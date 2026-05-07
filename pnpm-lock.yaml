@@ -89,6 +89,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@dworks/tree':
+        specifier: workspace:*
+        version: link:../../packages/tree
+      '@dworks/tree-editor':
+        specifier: workspace:*
+        version: link:../../packages/tree-editor
       next:
         specifier: ^15.1.0
         version: 15.5.16(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -99,6 +105,9 @@ importers:
         specifier: ^19.0.0
         version: 19.2.6(react@19.2.6)
     devDependencies:
+      '@eslint/eslintrc':
+        specifier: ^3.3.5
+        version: 3.3.5
       '@tailwindcss/postcss':
         specifier: ^4.0.0
         version: 4.2.4
