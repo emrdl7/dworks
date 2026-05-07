@@ -24,7 +24,7 @@
   - **M1.2 live 점수 산출** — 진행 중 (`m1-live-execution` 토픽)
   - Claude 최근 담당: `m1-live` 라운드 1~5 + 사용자 결정("api 없어. 모두 cli로 처리")을 메인 문서에 흡수 (`46ee013`)
   - Codex 현재 담당: CLI fallback judge 구현/검증 가능 범위를 정리하고, 1단계 live 실행을 막는 코드 잔여 의존성을 제거.
-  - live 실행은 API key가 아니라 로컬 인증 CLI(`claude`, `codex`, `gemini`) 가용성에 의존한다. 현재 로컬에서 `codex`, `gemini`는 감지됐고 `claude`는 미감지 상태.
+  - live 실행은 API key가 아니라 로컬 인증 CLI(`claude`, `codex`, `gemini`) 가용성에 의존한다. 현재 로컬에서 Claude Code CLI(절대 경로), `codex`, `gemini` 모두 감지됐다.
 
 M1 범위 안의 코드 변경은 사용자 사전 승인 범위로 본다.
 

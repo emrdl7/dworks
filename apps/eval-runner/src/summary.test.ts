@@ -69,8 +69,8 @@ describe('eval summary', () => {
     const summary = summarizeResults([resultA, resultB], { mode: 'live', repeat: 3 })
     assert.equal(summary.estimate.judgeCalls, 12)
     assert.equal(summary.estimate.repeat, 3)
-    assert.equal(summary.estimate.estimatedSeconds, 144)
-    assert.equal(summary.estimate.estimatedCostUsd, 0.18)
+    assert.equal(summary.estimate.estimatedSeconds, 300)
+    assert.equal(summary.estimate.estimatedCostUsd, 0)
   })
 
   it('counts unstable axes at root and perAxis', () => {

@@ -6,6 +6,7 @@
 // M1 단계: 로컬에 인증된 LLM CLI를 순서대로 spawn한다.
 
 import { spawn } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -101,11 +102,25 @@ function buildUserPrompt(input: JudgeInput): string {
 const JUDGE_TIMEOUT_MS = 30_000
 
 async function callClaude(input: JudgeInput, options: CallJudgeOptions): Promise<AxisScore> {
-  const output = await runCli('claude', ['-p', buildCliPrompt(input, 'claude')], options)
+  const workspaceRoot = options.workspaceRoot ?? process.cwd()
+  const args = [
+    '-p',
+    '--output-format',
+    'text',
+    '--append-system-prompt',
+    buildSystemPrompt(),
+    '--add-dir',
+    workspaceRoot,
+  ]
+  const model = process.env.DWORKS_CLAUDE_MODEL
+  if (model) args.push('--model', model)
+  args.push('--', buildCliUserPrompt(input, 'claude'))
+
+  const output = await runCli(resolveClaudeCommand(), args, options)
   return parseCliScore(
     output.stdout,
     'claude',
-    process.env.DWORKS_CLAUDE_MODEL ?? 'claude-cli',
+    model ?? 'claude-cli',
   )
 }
 
@@ -227,27 +242,38 @@ function hashStr(s: string): number {
 }
 
 function buildCliPrompt(input: JudgeInput, provider: JudgeModel): string {
+  return [
+    buildSystemPrompt(),
+    '',
+    buildCliUserPrompt(input, provider),
+  ].join('\n')
+}
+
+function buildCliUserPrompt(input: JudgeInput, provider: JudgeModel): string {
   const imagePaths = getScreenshotFilePaths(input)
   const imageSection =
     imagePaths.length > 0
       ? [
           '## 스크린샷 파일',
           ...input.screenshots.map(
-            (shot) => `- ${shot.viewport}: ${shot.filePath ?? '(attached image)'}`,
+            (shot) => `- ${shot.viewport}: ${formatScreenshotRef(provider, shot.filePath)}`,
           ),
           provider === 'codex'
             ? 'Codex CLI에는 위 파일들이 --image로 첨부되어 있다.'
-            : '위 경로의 이미지를 열어 시각적으로 평가한다.',
+            : '@path로 인용한 이미지를 열어 시각적으로 평가한다.',
         ].join('\n')
       : '## 스크린샷 파일\n첨부된 스크린샷 없음. 가능한 근거만으로 평가하되 evidence에 한계를 명시한다.'
 
   return [
-    buildSystemPrompt(),
-    '',
     imageSection,
     '',
     buildUserPrompt(input),
   ].join('\n')
+}
+
+function formatScreenshotRef(provider: JudgeModel, filePath: string | undefined): string {
+  if (!filePath) return '(attached image)'
+  return provider === 'codex' ? filePath : `@${filePath}`
 }
 
 function getScreenshotFilePaths(input: JudgeInput): string[] {
@@ -261,7 +287,7 @@ function parseCliScore(
   judgeModel: JudgeModel,
   judgeModelVersion: string,
 ): AxisScore {
-  const parsed = parseJudgeResponse(text)
+  const parsed = parseJudgeResponse(unwrapCliOutput(text))
   return {
     axis: parsed.axis,
     score: parsed.score,
@@ -272,6 +298,41 @@ function parseCliScore(
     judgeModel,
     judgeModelVersion,
   }
+}
+
+function resolveClaudeCommand(): string {
+  if (process.env.DWORKS_CLAUDE_CLI) return process.env.DWORKS_CLAUDE_CLI
+  const localClaude = process.env.HOME ? join(process.env.HOME, '.claude/local/claude') : null
+  if (localClaude && existsSync(localClaude)) return localClaude
+  return 'claude'
+}
+
+function unwrapCliOutput(text: string): string {
+  const trimmed = text.trim()
+  try {
+    const parsed = JSON.parse(trimmed) as unknown
+    if (typeof parsed === 'string') return parsed
+    if (parsed && typeof parsed === 'object') {
+      const record = parsed as Record<string, unknown>
+      for (const key of ['result', 'text', 'content', 'message']) {
+        const value = record[key]
+        if (typeof value === 'string') return value
+      }
+      const content = record.content
+      if (Array.isArray(content)) {
+        const textPart = content.find(
+          (part): part is { text: string } =>
+            Boolean(part) &&
+            typeof part === 'object' &&
+            typeof (part as { text?: unknown }).text === 'string',
+        )
+        if (textPart) return textPart.text
+      }
+    }
+  } catch {
+    // Not a CLI wrapper JSON; parseJudgeResponse will handle raw JSON/fenced JSON.
+  }
+  return text
 }
 
 interface CliOutput {
@@ -287,6 +348,7 @@ function runCli(
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.workspaceRoot,
+      detached: true,
       env: process.env,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
@@ -304,7 +366,7 @@ function runCli(
     }
 
     timer = setTimeout(() => {
-      child.kill('SIGTERM')
+      killProcessGroup(child.pid)
       finish(new Error(`${command} judge timed out after ${JUDGE_TIMEOUT_MS}ms`))
     }, JUDGE_TIMEOUT_MS)
 
@@ -321,6 +383,19 @@ function runCli(
       finish(null, { stdout: out, stderr: err })
     })
   })
+}
+
+function killProcessGroup(pid: number | undefined): void {
+  if (!pid) return
+  try {
+    process.kill(-pid, 'SIGTERM')
+  } catch {
+    try {
+      process.kill(pid, 'SIGTERM')
+    } catch {
+      // Process already exited.
+    }
+  }
 }
 
 // ---- LLM 응답 파싱 ----

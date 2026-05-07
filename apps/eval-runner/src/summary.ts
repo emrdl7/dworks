@@ -1,8 +1,8 @@
 import type { AxisId, AxisScore, EvalResult } from '@dworks/eval'
 
-const LIVE_SECONDS_PER_JUDGE_CALL = 12
+const LIVE_SECONDS_PER_JUDGE_CALL = 25
 const DRY_RUN_SECONDS_PER_JUDGE_CALL = 0.05
-const LIVE_COST_PER_JUDGE_CALL_USD = 0.015
+const LIVE_COST_PER_JUDGE_CALL_USD = 0
 
 export interface AxisLowestDetail {
   briefId: string
@@ -259,7 +259,8 @@ function createEstimate(axisSamples: number, mode: EvalSummary['mode'], repeat: 
     assumptions:
       mode === 'live'
         ? [
-            `live estimate uses ${LIVE_SECONDS_PER_JUDGE_CALL}s and ${formatUsd(LIVE_COST_PER_JUDGE_CALL_USD)} per judge call until token telemetry is available.`,
+            `live estimate uses ${LIVE_SECONDS_PER_JUDGE_CALL}s per CLI judge call until telemetry is calibrated.`,
+            `direct API cost estimate is ${formatUsd(LIVE_COST_PER_JUDGE_CALL_USD)} because D12 uses local authenticated CLIs.`,
             'screenshot capture/browser startup overhead is excluded.',
           ]
         : [
