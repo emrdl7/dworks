@@ -1,17 +1,17 @@
-# Design Works (dworks) — 협업 컨벤션
+# Dworks — 협업 컨벤션
 
-> **상태**: 1차 안 (2026-05-07). Claude 작성. 사용자 + Codex 합의 후 결정.
+> **상태**: 결정 (2026-05-07, dworks 라운드 1~5 합의 흡수). 변경은 새 라운드 의논을 거친다.
 
-본 문서는 **사용자 + Claude + Codex** 3자가 같은 로컬에서 dworks를 진행하기 위한 운영 규칙이다. krds-studio v4 의논의 4 라운드 경험을 그대로 컨벤션으로 박는다.
+본 문서는 **사용자 + Claude + Codex** 3자가 같은 로컬에서 dworks를 진행하기 위한 운영 규칙이다.
 
 ---
 
 ## 1. 작업 환경
 
 - **작업 디렉토리**: `~/dworks` (단일 git repo)
+- **원격 저장소**: `https://github.com/emrdl7/dworks` (퍼블릭). **상대 커밋 확인은 로컬 git 기준**으로 한다 — 같은 로컬에서 작업하므로 원격 polling은 불필요.
 - **작업자**: Claude (Anthropic), Codex (OpenAI), 사용자
-- **git user**: 단일 git author로 커밋되므로, 작성자 구분은 **커밋 메시지로** 한다.
-- **원격 저장소**: 미정 (사용자 결정 대기). 같은 로컬이라 협업에 필수는 아니지만 백업 관점에서 권장.
+- **git user**: 단일 git author로 커밋되므로, 작성자 구분은 **커밋 메시지 footer 마커**로 한다 (`[Claude]` / `[Codex]`).
 
 ## 2. 커밋 트리거 협업 모델
 
@@ -118,19 +118,21 @@ docs/discussions/
 
 ## 9. 라운드 번호 일관성
 
-krds-studio 라운드 1~4의 컨벤션을 그대로 가져온다.
+dworks 내부에서 다음 규칙을 일관 적용한다.
 
-- 전체 의논 흐름의 라운드 번호로 통일
-- **홀수 라운드 = Codex가 시작 / 짝수 라운드 = Claude가 시작** (krds-studio 라운드 4 §13.3 정정 적용)
-- dworks의 첫 라운드는 라운드 1로 새로 시작 (krds-studio 라운드와 별개 카운트)
+- 한 토픽의 라운드 번호는 1부터 시작.
+- **홀수 라운드 = Claude / 짝수 라운드 = Codex**.
+- dworks의 첫 라운드(plan)는 Claude가 시작했으므로 라운드 1=Claude.
 
-dworks 라운드 매핑 예:
-- 라운드 1 = Claude (본 PLAN.md 1차 안)
-- 라운드 2 = Codex (PLAN.md 검토 응답)
-- 라운드 3 = Claude (Codex 응답에 대한 답)
-- ...
+dworks plan 라운드 매핑 (확정):
 
-> **주**: krds-studio에선 §10이 Codex 라운드 1이었지만, dworks는 Claude가 첫 PLAN.md를 쓰며 시작하므로 라운드 1=Claude로 자연스럽게 채택된다. 본 컨벤션은 dworks 내부에서만 일관되면 된다.
+| 라운드 | 작성자 | 파일 |
+|--------|--------|------|
+| 1 | Claude | (1차 안 커밋 4건, `74be743`/`ddf1616`/`b449f3d`/`30d4697`) |
+| 2 | Codex | `docs/discussions/2026-05-07-plan-round-2-codex.md` |
+| 3 | Claude | `docs/discussions/2026-05-07-plan-round-3-claude.md` |
+| 4 | Codex | `docs/discussions/2026-05-07-plan-round-4-codex.md` |
+| 5 | Claude | `docs/discussions/2026-05-07-plan-round-5-claude.md` |
 
 ## 10. 본 컨벤션의 변경
 
@@ -194,19 +196,17 @@ feed가 비어 있으면 첫 커밋 전까지 tail이 EOF에서 머문다. 직�
 
 #### 3. 신호 파일 — `docs/AUTONOMOUS.md`
 
-자율 모드 활성/비활성 토글은 **신호 파일의 존재**로 한다.
+자율 모드 활성/비활성 토글은 **신호 파일의 존재**로만 결정한다. 카운터는 두지 않고 안전장치는 §11.6 즉석 검사로 산출한다.
 
 ```bash
-# 활성화
+# 활성화 (양식)
 cat > ~/dworks/docs/AUTONOMOUS.md <<'EOF'
 # 자율 협업 모드 활성
 
 활성화: <YYYY-MM-DD HH:MM> by <user|claude|codex>
 모드: 이벤트 기반 (post-commit hook + tail -F + Monitor)
 
-## 안전장치 카운터
-- 라운드 카운트: 0
-- 최근 동일 파일 수정 기록: (자동 갱신)
+상태/카운터는 보관하지 않는다 — 안전장치는 git에서 즉석 산출 (COLLABORATION.md §11.6).
 EOF
 
 # 비활성화
@@ -253,17 +253,17 @@ Codex CLI가 동등한 파일 watch + 자동 응답 메커니즘을 지원해야
 - 상대방 마커면 응답.
 - 마커 없는 커밋(사용자 직접 커밋)은 사용자가 명시한 행동을 우선.
 
-### 11.6 안전장치 5개 (필수)
+### 11.6 안전장치 5개 (필수, 카운터 없는 즉석 검사)
 
-자율 모드의 가장 큰 위험은 무한 루프와 충돌이다. 다음 가드레일은 의무.
+자율 모드의 가장 큰 위험은 무한 루프와 충돌이다. 모든 안전장치는 라운드 응답 시작 시 git에서 즉석 산출한다 (상태 파일 없음).
 
-| # | 트리거 | 행동 |
-|---|--------|------|
-| 1 | 한 토픽에서 라운드 6 초과 | 자율 모드 즉시 정지 + `docs/discussions/ALERT-<date>.md` 작성 |
-| 2 | 동일 미해결 항목 2 라운드 연속 등장 | 자율 모드 즉시 정지 + ALERT 작성 |
-| 3 | 한 작업자가 1시간 안에 같은 파일 3회 이상 수정 | 자율 모드 즉시 정지 + ALERT 작성 |
-| 4 | `git pull --ff-only` 실패 (non-FF 충돌) | 자율 모드 즉시 정지 + ALERT 작성. **rebase/merge 자동 시도 금지** |
-| 5 | 코드 변경이 발생하는 라운드 | 자율 모드 자동 정지 (코드 변경은 항상 사용자 OK 후 수동 가동) |
+| # | 트리거 | 즉석 검사 명령 | 행동 |
+|---|--------|-----------------|------|
+| 1 | 한 토픽에서 라운드 6 초과 | `ls docs/discussions/<topic>-round-*-*.md \| wc -l` ≥ 6 | 자율 모드 즉시 정지 + `docs/discussions/ALERT-<date>.md` 작성 |
+| 2 | 동일 미해결 항목 2 라운드 연속 등장 | 직전 두 라운드 노트의 미해결 섹션 비교 (에이전트 문맥 판단) | 자율 모드 즉시 정지 + ALERT |
+| 3 | 한 작업자가 1시간 안에 같은 파일 3회 이상 수정 | `git log --since='1 hour ago' --name-only --pretty=format: \| sort \| uniq -c \| sort -rn` 에서 ≥3 발견 | 자율 모드 즉시 정지 + ALERT |
+| 4 | `git pull --ff-only` 실패 (non-FF 충돌) | 라운드 시작 시 `git pull --ff-only` 결과 | 자율 모드 즉시 정지 + ALERT. **rebase/merge 자동 시도 금지** |
+| 5 | 코드 변경이 발생하는 라운드 | 응답 라운드 중 docs 외 파일 수정 시도 시 | 자율 모드 자동 정지 (코드 변경은 항상 사용자 OK 후 수동 가동) |
 
 **정지 = `docs/AUTONOMOUS.md` 파일을 삭제**한다. 사용자가 ALERT를 보고 판단 후 신호 파일을 다시 만들어야 자율 모드 재개.
 

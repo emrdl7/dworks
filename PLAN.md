@@ -1,8 +1,8 @@
 # Dworks — 진행 플랜
 
-> **상태**: 1차 안 (2026-05-07). Claude가 작성. 사용자 + Codex 합의 후 결정으로 굳힌다.
-> **출발점**: `~/krds-studio` 프로젝트의 v3→v4 의논 결과(라운드 1~4)를 처음부터 반영하는 새 시작.
-> **이전 의논 노트**: `~/krds-studio/docs/10-FRAME-REVIEW-2026-05-07.md` (참조 자산, krds-studio 삭제 시 dworks로 흡수).
+> **상태**: 결정 (2026-05-07, dworks 라운드 1~5 합의 흡수). 변경은 새 라운드 의논을 거친다.
+> **출발점**: `~/krds-studio` v3→v4 의논 결과를 처음부터 반영하는 새 시작.
+> **의논 history**: `~/krds-studio/docs/10-FRAME-REVIEW-2026-05-07.md` + 본 저장소 `docs/discussions/2026-05-07-plan-round-{1..5}-{author}.md`.
 
 ---
 
@@ -18,16 +18,18 @@
 
 ---
 
-## 1. 의논 합의 결과 요약 (라운드 1~4)
+## 1. 의논 합의 결과 요약 (krds-studio 라운드 1~4 + dworks 라운드 1~5)
 
 자세한 내용은 [`docs/DECISIONS.md`](./docs/DECISIONS.md). 핵심만 추리면:
 
 1. **프레임**: 디자인툴이지 HTML 생성기가 아니다.
-2. **모델 표현**: E (Hybrid) — JSON 의도 트리가 source of truth, HTML은 LLM I/O + 캔버스 렌더 + 익스포트 매체.
-3. **우선순위**: P0 디자인 품질 eval → P0.5 편집 기능 + 측정 → P1 디자인 고도화 루프 → P2 HTML→트리 흡수 PoC.
+2. **모델 표현**: E (Hybrid) — **제품 방향 확정**: JSON 의도 트리가 source of truth, HTML은 LLM I/O + 캔버스 렌더 + 익스포트 매체. **흡수 전략은 PoC**(M4)에서 검증.
+3. **우선순위**: P0 디자인 품질 eval → P0.5 편집 기능 + 측정 → P1 디자인 고도화 루프 → P2 HTML→트리 흡수 전략 PoC.
 4. **eval 입력 본질**: brief + 캔버스 스크린샷 + 자산 + viewport별 렌더 (DOM 구조 아님).
 5. **익스포트 = 트리에서 분기되는 다중 변환기** (plain / jabworks / infoUX / KRDS). v4의 "Compliance Align" 단계는 익스포트 변환기로 흡수.
 6. **검증의 위계**: 사용자에게 노출되는 검증은 사실상 "익스포트 가능 여부" 한 가지. 디자인 단계엔 도구 내부 안전성(렌더/보안/편집 노드 손실)만.
+7. **평가 결과 모델**: `JudgeStatus`(점수 신뢰도)와 `SuggestedAction`(제품 다음 행동)을 분리한다 (D14).
+8. **자율 협업 모드**: 카운터 없는 즉석 git 검사 기반 안전장치 (D15).
 
 ---
 
@@ -78,12 +80,17 @@
 - LLM: Codex CLI (`codex exec --json --ephemeral`)
 - 테스트: tsx 기반 단위 테스트 (krds-studio 패턴)
 
-### 신규 도입 검토
+### 신규 도입 (확정)
 
-- **vision LLM judge** — 후보: Claude vision API (Sonnet/Opus). P0/P0.5의 모든 평가 축이 의존.
-- **Playwright 또는 Puppeteer** — viewport별 스크린샷. krds-studio는 미도입, dworks는 P0부터 필요.
-- **트리 스키마 검증 라이브러리** — Zod 또는 ArkType. JSON 트리 노드 검증 + 흡수기 안전망.
-- **이미지 diff 도구** — pixelmatch 또는 odiff. P2 PoC의 디자인 보존 측정.
+- **vision LLM judge** — 1순위 Claude vision API → 2순위 Codex → 3순위 Gemini fallback (D12). 한 fixture 안에서 모델 섞이면 `judgeStatus: 'mixed-model'` 표기 (D14).
+- **Playwright** — viewport별 스크린샷. M0 부트스트랩에 패키지 설치, M0.5에서 첫 사용, M1부터 본격 활용. 정규 viewport: **440 / 768 / 1440**. 1280은 디버그/QA 보조 폭으로만 허용.
+- **Zod** — 트리 스키마 검증 + 흡수기 안전망 (D13). TypeScript-first 생태계와 LLM 친화도 우위로 결정.
+- **이미지 diff 도구** — pixelmatch 또는 odiff. M4 PoC의 디자인 보존 측정에 도입.
+
+### artifacts 경로
+
+- 평가 산출물: `artifacts/evals/<brief-id>/<run-id>/`
+- 편집 fixture: `seeds/evals/edit-sequences/`
 
 ### 변경 없음
 
@@ -98,10 +105,32 @@
 - monorepo 골격 복제 (`package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tsconfig.json`)
 - `apps/web`, `apps/api`, `packages/{tokens, llm-prompts, components, validators, exporters}` 빈 골격
 - `references/`, `seeds/` 가져옴
-- `docs/DECISIONS.md`, `docs/COLLABORATION.md` 본 라운드에서 작성
-- 첫 협업 라운드 시작 (본 PLAN.md 합의)
+- Playwright 패키지 설치 (실 사용은 M0.5 이후)
+- 첫 협업 라운드 합의 흡수는 본 라운드(라운드 1~5) 시점에 완료
 
 **완료 기준**: `pnpm install && pnpm typecheck` 통과, 빈 Next.js 앱과 빈 Hono API 가동.
+
+### M0.5. Tree Foundation (1주 추정 — 범위 동결)
+
+E Hybrid 제품 방향이 확정됐으므로 M2 편집 기능이 시작되기 전에 트리 모델의 최소 골격이 있어야 한다. **범위 초과 = M4 PoC로 변질**이므로 다음 표를 엄수.
+
+**범위 (포함)**
+
+- `packages/tree`: Zod 기반 최소 트리 스키마 (5~7개 노드 타입: section / hero / card / button / list / form / text)
+- `packages/tree-renderer`: tree → HTML 최소 렌더러
+- `packages/tree-importer`: fixture 3~5개 대상 최소 HTML → tree 흡수기 또는 수동 tree fixture
+- 노드 메타: `id`, `editKind` enum (text/media/structure/style), 반응형 의도 최소 필드
+- 단위 테스트
+
+**비범위 (제외 — 넘기면 M0.5가 깨진다)**
+
+- 실제 LLM 생성 연동
+- 완성형 캔버스 UI
+- 전체 krds-studio HTML 호환
+- 모든 Tailwind class 역추론
+- jabworks / infoUX / KRDS export 변환기
+
+**완료 기준**: 트리 fixture 3~5개로 tree → HTML 렌더 정상 + 단위 테스트 통과.
 
 ### M1 (P0). 디자인 품질 eval 1차 구현 (2~3주 추정)
 
@@ -116,6 +145,8 @@
 **완료 기준**: 7개 축 중 4개 이상이 측정 가능 + 12개 brief 1차 점수 산출 (= P2 PoC 시작 트리거).
 
 ### M2 (P0.5). 편집 기능 + 측정 (3~4주 추정)
+
+**시작 조건**: M0.5 완료 (트리 모델 최소 골격 존재).
 
 편집 기능 6개 범위:
 1. 콘텐츠 편집 (텍스트/라벨/마이크로카피)
@@ -139,17 +170,19 @@
 
 **완료 기준**: 표준 brief 12개에 대해 고도화 후 P0 평균 점수 +1.0 이상 향상.
 
-### M4 (P2). HTML→트리 흡수 PoC (R&D)
+### M4 (P2). HTML→트리 흡수 전략 검증 (R&D)
 
-- 트리거: M1의 P0 7축 중 4축 측정 가능 + 표준 brief 12개 1차 점수 산출 (= M1 완료 기준)
-- 트리 스키마 1차 설계
-- HTML→트리 흡수기 시뮬레이션
+> **주**: E Hybrid 자체는 D2에서 제품 방향으로 확정됐다. 본 마일스톤은 "트리 채택 여부"가 아니라 **"흡수 방식이 디자인 의도/편집성/고도화 가능성을 보존하는가"** 를 검증한다.
+
+- 시작 트리거: M1의 P0 7축 중 4축 측정 가능 + 표준 brief 12개 1차 점수 산출
+- 본격 트리 스키마 설계 (M0.5 최소형 → 풀 스펙)
+- HTML→트리 흡수기 본격 구현 + 다중 fixture 검증
 - 보고 양식 의무 항목: P0.5 5개 축 점수 + P0 측정 완료 축 점수
 - 통과 조건:
   - 의미 역할 추출률 ≥ 80%
   - 트리→HTML 재렌더 후 `layout-preservation-after-edit`, `output-tidiness` 점수 평균 -0.5 이내
 
-**완료 기준**: 통과 조건 만족 시 E 채택 확정 → M5로. 실패 시 옵션 A(현행 유지) / 옵션 C(JSON 트리 LLM 직접 출력) 재검토.
+**완료 기준**: 통과 조건 만족 시 → M5로. **실패 시는 트리 채택을 폐기하지 않고 흡수 방식을 변경**한다 — 옵션: ① LLM이 트리를 직접 출력 (제품 방향 유지, 흡수 단계 제거), ② 흡수기에 더 많은 fixture/보정 룰 추가 후 재시도, ③ 단일 plain HTML export로 jabworks/infoUX/KRDS 다중 export 야망 축소.
 
 ### M5. 익스포트 변환기 (jabworks 1차) (M4 통과 후)
 
@@ -171,19 +204,21 @@
 
 - **양측(Claude, Codex)이 같은 로컬, 같은 git repo에서 작업**.
 - **상대방 커밋이 다음 행동 트리거**. 한쪽이 커밋 → 다른 쪽이 받아서 응답 커밋 → 반복.
-- **의논 라운드는 `docs/discussions/` 안에 누적**. 라운드 번호 일관 (Codex 홀수, Claude 짝수).
+- **의논 라운드는 `docs/discussions/` 안에 누적**. 라운드 번호 일관 (**홀수 Claude, 짝수 Codex** — dworks 라운드 1=Claude로 시작).
 - **결정은 합의 후 메인 문서로 흡수**. 의논 노트는 history로 보존.
 - **코드 변경 vs 문서 변경 분리**. 의논 중에는 문서, 합의 후 코드.
 - **커밋 메시지에 작성자 명시** (`[Claude]` / `[Codex]` 접두 또는 footer).
 
 ---
 
-## 6. 다음 작업 (라운드 1 시작점)
+## 6. 다음 작업
 
-1. **사용자 본 PLAN.md 검토** → OK 또는 수정 지시.
-2. **Codex 본 PLAN.md 검토 커밋** → 합의/이견 기록 (`docs/discussions/2026-05-07-plan-review-codex.md` 같은 형식).
-3. **Claude 응답 커밋** → 합의/이견 기록.
-4. 의논 미해결 0건 도달 시 → M0 부트스트랩 시작.
+라운드 1~5 합의가 본 커밋에서 흡수 완료. **다음은 M0 부트스트랩**.
+
+1. M0: monorepo 골격 + 빈 앱/패키지 + Playwright 설치 + `pnpm typecheck` 통과
+2. M0.5: Tree Foundation (1주, 범위 동결)
+3. M1 + M4 트리거 직결: M1 P0 4축 측정 가능 시점에 M4 PoC 시작
+4. M2는 M0.5 완료 후 시작
 
 ---
 
@@ -202,7 +237,8 @@
 
 ## 8. 참조
 
-- `~/krds-studio/docs/10-FRAME-REVIEW-2026-05-07.md` — 라운드 1~4 의논 노트
+- `~/krds-studio/docs/10-FRAME-REVIEW-2026-05-07.md` — krds-studio 라운드 1~4 의논 노트
 - `~/krds-studio/docs/01-PRD.md` ~ `09-EDITOR-UX-PLAN.md` — 자산 검토 시 참조
-- `~/krds-studio/seeds/evals/briefs/` — P0 표준 fixture
-- `~/krds-studio/references/` — Codex 시스템 프롬프트 베이스, emotional design 자료
+- `~/krds-studio/seeds/evals/briefs/` — P0 표준 fixture (M0에서 dworks로 이전)
+- `~/krds-studio/references/` — Codex 시스템 프롬프트 베이스, emotional design 자료 (M0에서 이전)
+- `docs/discussions/2026-05-07-plan-round-1-claude.md` ~ `round-5-claude.md` — dworks 라운드 1~5 의논 history

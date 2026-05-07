@@ -18,7 +18,8 @@
 
 ## D2. 모델 표현 — E (Hybrid)
 
-**JSON 의도 트리가 source of truth, HTML은 LLM I/O + 캔버스 렌더 + 익스포트 매체.**
+**제품 방향 확정**: JSON 의도 트리가 source of truth, HTML은 LLM I/O + 캔버스 렌더 + 익스포트 매체.
+**흡수 전략은 PoC**(M4)에서 검증한다 — M4 실패 시는 트리 채택을 폐기하지 않고 흡수 방식만 변경한다 (PLAN.md M4 실패 분기 참조).
 
 ```
 LLM (Codex)
@@ -200,9 +201,71 @@ JSON 의도 트리 정의/검증/흡수기 안전망에 **Zod** (`zod` v3 또는
 
 **근거**: 사용자가 "가장 강점 많은 걸로 알아서" 위임 → Claude 선택 2026-05-07.
 
+## D14. 평가 결과 모델 — JudgeStatus / SuggestedAction 분리
+
+평가 결과는 **점수 신뢰도**와 **제품 다음 행동**을 별도 enum으로 표현한다. 둘을 한 enum에 섞으면 후속 자동화의 분기 조건이 잘못 잡힌다.
+
+```ts
+type JudgeStatus =
+  | 'ok'            // 정상 평가
+  | 'unstable'      // 재현성 분산 > 0.5
+  | 'mixed-model'   // 한 fixture 안에서 모델 fallback 발생
+  | 'failed'        // 평가 자체 실패 (응답 없음, 파싱 실패 등)
+
+type SuggestedAction =
+  | 'acceptable'              // 점수 양호, 그대로 진행
+  | 'design-polish-needed'    // 점수 2점 이하, 자동 고도화 입력
+  | 'manual-review-needed'    // 신뢰도 의심, 사람 판단 필요
+  | 'export-blocking'         // 익스포트 단계 hard fail
+```
+
+**해석 원칙**:
+- `judgeStatus !== 'ok'`이면 `suggestedAction`은 기본 `manual-review-needed`로 강제.
+- `acceptable` / `design-polish-needed` / `export-blocking`은 `judgeStatus === 'ok'`일 때만 선택.
+
+**평가 결과 페이로드 구조**:
+
+```json
+{
+  "axis": "first viewport richness",
+  "score": 3,
+  "reason": "핵심 CTA는 보이지만 브랜드 맥락과 이미지 초점이 약함",
+  "evidence": ["hero copy generic", "primary CTA below fold on mobile"],
+  "judgeStatus": "ok",
+  "suggestedAction": "design-polish-needed"
+}
+```
+
+`axis`는 D5/D6의 12개 축 id로 제한 (Zod enum). `evidence`는 다중 근거 배열.
+
+**근거**: dworks 라운드 4 §2.4 (Codex 분리 제안), 라운드 5 §1.4 (Claude 수용).
+
+## D15. 자율 협업 모드 — 카운터 없는 즉석 검사
+
+Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. 자세한 컨벤션은 `docs/COLLABORATION.md` §11.
+
+**핵심 원칙**:
+- 활성/비활성 토글은 `docs/AUTONOMOUS.md` 신호 파일의 존재로만 결정.
+- 작동 매개체는 `.git/hooks/post-commit` + `.git/feed.log` + `tail -F` + Monitor 도구.
+- 자기 커밋 echo는 `[Claude]` / `[Codex]` 마커로 무시.
+- 마커 없는 사용자 직접 커밋은 자율 모드에서 무시 (사용자 명시 지시 우선).
+
+**안전장치는 카운터 없이 즉석 검사**:
+- 라운드 6 초과: `ls docs/discussions/<topic>-round-*-*.md | wc -l`
+- 1시간 내 동일 파일 3회 이상: `git log --since='1 hour ago' --name-only --pretty=format: | sort | uniq -c | sort -rn`
+- 동일 미해결 2회 연속: 라운드 시작 시 에이전트 문맥 판단
+- `git pull --ff-only` 실패: 즉시 정지 + ALERT
+- 코드 변경 발생 라운드: 즉시 정지 (자율 모드는 docs만)
+
+**메인 문서 흡수는 사용자 OK 신호 필수** (`COLLABORATION.md` §7). 자율 모드가 흡수까지 자동 진행하지 않는다.
+
+**근거**: dworks 라운드 1 §11 (Claude 컨벤션 도입), 라운드 2 §2.5 (Codex 카운터 stale 지적), 라운드 3 §2.3 (Claude 카운터 제거 대안), 라운드 4 §2.1 (Codex 채택), 라운드 5 §1.1 (Claude 합의).
+
 ---
 
 ## 부록 A. 의논 라운드 추적
+
+### krds-studio 라운드 (의논 발단)
 
 | 라운드 | 작성자 | 출처 | 핵심 기여 |
 |--------|--------|------|----------|
@@ -211,4 +274,12 @@ JSON 의도 트리 정의/검증/흡수기 안전망에 **Zod** (`zod` v3 또는
 | 3 | Codex (krds-studio §12) | 의논 노트 | 편집 기능 P0.5 격상, PRD 한 줄 정의 후보 |
 | 4 | Claude (krds-studio §13) | 의논 노트 | judge 신뢰성 보강, output-tidiness 정의, PoC 회귀 차단 |
 
-dworks 라운드는 [`docs/discussions/`](./discussions/)에 누적된다.
+### dworks 라운드 (PLAN 합의)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| 1 | Claude | `docs/discussions/2026-05-07-plan-round-1-claude.md`(=커밋 `74be743`/`ddf1616`/`b449f3d`/`30d4697`) | PLAN.md/DECISIONS.md/COLLABORATION.md 1차 안 + 자율 모드 도입 |
+| 2 | Codex | `docs/discussions/2026-05-07-plan-round-2-codex.md` | E Hybrid 명확화, M0.5 신설 제안, 라운드 번호 정정, 카운터 stale 지적 |
+| 3 | Claude | `docs/discussions/2026-05-07-plan-round-3-claude.md` | 라운드 2 6건 합의, M0.5 범위 + 새 캔버스 + 카운터 제거 대안 |
+| 4 | Codex | `docs/discussions/2026-05-07-plan-round-4-codex.md` | 라운드 3 4건 채택 + JudgeStatus/SuggestedAction 분리 제안 |
+| 5 | Claude | `docs/discussions/2026-05-07-plan-round-5-claude.md` | 분리안 수용, 미해결 0건, 흡수 트리거 |
