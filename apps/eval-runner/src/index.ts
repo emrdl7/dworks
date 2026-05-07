@@ -36,6 +36,9 @@ async function main(): Promise<void> {
 
   console.log(`[eval-runner] runId=${runId}`)
   console.log(`[eval-runner] mode=${mode}`)
+  if (args.failOnFallback) {
+    console.log('[eval-runner] fail-on-fallback enabled; live primary judge failure will abort the run')
+  }
   if (args.dryRun) {
     console.log('[eval-runner] dry-run stub judge is active; pass --live or DWORKS_JUDGE_MODE=live for CLI judge')
   }
@@ -56,6 +59,7 @@ async function main(): Promise<void> {
         dryRun: args.dryRun,
         noScreenshots: args.noScreenshots,
         repeat: args.repeat,
+        failOnFallback: args.failOnFallback,
       }),
     )
   }
@@ -87,10 +91,11 @@ interface RunBriefInput {
   dryRun: boolean
   noScreenshots: boolean
   repeat: number
+  failOnFallback: boolean
 }
 
 async function runBrief(input: RunBriefInput): Promise<EvalResult> {
-  const { brief, axes, runId, runDir, dryRun, noScreenshots, repeat } = input
+  const { brief, axes, runId, runDir, dryRun, noScreenshots, repeat, failOnFallback } = input
   const repeatTag = repeat > 1 ? ` repeat=${repeat}` : ''
   console.log(`[eval-runner] brief=${brief.id} category=${brief.category}${repeatTag}`)
   const tree = buildPlaceholderTree(brief)
@@ -122,7 +127,7 @@ async function runBrief(input: RunBriefInput): Promise<EvalResult> {
         screenshots,
       },
       repeat,
-      { dryRun, workspaceRoot: ROOT },
+      { dryRun, workspaceRoot: ROOT, failOnFallback },
     )
     axisScores.push(repeated.representative)
     if (repeated.reproducibility) {

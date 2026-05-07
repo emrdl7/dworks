@@ -36,6 +36,12 @@ describe('parseArgs', () => {
     assert.equal(args.repeat, 3)
   })
 
+  it('parses --fail-on-fallback', () => {
+    const args = parseArgs(['--live', '--fail-on-fallback'])
+    assert.equal(args.dryRun, false)
+    assert.equal(args.failOnFallback, true)
+  })
+
   it('rejects --repeat=0', () => {
     assert.throws(() => parseArgs(['--repeat=0']))
   })

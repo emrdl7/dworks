@@ -171,6 +171,8 @@ export interface CallJudgeOptions {
   // 1차 파이프라인 검증/CI 용. 실제 점수가 아님.
   dryRun?: boolean
   workspaceRoot?: string
+  // D8 재현성 측정용: primary judge 실패 시 다른 provider로 넘어가지 않고 run을 중단.
+  failOnFallback?: boolean
 }
 
 export async function callJudge(
@@ -193,6 +195,9 @@ export async function callJudge(
       }
     } catch (err) {
       lastError = err
+      if (options.failOnFallback) {
+        throw new Error(`primary judge failed with --fail-on-fallback: ${String(err)}`)
+      }
       // 정책 D12: CLI 불능 판정 후 다음 provider로 fallback.
       continue
     }

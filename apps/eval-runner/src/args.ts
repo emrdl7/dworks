@@ -10,6 +10,8 @@ export interface RunnerArgs {
   // 라운드 4 §1: --repeat=N. 기본 1, 2 이상이면 같은 axis × N회 호출 후 variance 측정.
   // 1 미만은 reject.
   repeat: number
+  // live judge primary 실패 시 codex/gemini fallback 없이 즉시 실패.
+  failOnFallback: boolean
 }
 
 export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env): RunnerArgs {
@@ -17,6 +19,7 @@ export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env):
     dryRun: env.DWORKS_JUDGE_MODE !== 'live',
     noScreenshots: false,
     repeat: 1,
+    failOnFallback: false,
   }
 
   for (const raw of argv) {
@@ -28,6 +31,8 @@ export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env):
       args.dryRun = false
     } else if (raw === '--no-screenshots') {
       args.noScreenshots = true
+    } else if (raw === '--fail-on-fallback') {
+      args.failOnFallback = true
     } else if (raw.startsWith('--briefs=')) {
       args.briefIds = splitCsv(raw.slice('--briefs='.length))
     } else if (raw.startsWith('--axes=')) {
