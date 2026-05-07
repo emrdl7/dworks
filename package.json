@@ -1,0 +1,24 @@
+{
+  "name": "dworks",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Dworks — 자연어와 레퍼런스로 웹 디자인 시안을 생성하고 캔버스에서 편집·고도화해 납품 가능한 디자인 산출물로 정돈하는 디자인툴.",
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.9.0",
+    "eslint": "^9.15.0",
+    "typescript-eslint": "^8.15.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
