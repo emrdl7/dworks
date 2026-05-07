@@ -262,7 +262,7 @@ Codex CLI가 동등한 파일 watch + 자동 응답 메커니즘을 지원해야
 |---|--------|-----------------|------|
 | 1 | 한 토픽에서 라운드 6 도달 (`≥ 6`) | `ls docs/discussions/<topic>-round-*-*.md \| wc -l` ≥ 6 | 자율 모드 즉시 정지 + `docs/discussions/ALERT-<date>.md` 작성 |
 | 2 | 동일 미해결 항목 2 라운드 연속 등장 | 직전 두 라운드 노트의 미해결 섹션 비교 (에이전트 문맥 판단) | 자율 모드 즉시 정지 + ALERT |
-| 3 | 한 작업자가 1시간 안에 같은 파일 3회 이상 수정 (단 가장 최근의 흡수 커밋 이후만 카운트) | `SINCE=$(git log --grep='\[ABSORB\]' -n1 --pretty=%ct \|\| true); FROM_TS=$(($(date +%s)-3600)); CUTOFF=$((SINCE > FROM_TS ? SINCE : FROM_TS)); git log --since="@$CUTOFF" --name-only --pretty=format: \| sort \| uniq -c \| sort -rn`에서 ≥3 발견 | 자율 모드 즉시 정지 + ALERT |
+| 3 | 한 작업자가 1시간 안에 같은 파일 3회 이상 수정 (단 가장 최근의 흡수 커밋 이후만 카운트, 자동 생성 파일 제외) | `SINCE=$(git log --grep='\[ABSORB\]' -n1 --pretty=%ct \|\| true); FROM_TS=$(($(date +%s)-3600)); CUTOFF=$((SINCE > FROM_TS ? SINCE : FROM_TS)); git log --since="@$CUTOFF" --name-only --pretty=format: \| grep -vE '^(pnpm-lock\.yaml\|package-lock\.json\|yarn\.lock\|bun\.lockb\|\.next/\|\.turbo/\|dist/\|build/)' \| sort \| uniq -c \| sort -rn`에서 ≥3 발견. **제외 대상**: lockfile(`pnpm-lock.yaml` / `package-lock.json` / `yarn.lock` / `bun.lockb`), 빌드 산출물(`.next/`, `.turbo/`, `dist/`, `build/`) 등 의존성 추가나 빌드마다 자동 갱신되는 파일은 의도된 빈번 수정이므로 카운트 제외 | 자율 모드 즉시 정지 + ALERT |
 | 4 | `git pull --ff-only` 실패 (non-FF 충돌) | 라운드 시작 시 `git pull --ff-only` 결과 | 자율 모드 즉시 정지 + ALERT. **rebase/merge 자동 시도 금지** |
 | 5 | 코드 변경이 발생하는 라운드 | 응답 라운드 중 docs 외 파일 수정 시도 시 | 자율 모드 자동 정지 (코드 변경은 항상 사용자 OK 후 수동 가동) |
 

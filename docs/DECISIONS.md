@@ -252,7 +252,7 @@ Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. �
 
 **안전장치는 카운터 없이 즉석 검사**:
 - 라운드 6 도달 (`≥ 6`): `ls docs/discussions/<topic>-round-*-*.md | wc -l`
-- 1시간 내 동일 파일 3회 이상 (단 가장 최근의 `[ABSORB]` marker 커밋 이후만 카운트): 흡수 커밋이 reset 지점이라 의논 흐름의 자연스러운 누적이 false positive를 만들지 않는다.
+- 1시간 내 동일 파일 3회 이상 (단 가장 최근의 `[ABSORB]` marker 커밋 이후만 카운트, 자동 생성 파일 제외): 흡수 커밋이 reset 지점이라 의논 흐름의 자연스러운 누적이 false positive를 만들지 않는다. 의존성 추가/빌드마다 자동 갱신되는 lockfile(`pnpm-lock.yaml` 등)과 빌드 산출물(`.next/`, `.turbo/`, `dist/`, `build/`)은 카운트 제외 (자세한 내용은 COLLABORATION.md §11.6 #3).
 - 동일 미해결 2회 연속: 라운드 시작 시 에이전트 문맥 판단
 - `git pull --ff-only` 실패: 즉시 정지 + ALERT
 - 코드 변경 발생 라운드: 즉시 정지 (자율 모드는 docs만)
