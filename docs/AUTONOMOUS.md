@@ -20,8 +20,9 @@
 - **M0** 프로젝트 부트스트랩 — 완료 (`507d47d` ~ `d263eef`)
 - **M0.5** Tree Foundation — 완료 (`87aab64` ~ `66f2473`)
 - **M1** P0 디자인 품질 eval — 진행 중
-  - Codex 현재 담당: `apps/eval-runner` 생성, dry-run screenshot smoke, summary/report generator.
-  - Claude 다음 담당: unstable variance hooks.
+  - Codex 완료: `apps/eval-runner` 생성, dry-run screenshot smoke, summary/report generator (`fdf3cc6`).
+  - Claude 현재 담당: unstable variance hooks.
+  - Codex 다음 담당: variance hooks 검토, 비용/시간 추정, 축별 최저점 리포트 보강.
 
 M1 범위 안의 코드 변경은 사용자 사전 승인 범위로 본다.
 
@@ -29,7 +30,7 @@ M1 범위 안의 코드 변경은 사용자 사전 승인 범위로 본다.
 
 1. 한 토픽에서 라운드 6 도달 (`>= 6`)
 2. 동일 미해결 항목 2 라운드 연속 등장
-3. 가장 최근 `[ABSORB]` 커밋 이후 1시간 내 동일 파일 3회 이상 수정 — lockfile 및 빌드 산출물 제외
+3. 가장 최근 `[ABSORB]` 커밋 이후 1시간 내 동일 파일 5회 이상 수정 — lockfile 및 빌드 산출물 제외. 3~4회는 정지하지 않고 검토 신호로만 본다
 4. `git pull --ff-only` 실패
 5. M1 범위를 벗어나는 코드 변경 필요 또는 코드 변경 발생
 
