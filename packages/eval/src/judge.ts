@@ -154,7 +154,19 @@ async function callGemini(_input: JudgeInput): Promise<AxisScore> {
 
 const FALLBACK_ORDER: JudgeModel[] = ['claude', 'codex', 'gemini']
 
-export async function callJudge(input: JudgeInput): Promise<AxisScore> {
+export interface CallJudgeOptions {
+  // dry-run 모드: 실제 LLM 호출 대신 결정론적 stub 응답.
+  // 1차 파이프라인 검증/CI 용. 실제 점수가 아님.
+  dryRun?: boolean
+}
+
+export async function callJudge(
+  input: JudgeInput,
+  options: CallJudgeOptions = {},
+): Promise<AxisScore> {
+  if (options.dryRun) {
+    return stubJudge(input)
+  }
   let lastError: unknown = null
   for (const model of FALLBACK_ORDER) {
     try {
@@ -181,6 +193,37 @@ export async function callJudge(input: JudgeInput): Promise<AxisScore> {
     suggestedAction: 'manual-review-needed',
     judgeModel: 'claude',
   }
+}
+
+// dry-run stub — brief id × axis id의 hash 기반 결정론적 점수.
+// placeholder 트리는 와이어프레임 성격이라 1~3점 범위가 자연스럽다.
+function stubJudge(input: JudgeInput): AxisScore {
+  const seed = hashStr(`${input.briefId}|${input.axis.id}`)
+  const score = (seed % 4) + 1 // 1..4
+  return {
+    axis: input.axis.id,
+    score,
+    reason: `[dry-run stub] placeholder 트리 기반 결정론적 점수 ${score}/5.`,
+    evidence: [
+      `brief: ${input.briefId}`,
+      `axis: ${input.axis.id}`,
+      'NOTE: 실제 LLM 호출 아님 — ANTHROPIC_API_KEY 설정 후 dryRun=false 로 재실행',
+    ],
+    judgeStatus: 'ok',
+    suggestedAction:
+      score <= input.axis.polishThreshold
+        ? 'design-polish-needed'
+        : 'acceptable',
+    judgeModel: 'claude',
+  }
+}
+
+function hashStr(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) {
+    h = (h * 31 + s.charCodeAt(i)) | 0
+  }
+  return Math.abs(h)
 }
 
 // ---- LLM 응답 파싱 ----
