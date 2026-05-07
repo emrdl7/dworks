@@ -4,6 +4,7 @@
 export {
   applyEditOperation,
   applyEditSequence,
+  replaceTextById,
   updateButtonLabel,
   updateText,
 } from './operations.js'

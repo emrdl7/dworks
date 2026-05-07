@@ -5,6 +5,7 @@ import type { Tree } from '@dworks/tree'
 
 import {
   applyEditSequence,
+  replaceTextById,
   updateButtonLabel,
   updateText,
 } from './operations.js'
@@ -66,6 +67,19 @@ describe('tree editor operations', () => {
       assert.equal(cta?.type, 'button')
       if (cta?.type === 'button') {
         assert.equal(cta.label, '시안 만들기')
+      }
+    }
+  })
+
+  it('replaces text by id through the compatibility helper', () => {
+    const updated = replaceTextById(fixtureTree(), 'landing.title', '새 이름')
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      const title = updated.root.children[0]
+      assert.equal(title?.type, 'text')
+      if (title?.type === 'text') {
+        assert.equal(title.content, '새 이름')
       }
     }
   })

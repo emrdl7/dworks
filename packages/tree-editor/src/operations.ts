@@ -28,6 +28,14 @@ export function updateText(
   return applyEditOperation(tree, { type: 'updateText', nodeId, content })
 }
 
+export function replaceTextById(
+  tree: Tree,
+  nodeId: string,
+  value: string,
+): Tree {
+  return updateText(tree, nodeId, value)
+}
+
 export function updateButtonLabel(
   tree: Tree,
   nodeId: string,
