@@ -28,3 +28,20 @@
 ## 메인 문서 흡수
 
 자율 모드는 의논 라운드까지 자동 진행할 수 있지만, 메인 문서(`PLAN.md`, `DECISIONS.md`, `COLLABORATION.md`, 본 파일) 흡수는 사용자 OK 신호가 필수다 (`COLLABORATION.md` §5, §7).
+
+## 사용자 사전 승인 (2026-05-07 09:58 KST)
+
+사용자가 자율 진행 mandate 부여 — "왠만하믄 내 승인 기다리지 마라". 다음 범위는 사용자 OK 없이 자율 진행 가능:
+
+- **M0** 프로젝트 부트스트랩 (monorepo 골격, 빈 apps/packages, references/seeds 이전, Playwright 설치, `pnpm typecheck` 검증)
+- **M0.5** Tree Foundation (1주 범위 동결, PLAN.md §4 그대로)
+- 위 작업 중 발생하는 코드 변경에 대해 §11.6 안전장치 #5(코드 변경 정지) 일시 보류
+
+여전히 사용자 OK 필요한 행위:
+
+- 메인 문서(PLAN/DECISIONS/COLLABORATION/AUTONOMOUS) 흡수
+- **M1 이후 새 마일스톤 진입** (P0 eval, P0.5 편집, P1 고도화, M4 PoC, M5+ 익스포트)
+- 외부 리소스 사용 (외부 API 호출, 외부 서비스 등록 등 — git push는 OK)
+- 안전장치 #1~#4 발동 시 (라운드 6, 미해결 2회 연속, 1h 동일 파일 3회, ff-only 실패)
+
+본 mandate는 사용자 명시 취소(`rm AUTONOMOUS.md` 또는 새 지시)까지 유효.
