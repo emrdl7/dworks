@@ -33,6 +33,8 @@ const editKindLabels: Record<TreeNode['editKind'], string> = {
   style: '스타일',
 }
 
+const MAX_HISTORY = 100
+
 export default function HomePage() {
   const [selectedFixtureId, setSelectedFixtureId] = useState(defaultTreeFixture.id)
   const [tree, setTree] = useState<Tree>(defaultTreeFixture.tree)
@@ -40,6 +42,8 @@ export default function HomePage() {
     findFirstEditableNodeId(defaultTreeFixture.tree.root) ??
       defaultTreeFixture.tree.root.id,
   )
+  const [historyPast, setHistoryPast] = useState<Tree[]>([])
+  const [historyFuture, setHistoryFuture] = useState<Tree[]>([])
 
   const selectedNode = useMemo(
     () => findNode(tree.root, selectedNodeId) ?? tree.root,
@@ -56,17 +60,52 @@ export default function HomePage() {
     const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
     setSelectedFixtureId(nextFixture.id)
     setTree(nextFixture.tree)
+    setHistoryPast([])
+    setHistoryFuture([])
     setSelectedNodeId(
       findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
     )
   }
 
+  function commitTreeEdit(nextTree: Tree) {
+    setHistoryPast((past) => [...past, tree].slice(-MAX_HISTORY))
+    setHistoryFuture([])
+    setTree(nextTree)
+    setSelectedNodeId((currentNodeId) => getSafeSelectedNodeId(nextTree, currentNodeId))
+  }
+
   function handleTextChange(node: TextNode, content: string) {
-    setTree((currentTree) => updateText(currentTree, node.id, content))
+    commitTreeEdit(updateText(tree, node.id, content))
   }
 
   function handleButtonLabelChange(node: ButtonNode, label: string) {
-    setTree((currentTree) => updateButtonLabel(currentTree, node.id, label))
+    commitTreeEdit(updateButtonLabel(tree, node.id, label))
+  }
+
+  function handleUndo() {
+    const previousTree = historyPast.at(-1)
+    if (!previousTree) {
+      return
+    }
+
+    setHistoryPast((past) => past.slice(0, -1))
+    setHistoryFuture((future) => [...future, tree].slice(-MAX_HISTORY))
+    setTree(previousTree)
+    setSelectedNodeId((currentNodeId) =>
+      getSafeSelectedNodeId(previousTree, currentNodeId),
+    )
+  }
+
+  function handleRedo() {
+    const nextTree = historyFuture.at(-1)
+    if (!nextTree) {
+      return
+    }
+
+    setHistoryFuture((future) => future.slice(0, -1))
+    setHistoryPast((past) => [...past, tree].slice(-MAX_HISTORY))
+    setTree(nextTree)
+    setSelectedNodeId((currentNodeId) => getSafeSelectedNodeId(nextTree, currentNodeId))
   }
 
   return (
@@ -75,7 +114,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-base font-semibold">Dworks Editor</h1>
-            <p className="text-xs text-[#647067]">m2-fixture-loader</p>
+            <p className="text-xs text-[#647067]">m2-edit-undo</p>
           </div>
           <label className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#4f5e56]">Fixture</span>
@@ -93,16 +132,34 @@ export default function HomePage() {
             </select>
           </label>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
-          <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-            root {tree.root.id}
-          </span>
-          <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-            editable {editableCount}
-          </span>
-          <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-            selected {selectedNode.id}
-          </span>
+        <div className="flex shrink-0 items-center gap-4">
+          <div className="flex items-center gap-1">
+            <HistoryButton
+              ariaLabel="실행 취소"
+              disabled={historyPast.length === 0}
+              onClick={handleUndo}
+            >
+              Undo
+            </HistoryButton>
+            <HistoryButton
+              ariaLabel="다시 실행"
+              disabled={historyFuture.length === 0}
+              onClick={handleRedo}
+            >
+              Redo
+            </HistoryButton>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
+            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
+              root {tree.root.id}
+            </span>
+            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
+              editable {editableCount}
+            </span>
+            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
+              selected {selectedNode.id}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -154,6 +211,32 @@ export default function HomePage() {
         </aside>
       </div>
     </main>
+  )
+}
+
+interface HistoryButtonProps {
+  ariaLabel: string
+  children: ReactNode
+  disabled: boolean
+  onClick: () => void
+}
+
+function HistoryButton({
+  ariaLabel,
+  children,
+  disabled,
+  onClick,
+}: HistoryButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      className="h-9 rounded-md border border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -535,6 +618,14 @@ function findFirstEditableNodeId(node: TreeNode): string | null {
   }
 
   return null
+}
+
+function getSafeSelectedNodeId(tree: Tree, preferredNodeId: string): string {
+  return (
+    findNode(tree.root, preferredNodeId)?.id ??
+    findFirstEditableNodeId(tree.root) ??
+    tree.root.id
+  )
 }
 
 function isContainerNode(node: TreeNode): node is ContainerNode {
