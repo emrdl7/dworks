@@ -145,15 +145,24 @@ E Hybrid 제품 방향이 확정됐으므로 M2 편집 기능이 시작되기 �
 
 부트스트랩 검증: typecheck 13/13, test 6 패키지, smoke `--repeat=3` 통과.
 
-#### M1.2 live 점수 산출 — 진행 예정 (m1-live 토픽)
+#### M1.2 live 점수 산출 — 진행 예정 (m1-live-execution 토픽)
 
-- 평가 축 7개:
-  - `non-wireframe`, `first viewport richness`, `emotional-fit`, `visual-variety`, `brand/reference fidelity`, `responsive design intent preservation`, `editability`
-- 각 축 0–5 루브릭 정의 + vision LLM judge 호출 + 점수 산출
-- 표준 brief 12개에 대한 1차 점수 산출
-- judge 재현성 체크 (분산 ≤ 0.5)
-- 사람 grading 보정 (12개 중 3개 사람 grading, Pearson 상관계수 ≥ 0.6)
-- 축별 평균/최저점 brief/대표 실패 사유 리포트
+vision judge는 **CLI fallback chain** (Claude Code CLI → Codex CLI → Gemini CLI). API key 의존 없음 (D12 갱신, 사용자 2026-05-07 결정).
+
+**단계화** (m1-live 라운드 2 §1.1 합의):
+- **1단계**: 4축 × 12 brief × repeat=1 = **48 calls** (M4 PoC 트리거 충족 최소)
+- **2단계**: 7축 × 12 brief × repeat=1 = **84 calls** (전체 축 측정)
+- **3단계**: 7축 × 12 brief × repeat=3 = **252 calls** (재현성 분산 측정)
+
+각 단계 후 `summary.json` + `report.md` 검토 → 다음 단계 진행.
+
+**1단계 4축**: `non-wireframe` / `first-viewport-richness` / `emotional-fit` / `editability` (placeholder 트리에서 측정 가능 신호 강한 축).
+
+**남은 4축**: `visual-variety` / `brand-reference-fidelity` / `responsive-design-intent-preservation` (placeholder 단계에선 약함 — M2 LLM 생성 트리에서 본격 검증).
+
+**사람 grading 3 brief**: `public-landing-jdc` / `dashboard-customer-support` / `brand-campaign-startup` (공공/B2B/스타트업 대표성). 1단계 report 후 사용자에게 21건 평가 요청 → judge와 Pearson r 계측.
+
+**mixed-model 우선순위**: 같은 fixture × repeat 안에서 `judgeModel` 또는 `judgeModelVersion`이 섞이면 `judgeStatus: 'mixed-model'` (D14, m1-live 라운드 4).
 
 **완료 기준**: 7개 축 중 4개 이상이 측정 가능 + 12개 brief 1차 점수 산출 (= P2 PoC 시작 트리거).
 

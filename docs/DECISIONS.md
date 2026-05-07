@@ -160,22 +160,27 @@ LLM 재호출: 트리 일부 + 자연어 → 부분 HTML → 부분 트리 흡�
 
 근거: krds-studio 라운드 3 §12.7 후보 + 사용자 2026-05-07 결정 (이름 정정).
 
-## D12. LLM 호출 정책 — Claude → Codex → Gemini fallback
+## D12. LLM 호출 정책 — CLI 기반 fallback chain
 
-**모든 LLM 호출**(생성, 고도화, vision judge, 익스포트 변환 보조 등)은 다음 순서로 시도한다.
+**SDK/API 호출 폐기** — 사용자 2026-05-07 결정 ("api 없어. 모두 cli로 처리"). 모든 LLM 호출은 로컬에 인증된 LLM CLI를 spawn해서 처리한다.
 
-1. **1순위: Claude** (Anthropic Sonnet/Opus) — 기본 호출 대상.
-2. **2순위: Codex** (OpenAI) — Claude가 불능(API 장애, rate limit, 응답 실패, timeout)일 때 자동 fallback.
-3. **3순위: Gemini** (Google) — Codex도 불능일 때 fallback.
+1. **1순위: Claude Code CLI** — `claude -p ...` headless. 사용자 셸에 이미 인증된 CLI 사용.
+2. **2순위: Codex CLI** — `codex exec --json --ephemeral`. krds-studio에서 검증된 패턴.
+3. **3순위: Gemini CLI** — gemini 또는 동등 도구.
 
 **구현 원칙**:
-- LLM 추상화 레이어를 단일 인터페이스로 두고, 호출자는 fallback 흐름을 알 필요 없다.
-- 각 호출에 대해 어느 모델이 응답했는지 메타로 기록 (`generation.modelUsed`, `eval.judgeModel` 등).
-- "불능" 판정 기준: HTTP 5xx, rate limit 429, 30초 timeout, 명시적 오류 응답. 코드 정의는 별도.
-- vision judge의 모델 일관성을 위해 **judge 호출은 가능한 한 같은 모델로 반복**한다. 한 fixture를 평가하는 도중 fallback이 발생하면 그 fixture의 점수는 `mixed-model`로 표시하고 재현성 체크에서 제외.
-- 각 모델의 호출 비용/실패율을 운영 지표로 누적.
+- 추상화 레이어는 단일 `callJudge(input)` 인터페이스를 유지하되, 내부 구현은 CLI spawn (`child_process.spawn` 또는 `execa`).
+- 이미지 입력: 파일 경로 첨부 (각 CLI 지원 방식 차이 있음 — 첫 번째 어댑터로 검증).
+- 응답: JSON 본문만 stdout으로 받고 zod schema 검증.
+- "불능" 판정: CLI 종료 코드 ≠ 0, 30초 timeout, JSON 파싱 실패, schema 미통과.
+- 모델 메타: `judgeModel` (provider enum: claude/codex/gemini) + `judgeModelVersion` (CLI 응답에서 추출한 모델 문자열). 자세한 구현은 D14.
 
-**근거**: 사용자 2026-05-07 결정.
+**판단의 본질**:
+- CLI 기반은 SDK보다 latency 큼 (대화 프로토콜 + 인증 부담). `EvalEstimate.LIVE_SECONDS_PER_JUDGE_CALL` 상수는 첫 실측 후 재보정.
+- API key 환경 의존이 사라짐 — 사용자 셸에 인증된 CLI가 있으면 충분.
+- M1 후반 또는 별도 결정에서 SDK 옵션 부활 가능 (`USE_SDK=true` env override 등). m1-live-execution 단계에서는 CLI 1차만.
+
+**근거**: 사용자 2026-05-07 결정 (api 없음 → CLI). m1-live 라운드 1~5 합의 흡수.
 
 ## D13. 트리 스키마 라이브러리 — Zod
 
@@ -241,15 +246,21 @@ type SuggestedAction =
 `axis`는 D5/D6의 12개 축 id로 제한 (Zod enum). `evidence`는 다중 근거 배열.
 
 **모델 메타 분리** (m1-bootstrap 라운드 4 §2.5):
-- `judgeModel` (provider enum): `claude` / `codex` / `gemini` — D12 fallback chain.
-- `judgeModelVersion` (실제 호출 모델 문자열): `claude-sonnet-4-5-20250929` 등. 환경 변수 `ANTHROPIC_MODEL`로 override 가능, 기본값은 Sonnet 4.5. dry-run stub은 `'dry-run-stub'`.
-- 재현성 평가 시 fixture 안에서 `judgeModelVersion`이 바뀌면 `judgeStatus: 'mixed-model'` 마킹 후보 (검출 메커니즘은 m1-live 토픽에서 합의).
+- `judgeModel` (provider enum): `claude` / `codex` / `gemini` — D12 CLI fallback chain.
+- `judgeModelVersion` (실제 응답 모델 문자열): CLI 응답에서 추출 (`claude-sonnet-4-5-20250929` 등). dry-run stub은 `'dry-run-stub'`.
+
+**mixed-model 검출** (m1-live 라운드 4 §2):
+- `JudgeRun = { judgeModel, judgeModelVersion? }`.
+- `RepeatedJudgeResult.judgeRuns: JudgeRun[]` 누적 (각 호출별 provider/version).
+- `ReproducibilityCheck.judgeRuns?: JudgeRun[]` 재현성 결과에 첨부.
+- `hasMixedJudgeRuns(runs)`: provider 또는 version이 둘 이상이면 true.
+- 마킹 우선순위: `mixed-model` > variance `unstable`. 즉 한 fixture 안에서 모델 섞이면 unstable 여부와 무관하게 `judgeStatus: 'mixed-model'`.
 
 **재현성 누적** (m1-bootstrap 라운드 5 §1.2):
 - `EvalResult.reproducibility?: ReproducibilityCheck[]` — root level optional.
 - `callJudgeRepeated(input, repeat, options)` 호출 기준: `repeat<2` → representative만 / `repeat=2` → stable/unstable 판단만 / `repeat≥3` → ReproducibilityCheck 객체 누적.
 
-**근거**: dworks 라운드 4 §2.4 (Codex 분리 제안), 라운드 5 §1.4 (Claude 수용), m1-bootstrap 라운드 4 §2.5 (모델 메타 분리), 라운드 5 §1 (구현 흡수).
+**근거**: dworks 라운드 4 §2.4 (Codex 분리 제안), 라운드 5 §1.4 (Claude 수용), m1-bootstrap 라운드 4 §2.5 (모델 메타 분리), 라운드 5 §1 (구현 흡수), m1-live 라운드 4 (mixed-model 검출 구현), 라운드 5 (Claude 검토 OK).
 
 ## D15. 자율 협업 모드 — 카운터 없는 즉석 검사
 
@@ -305,3 +316,14 @@ Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. �
 | 4 | Codex | `docs/discussions/2026-05-07-m1-bootstrap-round-4-codex.md` | 합의 5건 결정 + 안전장치 #3 `>=5` 완화 + judgeModelVersion 분리 |
 | 5 | Claude | `docs/discussions/2026-05-07-m1-bootstrap-round-5-claude.md` | 분배 #5 구현 완료 (judgeModelVersion + reproducibility + repeat) |
 | 코드 #6 | Codex (`cd2d3cd`) | (라운드 노트 없이 코드 작업으로 안전장치 #1 회피) | EvalEstimate + AxisLowestDetail + report 보강 |
+
+### dworks 라운드 (m1-live 토픽)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| 1 | Claude | `docs/discussions/2026-05-07-m1-live-round-1-claude.md` | 토픽 시작, live 산출 단계화 설계, 합의 요청 6건 |
+| 2 | Codex | `docs/discussions/2026-05-07-m1-live-round-2-codex.md` | 합의 6건 결정 + 1단계 실행 지시 + Codex 키 부재 보고 |
+| 3 | Claude | `docs/discussions/2026-05-07-m1-live-round-3-claude.md` | 합의 OK 표명 + Claude 환경 키 부재 보고 |
+| 4 | Codex | `docs/discussions/2026-05-07-m1-live-round-4-codex.md` (`61adc26`) | mixed-model 검출 구현 (`JudgeRun`+`hasMixedJudgeRuns`+우선순위) |
+| 5 | Claude | `docs/discussions/2026-05-07-m1-live-round-5-claude.md` | Codex 코드 검토 OK + 흡수 후보 정리. 외부 의존성(API key)만 미해결 |
+| 사용자 결정 | (2026-05-07) | (커밋 메시지) | "api 없어. 모두 cli로 처리" → D12 CLI 전환 + 흡수 OK + 자율 진행 mandate |
