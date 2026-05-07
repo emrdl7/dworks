@@ -17,7 +17,15 @@ export {
 } from './schema.js'
 export type {
   EditKind,
+  Emphasis,
   ResponsiveIntent,
+  TextNode,
+  ButtonNode,
+  SectionNode,
+  HeroNode,
+  CardNode,
+  ListNode,
+  FormNode,
   TreeNode,
   TreeNodeType,
   Tree,
