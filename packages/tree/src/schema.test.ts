@@ -5,6 +5,8 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
+  CONTENT_ROLES,
+  LAYOUT_INTENTS,
   TREE_NODE_TYPES,
   treeNodeSchema,
   treeSchema,
@@ -80,5 +82,112 @@ describe('tree schema', () => {
     const parsed = treeSchema.parse(tree)
     assert.equal(parsed.version, '1')
     assert.equal(parsed.root.type, 'section')
+  })
+
+  it('keeps M0.5 fixtures backward compatible without semantic fields', () => {
+    const tree = {
+      version: '1',
+      root: {
+        id: 'legacy',
+        type: 'section',
+        editKind: 'structure',
+        children: [
+          {
+            id: 'legacy.title',
+            type: 'text',
+            editKind: 'text',
+            content: 'Legacy title',
+          },
+          {
+            id: 'legacy.cta',
+            type: 'button',
+            editKind: 'text',
+            label: 'Start',
+          },
+        ],
+      },
+    }
+
+    assert.doesNotThrow(() => treeSchema.parse(tree))
+  })
+
+  it('parses optional layoutIntent and contentRole semantic fields', () => {
+    const tree = {
+      version: '1',
+      root: {
+        id: 'landing',
+        type: 'section',
+        editKind: 'structure',
+        layoutIntent: 'split',
+        children: [
+          {
+            id: 'landing.title',
+            type: 'text',
+            editKind: 'text',
+            content: 'Designed page',
+            emphasis: 'heading-1',
+            contentRole: 'heading',
+          },
+          {
+            id: 'landing.cta',
+            type: 'button',
+            editKind: 'text',
+            label: 'Start',
+            contentRole: 'cta',
+          },
+        ],
+      },
+    }
+
+    const parsed = treeSchema.parse(tree)
+    assert.equal(parsed.root.type, 'section')
+    if (parsed.root.type === 'section') {
+      assert.equal(parsed.root.layoutIntent, 'split')
+      const title = parsed.root.children[0]
+      assert.equal(title?.type, 'text')
+      if (title?.type === 'text') {
+        assert.equal(title.contentRole, 'heading')
+      }
+    }
+  })
+
+  it('rejects invalid semantic enum values', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-layout',
+        type: 'section',
+        editKind: 'structure',
+        layoutIntent: 'masonry',
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-role',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad role',
+        contentRole: 'timestamp',
+      }),
+    )
+  })
+
+  it('exports stable semantic enum value lists', () => {
+    assert.deepEqual(LAYOUT_INTENTS, [
+      'stack',
+      'grid',
+      'inline',
+      'split',
+      'dashboard-grid',
+    ])
+    assert.deepEqual(CONTENT_ROLES, [
+      'heading',
+      'body',
+      'caption',
+      'cta',
+      'label',
+      'value',
+    ])
   })
 })

@@ -3,6 +3,8 @@
 
 export {
   editKindSchema,
+  layoutIntentSchema,
+  contentRoleSchema,
   responsiveIntentSchema,
   textNodeSchema,
   buttonNodeSchema,
@@ -14,10 +16,14 @@ export {
   treeNodeSchema,
   treeSchema,
   TREE_NODE_TYPES,
+  LAYOUT_INTENTS,
+  CONTENT_ROLES,
 } from './schema.js'
 export type {
   EditKind,
   Emphasis,
+  LayoutIntent,
+  ContentRole,
   ResponsiveIntent,
   TextNode,
   ButtonNode,

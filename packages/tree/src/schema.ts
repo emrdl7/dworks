@@ -28,6 +28,25 @@ export const emphasisSchema = z.enum([
 ])
 export type Emphasis = z.infer<typeof emphasisSchema>
 
+export const layoutIntentSchema = z.enum([
+  'stack',
+  'grid',
+  'inline',
+  'split',
+  'dashboard-grid',
+])
+export type LayoutIntent = z.infer<typeof layoutIntentSchema>
+
+export const contentRoleSchema = z.enum([
+  'heading',
+  'body',
+  'caption',
+  'cta',
+  'label',
+  'value',
+])
+export type ContentRole = z.infer<typeof contentRoleSchema>
+
 // ---- 명시적 타입 선언 (재귀 union의 안정 추론 위해 먼저 선언) ----
 
 interface BaseNodeMeta {
@@ -41,6 +60,7 @@ export interface TextNode extends BaseNodeMeta {
   type: 'text'
   content: string
   emphasis?: Emphasis
+  contentRole?: ContentRole
 }
 
 export interface ButtonNode extends BaseNodeMeta {
@@ -48,27 +68,32 @@ export interface ButtonNode extends BaseNodeMeta {
   label: string
   variant?: 'primary' | 'secondary' | 'ghost'
   href?: string
+  contentRole?: ContentRole
 }
 
 export interface SectionNode extends BaseNodeMeta {
   type: 'section'
   role?: string
+  layoutIntent?: LayoutIntent
   children: TreeNode[]
 }
 
 export interface HeroNode extends BaseNodeMeta {
   type: 'hero'
+  layoutIntent?: LayoutIntent
   children: TreeNode[]
 }
 
 export interface CardNode extends BaseNodeMeta {
   type: 'card'
+  layoutIntent?: LayoutIntent
   children: TreeNode[]
 }
 
 export interface ListNode extends BaseNodeMeta {
   type: 'list'
   variant?: 'ordered' | 'unordered' | 'description'
+  layoutIntent?: LayoutIntent
   children: TreeNode[]
 }
 
@@ -76,6 +101,7 @@ export interface FormNode extends BaseNodeMeta {
   type: 'form'
   action?: string
   method?: 'get' | 'post'
+  layoutIntent?: LayoutIntent
   children: TreeNode[]
 }
 
@@ -102,6 +128,7 @@ export const textNodeSchema: z.ZodType<TextNode> = z.object({
   type: z.literal('text'),
   content: z.string(),
   emphasis: emphasisSchema.optional(),
+  contentRole: contentRoleSchema.optional(),
 })
 
 export const buttonNodeSchema: z.ZodType<ButtonNode> = z.object({
@@ -110,6 +137,7 @@ export const buttonNodeSchema: z.ZodType<ButtonNode> = z.object({
   label: z.string(),
   variant: z.enum(['primary', 'secondary', 'ghost']).optional(),
   href: z.string().optional(),
+  contentRole: contentRoleSchema.optional(),
 })
 
 // 재귀 union을 위해 children 필드는 z.lazy로 후행 참조.
@@ -121,18 +149,21 @@ export const sectionNodeSchema: z.ZodType<SectionNode> = z.object({
   ...baseShape,
   type: z.literal('section'),
   role: z.string().optional(),
+  layoutIntent: layoutIntentSchema.optional(),
   children: childrenLazy,
 })
 
 export const heroNodeSchema: z.ZodType<HeroNode> = z.object({
   ...baseShape,
   type: z.literal('hero'),
+  layoutIntent: layoutIntentSchema.optional(),
   children: childrenLazy,
 })
 
 export const cardNodeSchema: z.ZodType<CardNode> = z.object({
   ...baseShape,
   type: z.literal('card'),
+  layoutIntent: layoutIntentSchema.optional(),
   children: childrenLazy,
 })
 
@@ -140,6 +171,7 @@ export const listNodeSchema: z.ZodType<ListNode> = z.object({
   ...baseShape,
   type: z.literal('list'),
   variant: z.enum(['ordered', 'unordered', 'description']).optional(),
+  layoutIntent: layoutIntentSchema.optional(),
   children: childrenLazy,
 })
 
@@ -148,6 +180,7 @@ export const formNodeSchema: z.ZodType<FormNode> = z.object({
   type: z.literal('form'),
   action: z.string().optional(),
   method: z.enum(['get', 'post']).optional(),
+  layoutIntent: layoutIntentSchema.optional(),
   children: childrenLazy,
 })
 
@@ -184,3 +217,20 @@ export const TREE_NODE_TYPES = [
   'form',
 ] as const
 export type TreeNodeType = (typeof TREE_NODE_TYPES)[number]
+
+export const LAYOUT_INTENTS = [
+  'stack',
+  'grid',
+  'inline',
+  'split',
+  'dashboard-grid',
+] as const
+
+export const CONTENT_ROLES = [
+  'heading',
+  'body',
+  'caption',
+  'cta',
+  'label',
+  'value',
+] as const
