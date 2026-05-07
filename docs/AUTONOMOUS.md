@@ -20,9 +20,10 @@
 - **M0** 프로젝트 부트스트랩 — 완료 (`507d47d` ~ `d263eef`)
 - **M0.5** Tree Foundation — 완료 (`87aab64` ~ `66f2473`)
 - **M1** P0 디자인 품질 eval — 진행 중
-  - Codex 완료: `apps/eval-runner` 생성, dry-run screenshot smoke, summary/report generator (`fdf3cc6`).
-  - Claude 현재 담당: unstable variance hooks.
-  - Codex 다음 담당: variance hooks 검토, 비용/시간 추정, 축별 최저점 리포트 보강.
+  - **M1.1 부트스트랩** — 완료 (`3e29537` ~ `cd2d3cd`, 흡수 `6d16c44`)
+  - **M1.2 live 점수 산출** — 진행 중 (`m1-live` 토픽)
+  - Claude 최근 담당: `m1-live` round 1 설계 (`a189023`)
+  - Codex 현재 담당: `m1-live` round 2 합의 응답. 현재 Codex 환경에는 `ANTHROPIC_API_KEY`가 없어 live 실행은 Claude 또는 사용자 환경 필요.
 
 M1 범위 안의 코드 변경은 사용자 사전 승인 범위로 본다.
 
