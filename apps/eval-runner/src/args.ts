@@ -14,7 +14,7 @@ export interface RunnerArgs {
 
 export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env): RunnerArgs {
   const args: RunnerArgs = {
-    dryRun: !env.ANTHROPIC_API_KEY,
+    dryRun: env.DWORKS_JUDGE_MODE !== 'live',
     noScreenshots: false,
     repeat: 1,
   }

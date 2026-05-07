@@ -77,12 +77,12 @@
 - TypeScript 5.6, ESLint 9
 - apps/web: Next.js 15 + React 19 + Tailwind v4
 - apps/api: Hono 4 + Drizzle 0.36 + PostgreSQL
-- LLM: Codex CLI (`codex exec --json --ephemeral`)
+- LLM: CLI fallback chain (`claude -p` → `codex exec --json --ephemeral` → `gemini -p`)
 - 테스트: tsx 기반 단위 테스트 (krds-studio 패턴)
 
 ### 신규 도입 (확정)
 
-- **vision LLM judge** — 1순위 Claude vision API → 2순위 Codex → 3순위 Gemini fallback (D12). 한 fixture 안에서 모델 섞이면 `judgeStatus: 'mixed-model'` 표기 (D14).
+- **vision LLM judge** — 1순위 Claude Code CLI → 2순위 Codex CLI → 3순위 Gemini CLI fallback (D12). 한 fixture 안에서 모델 섞이면 `judgeStatus: 'mixed-model'` 표기 (D14).
 - **Playwright** — viewport별 스크린샷. M0 부트스트랩에 패키지 설치, M0.5에서 첫 사용, M1부터 본격 활용. 정규 viewport: **440 / 768 / 1440**. 1280은 디버그/QA 보조 폭으로만 허용.
 - **Zod** — 트리 스키마 검증 + 흡수기 안전망 (D13). TypeScript-first 생태계와 LLM 친화도 우위로 결정.
 - **이미지 diff 도구** — pixelmatch 또는 odiff. M4 PoC의 디자인 보존 측정에 도입.
@@ -140,7 +140,7 @@ E Hybrid 제품 방향이 확정됐으므로 M2 편집 기능이 시작되기 �
 - `packages/screenshot` (Playwright viewport 440/768/1440)
 - `apps/eval-runner` (CLI + `summarizeResults` + `renderMarkdownReport` + `EvalEstimate`)
 - `callJudgeRepeated(input, repeat, options)` + `reproducibility[]` 누적 (D8)
-- `judgeModelVersion` 메타 + `ANTHROPIC_MODEL` env override
+- `judgeModelVersion` 메타 + CLI provider/version 기록
 - 안전장치 #3 `>=5`로 완화 (lockfile/빌드 산출물 제외)
 
 부트스트랩 검증: typecheck 13/13, test 6 패키지, smoke `--repeat=3` 통과.
@@ -158,7 +158,7 @@ vision judge는 **CLI fallback chain** (Claude Code CLI → Codex CLI → Gemini
 
 **1단계 4축**: `non-wireframe` / `first-viewport-richness` / `emotional-fit` / `editability` (placeholder 트리에서 측정 가능 신호 강한 축).
 
-**남은 4축**: `visual-variety` / `brand-reference-fidelity` / `responsive-design-intent-preservation` (placeholder 단계에선 약함 — M2 LLM 생성 트리에서 본격 검증).
+**남은 3축**: `visual-variety` / `brand-reference-fidelity` / `responsive-design-intent-preservation` (placeholder 단계에선 약함 — M2 LLM 생성 트리에서 본격 검증).
 
 **사람 grading 3 brief**: `public-landing-jdc` / `dashboard-customer-support` / `brand-campaign-startup` (공공/B2B/스타트업 대표성). 1단계 report 후 사용자에게 21건 평가 요청 → judge와 Pearson r 계측.
 
@@ -235,12 +235,12 @@ vision judge는 **CLI fallback chain** (Claude Code CLI → Codex CLI → Gemini
 
 ## 6. 다음 작업
 
-M0 / M0.5 / M1.1 부트스트랩 모두 완료. **다음은 M1.2 live 점수 산출** (m1-live 토픽).
+M0 / M0.5 / M1.1 부트스트랩 모두 완료. **다음은 M1.2 live 점수 산출** (m1-live-execution 토픽).
 
 1. ✓ M0 부트스트랩 (`507d47d`~`d263eef`)
 2. ✓ M0.5 Tree Foundation (`87aab64`~`66f2473`)
 3. ✓ M1.1 eval 부트스트랩 (m1-bootstrap 토픽 라운드 1~5, `3e29537`~`cd2d3cd`)
-4. **다음**: M1.2 live 점수 산출 — 12 brief × 7 axis × Claude vision judge, repeat=3 재현성, 사람 grading 3건, M4 PoC 트리거 충족
+4. **다음**: M1.2 live 점수 산출 — 1단계 12 brief × 4 axis × CLI vision judge, 이후 7축/재현성 단계 확장
 5. M4 PoC 시작 트리거: M1.2의 4축 이상 측정 완료
 6. M2는 M0.5 완료 후 시작 가능 (사용자 OK 후)
 
@@ -254,7 +254,7 @@ M0 / M0.5 / M1.1 부트스트랩 모두 완료. **다음은 M1.2 live 점수 산
 | PRD 한 줄 정의 | §0 본문대로 채택 (이름만 "Design Works" → "Dworks") |
 | krds-studio 처리 | 참조 용도, **적절한 시점에 삭제** |
 | 원격 git 저장소 | **`github.com/emrdl7/dworks` 퍼블릭** |
-| LLM 정책 | **1순위 Claude → 2순위 Codex (Claude 불능 시) → 3순위 Gemini (Codex 불능 시)**. vision judge 포함 모든 LLM 호출에 동일 적용. 자세한 내용은 `docs/DECISIONS.md` D12. |
+| LLM 정책 | **1순위 Claude Code CLI → 2순위 Codex CLI → 3순위 Gemini CLI**. SDK/API 호출 없이 로컬 인증 CLI를 사용한다. 자세한 내용은 `docs/DECISIONS.md` D12. |
 | 트리 스키마 라이브러리 | **Zod**. 근거: TypeScript-first 생태계 1위, Drizzle/Hono와 동일 패턴, discriminated union 지원, LLM이 가장 익숙. 자세한 내용은 `docs/DECISIONS.md` D13. |
 
 ---

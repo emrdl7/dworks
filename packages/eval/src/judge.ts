@@ -1,12 +1,15 @@
 // @dworks/eval — vision LLM judge 호출 추상.
-// DECISIONS D12 (LLM fallback chain: Claude → Codex → Gemini)
+// DECISIONS D12 (CLI fallback chain: Claude → Codex → Gemini)
 //                + D14 (JudgeStatus / SuggestedAction)
 //                + D8 (재현성 + 사람 grading 보정).
 //
-// M1 단계: 1순위 Anthropic SDK 구현 + 2/3순위 명시적 stub.
-// API 키는 환경 변수 ANTHROPIC_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY.
+// M1 단계: 로컬에 인증된 LLM CLI를 순서대로 spawn한다.
 
-import Anthropic from '@anthropic-ai/sdk'
+import { spawn } from 'node:child_process'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { z } from 'zod'
 
 import type { AxisRubric, ViewportLabel } from './axes.js'
@@ -31,6 +34,7 @@ export interface JudgeInput {
   screenshots: Array<{
     viewport: ViewportLabel
     base64Png: string
+    filePath?: string
   }>
   // brand/reference asset 메타 (1차는 placeholder, M1에서 실 자산 연동)
   brandAssets?: Array<{ kind: 'logo' | 'reference'; description: string }>
@@ -92,74 +96,55 @@ function buildUserPrompt(input: JudgeInput): string {
   return lines.join('\n')
 }
 
-// ---- 1순위: Claude (Anthropic SDK) ----
+// ---- CLI providers ----
 
-// 라운드 4 §2.5: 모델 버전은 ANTHROPIC_MODEL env로 override.
-// 기본값은 Sonnet 4.5; M1 후반에 Opus 4.7 옵션 검토.
-export const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-4-5-20250929'
+const JUDGE_TIMEOUT_MS = 30_000
 
-function resolveClaudeModel(): string {
-  return process.env.ANTHROPIC_MODEL ?? DEFAULT_CLAUDE_MODEL
+async function callClaude(input: JudgeInput, options: CallJudgeOptions): Promise<AxisScore> {
+  const output = await runCli('claude', ['-p', buildCliPrompt(input, 'claude')], options)
+  return parseCliScore(
+    output.stdout,
+    'claude',
+    process.env.DWORKS_CLAUDE_MODEL ?? 'claude-cli',
+  )
 }
 
-async function callClaude(input: JudgeInput): Promise<AxisScore> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
-
-  const client = new Anthropic({ apiKey })
-  const userContent: Anthropic.Messages.ContentBlockParam[] = []
-
-  // 이미지 먼저 (vision judge), 그 다음 텍스트 prompt.
-  for (const shot of input.screenshots) {
-    userContent.push({
-      type: 'image',
-      source: {
-        type: 'base64',
-        media_type: 'image/png',
-        data: shot.base64Png,
-      },
-    })
-    userContent.push({
-      type: 'text',
-      text: `위 이미지: viewport=${shot.viewport}.`,
-    })
-  }
-  userContent.push({ type: 'text', text: buildUserPrompt(input) })
-
-  const model = resolveClaudeModel()
-  const response = await client.messages.create({
-    model,
-    max_tokens: 1024,
-    system: buildSystemPrompt(),
-    messages: [{ role: 'user', content: userContent }],
-  })
-
-  const textBlock = response.content.find((b) => b.type === 'text')
-  if (!textBlock || textBlock.type !== 'text') {
-    throw new Error('Claude judge: no text content')
-  }
-  const parsed = parseJudgeResponse(textBlock.text)
-  return {
-    axis: parsed.axis,
-    score: parsed.score,
-    reason: parsed.reason,
-    evidence: parsed.evidence,
-    judgeStatus: 'ok',
-    suggestedAction: parsed.suggestedAction,
-    judgeModel: 'claude',
-    judgeModelVersion: model,
+async function callCodex(input: JudgeInput, options: CallJudgeOptions): Promise<AxisScore> {
+  const tempDir = await mkdtemp(join(tmpdir(), 'dworks-codex-judge-'))
+  const outputPath = join(tempDir, 'last-message.txt')
+  const workspaceRoot = options.workspaceRoot ?? process.cwd()
+  try {
+    const args = [
+      'exec',
+      '--json',
+      '--ephemeral',
+      '--sandbox',
+      'read-only',
+      '--cd',
+      workspaceRoot,
+      '-o',
+      outputPath,
+    ]
+    const model = process.env.DWORKS_CODEX_MODEL
+    if (model) args.push('--model', model)
+    for (const imagePath of getScreenshotFilePaths(input)) {
+      args.push('--image', imagePath)
+    }
+    args.push(buildCliPrompt(input, 'codex'))
+    await runCli('codex', args, options)
+    const output = await readFile(outputPath, 'utf8')
+    return parseCliScore(output, 'codex', model ?? 'codex-cli')
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
   }
 }
 
-// ---- 2/3순위 stub ----
-
-async function callCodex(_input: JudgeInput): Promise<AxisScore> {
-  // M1 1차 미구현. D12 fallback chain의 자리 표시.
-  throw new Error('codex judge not yet implemented (M1 후반 또는 사용자 요청 시)')
-}
-
-async function callGemini(_input: JudgeInput): Promise<AxisScore> {
-  throw new Error('gemini judge not yet implemented (M1 후반 또는 사용자 요청 시)')
+async function callGemini(input: JudgeInput, options: CallJudgeOptions): Promise<AxisScore> {
+  const args = ['-p', buildCliPrompt(input, 'gemini'), '--output-format', 'text', '--skip-trust']
+  const model = process.env.DWORKS_GEMINI_MODEL
+  if (model) args.unshift('--model', model)
+  const output = await runCli('gemini', args, options)
+  return parseCliScore(output.stdout, 'gemini', model ?? 'gemini-cli')
 }
 
 // ---- fallback chain ----
@@ -170,6 +155,7 @@ export interface CallJudgeOptions {
   // dry-run 모드: 실제 LLM 호출 대신 결정론적 stub 응답.
   // 1차 파이프라인 검증/CI 용. 실제 점수가 아님.
   dryRun?: boolean
+  workspaceRoot?: string
 }
 
 export async function callJudge(
@@ -184,15 +170,15 @@ export async function callJudge(
     try {
       switch (model) {
         case 'claude':
-          return await callClaude(input)
+          return await callClaude(input, options)
         case 'codex':
-          return await callCodex(input)
+          return await callCodex(input, options)
         case 'gemini':
-          return await callGemini(input)
+          return await callGemini(input, options)
       }
     } catch (err) {
       lastError = err
-      // 정책 D12: "불능" 판정 후 다음 모델로. 단 명시적 모델 미구현 stub은 skip이지 fail이 아니다.
+      // 정책 D12: CLI 불능 판정 후 다음 provider로 fallback.
       continue
     }
   }
@@ -220,7 +206,7 @@ function stubJudge(input: JudgeInput): AxisScore {
     evidence: [
       `brief: ${input.briefId}`,
       `axis: ${input.axis.id}`,
-      'NOTE: 실제 LLM 호출 아님 — ANTHROPIC_API_KEY 설정 후 dryRun=false 로 재실행',
+      'NOTE: 실제 LLM 호출 아님 — --live 또는 DWORKS_JUDGE_MODE=live 로 재실행',
     ],
     judgeStatus: 'ok',
     suggestedAction:
@@ -240,6 +226,103 @@ function hashStr(s: string): number {
   return Math.abs(h)
 }
 
+function buildCliPrompt(input: JudgeInput, provider: JudgeModel): string {
+  const imagePaths = getScreenshotFilePaths(input)
+  const imageSection =
+    imagePaths.length > 0
+      ? [
+          '## 스크린샷 파일',
+          ...input.screenshots.map(
+            (shot) => `- ${shot.viewport}: ${shot.filePath ?? '(attached image)'}`,
+          ),
+          provider === 'codex'
+            ? 'Codex CLI에는 위 파일들이 --image로 첨부되어 있다.'
+            : '위 경로의 이미지를 열어 시각적으로 평가한다.',
+        ].join('\n')
+      : '## 스크린샷 파일\n첨부된 스크린샷 없음. 가능한 근거만으로 평가하되 evidence에 한계를 명시한다.'
+
+  return [
+    buildSystemPrompt(),
+    '',
+    imageSection,
+    '',
+    buildUserPrompt(input),
+  ].join('\n')
+}
+
+function getScreenshotFilePaths(input: JudgeInput): string[] {
+  return input.screenshots
+    .map((shot) => shot.filePath)
+    .filter((filePath): filePath is string => Boolean(filePath))
+}
+
+function parseCliScore(
+  text: string,
+  judgeModel: JudgeModel,
+  judgeModelVersion: string,
+): AxisScore {
+  const parsed = parseJudgeResponse(text)
+  return {
+    axis: parsed.axis,
+    score: parsed.score,
+    reason: parsed.reason,
+    evidence: parsed.evidence,
+    judgeStatus: 'ok',
+    suggestedAction: parsed.suggestedAction,
+    judgeModel,
+    judgeModelVersion,
+  }
+}
+
+interface CliOutput {
+  stdout: string
+  stderr: string
+}
+
+function runCli(
+  command: string,
+  args: string[],
+  options: CallJudgeOptions = {},
+): Promise<CliOutput> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: options.workspaceRoot,
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    const stdout: Buffer[] = []
+    const stderr: Buffer[] = []
+    let settled = false
+    let timer: NodeJS.Timeout
+
+    const finish = (error: Error | null, output?: CliOutput): void => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      if (error) reject(error)
+      else resolve(output ?? { stdout: '', stderr: '' })
+    }
+
+    timer = setTimeout(() => {
+      child.kill('SIGTERM')
+      finish(new Error(`${command} judge timed out after ${JUDGE_TIMEOUT_MS}ms`))
+    }, JUDGE_TIMEOUT_MS)
+
+    child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk))
+    child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk))
+    child.on('error', (error) => finish(error))
+    child.on('close', (code) => {
+      const out = Buffer.concat(stdout).toString('utf8')
+      const err = Buffer.concat(stderr).toString('utf8')
+      if (code !== 0) {
+        finish(new Error(`${command} judge exited with ${code}: ${err || out}`))
+        return
+      }
+      finish(null, { stdout: out, stderr: err })
+    })
+  })
+}
+
 // ---- LLM 응답 파싱 ----
 
 function parseJudgeResponse(text: string): {
@@ -249,14 +332,23 @@ function parseJudgeResponse(text: string): {
   evidence: string[]
   suggestedAction: ReturnType<typeof suggestedActionSchema.parse>
 } {
-  // ```json 블록 또는 raw JSON.
-  const cleaned = text
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim()
+  // ```json 블록, raw JSON, 또는 CLI가 앞뒤 설명을 붙인 출력에서 JSON만 추출.
+  const cleaned = extractJsonPayload(text)
   const json = JSON.parse(cleaned)
   return judgeResponseSchema.parse(json)
+}
+
+function extractJsonPayload(text: string): string {
+  const trimmed = text.trim()
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i)
+  if (fenceMatch?.[1]) return fenceMatch[1].trim()
+
+  const firstBrace = trimmed.indexOf('{')
+  const lastBrace = trimmed.lastIndexOf('}')
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return trimmed.slice(firstBrace, lastBrace + 1)
+  }
+  return trimmed
 }
 
 // ---- 재현성 체크 (D8) ----

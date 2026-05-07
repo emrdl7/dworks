@@ -4,13 +4,13 @@ import assert from 'node:assert/strict'
 import { parseArgs } from './args.js'
 
 describe('parseArgs', () => {
-  it('defaults to dry-run without ANTHROPIC_API_KEY', () => {
+  it('defaults to dry-run without explicit live mode', () => {
     const args = parseArgs([], {})
     assert.equal(args.dryRun, true)
   })
 
-  it('uses live mode when API key exists', () => {
-    const args = parseArgs([], { ANTHROPIC_API_KEY: 'x' })
+  it('uses live mode when DWORKS_JUDGE_MODE=live', () => {
+    const args = parseArgs([], { DWORKS_JUDGE_MODE: 'live' })
     assert.equal(args.dryRun, false)
   })
 

@@ -1,5 +1,5 @@
 // @dworks/eval 단위 테스트 — schema/axes/variance.
-// LLM 호출 자체는 API key가 필요해 별도 통합 테스트로 분리.
+// LLM CLI 호출 자체는 로컬 인증 상태가 필요해 별도 통합 테스트로 분리.
 
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'

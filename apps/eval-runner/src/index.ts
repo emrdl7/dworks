@@ -36,8 +36,8 @@ async function main(): Promise<void> {
 
   console.log(`[eval-runner] runId=${runId}`)
   console.log(`[eval-runner] mode=${mode}`)
-  if (args.dryRun && !process.env.ANTHROPIC_API_KEY) {
-    console.log('[eval-runner] ANTHROPIC_API_KEY is missing; dry-run stub judge is active')
+  if (args.dryRun) {
+    console.log('[eval-runner] dry-run stub judge is active; pass --live or DWORKS_JUDGE_MODE=live for CLI judge')
   }
 
   const allBriefs = await loadBriefs(DEFAULT_BRIEFS_DIR)
@@ -112,6 +112,7 @@ async function runBrief(input: RunBriefInput): Promise<EvalResult> {
       .map((capture) => ({
         viewport: capture.viewport,
         base64Png: capture.base64Png,
+        ...(capture.filePath ? { filePath: capture.filePath } : {}),
       }))
     const repeated = await callJudgeRepeated(
       {
@@ -121,7 +122,7 @@ async function runBrief(input: RunBriefInput): Promise<EvalResult> {
         screenshots,
       },
       repeat,
-      { dryRun },
+      { dryRun, workspaceRoot: ROOT },
     )
     axisScores.push(repeated.representative)
     if (repeated.reproducibility) {
