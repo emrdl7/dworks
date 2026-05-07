@@ -152,7 +152,7 @@ vision judge는 **CLI fallback chain** (Claude Code CLI → Codex CLI → Gemini
 
 **단계화** (m1-live 라운드 2 §1.1 합의):
 - **1단계** ✓ — 4축 × 12 brief × repeat=1 = **48 calls** (M4 PoC 트리거 충족 최소). judgeStatus ok 48/48, unstable/failed/mixed 0. 평균 non-wireframe 0.00 / first-viewport-richness 0.42 / emotional-fit 0.33 / editability 0.75 (baseline, D16 해석 적용).
-- **2단계** — 7축 × 12 brief × repeat=1 = **84 calls** (전체 축 측정). 토픽: `m1-live-7axis`.
+- **2단계** ✓ — 7축 × 12 brief × repeat=1 = **84 calls** (전체 축 측정). judgeStatus ok 84/84, unstable/failed/mixed 0. 추가 3축 평균: visual-variety 0.00 / brand-reference-fidelity 0.17 / responsive-design-intent-preservation 0.08 (D16 baseline). 토픽: `m1-live-7axis` 라운드 1~5 (`0fab116`~본 흡수).
 - **3단계** — 7축 × 12 brief × repeat=3 = **252 calls** (재현성 분산 측정). 토픽: `m1-live-reproducibility`.
 
 각 단계 후 `summary.json` + `report.md` 검토 → 다음 단계 진행.

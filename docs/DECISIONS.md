@@ -296,7 +296,10 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 **적용 범위**:
 - `apps/eval-runner` summary.json / report.md의 평균 점수는 baseline 값으로 기록.
 - 사용자 노출 보고서 (M3 고도화 결과 + M5 익스포트 검증)는 baseline 대비 Δ 형태로 표기.
-- M1.2 baseline (m1-live-execution 1단계, 2026-05-07 산출): 12 brief × 4 axis × repeat=1 = 48 calls / judgeStatus ok 48/48 / non-wireframe 0.00 / first-viewport-richness 0.42 / emotional-fit 0.33 / editability 0.75 / suggestedAction 분포 export-blocking 37 + design-polish-needed 11.
+- M1.2 baseline (2026-05-07 산출, m1-live-execution 1단계 + m1-live-7axis 2단계 통합):
+  - **1단계**: 4 axis × 12 brief = 48 calls / judgeStatus ok 48/48 / non-wireframe 0.00 / first-viewport-richness 0.42 / emotional-fit 0.33 / editability 0.75 / suggestedAction 분포 export-blocking 37 + design-polish-needed 11
+  - **2단계**: 7 axis × 12 brief = 84 calls / judgeStatus ok 84/84 / 추가 3축 평균: visual-variety 0.00 / brand-reference-fidelity 0.17 / responsive-design-intent-preservation 0.08
+  - 통합 baseline은 M2/M4 이후 Δ 비교 기준값. 7축 모두 placeholder tree 한계의 계측값.
 
 **근거**: m1-live-execution 라운드 4 §2~§3 (Codex 48 calls baseline 보고 + 점수 신호 해석), 라운드 5 §2.4 (Claude D16 신설 제안), 사용자 결정 (2026-05-07 "병행해" — 흡수 + 4 토픽 mandate).
 
@@ -355,3 +358,14 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | 4 | Codex | `docs/discussions/2026-05-07-m1-live-execution-round-4-codex.md` (`2db3b15`) | 12 brief × 4 axis = 48 calls baseline 통과 + 흡수 후보 |
 | 5 | Claude | `docs/discussions/2026-05-07-m1-live-execution-round-5-claude.md` (`f03df7c`) | 흡수 후보 정리 + D16 신설 제안 + 미해결 0건 |
 | 사용자 결정 | (2026-05-07) | (커밋 메시지) | "병행해" → 4건 흡수 (PLAN/AUTONOMOUS/COLLABORATION/D16) + 4 토픽 mandate (a 7축 + b repeat=3 + c M2 + d M4) |
+
+### dworks 라운드 (m1-live-7axis 토픽)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| 1 | Claude | `docs/discussions/2026-05-07-m1-live-7axis-round-1-claude.md` (`0fab116`) | 84 calls 범위 + 4 합의 요청 |
+| 2 | Codex | `docs/discussions/2026-05-07-m1-live-7axis-round-2-codex.md` (`7d42480`) | 합의 OK + responsive 점수 정정 + Claude 단독 실행 권장 |
+| 3 | Claude | `docs/discussions/2026-05-07-m1-live-7axis-round-3-claude.md` (`860bcf4`) | 84 calls 실측 보고 (judgeStatus ok 84/84) + Codex 예측 cross-check + 흡수 후보 |
+| 4 | Codex | `docs/discussions/2026-05-07-m1-live-7axis-round-4-codex.md` (`2c881d9`) | 검산 일치 + 흡수 동의 + summary.json statusCounts 후속 권장 |
+| 5 | Claude | `docs/discussions/2026-05-07-m1-live-7axis-round-5-claude.md` (`a11e5d0`) | 흡수 후보 최종 + statusCounts 후속 토픽 분리 |
+| 사용자 결정 | (2026-05-07) | (커밋 메시지) | "흡수 ok" → 본 흡수 commit |

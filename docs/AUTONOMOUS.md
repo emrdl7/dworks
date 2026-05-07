@@ -23,7 +23,7 @@
   - **M1.1 부트스트랩** — 완료 (`3e29537` ~ `cd2d3cd`, 흡수 `6d16c44`)
   - **M1.2 1단계 live baseline** — 완료 (`m1-live-execution` 토픽 라운드 1~5, `997cec0`~`f03df7c`, 흡수 사용자 OK 2026-05-07)
 - **사용자 2026-05-07 "병행해" mandate** — 다음 4 토픽 병행 진행 (자율 모드 범위 확장):
-  - **(a) `m1-live-7axis`** — M1.2 2단계 7축 확장 (12 brief × 7 axis = 84 calls)
+  - **(a) `m1-live-7axis`** ✓ 완료 (라운드 1~5, `0fab116`~`a11e5d0` + 흡수 commit, 2026-05-07)
   - **(b) `m1-live-reproducibility`** — M1.2 3단계 repeat=3 재현성 (12 brief × 7 axis × 3 = 252 calls, D8 variance threshold 검증)
   - **(c) `m2-bootstrap`** — M2 (P0.5) 편집 기능 + 측정. placeholder → LLM 생성 트리.
   - **(d) `m4-bootstrap`** — M4 (P2) HTML→트리 흡수 PoC. M1.2 4축 측정 완료 트리거 충족.
