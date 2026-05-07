@@ -38,6 +38,7 @@ Claude 또는 Codex가 작업 → 커밋
 - **언어**: 한국어, 명령형 (krds-studio 컨벤션 유지).
 - **작성자 표기**: footer에 `[Claude]` 또는 `[Codex]` 명시. 사용자 직접 커밋은 표기 없음.
 - **타입 prefix**: `docs:`, `feat:`, `fix:`, `refactor:`, `chore:` (기존 컨벤션 유지).
+- **흡수 marker**: 메인 문서(`PLAN.md` / `DECISIONS.md` / `COLLABORATION.md` / `AUTONOMOUS.md`)에 의논 라운드 합의를 일괄 반영하는 커밋의 footer에 `[ABSORB]`를 추가한다. §11.6 #3 안전장치 reset의 기준점이 된다.
 
 예시:
 
@@ -128,7 +129,7 @@ dworks plan 라운드 매핑 (확정):
 
 | 라운드 | 작성자 | 파일 |
 |--------|--------|------|
-| 1 | Claude | (1차 안 커밋 4건, `74be743`/`ddf1616`/`b449f3d`/`30d4697`) |
+| 1 | Claude | 별도 노트 없음 — 1차 안 커밋 4건: `74be743`/`ddf1616`/`b449f3d`/`30d4697` |
 | 2 | Codex | `docs/discussions/2026-05-07-plan-round-2-codex.md` |
 | 3 | Claude | `docs/discussions/2026-05-07-plan-round-3-claude.md` |
 | 4 | Codex | `docs/discussions/2026-05-07-plan-round-4-codex.md` |
@@ -259,9 +260,9 @@ Codex CLI가 동등한 파일 watch + 자동 응답 메커니즘을 지원해야
 
 | # | 트리거 | 즉석 검사 명령 | 행동 |
 |---|--------|-----------------|------|
-| 1 | 한 토픽에서 라운드 6 초과 | `ls docs/discussions/<topic>-round-*-*.md \| wc -l` ≥ 6 | 자율 모드 즉시 정지 + `docs/discussions/ALERT-<date>.md` 작성 |
+| 1 | 한 토픽에서 라운드 6 도달 (`≥ 6`) | `ls docs/discussions/<topic>-round-*-*.md \| wc -l` ≥ 6 | 자율 모드 즉시 정지 + `docs/discussions/ALERT-<date>.md` 작성 |
 | 2 | 동일 미해결 항목 2 라운드 연속 등장 | 직전 두 라운드 노트의 미해결 섹션 비교 (에이전트 문맥 판단) | 자율 모드 즉시 정지 + ALERT |
-| 3 | 한 작업자가 1시간 안에 같은 파일 3회 이상 수정 | `git log --since='1 hour ago' --name-only --pretty=format: \| sort \| uniq -c \| sort -rn` 에서 ≥3 발견 | 자율 모드 즉시 정지 + ALERT |
+| 3 | 한 작업자가 1시간 안에 같은 파일 3회 이상 수정 (단 가장 최근의 흡수 커밋 이후만 카운트) | `SINCE=$(git log --grep='\[ABSORB\]' -n1 --pretty=%ct \|\| true); FROM_TS=$(($(date +%s)-3600)); CUTOFF=$((SINCE > FROM_TS ? SINCE : FROM_TS)); git log --since="@$CUTOFF" --name-only --pretty=format: \| sort \| uniq -c \| sort -rn`에서 ≥3 발견 | 자율 모드 즉시 정지 + ALERT |
 | 4 | `git pull --ff-only` 실패 (non-FF 충돌) | 라운드 시작 시 `git pull --ff-only` 결과 | 자율 모드 즉시 정지 + ALERT. **rebase/merge 자동 시도 금지** |
 | 5 | 코드 변경이 발생하는 라운드 | 응답 라운드 중 docs 외 파일 수정 시도 시 | 자율 모드 자동 정지 (코드 변경은 항상 사용자 OK 후 수동 가동) |
 

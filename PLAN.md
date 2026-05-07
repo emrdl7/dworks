@@ -241,4 +241,6 @@ E Hybrid 제품 방향이 확정됐으므로 M2 편집 기능이 시작되기 �
 - `~/krds-studio/docs/01-PRD.md` ~ `09-EDITOR-UX-PLAN.md` — 자산 검토 시 참조
 - `~/krds-studio/seeds/evals/briefs/` — P0 표준 fixture (M0에서 dworks로 이전)
 - `~/krds-studio/references/` — Codex 시스템 프롬프트 베이스, emotional design 자료 (M0에서 이전)
-- `docs/discussions/2026-05-07-plan-round-1-claude.md` ~ `round-5-claude.md` — dworks 라운드 1~5 의논 history
+- dworks 라운드 1: 1차 안 커밋 4건 (`74be743` / `ddf1616` / `b449f3d` / `30d4697`). 별도 노트 없음.
+- `docs/discussions/2026-05-07-plan-round-{2..5}-*.md` — dworks 라운드 2~5 의논 history.
+- `docs/discussions/ALERT-2026-05-07.md` — 흡수 직후 안전장치 #3 발동 정지 기록.

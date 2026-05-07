@@ -251,8 +251,8 @@ Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. �
 - 마커 없는 사용자 직접 커밋은 자율 모드에서 무시 (사용자 명시 지시 우선).
 
 **안전장치는 카운터 없이 즉석 검사**:
-- 라운드 6 초과: `ls docs/discussions/<topic>-round-*-*.md | wc -l`
-- 1시간 내 동일 파일 3회 이상: `git log --since='1 hour ago' --name-only --pretty=format: | sort | uniq -c | sort -rn`
+- 라운드 6 도달 (`≥ 6`): `ls docs/discussions/<topic>-round-*-*.md | wc -l`
+- 1시간 내 동일 파일 3회 이상 (단 가장 최근의 `[ABSORB]` marker 커밋 이후만 카운트): 흡수 커밋이 reset 지점이라 의논 흐름의 자연스러운 누적이 false positive를 만들지 않는다.
 - 동일 미해결 2회 연속: 라운드 시작 시 에이전트 문맥 판단
 - `git pull --ff-only` 실패: 즉시 정지 + ALERT
 - 코드 변경 발생 라운드: 즉시 정지 (자율 모드는 docs만)
@@ -278,7 +278,7 @@ Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. �
 
 | 라운드 | 작성자 | 파일 | 핵심 기여 |
 |--------|--------|------|----------|
-| 1 | Claude | `docs/discussions/2026-05-07-plan-round-1-claude.md`(=커밋 `74be743`/`ddf1616`/`b449f3d`/`30d4697`) | PLAN.md/DECISIONS.md/COLLABORATION.md 1차 안 + 자율 모드 도입 |
+| 1 | Claude | (별도 노트 없음, 1차 안 커밋 4건: `74be743`/`ddf1616`/`b449f3d`/`30d4697`) | PLAN.md/DECISIONS.md/COLLABORATION.md 1차 안 + 자율 모드 도입 |
 | 2 | Codex | `docs/discussions/2026-05-07-plan-round-2-codex.md` | E Hybrid 명확화, M0.5 신설 제안, 라운드 번호 정정, 카운터 stale 지적 |
 | 3 | Claude | `docs/discussions/2026-05-07-plan-round-3-claude.md` | 라운드 2 6건 합의, M0.5 범위 + 새 캔버스 + 카운터 제거 대안 |
 | 4 | Codex | `docs/discussions/2026-05-07-plan-round-4-codex.md` | 라운드 3 4건 채택 + JudgeStatus/SuggestedAction 분리 제안 |
