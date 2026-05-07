@@ -60,8 +60,7 @@ async function main(): Promise<void> {
     )
   }
 
-  const summary = summarizeResults(results)
-  summary.mode = mode
+  const summary = summarizeResults(results, { mode, repeat: args.repeat })
   summary.axes = axes.length
   summary.briefs = briefs.length
 
@@ -71,6 +70,9 @@ async function main(): Promise<void> {
 
   console.log('\n=== Summary ===')
   console.log(`artifacts: ${runDir}`)
+  console.log(
+    `judge calls=${summary.estimate.judgeCalls}, estimate=${summary.estimate.estimatedSeconds}s / $${summary.estimate.estimatedCostUsd.toFixed(4)}`,
+  )
   for (const [axis, item] of Object.entries(summary.perAxis)) {
     if (!item) continue
     console.log(`  ${axis.padEnd(45)} mean=${item.mean.toFixed(2)} min=${item.min} (${item.minBriefId})`)

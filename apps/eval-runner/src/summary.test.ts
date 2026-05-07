@@ -50,6 +50,7 @@ describe('eval summary', () => {
     assert.equal(summary.axes, 2)
     assert.equal(summary.perAxis['non-wireframe']?.mean, 2.5)
     assert.equal(summary.perAxis['emotional-fit']?.minBriefId, 'brief-b')
+    assert.equal(summary.perAxis['emotional-fit']?.lowest.reason, 'fit')
     assert.equal(summary.perBrief['brief-a']?.mean, 3)
     assert.equal(summary.perBrief['brief-b']?.minAxis, 'emotional-fit')
   })
@@ -57,9 +58,19 @@ describe('eval summary', () => {
   it('renders markdown report', () => {
     const report = renderMarkdownReport(summarizeResults([resultA, resultB]))
     assert.match(report, /^# Dworks Eval Report/)
+    assert.match(report, /Run Estimate/)
     assert.match(report, /Axis Summary/)
+    assert.match(report, /Axis Lowest Details/)
     assert.match(report, /brief-b/)
     assert.match(report, /unstable axes:/)
+  })
+
+  it('estimates judge calls, time, and cost', () => {
+    const summary = summarizeResults([resultA, resultB], { mode: 'live', repeat: 3 })
+    assert.equal(summary.estimate.judgeCalls, 12)
+    assert.equal(summary.estimate.repeat, 3)
+    assert.equal(summary.estimate.estimatedSeconds, 144)
+    assert.equal(summary.estimate.estimatedCostUsd, 0.18)
   })
 
   it('counts unstable axes at root and perAxis', () => {
