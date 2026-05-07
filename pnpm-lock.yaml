@@ -127,6 +127,25 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
+  packages/edit-eval:
+    dependencies:
+      '@dworks/eval':
+        specifier: workspace:*
+        version: link:../eval
+      '@dworks/tree-editor':
+        specifier: workspace:*
+        version: link:../tree-editor
+      zod:
+        specifier: ^4.0.0
+        version: 4.4.3
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
   packages/eval:
     dependencies:
       '@dworks/tree':
