@@ -12,6 +12,7 @@ export interface RunnerArgs {
   repeat: number
   // live judge primary 실패 시 codex/gemini fallback 없이 즉시 실패.
   failOnFallback: boolean
+  judgeTimeoutMs?: number
 }
 
 export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env): RunnerArgs {
@@ -43,6 +44,11 @@ export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env):
       args.outDir = raw.slice('--out='.length).trim()
     } else if (raw.startsWith('--repeat=')) {
       args.repeat = parseRepeat(raw.slice('--repeat='.length))
+    } else if (raw.startsWith('--judge-timeout-ms=')) {
+      args.judgeTimeoutMs = parsePositiveInteger(
+        raw.slice('--judge-timeout-ms='.length),
+        '--judge-timeout-ms',
+      )
     } else {
       throw new Error(`unknown argument: ${raw}`)
     }
@@ -52,9 +58,13 @@ export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env):
 }
 
 function parseRepeat(value: string): number {
+  return parsePositiveInteger(value, '--repeat')
+}
+
+function parsePositiveInteger(value: string, flagName: string): number {
   const n = Number(value)
   if (!Number.isInteger(n) || n < 1) {
-    throw new Error(`--repeat must be integer >= 1, got: ${value}`)
+    throw new Error(`${flagName} must be integer >= 1, got: ${value}`)
   }
   return n
 }

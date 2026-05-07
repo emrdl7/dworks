@@ -99,7 +99,8 @@ function buildUserPrompt(input: JudgeInput): string {
 
 // ---- CLI providers ----
 
-const JUDGE_TIMEOUT_MS = 30_000
+const JUDGE_TIMEOUT_MS_DEFAULT = 30_000
+const JUDGE_TIMEOUT_ENV = 'DWORKS_JUDGE_TIMEOUT_MS'
 
 async function callClaude(input: JudgeInput, options: CallJudgeOptions): Promise<AxisScore> {
   const workspaceRoot = options.workspaceRoot ?? process.cwd()
@@ -173,6 +174,31 @@ export interface CallJudgeOptions {
   workspaceRoot?: string
   // D8 재현성 측정용: primary judge 실패 시 다른 provider로 넘어가지 않고 run을 중단.
   failOnFallback?: boolean
+  judgeTimeoutMs?: number
+}
+
+export function resolveJudgeTimeoutMs(
+  options: Pick<CallJudgeOptions, 'judgeTimeoutMs'> = {},
+  env: Partial<Record<typeof JUDGE_TIMEOUT_ENV, string | undefined>> = process.env,
+): number {
+  if (options.judgeTimeoutMs !== undefined) {
+    return parseJudgeTimeoutMs(String(options.judgeTimeoutMs), 'CallJudgeOptions.judgeTimeoutMs')
+  }
+
+  const envValue = env[JUDGE_TIMEOUT_ENV]
+  if (envValue !== undefined && envValue.trim() !== '') {
+    return parseJudgeTimeoutMs(envValue, JUDGE_TIMEOUT_ENV)
+  }
+
+  return JUDGE_TIMEOUT_MS_DEFAULT
+}
+
+function parseJudgeTimeoutMs(value: string, source: string): number {
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`${source} must be integer >= 1, got: ${value}`)
+  }
+  return n
 }
 
 export async function callJudge(
@@ -351,6 +377,7 @@ function runCli(
   options: CallJudgeOptions = {},
 ): Promise<CliOutput> {
   return new Promise((resolve, reject) => {
+    const timeoutMs = resolveJudgeTimeoutMs(options)
     const child = spawn(command, args, {
       cwd: options.workspaceRoot,
       detached: true,
@@ -372,8 +399,8 @@ function runCli(
 
     timer = setTimeout(() => {
       killProcessGroup(child.pid)
-      finish(new Error(`${command} judge timed out after ${JUDGE_TIMEOUT_MS}ms`))
-    }, JUDGE_TIMEOUT_MS)
+      finish(new Error(`${command} judge timed out after ${timeoutMs}ms`))
+    }, timeoutMs)
 
     child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk))
     child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk))

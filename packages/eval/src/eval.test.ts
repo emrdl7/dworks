@@ -14,6 +14,7 @@ import {
   getAxisRubric,
   hasMixedJudgeRuns,
   listAxes,
+  resolveJudgeTimeoutMs,
 } from './index.js'
 
 describe('eval types & schema', () => {
@@ -158,5 +159,30 @@ describe('reproducibility variance', () => {
       repeated.reproducibility?.judgeRuns?.map((run) => run.judgeModelVersion),
       ['dry-run-stub', 'dry-run-stub', 'dry-run-stub'],
     )
+  })
+})
+
+describe('judge timeout config', () => {
+  it('defaults to 30 seconds', () => {
+    assert.equal(resolveJudgeTimeoutMs({}, {}), 30000)
+  })
+
+  it('prefers explicit option over env', () => {
+    assert.equal(
+      resolveJudgeTimeoutMs(
+        { judgeTimeoutMs: 60000 },
+        { DWORKS_JUDGE_TIMEOUT_MS: '45000' },
+      ),
+      60000,
+    )
+  })
+
+  it('uses DWORKS_JUDGE_TIMEOUT_MS env when option is absent', () => {
+    assert.equal(resolveJudgeTimeoutMs({}, { DWORKS_JUDGE_TIMEOUT_MS: '45000' }), 45000)
+  })
+
+  it('rejects invalid timeout values', () => {
+    assert.throws(() => resolveJudgeTimeoutMs({ judgeTimeoutMs: 0 }, {}))
+    assert.throws(() => resolveJudgeTimeoutMs({}, { DWORKS_JUDGE_TIMEOUT_MS: 'abc' }))
   })
 })

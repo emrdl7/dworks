@@ -42,6 +42,11 @@ describe('parseArgs', () => {
     assert.equal(args.failOnFallback, true)
   })
 
+  it('parses --judge-timeout-ms', () => {
+    const args = parseArgs(['--live', '--judge-timeout-ms=60000'])
+    assert.equal(args.judgeTimeoutMs, 60000)
+  })
+
   it('rejects --repeat=0', () => {
     assert.throws(() => parseArgs(['--repeat=0']))
   })
@@ -49,5 +54,11 @@ describe('parseArgs', () => {
   it('rejects non-integer --repeat', () => {
     assert.throws(() => parseArgs(['--repeat=2.5']))
     assert.throws(() => parseArgs(['--repeat=abc']))
+  })
+
+  it('rejects invalid --judge-timeout-ms', () => {
+    assert.throws(() => parseArgs(['--judge-timeout-ms=0']))
+    assert.throws(() => parseArgs(['--judge-timeout-ms=10.5']))
+    assert.throws(() => parseArgs(['--judge-timeout-ms=abc']))
   })
 })

@@ -36,6 +36,7 @@ export {
   callJudgeRepeated,
   computeVariance,
   hasMixedJudgeRuns,
+  resolveJudgeTimeoutMs,
   STABLE_VARIANCE_THRESHOLD,
 } from './judge.js'
 export type {
