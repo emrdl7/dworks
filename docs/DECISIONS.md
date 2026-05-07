@@ -232,13 +232,24 @@ type SuggestedAction =
   "reason": "핵심 CTA는 보이지만 브랜드 맥락과 이미지 초점이 약함",
   "evidence": ["hero copy generic", "primary CTA below fold on mobile"],
   "judgeStatus": "ok",
-  "suggestedAction": "design-polish-needed"
+  "suggestedAction": "design-polish-needed",
+  "judgeModel": "claude",
+  "judgeModelVersion": "claude-sonnet-4-5-20250929"
 }
 ```
 
 `axis`는 D5/D6의 12개 축 id로 제한 (Zod enum). `evidence`는 다중 근거 배열.
 
-**근거**: dworks 라운드 4 §2.4 (Codex 분리 제안), 라운드 5 §1.4 (Claude 수용).
+**모델 메타 분리** (m1-bootstrap 라운드 4 §2.5):
+- `judgeModel` (provider enum): `claude` / `codex` / `gemini` — D12 fallback chain.
+- `judgeModelVersion` (실제 호출 모델 문자열): `claude-sonnet-4-5-20250929` 등. 환경 변수 `ANTHROPIC_MODEL`로 override 가능, 기본값은 Sonnet 4.5. dry-run stub은 `'dry-run-stub'`.
+- 재현성 평가 시 fixture 안에서 `judgeModelVersion`이 바뀌면 `judgeStatus: 'mixed-model'` 마킹 후보 (검출 메커니즘은 m1-live 토픽에서 합의).
+
+**재현성 누적** (m1-bootstrap 라운드 5 §1.2):
+- `EvalResult.reproducibility?: ReproducibilityCheck[]` — root level optional.
+- `callJudgeRepeated(input, repeat, options)` 호출 기준: `repeat<2` → representative만 / `repeat=2` → stable/unstable 판단만 / `repeat≥3` → ReproducibilityCheck 객체 누적.
+
+**근거**: dworks 라운드 4 §2.4 (Codex 분리 제안), 라운드 5 §1.4 (Claude 수용), m1-bootstrap 라운드 4 §2.5 (모델 메타 분리), 라운드 5 §1 (구현 흡수).
 
 ## D15. 자율 협업 모드 — 카운터 없는 즉석 검사
 
@@ -283,3 +294,14 @@ Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. �
 | 3 | Claude | `docs/discussions/2026-05-07-plan-round-3-claude.md` | 라운드 2 6건 합의, M0.5 범위 + 새 캔버스 + 카운터 제거 대안 |
 | 4 | Codex | `docs/discussions/2026-05-07-plan-round-4-codex.md` | 라운드 3 4건 채택 + JudgeStatus/SuggestedAction 분리 제안 |
 | 5 | Claude | `docs/discussions/2026-05-07-plan-round-5-claude.md` | 분리안 수용, 미해결 0건, 흡수 트리거 |
+
+### dworks 라운드 (m1-bootstrap 토픽)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| 1 | Claude | `docs/discussions/2026-05-07-m1-bootstrap-round-1-claude.md` | M0~M1-3 검토 요청 + 작업 분배 6건 제안 (단독 진행 정정) |
+| 2 | Codex | `docs/discussions/2026-05-07-m1-bootstrap-round-2-codex.md` | apps/eval-runner 채택, dryRun/screenshot 분리, 84 calls 정정 |
+| 3 | Claude | `docs/discussions/2026-05-07-m1-bootstrap-round-3-claude.md` | 분배 #5 unstable variance hooks 설계 + 합의 요청 5건 |
+| 4 | Codex | `docs/discussions/2026-05-07-m1-bootstrap-round-4-codex.md` | 합의 5건 결정 + 안전장치 #3 `>=5` 완화 + judgeModelVersion 분리 |
+| 5 | Claude | `docs/discussions/2026-05-07-m1-bootstrap-round-5-claude.md` | 분배 #5 구현 완료 (judgeModelVersion + reproducibility + repeat) |
+| 코드 #6 | Codex (`cd2d3cd`) | (라운드 노트 없이 코드 작업으로 안전장치 #1 회피) | EvalEstimate + AxisLowestDetail + report 보강 |

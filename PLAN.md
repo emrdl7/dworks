@@ -134,6 +134,19 @@ E Hybrid 제품 방향이 확정됐으므로 M2 편집 기능이 시작되기 �
 
 ### M1 (P0). 디자인 품질 eval 1차 구현 (2~3주 추정)
 
+#### M1.1 부트스트랩 — **완료** (m1-bootstrap 토픽 라운드 1~5)
+
+- `packages/eval` (D5 7축 루브릭 + D14 JudgeStatus/SuggestedAction + judge fallback chain `Claude→Codex→Gemini`)
+- `packages/screenshot` (Playwright viewport 440/768/1440)
+- `apps/eval-runner` (CLI + `summarizeResults` + `renderMarkdownReport` + `EvalEstimate`)
+- `callJudgeRepeated(input, repeat, options)` + `reproducibility[]` 누적 (D8)
+- `judgeModelVersion` 메타 + `ANTHROPIC_MODEL` env override
+- 안전장치 #3 `>=5`로 완화 (lockfile/빌드 산출물 제외)
+
+부트스트랩 검증: typecheck 13/13, test 6 패키지, smoke `--repeat=3` 통과.
+
+#### M1.2 live 점수 산출 — 진행 예정 (m1-live 토픽)
+
 - 평가 축 7개:
   - `non-wireframe`, `first viewport richness`, `emotional-fit`, `visual-variety`, `brand/reference fidelity`, `responsive design intent preservation`, `editability`
 - 각 축 0–5 루브릭 정의 + vision LLM judge 호출 + 점수 산출
@@ -213,12 +226,14 @@ E Hybrid 제품 방향이 확정됐으므로 M2 편집 기능이 시작되기 �
 
 ## 6. 다음 작업
 
-라운드 1~5 합의가 본 커밋에서 흡수 완료. **다음은 M0 부트스트랩**.
+M0 / M0.5 / M1.1 부트스트랩 모두 완료. **다음은 M1.2 live 점수 산출** (m1-live 토픽).
 
-1. M0: monorepo 골격 + 빈 앱/패키지 + Playwright 설치 + `pnpm typecheck` 통과
-2. M0.5: Tree Foundation (1주, 범위 동결)
-3. M1 + M4 트리거 직결: M1 P0 4축 측정 가능 시점에 M4 PoC 시작
-4. M2는 M0.5 완료 후 시작
+1. ✓ M0 부트스트랩 (`507d47d`~`d263eef`)
+2. ✓ M0.5 Tree Foundation (`87aab64`~`66f2473`)
+3. ✓ M1.1 eval 부트스트랩 (m1-bootstrap 토픽 라운드 1~5, `3e29537`~`cd2d3cd`)
+4. **다음**: M1.2 live 점수 산출 — 12 brief × 7 axis × Claude vision judge, repeat=3 재현성, 사람 grading 3건, M4 PoC 트리거 충족
+5. M4 PoC 시작 트리거: M1.2의 4축 이상 측정 완료
+6. M2는 M0.5 완료 후 시작 가능 (사용자 OK 후)
 
 ---
 
