@@ -30,6 +30,7 @@
 6. **검증의 위계**: 사용자에게 노출되는 검증은 사실상 "익스포트 가능 여부" 한 가지. 디자인 단계엔 도구 내부 안전성(렌더/보안/편집 노드 손실)만.
 7. **평가 결과 모델**: `JudgeStatus`(점수 신뢰도)와 `SuggestedAction`(제품 다음 행동)을 분리한다 (D14).
 8. **자율 협업 모드**: 카운터 없는 즉석 git 검사 기반 안전장치 (D15).
+9. **live judge baseline 해석**: placeholder tree에 대한 점수는 "Dworks 디자인 품질"이 아닌 "placeholder renderer 한계의 계측값"이며, 사용자 노출은 baseline 대비 Δ(개선량)로 표기한다 (D16).
 
 ---
 
@@ -145,14 +146,14 @@ E Hybrid 제품 방향이 확정됐으므로 M2 편집 기능이 시작되기 �
 
 부트스트랩 검증: typecheck 13/13, test 6 패키지, smoke `--repeat=3` 통과.
 
-#### M1.2 live 점수 산출 — 진행 예정 (m1-live-execution 토픽)
+#### M1.2 live 점수 산출 — 1단계 완료 (m1-live-execution 토픽 라운드 1~5, `997cec0`~`f03df7c`)
 
 vision judge는 **CLI fallback chain** (Claude Code CLI → Codex CLI → Gemini CLI). API key 의존 없음 (D12 갱신, 사용자 2026-05-07 결정).
 
 **단계화** (m1-live 라운드 2 §1.1 합의):
-- **1단계**: 4축 × 12 brief × repeat=1 = **48 calls** (M4 PoC 트리거 충족 최소)
-- **2단계**: 7축 × 12 brief × repeat=1 = **84 calls** (전체 축 측정)
-- **3단계**: 7축 × 12 brief × repeat=3 = **252 calls** (재현성 분산 측정)
+- **1단계** ✓ — 4축 × 12 brief × repeat=1 = **48 calls** (M4 PoC 트리거 충족 최소). judgeStatus ok 48/48, unstable/failed/mixed 0. 평균 non-wireframe 0.00 / first-viewport-richness 0.42 / emotional-fit 0.33 / editability 0.75 (baseline, D16 해석 적용).
+- **2단계** — 7축 × 12 brief × repeat=1 = **84 calls** (전체 축 측정). 토픽: `m1-live-7axis`.
+- **3단계** — 7축 × 12 brief × repeat=3 = **252 calls** (재현성 분산 측정). 토픽: `m1-live-reproducibility`.
 
 각 단계 후 `summary.json` + `report.md` 검토 → 다음 단계 진행.
 
@@ -235,14 +236,17 @@ vision judge는 **CLI fallback chain** (Claude Code CLI → Codex CLI → Gemini
 
 ## 6. 다음 작업
 
-M0 / M0.5 / M1.1 부트스트랩 모두 완료. **다음은 M1.2 live 점수 산출** (m1-live-execution 토픽).
+M0 / M0.5 / M1.1 / M1.2 1단계 완료. **다음은 4 토픽 병행** (사용자 2026-05-07 "병행해" mandate).
 
 1. ✓ M0 부트스트랩 (`507d47d`~`d263eef`)
 2. ✓ M0.5 Tree Foundation (`87aab64`~`66f2473`)
 3. ✓ M1.1 eval 부트스트랩 (m1-bootstrap 토픽 라운드 1~5, `3e29537`~`cd2d3cd`)
-4. **다음**: M1.2 live 점수 산출 — 1단계 12 brief × 4 axis × CLI vision judge, 이후 7축/재현성 단계 확장
-5. M4 PoC 시작 트리거: M1.2의 4축 이상 측정 완료
-6. M2는 M0.5 완료 후 시작 가능 (사용자 OK 후)
+4. ✓ M1.2 1단계 live baseline (m1-live-execution 토픽 라운드 1~5, `997cec0`~`f03df7c`) — 12 brief × 4 axis = 48 calls baseline 산출, D16 해석 적용
+5. **다음 (병행 4 토픽)**:
+   - **(a) m1-live-7axis** — M1.2 2단계 7축 확장 (12 brief × 7 axis = 84 calls)
+   - **(b) m1-live-reproducibility** — M1.2 3단계 repeat=3 재현성 (12 brief × 7 axis × 3 = 252 calls, D8 variance threshold 검증)
+   - **(c) M2 시작** — placeholder → LLM 생성 트리. 시작 조건 (M0.5 완료 + M1.2 baseline) 충족
+   - **(d) M4 PoC 시작** — HTML→트리 흡수기 검증. 시작 트리거 (M1의 4축 측정 완료) 충족
 
 ---
 

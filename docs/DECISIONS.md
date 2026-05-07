@@ -283,6 +283,23 @@ Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. �
 
 **근거**: dworks 라운드 1 §11 (Claude 컨벤션 도입), 라운드 2 §2.5 (Codex 카운터 stale 지적), 라운드 3 §2.3 (Claude 카운터 제거 대안), 라운드 4 §2.1 (Codex 채택), 라운드 5 §1.1 (Claude 합의).
 
+## D16. live judge baseline 해석 규약
+
+placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 디자인 품질"의 절대 측정값이 아니라 **"placeholder renderer 한계의 계측값"** 이다. M2 LLM 생성 트리 / M4 PoC 이후 같은 4축 재측정 결과의 차이값(Δ)이 개선량의 정량 지표다.
+
+**핵심 원칙**:
+- 1차 baseline은 평균 점수 0~0.75 범위가 자연스럽다 — placeholder 텍스트 덤프에 대한 정상 신호.
+- judge가 "placeholder 본문 — M2 이후 LLM 생성으로 교체." 문구를 evidence에 식별하면 baseline으로 인정.
+- 사용자 노출 점수는 절대값이 아니라 **Δ(개선량)** 으로 표기 — 예: "M2 이후 non-wireframe 평균 0.00 → 2.5 (+2.5)"
+- baseline 갱신 트리거: M2 LLM 생성 트리 도입 / M4 PoC 트리 흡수기 도입 / D5 7축 정의 변경.
+
+**적용 범위**:
+- `apps/eval-runner` summary.json / report.md의 평균 점수는 baseline 값으로 기록.
+- 사용자 노출 보고서 (M3 고도화 결과 + M5 익스포트 검증)는 baseline 대비 Δ 형태로 표기.
+- M1.2 baseline (m1-live-execution 1단계, 2026-05-07 산출): 12 brief × 4 axis × repeat=1 = 48 calls / judgeStatus ok 48/48 / non-wireframe 0.00 / first-viewport-richness 0.42 / emotional-fit 0.33 / editability 0.75 / suggestedAction 분포 export-blocking 37 + design-polish-needed 11.
+
+**근거**: m1-live-execution 라운드 4 §2~§3 (Codex 48 calls baseline 보고 + 점수 신호 해석), 라운드 5 §2.4 (Claude D16 신설 제안), 사용자 결정 (2026-05-07 "병행해" — 흡수 + 4 토픽 mandate).
+
 ---
 
 ## 부록 A. 의논 라운드 추적
@@ -327,3 +344,14 @@ Claude / Codex가 사용자 자리 비움에도 의논을 진행하는 모드. �
 | 4 | Codex | `docs/discussions/2026-05-07-m1-live-round-4-codex.md` (`61adc26`) | mixed-model 검출 구현 (`JudgeRun`+`hasMixedJudgeRuns`+우선순위) |
 | 5 | Claude | `docs/discussions/2026-05-07-m1-live-round-5-claude.md` | Codex 코드 검토 OK + 흡수 후보 정리. 외부 의존성(API key)만 미해결 |
 | 사용자 결정 | (2026-05-07) | (커밋 메시지) | "api 없어. 모두 cli로 처리" → D12 CLI 전환 + 흡수 OK + 자율 진행 mandate |
+
+### dworks 라운드 (m1-live-execution 토픽)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| 1 | Claude | `docs/discussions/2026-05-07-m1-live-execution-round-1-claude.md` (`997cec0`) | CLI 전환 1차 설계 + 합의 요청 5건 |
+| 2 | Codex | `docs/discussions/2026-05-07-m1-live-execution-round-2-codex.md` (`058a454`) | 합의 5건 답변 + judge.ts 보정 (`--add-dir`/`--` 구분자, process group 종료) + 1 call live smoke 통과 |
+| 3 | Claude | `docs/discussions/2026-05-07-m1-live-execution-round-3-claude.md` (`48c8e76`) | 4 axis live smoke cross-validation 통과 + 48 calls 분배 제안 |
+| 4 | Codex | `docs/discussions/2026-05-07-m1-live-execution-round-4-codex.md` (`2db3b15`) | 12 brief × 4 axis = 48 calls baseline 통과 + 흡수 후보 |
+| 5 | Claude | `docs/discussions/2026-05-07-m1-live-execution-round-5-claude.md` (`f03df7c`) | 흡수 후보 정리 + D16 신설 제안 + 미해결 0건 |
+| 사용자 결정 | (2026-05-07) | (커밋 메시지) | "병행해" → 4건 흡수 (PLAN/AUTONOMOUS/COLLABORATION/D16) + 4 토픽 mandate (a 7축 + b repeat=3 + c M2 + d M4) |
