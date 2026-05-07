@@ -1,0 +1,27 @@
+{
+  "id": "card-grid-content",
+  "tree": "../../trees/card-grid.json",
+  "intent": "카드 그리드 헤딩과 카드 3개 제목을 일괄 톤다운으로 다듬는다.",
+  "operations": [
+    {
+      "type": "updateText",
+      "nodeId": "cards.heading",
+      "content": "핵심 기능"
+    },
+    {
+      "type": "updateText",
+      "nodeId": "cards.card-a.title",
+      "content": "AI 디자인 생성"
+    },
+    {
+      "type": "updateText",
+      "nodeId": "cards.card-b.title",
+      "content": "트리 캔버스"
+    },
+    {
+      "type": "updateText",
+      "nodeId": "cards.card-c.title",
+      "content": "다중 익스포트"
+    }
+  ]
+}

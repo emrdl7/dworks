@@ -13,3 +13,12 @@ export type {
   UpdateButtonLabelOperation,
   UpdateTextOperation,
 } from './operations.js'
+
+// m2-edit-fixtures round 2 합의: schema/type 외부 노출.
+export {
+  editOperationSchema,
+  editSequenceSchema,
+  updateButtonLabelOperationSchema,
+  updateTextOperationSchema,
+} from './schema.js'
+export type { EditSequence } from './schema.js'

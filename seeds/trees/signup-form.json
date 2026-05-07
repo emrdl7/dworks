@@ -1,0 +1,46 @@
+{
+  "version": "1",
+  "root": {
+    "id": "signup",
+    "type": "form",
+    "editKind": "structure",
+    "method": "post",
+    "children": [
+      {
+        "id": "signup.title",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "heading-2",
+        "content": "Dworks 가입"
+      },
+      {
+        "id": "signup.intro",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "body",
+        "content": "이메일과 이름만으로 시작할 수 있습니다."
+      },
+      {
+        "id": "signup.field-email.label",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "caption",
+        "content": "이메일"
+      },
+      {
+        "id": "signup.field-name.label",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "caption",
+        "content": "이름"
+      },
+      {
+        "id": "signup.cta",
+        "type": "button",
+        "editKind": "text",
+        "variant": "primary",
+        "label": "회원가입"
+      }
+    ]
+  }
+}

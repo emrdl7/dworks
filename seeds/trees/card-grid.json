@@ -1,0 +1,81 @@
+{
+  "version": "1",
+  "root": {
+    "id": "cards",
+    "type": "section",
+    "editKind": "structure",
+    "role": "feature-grid",
+    "children": [
+      {
+        "id": "cards.heading",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "heading-2",
+        "content": "주요 기능"
+      },
+      {
+        "id": "cards.card-a",
+        "type": "card",
+        "editKind": "structure",
+        "children": [
+          {
+            "id": "cards.card-a.title",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "heading-3",
+            "content": "디자인 생성"
+          },
+          {
+            "id": "cards.card-a.body",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "body",
+            "content": "브리프와 레퍼런스로 시안을 생성합니다."
+          }
+        ]
+      },
+      {
+        "id": "cards.card-b",
+        "type": "card",
+        "editKind": "structure",
+        "children": [
+          {
+            "id": "cards.card-b.title",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "heading-3",
+            "content": "캔버스 편집"
+          },
+          {
+            "id": "cards.card-b.body",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "body",
+            "content": "트리 노드를 직접 편집해 디자인을 다듬습니다."
+          }
+        ]
+      },
+      {
+        "id": "cards.card-c",
+        "type": "card",
+        "editKind": "structure",
+        "children": [
+          {
+            "id": "cards.card-c.title",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "heading-3",
+            "content": "익스포트"
+          },
+          {
+            "id": "cards.card-c.body",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "body",
+            "content": "트리에서 분기되는 다중 변환기로 출력합니다."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "version": "1",
+  "root": {
+    "id": "hero",
+    "type": "hero",
+    "editKind": "structure",
+    "children": [
+      {
+        "id": "hero.title",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "heading-1",
+        "content": "Dworks로 디자인을 시작하세요"
+      },
+      {
+        "id": "hero.subtitle",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "body",
+        "content": "자연어와 레퍼런스로 웹 디자인 시안을 생성하고 캔버스에서 바로 편집합니다."
+      },
+      {
+        "id": "hero.cta",
+        "type": "button",
+        "editKind": "text",
+        "variant": "primary",
+        "label": "지금 시작하기"
+      }
+    ]
+  }
+}

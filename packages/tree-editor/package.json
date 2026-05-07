@@ -11,7 +11,8 @@
     "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
-    "@dworks/tree": "workspace:*"
+    "@dworks/tree": "workspace:*",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

@@ -182,6 +182,9 @@ importers:
       '@dworks/tree':
         specifier: workspace:*
         version: link:../tree
+      zod:
+        specifier: ^4.0.0
+        version: 4.4.3
     devDependencies:
       tsx:
         specifier: ^4.19.2

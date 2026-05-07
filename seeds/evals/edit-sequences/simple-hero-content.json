@@ -1,0 +1,17 @@
+{
+  "id": "simple-hero-content",
+  "tree": "../../trees/simple-hero.json",
+  "intent": "히어로 제목과 CTA 라벨을 사용자가 직접 다듬는다.",
+  "operations": [
+    {
+      "type": "updateText",
+      "nodeId": "hero.title",
+      "content": "Dworks Studio — 디자인의 시작"
+    },
+    {
+      "type": "updateButtonLabel",
+      "nodeId": "hero.cta",
+      "label": "바로 시작하기"
+    }
+  ]
+}
