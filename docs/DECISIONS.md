@@ -299,9 +299,10 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 - M1.2 baseline (2026-05-07 산출, m1-live-execution 1단계 + m1-live-7axis 2단계 통합):
   - **1단계**: 4 axis × 12 brief = 48 calls / judgeStatus ok 48/48 / non-wireframe 0.00 / first-viewport-richness 0.42 / emotional-fit 0.33 / editability 0.75 / suggestedAction 분포 export-blocking 37 + design-polish-needed 11
   - **2단계**: 7 axis × 12 brief = 84 calls / judgeStatus ok 84/84 / 추가 3축 평균: visual-variety 0.00 / brand-reference-fidelity 0.17 / responsive-design-intent-preservation 0.08
+  - **3단계 재현성**: 12 brief × 7 axis × repeat=3 = 252 calls / judgeStatus ok 84/unstable 0/mixed-model 0/failed 0 / max variance 0.2222 (D8 threshold 0.5 이하) / `--fail-on-fallback` + `--judge-timeout-ms=60000` 조합으로 오염 0건. D8 stable 확정.
   - 통합 baseline은 M2/M4 이후 Δ 비교 기준값. 7축 모두 placeholder tree 한계의 계측값.
 
-**근거**: m1-live-execution 라운드 4 §2~§3 (Codex 48 calls baseline 보고 + 점수 신호 해석), 라운드 5 §2.4 (Claude D16 신설 제안), 사용자 결정 (2026-05-07 "병행해" — 흡수 + 4 토픽 mandate).
+**근거**: m1-live-execution 라운드 4 §2~§3 (Codex 48 calls baseline 보고 + 점수 신호 해석), 라운드 5 §2.4 (Claude D16 신설 제안), 사용자 결정 (2026-05-07 "병행해" — 흡수 + 4 토픽 mandate). m1-live-reproducibility retry 3 result (`a4df2b6`, round 6 흡수 2026-05-08).
 
 ---
 
@@ -369,3 +370,34 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | 4 | Codex | `docs/discussions/2026-05-07-m1-live-7axis-round-4-codex.md` (`2c881d9`) | 검산 일치 + 흡수 동의 + summary.json statusCounts 후속 권장 |
 | 5 | Claude | `docs/discussions/2026-05-07-m1-live-7axis-round-5-claude.md` (`a11e5d0`) | 흡수 후보 최종 + statusCounts 후속 토픽 분리 |
 | 사용자 결정 | (2026-05-07) | (커밋 메시지) | "흡수 ok" → 본 흡수 commit |
+
+### dworks 라운드 (m1-live-reproducibility 토픽)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| abort | Codex | `docs/discussions/2026-05-07-m1-live-reproducibility-run-abort-codex.md` | 252 calls abort (Claude quota + fallback 발생) → fail-on-fallback 후속 토픽 분리 |
+| 1 | Claude | `docs/discussions/2026-05-07-m1-live-reproducibility-round-1-claude.md` | 토픽 시작, 252 calls repeat=3 설계, 합의 요청 4건 |
+| 2 | Codex | `docs/discussions/2026-05-07-m1-live-reproducibility-round-2-codex.md` | 합의 4건 결정 |
+| 3 | Claude | `docs/discussions/2026-05-07-m1-live-reproducibility-round-3-claude.md` | 사용자 quota reset 신호 + 재실행 분배/preflight 합의 |
+| 4 | Codex | `docs/discussions/2026-05-07-m1-live-reproducibility-round-4-codex.md` | fail-on-fallback 코드 (`240733f`) + 합의 3건 결정 |
+| 5 | Claude | `docs/discussions/2026-05-07-m1-live-reproducibility-round-5-claude.md` | 코드 검토 OK + 252 calls 재실행 OK 신호 + round 6 처리 안 |
+| retry 1 abort | Codex | `docs/discussions/2026-05-07-m1-live-reproducibility-retry-1-abort-codex.md` | 30s timeout (form-business-permit) → timeout config 후속 토픽 분리 |
+| retry 2 abort | Codex | `docs/discussions/2026-05-07-m1-live-reproducibility-retry-2-abort-codex.md` | 126 calls 후 Claude quota 재도달 (form-event-registration) |
+| retry 3 result | Codex | `docs/discussions/2026-05-07-m1-live-reproducibility-retry-3-result-codex.md` (`a4df2b6`) | 252 calls 완주 / ok 84/unstable 0/mixed-model 0/failed 0 / D8 stable |
+| 6 | Claude | `docs/discussions/2026-05-07-m1-live-reproducibility-round-6-claude.md` (`c5f25d7`) | retry 3 검토 OK + ALERT + 흡수 후보 정리 |
+| 사용자 결정 | (2026-05-08) | (커밋 메시지) | "ㄱㄱ" → 본 흡수 commit (D16 3단계 baseline + 부록 A 추가) |
+
+### dworks 라운드 (m1-runner-fail-on-fallback 토픽)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| 1 | Claude | (m1-live-reproducibility round 4 §1.3에 통합) | 후속 토픽 분리 권장 |
+| 코드 | Codex (`240733f`) | (라운드 노트 없음) | `--fail-on-fallback` 코드 + `args.test.ts` 보강 |
+
+### dworks 라운드 (m1-runner-timeout-config 토픽)
+
+| 라운드 | 작성자 | 파일 | 핵심 기여 |
+|--------|--------|------|----------|
+| 1 | Claude | `docs/discussions/2026-05-07-m1-runner-timeout-config-round-1-claude.md` | timeout 설정 가능화 설계 + 합의 요청 2건 |
+| 2 | Codex | `docs/discussions/2026-05-07-m1-runner-timeout-config-round-2-codex.md` | 합의 OK + 코드 (`f443673`) — `resolveJudgeTimeoutMs` + `DWORKS_JUDGE_TIMEOUT_MS` |
+| 3 | Claude | `docs/discussions/2026-05-07-m1-runner-timeout-config-round-3-claude.md` | 코드 검토 OK + 토픽 종료 |
