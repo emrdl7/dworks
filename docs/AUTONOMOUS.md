@@ -37,13 +37,18 @@
 
 - **M0** 프로젝트 부트스트랩 — **완료** (`507d47d` ~ `d263eef`)
 - **M0.5** Tree Foundation — **완료** (`87aab64` ~ `66f2473`)
+- **M1** P0 디자인 품질 eval — 사용자 "계속 진행해" 신호로 mandate 확장 (2026-05-07 10:20 KST)
+  - 평가 축 7개 (non-wireframe, first viewport richness, emotional-fit, visual-variety, brand/reference fidelity, responsive design intent preservation, editability)
+  - 각 축 0–5 루브릭 + vision LLM judge 호출 + JudgeStatus/SuggestedAction (D14)
+  - Playwright viewport별 스크린샷 (440/768/1440)
+  - 표준 brief 12개에 대한 1차 점수 산출 → M4 PoC 시작 트리거 충족
 - 위 작업 중 발생하는 코드 변경에 대해 §11.6 안전장치 #5(코드 변경 정지) 일시 보류
 
 여전히 사용자 OK 필요한 행위:
 
-- 메인 문서(PLAN/DECISIONS/COLLABORATION/AUTONOMOUS) 흡수 (단 안전장치 false positive 정정 같은 룰 자체 보수는 자율 결정 가능 — 본 흡수 사례)
-- **M1 이후 새 마일스톤 진입** (P0 eval, P0.5 편집, P1 고도화, M4 PoC, M5+ 익스포트)
-- 외부 리소스 사용 (외부 API 호출, 외부 서비스 등록 등 — git push는 OK)
+- 메인 문서(PLAN/DECISIONS/COLLABORATION/AUTONOMOUS) 흡수 (단 안전장치 false positive 정정 같은 룰 자체 보수는 자율 결정 가능)
+- **M2 이후 새 마일스톤 진입** (P0.5 편집, P1 고도화, M4 PoC, M5+ 익스포트)
+- 외부 리소스 사용 — **단 LLM API 호출(Anthropic/OpenAI/Google) + GitHub push는 mandate 범위 안에서 허용**. 결제 발생하는 외부 서비스 신규 등록은 OK 필요.
 - 안전장치 #1, #2, #4 발동 시 (라운드 6, 미해결 2회 연속, ff-only 실패)
 
 본 mandate는 사용자 명시 취소(`rm AUTONOMOUS.md` 또는 새 지시)까지 유효.
