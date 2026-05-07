@@ -148,14 +148,57 @@ LLM 재호출: 트리 일부 + 자연어 → 부분 HTML → 부분 트리 흡�
 
 근거: krds-studio 라운드 3 §12.2, 라운드 4 §13.2.3.
 
-## D11. PRD 한 줄 정의 (후보 단계)
+## D11. PRD 한 줄 정의
 
-> Design Works — 자연어와 레퍼런스로 웹 디자인 시안을 생성하고, 사용자가 캔버스에서 바로 편집·고도화해 납품 가능한 디자인 산출물로 정돈하는 도구.
+> Dworks — 자연어와 레퍼런스로 웹 디자인 시안을 생성하고, 사용자가 캔버스에서 바로 편집·고도화해 납품 가능한 디자인 산출물로 정돈하는 디자인툴.
 
 보조 문장:
 > HTML은 캔버스 렌더링과 export를 위한 매체일 뿐, 제품의 중심 모델은 디자인 산출물과 편집 경험이다.
 
-근거: krds-studio 라운드 3 §12.7. dworks 라운드 1에서 확정 예정.
+이름의 어원: 디자인 + jabworks = Dworks.
+
+근거: krds-studio 라운드 3 §12.7 후보 + 사용자 2026-05-07 결정 (이름 정정).
+
+## D12. LLM 호출 정책 — Claude → Codex → Gemini fallback
+
+**모든 LLM 호출**(생성, 고도화, vision judge, 익스포트 변환 보조 등)은 다음 순서로 시도한다.
+
+1. **1순위: Claude** (Anthropic Sonnet/Opus) — 기본 호출 대상.
+2. **2순위: Codex** (OpenAI) — Claude가 불능(API 장애, rate limit, 응답 실패, timeout)일 때 자동 fallback.
+3. **3순위: Gemini** (Google) — Codex도 불능일 때 fallback.
+
+**구현 원칙**:
+- LLM 추상화 레이어를 단일 인터페이스로 두고, 호출자는 fallback 흐름을 알 필요 없다.
+- 각 호출에 대해 어느 모델이 응답했는지 메타로 기록 (`generation.modelUsed`, `eval.judgeModel` 등).
+- "불능" 판정 기준: HTTP 5xx, rate limit 429, 30초 timeout, 명시적 오류 응답. 코드 정의는 별도.
+- vision judge의 모델 일관성을 위해 **judge 호출은 가능한 한 같은 모델로 반복**한다. 한 fixture를 평가하는 도중 fallback이 발생하면 그 fixture의 점수는 `mixed-model`로 표시하고 재현성 체크에서 제외.
+- 각 모델의 호출 비용/실패율을 운영 지표로 누적.
+
+**근거**: 사용자 2026-05-07 결정.
+
+## D13. 트리 스키마 라이브러리 — Zod
+
+JSON 의도 트리 정의/검증/흡수기 안전망에 **Zod** (`zod` v3 또는 v4)를 채택.
+
+**선택 근거**:
+- TypeScript-first 생태계 1위. Hono, Drizzle, Next.js 등 dworks의 모든 핵심 의존성과 동일 패턴.
+- **Discriminated union 지원**이 본 프로젝트에 결정적. 트리 노드 타입(section/hero/card/button/list/form/table/...)이 깊은 union이라 분기 추론이 강해야 한다.
+- 타입 추론(`z.infer<typeof schema>`)이 강력해 트리 노드와 TypeScript 타입을 단일 정의로 유지 가능.
+- LLM(Claude/Codex/Gemini 모두)이 Zod 스키마 생성에 가장 익숙. 시스템 프롬프트에서 트리 스키마 묘사 시 토큰 효율 우위.
+- 광범위한 생태계: `drizzle-zod`, `hono/zod-validator`, `@anatine/zod-mock` 등 dworks가 쓸 도구가 즉시 호환.
+
+**거부된 후보**:
+- **ArkType**: 런타임 성능은 더 빠르지만 생태계 점유와 LLM 친화도가 떨어짐. 트리 검증 자체가 hot path가 아니라 ROI가 약함.
+- **Yup**: TypeScript 추론이 약함. 추론 강도가 본 프로젝트의 핵심 요건.
+- **자체 정의**: 안전망/생태계 도구 손실 비용이 큼.
+
+**적용 범위**:
+- `packages/tree`(가칭) — 트리 노드 스키마 정의
+- `apps/api` 라우트 입출력 검증
+- HTML→트리 흡수기의 출력 검증
+- 익스포트 변환기 입력 검증
+
+**근거**: 사용자가 "가장 강점 많은 걸로 알아서" 위임 → Claude 선택 2026-05-07.
 
 ---
 

@@ -1,18 +1,20 @@
-# Design Works (dworks) — 진행 플랜
+# Dworks — 진행 플랜
 
 > **상태**: 1차 안 (2026-05-07). Claude가 작성. 사용자 + Codex 합의 후 결정으로 굳힌다.
 > **출발점**: `~/krds-studio` 프로젝트의 v3→v4 의논 결과(라운드 1~4)를 처음부터 반영하는 새 시작.
-> **이전 의논 노트**: `~/krds-studio/docs/10-FRAME-REVIEW-2026-05-07.md` (참조 자산으로 보존).
+> **이전 의논 노트**: `~/krds-studio/docs/10-FRAME-REVIEW-2026-05-07.md` (참조 자산, krds-studio 삭제 시 dworks로 흡수).
 
 ---
 
 ## 0. 본 프로젝트 정체성
 
-- **이름**: Design Works (저장소: `dworks`)
-- **한 줄 정의 후보** (krds-studio 라운드 3 §12.7 합의 후보 그대로):
-  > 자연어와 레퍼런스로 웹 디자인 시안을 생성하고, 사용자가 캔버스에서 바로 편집·고도화해 납품 가능한 디자인 산출물로 정돈하는 도구.
+- **이름**: **Dworks** (저장소: `dworks`)
+- **어원**: 디자인 + jabworks = Dworks
+- **한 줄 정의** (krds-studio 라운드 3 §12.7 합의 후보 + 이름 정정):
+  > Dworks — 자연어와 레퍼런스로 웹 디자인 시안을 생성하고, 사용자가 캔버스에서 바로 편집·고도화해 납품 가능한 디자인 산출물로 정돈하는 디자인툴.
 - **보조 문장**: HTML은 캔버스 렌더링과 export를 위한 매체일 뿐, 제품의 중심 모델은 디자인 산출물과 편집 경험이다.
-- **krds-studio와의 관계**: krds-studio는 v4 의논 비용을 치른 학습 자산. dworks는 그 결론에서 시작하는 v2. krds-studio는 참조 자산으로 보존하되 메인 개발은 dworks로 이전.
+- **krds-studio와의 관계**: krds-studio는 v4 의논 비용을 치른 학습 자산. **참조 용도로만 활용하고 적절한 시점에 삭제한다**. 삭제 전에 필요한 자산(seeds, references 등)은 dworks로 이전.
+- **원격 저장소**: `https://github.com/emrdl7/dworks` (퍼블릭).
 
 ---
 
@@ -185,13 +187,16 @@
 
 ---
 
-## 7. 미결 항목 (사용자/Codex 확인 필요)
+## 7. 사용자 결정 사항 (2026-05-07 확정)
 
-- **PRD 한 줄 정의 후보 (§0)** — krds-studio 라운드 3에서 합의 후보 단계까지 갔으니 dworks에서 그대로 채택할지, 다시 다듬을지.
-- **krds-studio 처리** — 참조 자산으로 동결할지, archive 태그를 붙일지, 그대로 둘지.
-- **원격 git 저장소** — dworks를 GitHub 등 원격에 push할지, 로컬만 유지할지. 협업이 같은 로컬이라 필수는 아니지만 백업 관점에서 권장.
-- **vision judge 모델 선택** — Claude Sonnet/Opus vs 다른 후보. 비용/품질/일관성 trade-off.
-- **트리 스키마 라이브러리** — Zod vs ArkType vs 자체 정의.
+| 항목 | 결정 |
+|------|------|
+| 프로젝트 이름 | **Dworks** (디자인 + jabworks) |
+| PRD 한 줄 정의 | §0 본문대로 채택 (이름만 "Design Works" → "Dworks") |
+| krds-studio 처리 | 참조 용도, **적절한 시점에 삭제** |
+| 원격 git 저장소 | **`github.com/emrdl7/dworks` 퍼블릭** |
+| LLM 정책 | **1순위 Claude → 2순위 Codex (Claude 불능 시) → 3순위 Gemini (Codex 불능 시)**. vision judge 포함 모든 LLM 호출에 동일 적용. 자세한 내용은 `docs/DECISIONS.md` D12. |
+| 트리 스키마 라이브러리 | **Zod**. 근거: TypeScript-first 생태계 1위, Drizzle/Hono와 동일 패턴, discriminated union 지원, LLM이 가장 익숙. 자세한 내용은 `docs/DECISIONS.md` D13. |
 
 ---
 
