@@ -1,0 +1,32 @@
+{
+  "id": "jabworks.table",
+  "adapter": "jabworks",
+  "name": "테이블",
+  "category": "data",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 정렬 인터랙션 + dense 모드 확정.",
+  "description": "tabular 데이터 표시. caption + scope 명시 강제.",
+  "useWhen": ["행렬 데이터 비교", "정렬 가능한 리스트"],
+  "doNotUseWhen": ["레이아웃 용도 금지", "단순 키-값 쌍은 dl 또는 stack"],
+  "props": [
+    { "name": "caption", "type": "string", "required": true },
+    { "name": "captionVisible", "type": "boolean", "default": true },
+    { "name": "columns", "type": "Array<{key, label, sortable?}>", "required": true },
+    { "name": "rows", "type": "Array<Record<string, unknown>>", "required": true }
+  ],
+  "slots": [],
+  "a11y": {
+    "roles": [],
+    "requiredAttrs": [
+      { "selector": "table", "attr": ":has(caption)", "valuePattern": "true" },
+      { "selector": "th", "attr": "scope", "valuePattern": "col|row" }
+    ],
+    "keyboard": {}
+  },
+  "states": { "required": ["default"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/Table",
+  "exemplaryUsages": []
+}

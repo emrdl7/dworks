@@ -1,0 +1,20 @@
+{
+  "id": "brand-campaign-carbon",
+  "category": "brand-campaign",
+  "complianceProfile": "free",
+  "intent": "탄소중립 시민 참여 캠페인 랜딩. 실천 미션, 누적 참여 수, 신청 CTA를 설득력 있게 보여준다.",
+  "answers": {
+    "client": "Carbon Zero Week",
+    "audience": "시민, 학교, 지역 커뮤니티",
+    "tone": "캠페인성, 따뜻함, 참여 유도",
+    "key_message": "작은 실천이 도시의 탄소를 줄입니다",
+    "dw_density": "여유형",
+    "dw_structure": "랜딩",
+    "dw_image_usage": "히어로"
+  },
+  "expected": {
+    "requiredSections": ["hero", "participation metrics", "missions", "how to join", "CTA"],
+    "forbiddenPatterns": ["초록색 단일 팔레트", "의미 없는 자연 배경", "metric 단위 누락"],
+    "mobileRisks": ["큰 헤드라인 줄바꿈", "미션 카드 높이", "CTA 하단 노출"]
+  }
+}

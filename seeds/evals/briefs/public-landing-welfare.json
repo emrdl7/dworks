@@ -1,0 +1,20 @@
+{
+  "id": "public-landing-welfare",
+  "category": "public-landing",
+  "complianceProfile": "infoux",
+  "intent": "복지 지원 포털 첫 화면. 50대 이상 도민도 쉽게 신청 가능한 공공서비스 랜딩.",
+  "answers": {
+    "client": "생활복지지원센터",
+    "audience": "중장년, 고령층, 보호자",
+    "tone": "공공기관형, 친절함, 큰 글씨",
+    "key_message": "내게 맞는 복지 혜택을 빠르게 확인하고 신청하세요",
+    "dw_density": "여유형",
+    "dw_structure": "랜딩",
+    "dw_image_usage": "없음"
+  },
+  "expected": {
+    "requiredSections": ["header", "hero", "혜택 찾기", "신청 절차", "문의", "footer"],
+    "forbiddenPatterns": ["작은 보조 텍스트 과다", "낮은 대비", "CTA 3개 이상 동등 강조"],
+    "mobileRisks": ["버튼 터치 영역", "절차 카드 가로 스크롤", "전화번호 가독성"]
+  }
+}

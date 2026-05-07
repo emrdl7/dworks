@@ -1,0 +1,82 @@
+{
+  "ranAt": "2026-05-06T07:58:45.456Z",
+  "mode": "schema",
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "results": [
+    {
+      "file": "brand-campaign-carbon.json",
+      "id": "brand-campaign-carbon",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "brand-campaign-startup.json",
+      "id": "brand-campaign-startup",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "dashboard-customer-support.json",
+      "id": "dashboard-customer-support",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "dashboard-energy-monitoring.json",
+      "id": "dashboard-energy-monitoring",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "dashboard-project-status.json",
+      "id": "dashboard-project-status",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "form-business-permit.json",
+      "id": "form-business-permit",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "form-event-registration.json",
+      "id": "form-event-registration",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "list-notice-center.json",
+      "id": "list-notice-center",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "list-tour-destinations.json",
+      "id": "list-tour-destinations",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "public-landing-jdc.json",
+      "id": "public-landing-jdc",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "public-landing-transport.json",
+      "id": "public-landing-transport",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "file": "public-landing-welfare.json",
+      "id": "public-landing-welfare",
+      "ok": true,
+      "errors": []
+    }
+  ],
+  "resultFile": "seeds/evals/results/2026-05-06T07-58-45-457Z-schema.json"
+}

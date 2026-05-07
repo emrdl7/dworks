@@ -1,0 +1,20 @@
+{
+  "id": "list-tour-destinations",
+  "category": "list-detail",
+  "complianceProfile": "free",
+  "intent": "제주 관광지 탐색 목록. 지역, 테마, 이동시간 필터로 관광지를 비교하고 상세로 이동한다.",
+  "answers": {
+    "client": "Jeju Trip",
+    "audience": "가족 여행객, 20대 커플, 외국인 관광객",
+    "tone": "서비스형, 생동감, 탐색 중심",
+    "key_message": "오늘 일정에 맞는 제주 여행지를 찾으세요",
+    "dw_density": "표준형",
+    "dw_structure": "목록/상세",
+    "dw_image_usage": "카드"
+  },
+  "expected": {
+    "requiredSections": ["search filters", "featured result", "destination cards", "sort", "footer"],
+    "forbiddenPatterns": ["이미지 없는 관광 카드", "필터 label 누락", "좋아요가 주 CTA보다 강함"],
+    "mobileRisks": ["필터 칩 줄바꿈", "카드 이미지 비율", "긴 관광지명"]
+  }
+}

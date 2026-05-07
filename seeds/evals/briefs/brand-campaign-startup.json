@@ -1,0 +1,20 @@
+{
+  "id": "brand-campaign-startup",
+  "category": "brand-campaign",
+  "complianceProfile": "free",
+  "intent": "스타트업 데모데이 홍보 랜딩. 참가 스타트업, 심사위원, 일정, 신청 CTA를 세련되게 구성한다.",
+  "answers": {
+    "client": "Next Demo Day",
+    "audience": "투자자, 창업팀, 액셀러레이터",
+    "tone": "미래지향, 전문성, 고급감",
+    "key_message": "다음 시장을 여는 팀을 가장 먼저 만나보세요",
+    "dw_density": "표준형",
+    "dw_structure": "랜딩",
+    "dw_image_usage": "배경"
+  },
+  "expected": {
+    "requiredSections": ["hero", "startup lineup", "schedule", "judges", "application CTA"],
+    "forbiddenPatterns": ["generic SaaS dashboard mockup", "보라/파랑 gradient 과다", "로고 없는 브랜드"],
+    "mobileRisks": ["라인업 카드 overflow", "일정 타임라인 압축", "CTA 중복"]
+  }
+}

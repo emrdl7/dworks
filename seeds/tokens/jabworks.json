@@ -1,0 +1,106 @@
+{
+  "id": "tokens.jabworks.v0",
+  "adapter": "jabworks",
+  "name": "jabworks DS v0 (placeholder)",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "정확한 값은 jabworks 디자이너 워크숍 후 확정. Phase 1 Week 1. 아래는 Tailwind 기반 임시 베이스라인.",
+
+  "primitive": {
+    "color": {
+      "neutral.50":  "#fafafa",
+      "neutral.100": "#f5f5f5",
+      "neutral.200": "#e5e5e5",
+      "neutral.300": "#d4d4d4",
+      "neutral.500": "#737373",
+      "neutral.700": "#404040",
+      "neutral.900": "#171717",
+
+      "brand.50":  "#eff6ff",
+      "brand.100": "#dbeafe",
+      "brand.500": "#3b82f6",
+      "brand.700": "#1d4ed8",
+      "brand.900": "#1e3a8a",
+
+      "feedback.error":   "#ef4444",
+      "feedback.success": "#10b981",
+      "feedback.warn":    "#f59e0b"
+    },
+    "spacing": {
+      "0":   "0",
+      "xs":  "4px",
+      "sm":  "8px",
+      "md":  "16px",
+      "lg":  "24px",
+      "xl":  "32px",
+      "2xl": "48px",
+      "3xl": "64px"
+    },
+    "fontSize": {
+      "xs":  "12px",
+      "sm":  "14px",
+      "md":  "16px",
+      "lg":  "18px",
+      "xl":  "20px",
+      "2xl": "24px",
+      "3xl": "32px",
+      "4xl": "48px"
+    },
+    "fontFamily": {
+      "sans": "Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+      "mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace"
+    },
+    "radius": {
+      "none": "0",
+      "sm":   "4px",
+      "md":   "8px",
+      "lg":   "12px",
+      "full": "9999px"
+    },
+    "shadow": {
+      "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "md": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      "lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)"
+    },
+    "motion": {
+      "duration.fast":   "120ms",
+      "duration.normal": "200ms",
+      "duration.slow":   "320ms",
+      "easing.standard": "cubic-bezier(0.2, 0, 0, 1)",
+      "easing.emphasized": "cubic-bezier(0.3, 0, 0, 1)"
+    }
+  },
+
+  "themes": {
+    "light": {
+      "color.bg.primary":      "primitive.color.neutral.50",
+      "color.bg.secondary":    "primitive.color.neutral.100",
+      "color.bg.surface":      "primitive.color.neutral.50",
+      "color.text.default":    "primitive.color.neutral.900",
+      "color.text.muted":      "primitive.color.neutral.500",
+      "color.text.inverse":    "primitive.color.neutral.50",
+      "color.border.default":  "primitive.color.neutral.300",
+      "color.border.subtle":   "primitive.color.neutral.200",
+      "color.accent.primary":  "primitive.color.brand.700",
+      "color.accent.primary-hover": "primitive.color.brand.900",
+      "color.feedback.error":   "primitive.color.feedback.error",
+      "color.feedback.success": "primitive.color.feedback.success",
+      "color.feedback.warn":    "primitive.color.feedback.warn"
+    },
+    "dark": {
+      "color.bg.primary":      "primitive.color.neutral.900",
+      "color.bg.secondary":    "primitive.color.neutral.700",
+      "color.bg.surface":      "primitive.color.neutral.900",
+      "color.text.default":    "primitive.color.neutral.50",
+      "color.text.muted":      "primitive.color.neutral.300",
+      "color.text.inverse":    "primitive.color.neutral.900",
+      "color.border.default":  "primitive.color.neutral.500",
+      "color.border.subtle":   "primitive.color.neutral.700",
+      "color.accent.primary":  "primitive.color.brand.500",
+      "color.accent.primary-hover": "primitive.color.brand.100",
+      "color.feedback.error":   "primitive.color.feedback.error",
+      "color.feedback.success": "primitive.color.feedback.success",
+      "color.feedback.warn":    "primitive.color.feedback.warn"
+    }
+  }
+}

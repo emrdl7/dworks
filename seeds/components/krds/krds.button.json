@@ -1,0 +1,99 @@
+{
+  "id": "krds.button",
+  "name": "버튼",
+  "category": "form",
+  "source": "krds",
+  "version": "1.0.0",
+  "description": "사용자 액션을 트리거하는 기본 버튼.",
+
+  "useWhen": [
+    "양식 제출, 페이지 내 액션 트리거",
+    "모달 열기/닫기, 단계 진행 등 명시적 사용자 의도 표현"
+  ],
+  "doNotUseWhen": [
+    "다른 페이지로 이동하는 경우 (link 사용)",
+    "단순 토글 상태 표시 (switch / checkbox 사용)"
+  ],
+
+  "props": [
+    {
+      "name": "variant",
+      "type": "primary | secondary | tertiary | ghost | danger",
+      "default": "primary"
+    },
+    {
+      "name": "size",
+      "type": "sm | md | lg",
+      "default": "md"
+    },
+    {
+      "name": "type",
+      "type": "button | submit | reset",
+      "default": "button"
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "iconOnly",
+      "type": "boolean",
+      "default": false,
+      "description": "아이콘 단독 사용 여부. true면 aria-label 필수."
+    }
+  ],
+
+  "slots": [
+    { "name": "default", "type": "string | ReactNode", "description": "버튼 라벨" }
+  ],
+
+  "a11y": {
+    "roles": ["button"],
+    "requiredAttrs": [
+      {
+        "selector": "button[data-icon-only=true]",
+        "attr": "aria-label",
+        "valuePattern": ".+",
+        "rationale": "아이콘 단독 버튼은 시각 텍스트가 없으므로 aria-label 필수"
+      }
+    ],
+    "keyboard": {
+      "Enter": "버튼 활성화",
+      "Space": "버튼 활성화"
+    },
+    "minTouchTarget": "24x24"
+  },
+
+  "krdsLevel": {
+    "required": ["krds.button.r1", "krds.button.r2"],
+    "better": ["krds.button.b1"],
+    "best": []
+  },
+
+  "rules": [
+    {
+      "id": "krds.button.r1",
+      "level": "required",
+      "title": "아이콘 단독 버튼은 aria-label 필수",
+      "description": "iconOnly=true 인 버튼은 aria-label 또는 sr-only 텍스트로 라벨 제공."
+    },
+    {
+      "id": "krds.button.r2",
+      "level": "required",
+      "title": "최소 클릭 영역 24×24",
+      "description": "버튼의 클릭 가능 영역은 24×24 픽셀 이상."
+    },
+    {
+      "id": "krds.button.b1",
+      "level": "better",
+      "title": "포커스 인디케이터 명확",
+      "description": "포커스 시 outline 또는 box-shadow로 명확한 시각 표시."
+    }
+  ],
+
+  "renderer": "react",
+  "reactPath": "@krds-studio/components/Button",
+
+  "certifiedExamples": []
+}

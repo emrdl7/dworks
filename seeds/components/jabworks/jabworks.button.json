@@ -1,0 +1,76 @@
+{
+  "id": "jabworks.button",
+  "adapter": "jabworks",
+  "name": "버튼",
+  "category": "form",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "정확한 변형/크기/토큰 binding은 jabworks 디자이너 워크숍 후 확정. Phase 1 Week 1.",
+
+  "description": "사용자 행동을 유도하는 인터랙티브 요소.",
+
+  "useWhen": [
+    "주된 행동을 유도할 때 (제출, 저장, 다음으로)",
+    "다이얼로그를 열거나 닫을 때"
+  ],
+  "doNotUseWhen": [
+    "다른 페이지로 이동할 때 (link 사용)",
+    "선택 가능한 항목을 표시할 때 (radio/checkbox 사용)"
+  ],
+
+  "props": [
+    {
+      "name": "variant",
+      "type": "primary | secondary | tertiary | ghost | danger",
+      "default": "primary"
+    },
+    { "name": "size", "type": "sm | md | lg", "default": "md" },
+    { "name": "type", "type": "button | submit | reset", "default": "button" },
+    { "name": "fullWidth", "type": "boolean", "default": false },
+    { "name": "disabled", "type": "boolean", "default": false },
+    { "name": "loading", "type": "boolean", "default": false },
+    {
+      "name": "iconLeft",
+      "type": "ReactNode",
+      "description": "텍스트가 비어있는 아이콘 단독 버튼은 aria-label 필수"
+    },
+    { "name": "iconRight", "type": "ReactNode" }
+  ],
+
+  "slots": [{ "name": "label", "type": "string | ReactNode" }],
+
+  "a11y": {
+    "roles": ["button"],
+    "requiredAttrs": [
+      {
+        "selector": "button[data-icon-only=true]",
+        "attr": "aria-label",
+        "valuePattern": ".+",
+        "rationale": "아이콘 단독 버튼은 시각 텍스트가 없으므로 aria-label 필수"
+      }
+    ],
+    "keyboard": {
+      "Enter": "버튼 활성화",
+      "Space": "버튼 활성화"
+    },
+    "minTouchTarget": "24x24"
+  },
+
+  "states": {
+    "required": ["default", "hover", "focus", "active", "disabled", "loading"]
+  },
+
+  "tokenBindings": {
+    "_note": "jabworks DS v0 워크숍에서 확정",
+    "primary": {
+      "bg": "semantic.color.accent.primary",
+      "bgHover": "semantic.color.accent.primary-hover",
+      "text": "semantic.color.text.inverse"
+    }
+  },
+
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/Button",
+
+  "exemplaryUsages": []
+}

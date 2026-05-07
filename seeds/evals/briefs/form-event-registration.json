@@ -1,0 +1,20 @@
+{
+  "id": "form-event-registration",
+  "category": "application-form",
+  "complianceProfile": "free",
+  "intent": "디자인 워크숍 참가 신청 페이지. 참가자 정보, 관심 세션, 식이 제한, 개인정보 동의를 받는다.",
+  "answers": {
+    "client": "Design Works Lab",
+    "audience": "디자이너, 퍼블리셔, PM",
+    "tone": "서비스형, 친근함, 전문성",
+    "key_message": "실무 디자인 자동화 워크숍에 참여하세요",
+    "dw_density": "표준형",
+    "dw_structure": "신청폼",
+    "dw_image_usage": "히어로"
+  },
+  "expected": {
+    "requiredSections": ["hero", "event summary", "form fields", "session options", "consent", "submit"],
+    "forbiddenPatterns": ["긴 문단 hero", "label 없는 checkbox", "동의 CTA 과다 강조"],
+    "mobileRisks": ["세션 옵션 카드 폭", "폼 CTA 고정 영역", "hero 이미지 높이"]
+  }
+}

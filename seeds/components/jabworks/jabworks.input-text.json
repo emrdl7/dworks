@@ -1,0 +1,38 @@
+{
+  "id": "jabworks.input-text",
+  "adapter": "jabworks",
+  "name": "텍스트 입력",
+  "category": "form",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 정확한 토큰 binding + error/helper text 정책 확정.",
+  "description": "단일 줄 텍스트 입력. label 필수, placeholder 단독 라벨 금지.",
+  "useWhen": ["폼에서 단일 줄 텍스트, 이메일, 비밀번호, 전화번호, URL 입력"],
+  "doNotUseWhen": ["여러 줄 텍스트는 textarea", "선택 가능한 항목은 select/radio/checkbox"],
+  "props": [
+    { "name": "type", "type": "enum", "enum": ["text", "email", "password", "tel", "url"], "default": "text" },
+    { "name": "label", "type": "string", "required": true },
+    { "name": "name", "type": "string" },
+    { "name": "value", "type": "string" },
+    { "name": "placeholder", "type": "string" },
+    { "name": "required", "type": "boolean", "default": false },
+    { "name": "disabled", "type": "boolean", "default": false },
+    { "name": "error", "type": "string" },
+    { "name": "helperText", "type": "string" }
+  ],
+  "slots": [],
+  "a11y": {
+    "roles": [],
+    "requiredAttrs": [
+      { "selector": "input", "attr": "id", "valuePattern": ".+" },
+      { "selector": "label", "attr": "for", "valuePattern": ".+" },
+      { "selector": "input[aria-invalid=true]", "attr": "aria-describedby", "valuePattern": ".+" }
+    ],
+    "keyboard": { "Tab": "포커스 이동" }
+  },
+  "states": { "required": ["default", "hover", "focus", "active", "disabled", "error"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/Input",
+  "exemplaryUsages": []
+}

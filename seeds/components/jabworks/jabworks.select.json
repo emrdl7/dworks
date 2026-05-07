@@ -1,0 +1,34 @@
+{
+  "id": "jabworks.select",
+  "adapter": "jabworks",
+  "name": "선택",
+  "category": "form",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 native vs custom listbox 결정. 1차는 native 우선.",
+  "description": "옵션 목록에서 하나 선택.",
+  "useWhen": ["옵션 5~12개 정도", "긴 목록은 검색형 ComboBox로 (현재 카탈로그 외)"],
+  "doNotUseWhen": ["옵션 2~3개는 radio가 더 명확"],
+  "props": [
+    { "name": "label", "type": "string", "required": true },
+    { "name": "name", "type": "string" },
+    { "name": "options", "type": "Array<{value, label}>", "required": true },
+    { "name": "value", "type": "string" },
+    { "name": "required", "type": "boolean", "default": false },
+    { "name": "disabled", "type": "boolean", "default": false }
+  ],
+  "slots": [],
+  "a11y": {
+    "roles": [],
+    "requiredAttrs": [
+      { "selector": "select", "attr": "id", "valuePattern": ".+" },
+      { "selector": "label", "attr": "for", "valuePattern": ".+" }
+    ],
+    "keyboard": { "Up/Down": "옵션 이동", "Enter": "선택" }
+  },
+  "states": { "required": ["default", "hover", "focus", "disabled"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/Select",
+  "exemplaryUsages": []
+}

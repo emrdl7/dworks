@@ -1,0 +1,20 @@
+{
+  "id": "dashboard-customer-support",
+  "category": "dashboard",
+  "complianceProfile": "free",
+  "intent": "고객지원 운영 대시보드. 미처리 문의, SLA 위험, 채널별 유입, 최근 이슈를 표시한다.",
+  "answers": {
+    "client": "SupportOps",
+    "audience": "CS 리더, 운영 담당자",
+    "tone": "업무시스템형, 긴급도 명확",
+    "key_message": "SLA 위험 문의를 놓치지 않는다",
+    "dw_density": "압축형",
+    "dw_structure": "대시보드",
+    "dw_image_usage": "없음"
+  },
+  "expected": {
+    "requiredSections": ["SLA metrics", "urgent queue", "channel mix", "recent issues"],
+    "forbiddenPatterns": ["상태 색만으로 의미 전달", "CTA 없는 목록", "과한 gradient"],
+    "mobileRisks": ["긴 티켓 제목", "배지 줄바꿈", "차트 영역 축소"]
+  }
+}

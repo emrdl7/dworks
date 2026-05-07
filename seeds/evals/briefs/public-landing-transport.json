@@ -1,0 +1,20 @@
+{
+  "id": "public-landing-transport",
+  "category": "public-landing",
+  "complianceProfile": "infoux",
+  "intent": "교통정보 통합 안내 페이지. 실시간 운행, 공지, 민원 바로가기를 한 화면에서 제공한다.",
+  "answers": {
+    "client": "도시교통정보센터",
+    "audience": "출퇴근 시민, 관광객, 교통 민원 담당자",
+    "tone": "공공기관형, 명확함, 실시간 정보",
+    "key_message": "오늘의 교통 상황을 한눈에 확인하세요",
+    "dw_density": "표준형",
+    "dw_structure": "랜딩",
+    "dw_image_usage": "카드"
+  },
+  "expected": {
+    "requiredSections": ["header", "hero", "실시간 현황", "공지", "민원 바로가기", "footer"],
+    "forbiddenPatterns": ["상태 색 의미 불명확", "hero 이미지 의존", "표 없는 현황"],
+    "mobileRisks": ["상태 배지가 본문과 겹침", "공지 목록 행 높이", "nav overflow"]
+  }
+}

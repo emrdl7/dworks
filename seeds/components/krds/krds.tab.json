@@ -1,0 +1,149 @@
+{
+  "id": "krds.tab",
+  "name": "탭",
+  "category": "navigation",
+  "source": "krds",
+  "version": "1.0.0",
+  "description": "상호 배타적인 콘텐츠 그룹을 전환하는 컴포넌트.",
+
+  "useWhen": [
+    "동일한 맥락의 콘텐츠를 여러 그룹으로 나눠 보여줄 때",
+    "한 번에 한 그룹씩만 보여줘도 충분할 때"
+  ],
+  "doNotUseWhen": [
+    "그룹 간 비교가 중요한 경우 (테이블 사용)",
+    "탭 개수가 7개 이상인 경우 (네비게이션으로 분리)"
+  ],
+
+  "props": [
+    {
+      "name": "items",
+      "type": "TabItem[]",
+      "required": true,
+      "description": "탭 항목 배열. 각 항목은 { id, label, panelId } 구조."
+    },
+    {
+      "name": "activeIndex",
+      "type": "number",
+      "required": true,
+      "default": 0
+    },
+    {
+      "name": "orientation",
+      "type": "horizontal | vertical",
+      "default": "horizontal"
+    },
+    {
+      "name": "onChange",
+      "type": "(index: number) => void",
+      "required": false
+    }
+  ],
+
+  "slots": [
+    {
+      "name": "panel",
+      "type": "ReactNode | string",
+      "description": "각 탭 인덱스에 대응하는 패널 콘텐츠."
+    }
+  ],
+
+  "a11y": {
+    "roles": ["tablist", "tab", "tabpanel"],
+    "requiredAttrs": [
+      {
+        "selector": "[role=tab]",
+        "attr": "aria-selected",
+        "valuePattern": "true|false"
+      },
+      {
+        "selector": "[role=tab][aria-selected=true]",
+        "attr": "title",
+        "value": "선택됨",
+        "rationale": "SenseReader 인증 호환을 위한 한국 인증 특화 요건"
+      },
+      {
+        "selector": "[role=tab]",
+        "attr": "aria-controls",
+        "valuePattern": ".+"
+      },
+      {
+        "selector": "[role=tabpanel]",
+        "attr": "aria-labelledby",
+        "valuePattern": ".+"
+      }
+    ],
+    "keyboard": {
+      "ArrowLeft": "이전 탭으로 포커스 이동 (수평 방향)",
+      "ArrowRight": "다음 탭으로 포커스 이동 (수평 방향)",
+      "ArrowUp": "이전 탭으로 포커스 이동 (수직 방향)",
+      "ArrowDown": "다음 탭으로 포커스 이동 (수직 방향)",
+      "Home": "첫 탭으로 이동",
+      "End": "마지막 탭으로 이동",
+      "Enter": "탭 활성화",
+      "Space": "탭 활성화"
+    }
+  },
+
+  "krdsLevel": {
+    "required": [
+      "krds.tab.r1",
+      "krds.tab.r2",
+      "krds.tab.r3"
+    ],
+    "better": [
+      "krds.tab.b1"
+    ],
+    "best": [
+      "krds.tab.bs1"
+    ]
+  },
+
+  "rules": [
+    {
+      "id": "krds.tab.r1",
+      "level": "required",
+      "title": "활성 탭 title=\"선택됨\"",
+      "description": "활성 상태 탭에 title=\"선택됨\" 속성을 부여하여 SenseReader 호환성을 확보한다.",
+      "rationale": "JDC 등 공공기관 인증 통과 사례 기준."
+    },
+    {
+      "id": "krds.tab.r2",
+      "level": "required",
+      "title": "키보드 화살표 이동",
+      "description": "탭 간 ←→ 키보드 이동을 보장한다."
+    },
+    {
+      "id": "krds.tab.r3",
+      "level": "required",
+      "title": "aria-controls / aria-labelledby 연결",
+      "description": "각 탭과 패널이 aria 속성으로 양방향 연결된다."
+    },
+    {
+      "id": "krds.tab.b1",
+      "level": "better",
+      "title": "비활성 탭 명도대비 4.5:1",
+      "description": "비활성 탭 텍스트와 배경의 명도대비가 4.5:1 이상이다."
+    },
+    {
+      "id": "krds.tab.bs1",
+      "level": "best",
+      "title": "탭 변경 시 라이브 안내",
+      "description": "탭 변경 시 aria-live 영역으로 변경 사실을 안내한다."
+    }
+  ],
+
+  "renderer": "react",
+  "reactPath": "@krds-studio/components/Tab",
+
+  "certifiedExamples": [
+    {
+      "id": "ex.tab.jdc-2024",
+      "project": "JDC 통합홈 2024",
+      "auditor": "WebWatch",
+      "passedAt": "2024-11-15",
+      "snippetPath": "seeds/examples/tab/jdc-2024.html",
+      "notes": "title=\"선택됨\" + aria-selected 조합으로 통과"
+    }
+  ]
+}

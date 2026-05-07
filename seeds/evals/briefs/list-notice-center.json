@@ -1,0 +1,20 @@
+{
+  "id": "list-notice-center",
+  "category": "list-detail",
+  "complianceProfile": "infoux",
+  "intent": "공공기관 공지사항 목록. 중요 공지, 카테고리, 검색, 날짜, 첨부 여부를 명확히 보여준다.",
+  "answers": {
+    "client": "정보정책원",
+    "audience": "일반 시민, 기관 담당자",
+    "tone": "공공기관형, 정확함, 검색 중심",
+    "key_message": "필요한 공지를 빠르게 찾으세요",
+    "dw_density": "압축형",
+    "dw_structure": "목록/상세",
+    "dw_image_usage": "없음"
+  },
+  "expected": {
+    "requiredSections": ["page title", "search", "category tabs", "notice list", "pagination"],
+    "forbiddenPatterns": ["테이블 caption 누락", "검색 input label 누락", "날짜만 작은 회색"],
+    "mobileRisks": ["탭 가로 overflow", "공지 제목 줄바꿈", "페이지네이션 터치 영역"]
+  }
+}

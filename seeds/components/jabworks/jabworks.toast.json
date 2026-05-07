@@ -1,0 +1,32 @@
+{
+  "id": "jabworks.toast",
+  "adapter": "jabworks",
+  "name": "토스트",
+  "category": "feedback",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 dismiss 시간 + position 확정.",
+  "description": "사용자 흐름을 차단하지 않는 일시적 피드백.",
+  "useWhen": ["저장 성공 같은 비차단 알림", "흐름 방해 없는 정보 전달"],
+  "doNotUseWhen": ["사용자 응답이 필요하면 modal"],
+  "props": [
+    { "name": "tone", "type": "enum", "enum": ["info", "success", "warn", "error"], "default": "info" },
+    { "name": "title", "type": "string", "required": true },
+    { "name": "description", "type": "string" },
+    { "name": "dismissible", "type": "boolean", "default": true }
+  ],
+  "slots": [],
+  "a11y": {
+    "roles": ["status", "alert"],
+    "requiredAttrs": [
+      { "selector": "[role=status]", "attr": "aria-live", "valuePattern": "polite" },
+      { "selector": "[role=alert]", "attr": "aria-live", "valuePattern": "assertive" }
+    ],
+    "keyboard": {}
+  },
+  "states": { "required": ["default"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/Toast",
+  "exemplaryUsages": []
+}

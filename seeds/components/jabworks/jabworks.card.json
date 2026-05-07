@@ -1,0 +1,27 @@
+{
+  "id": "jabworks.card",
+  "adapter": "jabworks",
+  "name": "카드",
+  "category": "layout",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 elevation 토큰 확정. border-left 4px solid 디폴트 패턴은 ai-slop-check Soft warn으로 차단.",
+  "description": "콘텐츠를 시각적으로 묶는 컨테이너. shadow 또는 thin border로 분리.",
+  "useWhen": ["관련 정보를 한 단위로 묶을 때", "리스트 항목 카드뷰"],
+  "doNotUseWhen": ["깊은 중첩 카드 안의 카드는 시각 노이즈. 한 레벨까지"],
+  "props": [
+    { "name": "elevation", "type": "enum", "enum": ["none", "sm", "md", "lg"], "default": "sm" },
+    { "name": "padding", "type": "enum", "enum": ["sm", "md", "lg"], "default": "md" }
+  ],
+  "slots": [
+    { "name": "header", "type": "ComponentInstance[] | string" },
+    { "name": "body", "type": "ComponentInstance[] | string" },
+    { "name": "footer", "type": "ComponentInstance[] | string" }
+  ],
+  "a11y": { "roles": [], "requiredAttrs": [], "keyboard": {} },
+  "states": { "required": ["default"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/Card",
+  "exemplaryUsages": []
+}

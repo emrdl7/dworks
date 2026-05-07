@@ -1,0 +1,20 @@
+{
+  "id": "form-business-permit",
+  "category": "application-form",
+  "complianceProfile": "infoux",
+  "intent": "사업자 등록 지원 신청폼. 신청자 정보, 사업장 정보, 첨부 서류, 동의 절차를 단계적으로 입력한다.",
+  "answers": {
+    "client": "기업지원센터",
+    "audience": "소상공인, 법인 담당자",
+    "tone": "공공기관형, 명확함",
+    "key_message": "필수 정보를 확인하고 신청서를 제출하세요",
+    "dw_density": "표준형",
+    "dw_structure": "신청폼",
+    "dw_image_usage": "없음"
+  },
+  "expected": {
+    "requiredSections": ["step indicator", "applicant fields", "business fields", "attachments", "consent", "submit"],
+    "forbiddenPatterns": ["label 없는 input", "placeholder-only label", "error 상태 없음"],
+    "mobileRisks": ["2열 폼 고정", "첨부 버튼 폭", "단계 표시 overflow"]
+  }
+}

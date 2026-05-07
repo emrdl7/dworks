@@ -1,0 +1,34 @@
+{
+  "id": "jabworks.checkbox-radio",
+  "adapter": "jabworks",
+  "name": "체크박스/라디오",
+  "category": "form",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 단일/그룹 모드 토큰 확정.",
+  "description": "체크박스 또는 라디오. mode prop으로 분기.",
+  "useWhen": ["다중 선택은 checkbox", "단일 선택 (옵션 2~5개)은 radio"],
+  "doNotUseWhen": ["옵션 6+는 select"],
+  "props": [
+    { "name": "mode", "type": "enum", "enum": ["checkbox", "radio"], "required": true },
+    { "name": "label", "type": "string", "required": true },
+    { "name": "name", "type": "string" },
+    { "name": "value", "type": "string" },
+    { "name": "checked", "type": "boolean" },
+    { "name": "disabled", "type": "boolean", "default": false }
+  ],
+  "slots": [],
+  "a11y": {
+    "roles": [],
+    "requiredAttrs": [
+      { "selector": "input", "attr": "id", "valuePattern": ".+" },
+      { "selector": "label", "attr": "for", "valuePattern": ".+" }
+    ],
+    "keyboard": { "Space": "토글", "Tab": "포커스 이동" }
+  },
+  "states": { "required": ["default", "hover", "focus", "checked", "disabled"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/CheckboxRadio",
+  "exemplaryUsages": []
+}

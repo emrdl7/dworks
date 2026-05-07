@@ -1,0 +1,27 @@
+{
+  "id": "jabworks.form-group",
+  "adapter": "jabworks",
+  "name": "폼 그룹",
+  "category": "form",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 에러 요약 영역 + 필수 표시 컨벤션 확정.",
+  "description": "폼 필드 묶음. fieldset + legend.",
+  "useWhen": ["관련 입력 필드를 묶을 때", "라디오/체크박스 그룹 래퍼"],
+  "doNotUseWhen": ["단독 input은 그룹 불필요"],
+  "props": [
+    { "name": "legend", "type": "string", "required": true },
+    { "name": "required", "type": "boolean", "default": false }
+  ],
+  "slots": [{ "name": "fields", "type": "ComponentInstance[]" }, { "name": "errors", "type": "string" }],
+  "a11y": {
+    "roles": [],
+    "requiredAttrs": [{ "selector": "fieldset", "attr": ":has(legend)", "valuePattern": "true" }],
+    "keyboard": {}
+  },
+  "states": { "required": ["default"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/FormGroup",
+  "exemplaryUsages": []
+}

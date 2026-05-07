@@ -1,0 +1,20 @@
+{
+  "id": "public-landing-jdc",
+  "category": "public-landing",
+  "complianceProfile": "infoux",
+  "intent": "JDC 메인 페이지. 제주 미래가치, 공공 신뢰, 디지털 정부 톤을 첫 화면에서 강하게 보여준다.",
+  "answers": {
+    "client": "JDC",
+    "audience": "제주도민, 입주기업, 관광·투자 관심자",
+    "tone": "공공기관형, 신뢰감, 디지털",
+    "key_message": "제주의 지속가능한 미래를 만드는 공공 플랫폼",
+    "dw_density": "표준형",
+    "dw_structure": "랜딩",
+    "dw_image_usage": "히어로"
+  },
+  "expected": {
+    "requiredSections": ["header", "hero", "주요 서비스", "공지 또는 소식", "footer"],
+    "forbiddenPatterns": ["generic SaaS hero", "동일 카드 3개만 나열", "raw hex color"],
+    "mobileRisks": ["hero CTA 줄바꿈", "기관명 축약", "카드 3열 고정"]
+  }
+}

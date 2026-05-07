@@ -1,0 +1,20 @@
+{
+  "id": "dashboard-project-status",
+  "category": "dashboard",
+  "complianceProfile": "free",
+  "intent": "사내 프로젝트 현황 대시보드. 진행률, 위험도, 담당자, 이번 주 마감 항목을 빠르게 스캔한다.",
+  "answers": {
+    "client": "jabworks",
+    "audience": "PM, UX팀장, 퍼블리셔",
+    "tone": "업무시스템형, 조용함, 고밀도",
+    "key_message": "이번 주 위험 프로젝트를 먼저 확인",
+    "dw_density": "압축형",
+    "dw_structure": "대시보드",
+    "dw_image_usage": "없음"
+  },
+  "expected": {
+    "requiredSections": ["summary metrics", "risk list", "weekly deadlines", "owner status"],
+    "forbiddenPatterns": ["마케팅 hero", "큰 장식 이미지", "카드 내부 카드"],
+    "mobileRisks": ["표 컬럼 압축", "필터 영역 줄바꿈", "숫자 지표 overflow"]
+  }
+}

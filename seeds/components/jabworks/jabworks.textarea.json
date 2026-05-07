@@ -1,0 +1,36 @@
+{
+  "id": "jabworks.textarea",
+  "adapter": "jabworks",
+  "name": "여러 줄 텍스트 입력",
+  "category": "form",
+  "version": "0.1.0",
+  "status": "placeholder",
+  "_note": "워크숍에서 글자수 카운터·resize 정책 확정.",
+  "description": "여러 줄 텍스트 입력.",
+  "useWhen": ["여러 줄 텍스트, 자유 형식 의견, 메모"],
+  "doNotUseWhen": ["단일 줄은 input-text"],
+  "props": [
+    { "name": "label", "type": "string", "required": true },
+    { "name": "name", "type": "string" },
+    { "name": "value", "type": "string" },
+    { "name": "rows", "type": "number", "default": 4 },
+    { "name": "maxLength", "type": "number" },
+    { "name": "required", "type": "boolean", "default": false },
+    { "name": "disabled", "type": "boolean", "default": false },
+    { "name": "error", "type": "string" }
+  ],
+  "slots": [],
+  "a11y": {
+    "roles": [],
+    "requiredAttrs": [
+      { "selector": "textarea", "attr": "id", "valuePattern": ".+" },
+      { "selector": "label", "attr": "for", "valuePattern": ".+" }
+    ],
+    "keyboard": { "Tab": "포커스 이동" }
+  },
+  "states": { "required": ["default", "hover", "focus", "disabled", "error"] },
+  "tokenBindings": { "_note": "워크숍 후 확정" },
+  "renderer": "react",
+  "reactPath": "@design-works/components/adapters/jabworks/Textarea",
+  "exemplaryUsages": []
+}
