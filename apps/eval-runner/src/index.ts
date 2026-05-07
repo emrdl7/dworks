@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import {
   AXIS_IDS,
   buildPlaceholderTree,
-  callJudge,
+  callJudgeRepeated,
   evalResultSchema,
   getAxisRubric,
   loadBriefs,
@@ -14,6 +14,7 @@ import {
   type AxisScore,
   type Brief,
   type EvalResult,
+  type ReproducibilityCheck,
 } from '@dworks/eval'
 import { captureTree, type CaptureResult } from '@dworks/screenshot'
 
@@ -46,7 +47,17 @@ async function main(): Promise<void> {
 
   const results: EvalResult[] = []
   for (const brief of briefs) {
-    results.push(await runBrief({ brief, axes, runId, runDir, dryRun: args.dryRun, noScreenshots: args.noScreenshots }))
+    results.push(
+      await runBrief({
+        brief,
+        axes,
+        runId,
+        runDir,
+        dryRun: args.dryRun,
+        noScreenshots: args.noScreenshots,
+        repeat: args.repeat,
+      }),
+    )
   }
 
   const summary = summarizeResults(results)
@@ -73,11 +84,13 @@ interface RunBriefInput {
   runDir: string
   dryRun: boolean
   noScreenshots: boolean
+  repeat: number
 }
 
 async function runBrief(input: RunBriefInput): Promise<EvalResult> {
-  const { brief, axes, runId, runDir, dryRun, noScreenshots } = input
-  console.log(`[eval-runner] brief=${brief.id} category=${brief.category}`)
+  const { brief, axes, runId, runDir, dryRun, noScreenshots, repeat } = input
+  const repeatTag = repeat > 1 ? ` repeat=${repeat}` : ''
+  console.log(`[eval-runner] brief=${brief.id} category=${brief.category}${repeatTag}`)
   const tree = buildPlaceholderTree(brief)
   const briefDir = join(runDir, 'briefs', brief.id)
   await mkdir(briefDir, { recursive: true })
@@ -89,6 +102,7 @@ async function runBrief(input: RunBriefInput): Promise<EvalResult> {
       })
 
   const axisScores: AxisScore[] = []
+  const reproducibility: ReproducibilityCheck[] = []
   for (const axisId of axes) {
     const axis = getAxisRubric(axisId)
     const screenshots = captures
@@ -97,16 +111,20 @@ async function runBrief(input: RunBriefInput): Promise<EvalResult> {
         viewport: capture.viewport,
         base64Png: capture.base64Png,
       }))
-    const score = await callJudge(
+    const repeated = await callJudgeRepeated(
       {
         briefId: brief.id,
         briefText: briefToText(brief),
         axis,
         screenshots,
       },
+      repeat,
       { dryRun },
     )
-    axisScores.push(score)
+    axisScores.push(repeated.representative)
+    if (repeated.reproducibility) {
+      reproducibility.push(repeated.reproducibility)
+    }
   }
 
   const result: EvalResult = {
@@ -120,6 +138,7 @@ async function runBrief(input: RunBriefInput): Promise<EvalResult> {
       label: capture.viewport,
       screenshotPath: capture.filePath ?? '',
     })),
+    ...(reproducibility.length > 0 ? { reproducibility } : {}),
   }
   const parsed = evalResultSchema.parse(result)
   await writeFile(join(briefDir, 'result.json'), `${JSON.stringify(parsed, null, 2)}\n`, 'utf8')

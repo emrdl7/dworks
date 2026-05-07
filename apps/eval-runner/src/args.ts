@@ -7,12 +7,16 @@ export interface RunnerArgs {
   axes?: AxisId[]
   runId?: string
   outDir?: string
+  // 라운드 4 §1: --repeat=N. 기본 1, 2 이상이면 같은 axis × N회 호출 후 variance 측정.
+  // 1 미만은 reject.
+  repeat: number
 }
 
 export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env): RunnerArgs {
   const args: RunnerArgs = {
     dryRun: !env.ANTHROPIC_API_KEY,
     noScreenshots: false,
+    repeat: 1,
   }
 
   for (const raw of argv) {
@@ -32,12 +36,22 @@ export function parseArgs(argv: string[], env: NodeJS.ProcessEnv = process.env):
       args.runId = raw.slice('--run-id='.length).trim()
     } else if (raw.startsWith('--out=')) {
       args.outDir = raw.slice('--out='.length).trim()
+    } else if (raw.startsWith('--repeat=')) {
+      args.repeat = parseRepeat(raw.slice('--repeat='.length))
     } else {
       throw new Error(`unknown argument: ${raw}`)
     }
   }
 
   return args
+}
+
+function parseRepeat(value: string): number {
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 1) {
+    throw new Error(`--repeat must be integer >= 1, got: ${value}`)
+  }
+  return n
 }
 
 function splitCsv(value: string): string[] {

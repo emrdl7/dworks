@@ -17,6 +17,7 @@ import {
   type AxisScore,
   type JudgeModel,
   judgeModelSchema,
+  type ReproducibilityCheck,
 } from './types.js'
 
 // ---- 입력 ----
@@ -92,6 +93,14 @@ function buildUserPrompt(input: JudgeInput): string {
 
 // ---- 1순위: Claude (Anthropic SDK) ----
 
+// 라운드 4 §2.5: 모델 버전은 ANTHROPIC_MODEL env로 override.
+// 기본값은 Sonnet 4.5; M1 후반에 Opus 4.7 옵션 검토.
+export const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-4-5-20250929'
+
+function resolveClaudeModel(): string {
+  return process.env.ANTHROPIC_MODEL ?? DEFAULT_CLAUDE_MODEL
+}
+
 async function callClaude(input: JudgeInput): Promise<AxisScore> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
@@ -116,8 +125,9 @@ async function callClaude(input: JudgeInput): Promise<AxisScore> {
   }
   userContent.push({ type: 'text', text: buildUserPrompt(input) })
 
+  const model = resolveClaudeModel()
   const response = await client.messages.create({
-    model: 'claude-sonnet-4-5-20250929', // M1 1차에는 Sonnet 4.5. M1 후반에 Opus 4.7 옵션 검토.
+    model,
     max_tokens: 1024,
     system: buildSystemPrompt(),
     messages: [{ role: 'user', content: userContent }],
@@ -136,6 +146,7 @@ async function callClaude(input: JudgeInput): Promise<AxisScore> {
     judgeStatus: 'ok',
     suggestedAction: parsed.suggestedAction,
     judgeModel: 'claude',
+    judgeModelVersion: model,
   }
 }
 
@@ -197,6 +208,7 @@ export async function callJudge(
 
 // dry-run stub — brief id × axis id의 hash 기반 결정론적 점수.
 // placeholder 트리는 와이어프레임 성격이라 1~3점 범위가 자연스럽다.
+// 라운드 4 §2.3: dry-run은 결정론 유지. repeat 호출해도 같은 점수.
 function stubJudge(input: JudgeInput): AxisScore {
   const seed = hashStr(`${input.briefId}|${input.axis.id}`)
   const score = (seed % 4) + 1 // 1..4
@@ -215,6 +227,7 @@ function stubJudge(input: JudgeInput): AxisScore {
         ? 'design-polish-needed'
         : 'acceptable',
     judgeModel: 'claude',
+    judgeModelVersion: 'dry-run-stub',
   }
 }
 
@@ -251,6 +264,70 @@ export function computeVariance(scores: number[]): number {
   if (scores.length === 0) return 0
   const mean = scores.reduce((a, b) => a + b, 0) / scores.length
   return scores.reduce((a, b) => a + (b - mean) ** 2, 0) / scores.length
+}
+
+// D8 stable 임계값. variance ≤ 0.5 → stable.
+export const STABLE_VARIANCE_THRESHOLD = 0.5
+
+// repeat ≥ 2 호출의 결과 묶음.
+// representative는 첫 호출 점수 기반 + variance > 0.5면 judgeStatus 'unstable'로 갱신.
+// reproducibility는 ReproducibilityCheck — root level EvalResult에 누적.
+export interface RepeatedJudgeResult {
+  representative: AxisScore
+  scores: AxisScore[]
+  reproducibility?: ReproducibilityCheck
+}
+
+/**
+ * 같은 input을 N회 호출하고 variance 기반 안정성 판단.
+ * repeat=1: 단일 호출, reproducibility 없음.
+ * repeat≥2: N회 호출 후 variance 계산 → stable false면 unstable 마킹.
+ *
+ * 라운드 4 §2.2: AxisScore는 단일 호출 결과 그대로 유지하고,
+ *               집계는 result-level metadata(reproducibility)로 둔다.
+ */
+export async function callJudgeRepeated(
+  input: JudgeInput,
+  repeat: number,
+  options: CallJudgeOptions = {},
+): Promise<RepeatedJudgeResult> {
+  if (!Number.isInteger(repeat) || repeat < 1) {
+    throw new Error(`callJudgeRepeated: repeat must be integer ≥ 1, got ${repeat}`)
+  }
+
+  const scores: AxisScore[] = []
+  for (let i = 0; i < repeat; i++) {
+    scores.push(await callJudge(input, options))
+  }
+
+  if (repeat < 2) {
+    return { representative: scores[0]!, scores }
+  }
+
+  // ReproducibilityCheck schema는 scores ≥ 3 요구. 다만 helper는 repeat=2도 허용
+  // (smoke 검증). schema 통과를 위해 실제 누적 시점은 호출자가 판단.
+  const numericScores = scores.map((s) => s.score)
+  const variance = computeVariance(numericScores)
+  const stable = variance <= STABLE_VARIANCE_THRESHOLD
+
+  const representative: AxisScore = stable
+    ? scores[0]!
+    : { ...scores[0]!, judgeStatus: 'unstable' }
+
+  // schema는 ≥3 요구하지만 helper는 less-strict — repeat>=3일 때만 reproducibility 산출.
+  // repeat 2는 stable/unstable 판단만 (representative에 반영) reproducibility 객체 없음.
+  if (repeat < 3) {
+    return { representative, scores }
+  }
+
+  const reproducibility: ReproducibilityCheck = {
+    axis: input.axis.id,
+    scores: numericScores,
+    variance,
+    stable,
+  }
+
+  return { representative, scores, reproducibility }
 }
 
 // 명시적 export — fallback chain 외부 사용.

@@ -59,5 +59,27 @@ describe('eval summary', () => {
     assert.match(report, /^# Dworks Eval Report/)
     assert.match(report, /Axis Summary/)
     assert.match(report, /brief-b/)
+    assert.match(report, /unstable axes:/)
+  })
+
+  it('counts unstable axes at root and perAxis', () => {
+    const unstableResult: EvalResult = {
+      ...resultA,
+      briefId: 'brief-c',
+      treeRootId: 'brief-c.root',
+      axes: [
+        { ...resultA.axes[0]!, judgeStatus: 'unstable' },
+        { ...resultA.axes[1]!, judgeStatus: 'unstable' },
+      ],
+    }
+    const summary = summarizeResults([resultA, unstableResult])
+    assert.equal(summary.unstableAxes, 2)
+    assert.equal(summary.perAxis['non-wireframe']?.unstableSamples, 1)
+    assert.equal(summary.perAxis['emotional-fit']?.unstableSamples, 1)
+  })
+
+  it('omits unstable section when none', () => {
+    const report = renderMarkdownReport(summarizeResults([resultA]))
+    assert.ok(!report.includes('## Unstable Axes'))
   })
 })

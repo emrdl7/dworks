@@ -63,8 +63,21 @@ export const axisScoreSchema = z.object({
   judgeStatus: judgeStatusSchema,
   suggestedAction: suggestedActionSchema,
   judgeModel: judgeModelSchema,
+  // 실제 호출된 모델 버전 문자열 (예: 'claude-sonnet-4-5-20250929').
+  // 라운드 4 §2.5: 재현성 평가는 모델 버전 일관성이 중요하므로 메타로 누적.
+  judgeModelVersion: z.string().optional(),
 })
 export type AxisScore = z.infer<typeof axisScoreSchema>
+
+// ---- 재현성 체크 결과 (D8: 같은 fixture 3회 분산 ≤ 0.5) ----
+
+export const reproducibilityCheckSchema = z.object({
+  axis: axisIdSchema,
+  scores: z.array(z.number().int().min(0).max(5)).min(3),
+  variance: z.number().nonnegative(),
+  stable: z.boolean(), // variance <= 0.5
+})
+export type ReproducibilityCheck = z.infer<typeof reproducibilityCheckSchema>
 
 // ---- 한 fixture(brief × 트리)에 대한 종합 결과 ----
 
@@ -82,18 +95,11 @@ export const evalResultSchema = z.object({
       screenshotPath: z.string(),
     }),
   ),
+  // 라운드 4 §2.2: repeat≥2일 때 axis별 재현성 검사 누적.
+  // 결과 root level에 둬서 axisScore는 단일 호출 결과로 깔끔히 유지.
+  reproducibility: z.array(reproducibilityCheckSchema).optional(),
 })
 export type EvalResult = z.infer<typeof evalResultSchema>
-
-// ---- 재현성 체크 결과 (D8: 같은 fixture 3회 분산 ≤ 0.5) ----
-
-export const reproducibilityCheckSchema = z.object({
-  axis: axisIdSchema,
-  scores: z.array(z.number().int().min(0).max(5)).min(3),
-  variance: z.number().nonnegative(),
-  stable: z.boolean(), // variance <= 0.5
-})
-export type ReproducibilityCheck = z.infer<typeof reproducibilityCheckSchema>
 
 // ---- 사람 grading 보정 (D8: 12개 중 3개 사람 grading, Pearson r ≥ 0.6) ----
 

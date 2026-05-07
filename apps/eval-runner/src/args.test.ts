@@ -25,4 +25,23 @@ describe('parseArgs', () => {
     assert.deepEqual(args.axes, ['non-wireframe', 'emotional-fit'])
     assert.equal(args.noScreenshots, true)
   })
+
+  it('repeat defaults to 1', () => {
+    const args = parseArgs(['--dry-run'])
+    assert.equal(args.repeat, 1)
+  })
+
+  it('parses --repeat=3', () => {
+    const args = parseArgs(['--dry-run', '--repeat=3'])
+    assert.equal(args.repeat, 3)
+  })
+
+  it('rejects --repeat=0', () => {
+    assert.throws(() => parseArgs(['--repeat=0']))
+  })
+
+  it('rejects non-integer --repeat', () => {
+    assert.throws(() => parseArgs(['--repeat=2.5']))
+    assert.throws(() => parseArgs(['--repeat=abc']))
+  })
 })

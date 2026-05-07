@@ -29,8 +29,18 @@ export {
 } from './axes.js'
 export type { AxisRubric, ViewportLabel } from './axes.js'
 
-export { callJudge, computeVariance } from './judge.js'
-export type { JudgeInput, CallJudgeOptions } from './judge.js'
+export {
+  callJudge,
+  callJudgeRepeated,
+  computeVariance,
+  DEFAULT_CLAUDE_MODEL,
+  STABLE_VARIANCE_THRESHOLD,
+} from './judge.js'
+export type {
+  JudgeInput,
+  CallJudgeOptions,
+  RepeatedJudgeResult,
+} from './judge.js'
 
 export { briefSchema, loadBriefs, buildPlaceholderTree } from './brief.js'
 export type { Brief } from './brief.js'
