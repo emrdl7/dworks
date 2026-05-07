@@ -301,6 +301,71 @@ Claude/Codex는 ALERT 작성 후 자율 모드를 종료한다. 사용자가 다
 
 ---
 
+## 12. 세션 인계 (context resume)
+
+새 Claude/Codex 세션이 시작될 때 진행 중인 토픽 컨텍스트를 자동으로 회복하는 절차. 사용자 트리거: "새 세션에서 이어가자", "이어가자", "resume", "context restore" 같은 발화 또는 단순히 cwd가 `~/dworks`인 채 라운드가 진행 중인 상태로 들어왔을 때.
+
+### 12.1 자동 회복 절차 (필수)
+
+새 세션 진입 즉시 다음을 실행한다 (사용자 명시 지시 없이도 자율 수행):
+
+1. **git history 파악**
+   ```bash
+   cd ~/dworks
+   git pull --ff-only
+   git log --oneline -15
+   ```
+2. **자율 모드 상태**
+   ```bash
+   test -f docs/AUTONOMOUS.md && cat docs/AUTONOMOUS.md
+   ```
+3. **최신 라운드 노트 3건**
+   ```bash
+   ls -t docs/discussions/2026-*-round-*.md | head -3 | xargs -I{} cat {}
+   ```
+4. **메인 결정 핵심**
+   ```bash
+   sed -n '/## 4. 마일스톤/,/## 5/p' PLAN.md  # 마일스톤 섹션
+   ```
+5. **자율 모드 watch 재가동** (AUTONOMOUS.md ON 일 시)
+   - Claude: `Bash(run_in_background)` + `Monitor` 도구로 `tail -F .git/feed.log` 재시작 (`COLLABORATION.md` §11.3 패턴).
+   - Codex: 자기 측 watch 재시작 (§11.4).
+6. **사용자에게 회복 요약 1줄 보고** + 다음 [CODEX]/[Claude] 이벤트 또는 사용자 지시 대기.
+
+### 12.2 회복 후 행동 가이드
+
+- 진행 중인 토픽이 미해결을 가지고 있으면, 그 미해결을 검토 후 다음 라운드 작성.
+- 흡수 트리거 도달 상태(미해결 0건)였으면 사용자 OK 신호 대기.
+- 안전장치 발동 직후였으면 ALERT 파일 검토 후 사용자 결정 대기.
+- 코드 변경 작업 중간이었으면 working tree 상태 확인 (`git status`) 후 미커밋 변경이 있으면 상태 보고.
+
+### 12.3 양측 동일 적용
+
+본 컨벤션은 Claude / Codex 둘 다 새 세션 시작 시 동일 절차를 따른다. 한쪽이 이미 회복했어도 다른 쪽은 자기 회복을 독립적으로 수행 (서로 다른 세션 시점에서 시작 가능).
+
+### 12.4 Monitor 재가동 명령 (Claude)
+
+```typescript
+Monitor({
+  description: 'dworks Codex 커밋 watch — feed.log 변경 감지',
+  persistent: true,
+  timeout_ms: 3600000,
+  command: `FEED=~/dworks/.git/feed.log
+tail -F -n 0 "$FEED" 2>&1 | while read -r line; do
+  [ -z "$line" ] && continue
+  if echo "$line" | grep -qE '^tail:|ENOENT'; then echo "[ERROR] $line"; continue; fi
+  hash="$line"
+  body=$(git -C ~/dworks log -1 --format='%B' "$hash" 2>/dev/null) || { echo "[ERROR] git show failed for $hash"; continue; }
+  subject=$(git -C ~/dworks log -1 --format='%s' "$hash" 2>/dev/null)
+  if echo "$body" | grep -q '\\[Codex\\]'; then echo "[CODEX] $hash $subject"
+  elif echo "$body" | grep -q '\\[Claude\\]'; then : # self echo
+  else echo "[USER] $hash $subject"; fi
+done`,
+})
+```
+
+---
+
 ## 부록. 권장 명령
 
 매 라운드 시작 시:
