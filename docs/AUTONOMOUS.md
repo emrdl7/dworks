@@ -31,6 +31,8 @@
 
 M1/M2/M4 4 토픽 범위 안의 코드 변경은 사용자 사전 승인 범위로 본다 ("병행해" mandate). 단 M2/M4는 새 마일스톤 단위라 round 1~2에서 범위 합의 후 실 코드 진행 (사용자 사전 승인은 토픽 시작 자체이지, 범위 미정 상태의 자유 코드 변경은 아니다).
 
+**(II) 확장 sync** (m2/m4-bootstrap 라운드 4 합의 + 사용자 OK 2026-05-07): D15 / §11.6 #5 / §11.9가 docs-only 원칙 + mandate 예외로 갱신됨. 본 mandate의 코드 진행은 docs round 1~2 합의 → round 3+ atomic commit. 후속 코드 토픽 (예: `m2-tree-editor`, `m4-tree-core`)은 본 mandate 범위 안에서 자연스럽게 분리 가능.
+
 ## 정지 조건 (`COLLABORATION.md` §11.6)
 
 1. 한 토픽에서 라운드 6 도달 (`>= 6`)

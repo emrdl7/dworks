@@ -264,7 +264,7 @@ Codex CLI가 동등한 파일 watch + 자동 응답 메커니즘을 지원해야
 | 2 | 동일 미해결 항목 2 라운드 연속 등장 | 직전 두 라운드 노트의 미해결 섹션 비교 (에이전트 문맥 판단) | 자율 모드 즉시 정지 + ALERT |
 | 3 | 한 작업자가 1시간 안에 같은 파일 5회 이상 수정 (단 가장 최근의 흡수 커밋 이후만 카운트, 자동 생성 파일 제외) | `SINCE=$(git log --grep='\[ABSORB\]' -n1 --pretty=%ct \|\| true); FROM_TS=$(($(date +%s)-3600)); CUTOFF=$((SINCE > FROM_TS ? SINCE : FROM_TS)); git log --since="@$CUTOFF" --name-only --pretty=format: \| grep -vE '^(pnpm-lock\.yaml\|package-lock\.json\|yarn\.lock\|bun\.lockb\|\.next/\|\.turbo/\|dist/\|build/)' \| sort \| uniq -c \| sort -rn`에서 ≥5 발견. **제외 대상**: lockfile(`pnpm-lock.yaml` / `package-lock.json` / `yarn.lock` / `bun.lockb`), 빌드 산출물(`.next/`, `.turbo/`, `dist/`, `build/`) 등 의존성 추가나 빌드마다 자동 갱신되는 파일은 의도된 빈번 수정이므로 카운트 제외. 3~4회는 정지 조건이 아니라 검토 신호로만 본다 | 자율 모드 즉시 정지 + ALERT |
 | 4 | `git pull --ff-only` 실패 (non-FF 충돌) | 라운드 시작 시 `git pull --ff-only` 결과 | 자율 모드 즉시 정지 + ALERT. **rebase/merge 자동 시도 금지** |
-| 5 | 코드 변경이 발생하는 라운드 | 응답 라운드 중 docs 외 파일 수정 시도 시 | 자율 모드 자동 정지 (코드 변경은 항상 사용자 OK 후 수동 가동) |
+| 5 | 승인된 mandate 범위를 벗어나는 코드 변경, 또는 round 1~2 합의 전 코드 변경 | 응답 라운드 중 mandate 외 파일 수정 시도 또는 round 3 미만 단계 코드 변경 시도 시 | 자율 모드 자동 정지 + ALERT. **승인된 mandate 범위 안의 코드 변경은 round 1~2 docs 합의 후 atomic commit으로 허용** (m2/m4-bootstrap 라운드 4 합의, II 확장) |
 
 **정지 = `docs/AUTONOMOUS.md` 파일을 삭제**한다. 사용자가 ALERT를 보고 판단 후 신호 파일을 다시 만들어야 자율 모드 재개.
 
@@ -292,12 +292,19 @@ Claude/Codex는 ALERT 작성 후 자율 모드를 종료한다. 사용자가 다
 - **비활성화**: `rm docs/AUTONOMOUS.md` (수동) 또는 §11.6 안전장치 발동 (자동).
 - **재개**: 사용자가 ALERT 검토 → 결정 → `docs/AUTONOMOUS.md` 재생성 → Claude/Codex가 watch 재시작.
 
-### 11.9 코드 변경과 자율 모드의 분리
+### 11.9 코드 변경과 자율 모드의 분리 (II 확장)
 
-자율 모드는 **문서 라운드**(의논, 합의, 메인 문서 흡수)만 다룬다.
-코드 변경(M0 부트스트랩, M1 구현 등)은 **항상 사용자 OK 후 수동 가동**한다.
+자율 모드는 **문서 라운드**(의논, 합의, 메인 문서 흡수)를 기본으로 다룬다. 단 사용자가 특정 milestone/topic의 코드 진행을 명시 승인한 경우에는 해당 mandate 범위 안에서만 코드 라운드를 진행할 수 있다 (m2/m4-bootstrap 라운드 4 합의).
 
-§11.6 안전장치 #5가 이를 강제한다 — 라운드 응답 중 코드 파일이 수정되면 자율 모드는 즉시 정지.
+**코드 라운드 진입 조건**:
+- 토픽 round 1~2 docs 합의 완료 (범위 / 분배 / 첫 코드 단위 명확)
+- worktree clean
+- 파일 소유 범위 명시 (어느 패키지/파일을 누가 수정)
+- atomic commit (한 의미 단위 = 한 commit)
+
+**메인 문서 흡수**(`PLAN.md` / `DECISIONS.md` / `COLLABORATION.md` / `AUTONOMOUS.md` 변경)는 **여전히 사용자 OK 필수** — 코드 자율 진행과 결정 흡수의 안전 경계는 유지된다.
+
+§11.6 안전장치 #5가 이를 강제한다 — 범위 밖 코드 변경, round 3 미만 단계 코드 변경, 또는 합의 전 코드 변경은 즉시 정지 + ALERT.
 
 ---
 
