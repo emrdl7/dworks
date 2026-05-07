@@ -53,6 +53,12 @@ export const judgeModelSchema = z.enum([
 ])
 export type JudgeModel = z.infer<typeof judgeModelSchema>
 
+export const judgeRunSchema = z.object({
+  judgeModel: judgeModelSchema,
+  judgeModelVersion: z.string().optional(),
+})
+export type JudgeRun = z.infer<typeof judgeRunSchema>
+
 // ---- 단일 축 평가 결과 ----
 
 export const axisScoreSchema = z.object({
@@ -76,6 +82,7 @@ export const reproducibilityCheckSchema = z.object({
   scores: z.array(z.number().int().min(0).max(5)).min(3),
   variance: z.number().nonnegative(),
   stable: z.boolean(), // variance <= 0.5
+  judgeRuns: z.array(judgeRunSchema).optional(),
 })
 export type ReproducibilityCheck = z.infer<typeof reproducibilityCheckSchema>
 

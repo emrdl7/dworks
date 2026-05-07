@@ -5,6 +5,7 @@ export {
   suggestedActionSchema,
   axisIdSchema,
   judgeModelSchema,
+  judgeRunSchema,
   axisScoreSchema,
   evalResultSchema,
   reproducibilityCheckSchema,
@@ -16,6 +17,7 @@ export type {
   SuggestedAction,
   AxisId,
   JudgeModel,
+  JudgeRun,
   AxisScore,
   EvalResult,
   ReproducibilityCheck,
@@ -33,12 +35,14 @@ export {
   callJudge,
   callJudgeRepeated,
   computeVariance,
+  hasMixedJudgeRuns,
   DEFAULT_CLAUDE_MODEL,
   STABLE_VARIANCE_THRESHOLD,
 } from './judge.js'
 export type {
   JudgeInput,
   CallJudgeOptions,
+  JudgeRunMetadata,
   RepeatedJudgeResult,
 } from './judge.js'
 

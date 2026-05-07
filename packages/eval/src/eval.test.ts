@@ -8,9 +8,11 @@ import {
   AXIS_IDS,
   AXIS_RUBRICS,
   axisScoreSchema,
+  callJudgeRepeated,
   computeVariance,
   evalResultSchema,
   getAxisRubric,
+  hasMixedJudgeRuns,
   listAxes,
 } from './index.js'
 
@@ -113,5 +115,48 @@ describe('reproducibility variance', () => {
     // [2,3,5]: mean=3.333..., var ≈ 1.555. unstable.
     const v = computeVariance([2, 3, 5])
     assert.ok(v > 0.5)
+  })
+
+  it('detects mixed judge model runs by provider or version', () => {
+    assert.equal(
+      hasMixedJudgeRuns([
+        { judgeModel: 'claude', judgeModelVersion: 'claude-sonnet-4-5-20250929' },
+        { judgeModel: 'claude', judgeModelVersion: 'claude-sonnet-4-5-20250929' },
+      ]),
+      false,
+    )
+    assert.equal(
+      hasMixedJudgeRuns([
+        { judgeModel: 'claude', judgeModelVersion: 'claude-sonnet-4-5-20250929' },
+        { judgeModel: 'claude', judgeModelVersion: 'claude-opus-4-7-20260210' },
+      ]),
+      true,
+    )
+    assert.equal(
+      hasMixedJudgeRuns([
+        { judgeModel: 'claude', judgeModelVersion: 'claude-sonnet-4-5-20250929' },
+        { judgeModel: 'codex', judgeModelVersion: 'gpt-5.2' },
+      ]),
+      true,
+    )
+  })
+
+  it('callJudgeRepeated records judge run metadata in dry-run reproducibility', async () => {
+    const repeated = await callJudgeRepeated(
+      {
+        briefId: 'brief-a',
+        briefText: 'intent: public landing',
+        axis: getAxisRubric('non-wireframe'),
+        screenshots: [],
+      },
+      3,
+      { dryRun: true },
+    )
+    assert.equal(repeated.judgeRuns.length, 3)
+    assert.equal(repeated.representative.judgeStatus, 'ok')
+    assert.deepEqual(
+      repeated.reproducibility?.judgeRuns?.map((run) => run.judgeModelVersion),
+      ['dry-run-stub', 'dry-run-stub', 'dry-run-stub'],
+    )
   })
 })

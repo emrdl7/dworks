@@ -15,6 +15,7 @@ import {
   judgeStatusSchema,
   suggestedActionSchema,
   type AxisScore,
+  type JudgeRun,
   type JudgeModel,
   judgeModelSchema,
   type ReproducibilityCheck,
@@ -271,11 +272,22 @@ export const STABLE_VARIANCE_THRESHOLD = 0.5
 
 // repeat ≥ 2 호출의 결과 묶음.
 // representative는 첫 호출 점수 기반 + variance > 0.5면 judgeStatus 'unstable'로 갱신.
+// repeat 안에서 provider/version이 섞이면 'mixed-model'이 unstable보다 우선한다.
 // reproducibility는 ReproducibilityCheck — root level EvalResult에 누적.
+export type JudgeRunMetadata = JudgeRun
+
 export interface RepeatedJudgeResult {
   representative: AxisScore
   scores: AxisScore[]
+  judgeRuns: JudgeRunMetadata[]
   reproducibility?: ReproducibilityCheck
+}
+
+export function hasMixedJudgeRuns(judgeRuns: readonly JudgeRunMetadata[]): boolean {
+  const keys = new Set(
+    judgeRuns.map((run) => `${run.judgeModel}:${run.judgeModelVersion ?? 'unknown-version'}`),
+  )
+  return keys.size > 1
 }
 
 /**
@@ -299,9 +311,10 @@ export async function callJudgeRepeated(
   for (let i = 0; i < repeat; i++) {
     scores.push(await callJudge(input, options))
   }
+  const judgeRuns = scores.map(toJudgeRun)
 
   if (repeat < 2) {
-    return { representative: scores[0]!, scores }
+    return { representative: scores[0]!, scores, judgeRuns }
   }
 
   // ReproducibilityCheck schema는 scores ≥ 3 요구. 다만 helper는 repeat=2도 허용
@@ -309,15 +322,18 @@ export async function callJudgeRepeated(
   const numericScores = scores.map((s) => s.score)
   const variance = computeVariance(numericScores)
   const stable = variance <= STABLE_VARIANCE_THRESHOLD
+  const mixedModel = hasMixedJudgeRuns(judgeRuns)
 
-  const representative: AxisScore = stable
-    ? scores[0]!
-    : { ...scores[0]!, judgeStatus: 'unstable' }
+  const representative: AxisScore = mixedModel
+    ? { ...scores[0]!, judgeStatus: 'mixed-model', suggestedAction: 'manual-review-needed' }
+    : stable
+      ? scores[0]!
+      : { ...scores[0]!, judgeStatus: 'unstable' }
 
   // schema는 ≥3 요구하지만 helper는 less-strict — repeat>=3일 때만 reproducibility 산출.
   // repeat 2는 stable/unstable 판단만 (representative에 반영) reproducibility 객체 없음.
   if (repeat < 3) {
-    return { representative, scores }
+    return { representative, scores, judgeRuns }
   }
 
   const reproducibility: ReproducibilityCheck = {
@@ -325,9 +341,17 @@ export async function callJudgeRepeated(
     scores: numericScores,
     variance,
     stable,
+    judgeRuns,
   }
 
-  return { representative, scores, reproducibility }
+  return { representative, scores, judgeRuns, reproducibility }
+}
+
+function toJudgeRun(score: AxisScore): JudgeRunMetadata {
+  return {
+    judgeModel: score.judgeModel,
+    ...(score.judgeModelVersion ? { judgeModelVersion: score.judgeModelVersion } : {}),
+  }
 }
 
 // 명시적 export — fallback chain 외부 사용.
