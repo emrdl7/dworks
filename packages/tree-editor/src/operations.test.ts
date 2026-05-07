@@ -7,6 +7,7 @@ import {
   applyEditSequence,
   replaceTextById,
   updateButtonLabel,
+  updateImage,
   updateText,
 } from './operations.js'
 
@@ -31,6 +32,14 @@ function fixtureTree(): Tree {
           editKind: 'text',
           label: '시작하기',
           variant: 'primary',
+        },
+        {
+          id: 'landing.visual',
+          type: 'image',
+          editKind: 'media',
+          src: '',
+          alt: '',
+          aspectRatio: 'wide',
         },
       ],
     },
@@ -71,6 +80,25 @@ describe('tree editor operations', () => {
     }
   })
 
+  it('updates an image source and alt text', () => {
+    const tree = fixtureTree()
+    const updated = updateImage(tree, 'landing.visual', {
+      src: 'https://example.com/hero.jpg',
+      alt: '작업 중인 디자인 캔버스',
+    })
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      const visual = updated.root.children[2]
+      assert.equal(visual?.type, 'image')
+      if (visual?.type === 'image') {
+        assert.equal(visual.src, 'https://example.com/hero.jpg')
+        assert.equal(visual.alt, '작업 중인 디자인 캔버스')
+        assert.equal(visual.aspectRatio, 'wide')
+      }
+    }
+  })
+
   it('replaces text by id through the compatibility helper', () => {
     const updated = replaceTextById(fixtureTree(), 'landing.title', '새 이름')
 
@@ -96,17 +124,29 @@ describe('tree editor operations', () => {
         nodeId: 'landing.cta',
         label: '바로 시작',
       },
+      {
+        type: 'updateImage',
+        nodeId: 'landing.visual',
+        alt: '새 이미지 설명',
+      },
     ])
 
     assert.equal(updated.root.type, 'section')
     if (updated.root.type === 'section') {
       const title = updated.root.children[0]
       const cta = updated.root.children[1]
+      const visual = updated.root.children[2]
       assert.equal(title?.type, 'text')
       assert.equal(cta?.type, 'button')
-      if (title?.type === 'text' && cta?.type === 'button') {
+      assert.equal(visual?.type, 'image')
+      if (
+        title?.type === 'text' &&
+        cta?.type === 'button' &&
+        visual?.type === 'image'
+      ) {
         assert.equal(title.content, '새 제목')
         assert.equal(cta.label, '바로 시작')
+        assert.equal(visual.alt, '새 이미지 설명')
       }
     }
   })
@@ -122,6 +162,11 @@ describe('tree editor operations', () => {
     assert.throws(
       () => updateText(fixtureTree(), 'landing.cta', 'x'),
       /updateText requires text node, got button/,
+    )
+
+    assert.throws(
+      () => updateImage(fixtureTree(), 'landing.title', { alt: 'x' }),
+      /updateImage requires image node, got text/,
     )
   })
 })

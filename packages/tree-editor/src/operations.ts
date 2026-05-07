@@ -1,4 +1,4 @@
-import type { Tree, TreeNode } from '@dworks/tree'
+import type { FocalPoint, ImageAspectRatio, Tree, TreeNode } from '@dworks/tree'
 
 export interface UpdateTextOperation {
   type: 'updateText'
@@ -12,9 +12,19 @@ export interface UpdateButtonLabelOperation {
   label: string
 }
 
+export interface UpdateImageOperation {
+  type: 'updateImage'
+  nodeId: string
+  src?: string
+  alt?: string
+  aspectRatio?: ImageAspectRatio
+  focalPoint?: FocalPoint
+}
+
 export type EditOperation =
   | UpdateTextOperation
   | UpdateButtonLabelOperation
+  | UpdateImageOperation
 
 interface EditState {
   matched: boolean
@@ -42,6 +52,14 @@ export function updateButtonLabel(
   label: string,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateButtonLabel', nodeId, label })
+}
+
+export function updateImage(
+  tree: Tree,
+  nodeId: string,
+  patch: Omit<UpdateImageOperation, 'type' | 'nodeId'>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateImage', nodeId, ...patch })
 }
 
 export function applyEditSequence(
@@ -85,6 +103,7 @@ function editNode(
       }
     case 'text':
     case 'button':
+    case 'image':
       return node
   }
 }
@@ -109,5 +128,23 @@ function editMatchedNode(
         )
       }
       return { ...node, label: operation.label }
+
+    case 'updateImage':
+      if (node.type !== 'image') {
+        throw new Error(
+          `tree edit failed: updateImage requires image node, got ${node.type}: ${node.id}`,
+        )
+      }
+      return {
+        ...node,
+        ...(operation.src !== undefined ? { src: operation.src } : {}),
+        ...(operation.alt !== undefined ? { alt: operation.alt } : {}),
+        ...(operation.aspectRatio !== undefined
+          ? { aspectRatio: operation.aspectRatio }
+          : {}),
+        ...(operation.focalPoint !== undefined
+          ? { focalPoint: operation.focalPoint }
+          : {}),
+      }
   }
 }

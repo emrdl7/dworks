@@ -1,5 +1,5 @@
 // @dworks/tree — JSON 의도 트리.
-// source-of-truth 모델 (DECISIONS D2). M0.5 Tree Foundation 범위.
+// source-of-truth 모델 (DECISIONS D2). M0.5 Tree Foundation + M2 image node 범위.
 
 export {
   editKindSchema,
@@ -8,6 +8,9 @@ export {
   responsiveIntentSchema,
   textNodeSchema,
   buttonNodeSchema,
+  imageAspectRatioSchema,
+  focalPointSchema,
+  imageNodeSchema,
   sectionNodeSchema,
   heroNodeSchema,
   cardNodeSchema,
@@ -18,15 +21,19 @@ export {
   TREE_NODE_TYPES,
   LAYOUT_INTENTS,
   CONTENT_ROLES,
+  IMAGE_ASPECT_RATIOS,
 } from './schema.js'
 export type {
   EditKind,
   Emphasis,
   LayoutIntent,
   ContentRole,
+  ImageAspectRatio,
+  FocalPoint,
   ResponsiveIntent,
   TextNode,
   ButtonNode,
+  ImageNode,
   SectionNode,
   HeroNode,
   CardNode,

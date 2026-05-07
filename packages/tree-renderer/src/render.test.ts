@@ -64,6 +64,37 @@ describe('renderNode', () => {
     assert.match(html, /^<a[^>]*href="\/docs"[^>]*>Docs<\/a>$/)
   })
 
+  it('renders image nodes with empty decorative alt preserved', () => {
+    const html = renderNode({
+      id: 'hero.visual',
+      type: 'image',
+      editKind: 'media',
+      src: '',
+      alt: '',
+      aspectRatio: 'wide',
+    })
+
+    assert.match(html, /^<figure[^>]*><img[^>]* \/><\/figure>$/)
+    assert.match(html, /data-dw-node="hero.visual"/)
+    assert.match(html, /data-dw-edit="media"/)
+    assert.match(html, /data-dw-aspect="wide"/)
+    assert.match(html, /src=""/)
+    assert.match(html, /alt=""/)
+  })
+
+  it('escapes image attributes', () => {
+    const html = renderNode({
+      id: 'img',
+      type: 'image',
+      editKind: 'media',
+      src: 'https://example.com/?q=<bad>',
+      alt: '"quoted"',
+    })
+
+    assert.match(html, /src="https:\/\/example.com\/\?q=&lt;bad&gt;"/)
+    assert.match(html, /alt="&quot;quoted&quot;"/)
+  })
+
   it('renders section with role and nested children', () => {
     const html = renderNode({
       id: 's1',

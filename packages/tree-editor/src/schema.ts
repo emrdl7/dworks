@@ -3,10 +3,12 @@
 // operations.ts는 실행 로직. 관심사 분리.
 
 import { z } from 'zod'
+import { focalPointSchema, imageAspectRatioSchema } from '@dworks/tree'
 
 import type {
   EditOperation,
   UpdateButtonLabelOperation,
+  UpdateImageOperation,
   UpdateTextOperation,
 } from './operations.js'
 
@@ -23,6 +25,16 @@ export const updateButtonLabelOperationSchema: z.ZodType<UpdateButtonLabelOperat
     label: z.string(),
   })
 
+export const updateImageOperationSchema: z.ZodType<UpdateImageOperation> =
+  z.object({
+    type: z.literal('updateImage'),
+    nodeId: z.string().min(1),
+    src: z.string().optional(),
+    alt: z.string().optional(),
+    aspectRatio: imageAspectRatioSchema.optional(),
+    focalPoint: focalPointSchema.optional(),
+  })
+
 // discriminatedUnion으로 type 리터럴 분기 — exhaustiveness check 강제.
 export const editOperationSchema = z.discriminatedUnion('type', [
   updateTextOperationSchema as z.ZodObject<{
@@ -34,6 +46,14 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     type: z.ZodLiteral<'updateButtonLabel'>
     nodeId: z.ZodString
     label: z.ZodString
+  }>,
+  updateImageOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateImage'>
+    nodeId: z.ZodString
+    src: z.ZodOptional<z.ZodString>
+    alt: z.ZodOptional<z.ZodString>
+    aspectRatio: z.ZodOptional<typeof imageAspectRatioSchema>
+    focalPoint: z.ZodOptional<typeof focalPointSchema>
   }>,
 ]) satisfies z.ZodType<EditOperation>
 

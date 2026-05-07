@@ -11,6 +11,7 @@ import type {
   CardNode,
   FormNode,
   HeroNode,
+  ImageNode,
   ListNode,
   SectionNode,
   TextNode,
@@ -33,7 +34,7 @@ function escapeHtml(text: string): string {
 
 function attrs(parts: Array<[string, string | undefined]>): string {
   const out = parts
-    .filter(([, value]) => value !== undefined && value !== '')
+    .filter(([, value]) => value !== undefined)
     .map(([key, value]) => `${key}="${escapeHtml(String(value))}"`)
     .join(' ')
   return out.length > 0 ? ' ' + out : ''
@@ -76,6 +77,15 @@ function renderButton(node: ButtonNode): string {
     return `<a${commonAttrs(node)}${variantAttr}${attrs([['href', node.href]])}>${escapeHtml(node.label)}</a>`
   }
   return `<button${commonAttrs(node)}${variantAttr} type="button">${escapeHtml(node.label)}</button>`
+}
+
+function renderImage(node: ImageNode): string {
+  const imageAttrs = attrs([
+    ['src', node.src],
+    ['alt', node.alt],
+  ])
+  const figureAttrs = attrs([['data-dw-aspect', node.aspectRatio]])
+  return `<figure${commonAttrs(node)}${figureAttrs}><img${imageAttrs} /></figure>`
 }
 
 function renderChildren(children: TreeNode[]): string {
@@ -122,6 +132,8 @@ export function renderNode(node: TreeNode): string {
       return renderText(node)
     case 'button':
       return renderButton(node)
+    case 'image':
+      return renderImage(node)
     case 'section':
       return renderSection(node)
     case 'hero':

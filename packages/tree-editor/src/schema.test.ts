@@ -29,6 +29,26 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateImage operation with empty decorative alt', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateImage',
+      nodeId: 'hero.visual',
+      src: '',
+      alt: '',
+      aspectRatio: 'wide',
+      focalPoint: { x: 0.5, y: 0.25 },
+    })
+
+    assert.equal(op.type, 'updateImage')
+    if (op.type === 'updateImage') {
+      assert.equal(op.nodeId, 'hero.visual')
+      assert.equal(op.src, '')
+      assert.equal(op.alt, '')
+      assert.equal(op.aspectRatio, 'wide')
+      assert.deepEqual(op.focalPoint, { x: 0.5, y: 0.25 })
+    }
+  })
+
   it('rejects unknown operation type', () => {
     assert.throws(() =>
       editOperationSchema.parse({
@@ -42,6 +62,24 @@ describe('edit-operation schema', () => {
   it('rejects updateText without content', () => {
     assert.throws(() =>
       editOperationSchema.parse({ type: 'updateText', nodeId: 'foo' }),
+    )
+  })
+
+  it('rejects invalid updateImage media metadata', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        aspectRatio: 'panorama',
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        focalPoint: { x: -0.1, y: 0.5 },
+      }),
     )
   })
 
@@ -64,13 +102,14 @@ describe('edit-sequence schema', () => {
     operations: [
       { type: 'updateText', nodeId: 'foo', content: 'bar' },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
+      { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
     ],
   }
 
   it('parses a valid sequence', () => {
     const seq = editSequenceSchema.parse(validSequence)
     assert.equal(seq.id, 'test')
-    assert.equal(seq.operations.length, 2)
+    assert.equal(seq.operations.length, 3)
     assert.equal(seq.tree, '../../trees/x.json')
   })
 

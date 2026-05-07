@@ -25,6 +25,18 @@
         "editKind": "text",
         "variant": "primary",
         "label": "지금 시작하기"
+      },
+      {
+        "id": "hero.visual",
+        "type": "image",
+        "editKind": "media",
+        "src": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
+        "alt": "노트북 화면 위에 열린 디자인 작업 공간",
+        "aspectRatio": "wide",
+        "focalPoint": {
+          "x": 0.5,
+          "y": 0.42
+        }
       }
     ]
   }

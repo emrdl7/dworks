@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 
 import {
   CONTENT_ROLES,
+  IMAGE_ASPECT_RATIOS,
   LAYOUT_INTENTS,
   TREE_NODE_TYPES,
   treeNodeSchema,
@@ -13,8 +14,9 @@ import {
 } from './schema.js'
 
 describe('tree schema', () => {
-  it('exposes 7 node types per M0.5 plan', () => {
-    assert.equal(TREE_NODE_TYPES.length, 7)
+  it('exposes 8 node types after the M2 image node expansion', () => {
+    assert.equal(TREE_NODE_TYPES.length, 8)
+    assert.ok(TREE_NODE_TYPES.includes('image'))
   })
 
   it('parses a minimal text node', () => {
@@ -67,6 +69,25 @@ describe('tree schema', () => {
   it('rejects missing required fields', () => {
     const bad = { id: 'x', type: 'text', editKind: 'text' }
     assert.throws(() => treeNodeSchema.parse(bad))
+  })
+
+  it('parses an image node with decorative alt and media metadata', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'hero.visual',
+      type: 'image',
+      editKind: 'media',
+      src: '',
+      alt: '',
+      aspectRatio: 'wide',
+      focalPoint: { x: 0.45, y: 0.35 },
+    })
+
+    assert.equal(parsed.type, 'image')
+    if (parsed.type === 'image') {
+      assert.equal(parsed.alt, '')
+      assert.equal(parsed.aspectRatio, 'wide')
+      assert.deepEqual(parsed.focalPoint, { x: 0.45, y: 0.35 })
+    }
   })
 
   it('parses tree root with version 1', () => {
@@ -171,6 +192,28 @@ describe('tree schema', () => {
         contentRole: 'timestamp',
       }),
     )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-aspect',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        aspectRatio: 'panorama',
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-focal',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        focalPoint: { x: 1.4, y: 0.5 },
+      }),
+    )
   })
 
   it('exports stable semantic enum value lists', () => {
@@ -188,6 +231,12 @@ describe('tree schema', () => {
       'cta',
       'label',
       'value',
+    ])
+    assert.deepEqual(IMAGE_ASPECT_RATIOS, [
+      'square',
+      'landscape',
+      'portrait',
+      'wide',
     ])
   })
 })

@@ -1,7 +1,8 @@
 // @dworks/tree — JSON 의도 트리의 source-of-truth 스키마.
 // DECISIONS D2 (E Hybrid 제품 방향) + M0.5 범위 동결 (PLAN.md §4 M0.5).
 //
-// M0.5 단계: 5~7개 노드 타입 + 최소 메타. 본격 스키마는 M4 PoC에서 확장.
+// M0.5 최소 스키마에서 시작했고, M2에서 image 노드까지 확장했다.
+// 본격 스키마는 M4 PoC에서 확장.
 
 import { z } from 'zod'
 
@@ -47,6 +48,20 @@ export const contentRoleSchema = z.enum([
 ])
 export type ContentRole = z.infer<typeof contentRoleSchema>
 
+export const imageAspectRatioSchema = z.enum([
+  'square',
+  'landscape',
+  'portrait',
+  'wide',
+])
+export type ImageAspectRatio = z.infer<typeof imageAspectRatioSchema>
+
+export const focalPointSchema = z.object({
+  x: z.number().min(0).max(1),
+  y: z.number().min(0).max(1),
+})
+export type FocalPoint = z.infer<typeof focalPointSchema>
+
 // ---- 명시적 타입 선언 (재귀 union의 안정 추론 위해 먼저 선언) ----
 
 interface BaseNodeMeta {
@@ -69,6 +84,14 @@ export interface ButtonNode extends BaseNodeMeta {
   variant?: 'primary' | 'secondary' | 'ghost'
   href?: string
   contentRole?: ContentRole
+}
+
+export interface ImageNode extends BaseNodeMeta {
+  type: 'image'
+  src: string
+  alt: string
+  aspectRatio?: ImageAspectRatio
+  focalPoint?: FocalPoint
 }
 
 export interface SectionNode extends BaseNodeMeta {
@@ -108,6 +131,7 @@ export interface FormNode extends BaseNodeMeta {
 export type TreeNode =
   | TextNode
   | ButtonNode
+  | ImageNode
   | SectionNode
   | HeroNode
   | CardNode
@@ -138,6 +162,15 @@ export const buttonNodeSchema: z.ZodType<ButtonNode> = z.object({
   variant: z.enum(['primary', 'secondary', 'ghost']).optional(),
   href: z.string().optional(),
   contentRole: contentRoleSchema.optional(),
+})
+
+export const imageNodeSchema: z.ZodType<ImageNode> = z.object({
+  ...baseShape,
+  type: z.literal('image'),
+  src: z.string(),
+  alt: z.string(),
+  aspectRatio: imageAspectRatioSchema.optional(),
+  focalPoint: focalPointSchema.optional(),
 })
 
 // 재귀 union을 위해 children 필드는 z.lazy로 후행 참조.
@@ -191,6 +224,7 @@ export const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
   z.union([
     textNodeSchema,
     buttonNodeSchema,
+    imageNodeSchema,
     sectionNodeSchema,
     heroNodeSchema,
     cardNodeSchema,
@@ -210,6 +244,7 @@ export type Tree = z.infer<typeof treeSchema>
 export const TREE_NODE_TYPES = [
   'text',
   'button',
+  'image',
   'section',
   'hero',
   'card',
@@ -233,4 +268,11 @@ export const CONTENT_ROLES = [
   'cta',
   'label',
   'value',
+] as const
+
+export const IMAGE_ASPECT_RATIOS = [
+  'square',
+  'landscape',
+  'portrait',
+  'wide',
 ] as const

@@ -6,11 +6,13 @@ export {
   applyEditSequence,
   replaceTextById,
   updateButtonLabel,
+  updateImage,
   updateText,
 } from './operations.js'
 export type {
   EditOperation,
   UpdateButtonLabelOperation,
+  UpdateImageOperation,
   UpdateTextOperation,
 } from './operations.js'
 
@@ -19,6 +21,7 @@ export {
   editOperationSchema,
   editSequenceSchema,
   updateButtonLabelOperationSchema,
+  updateImageOperationSchema,
   updateTextOperationSchema,
 } from './schema.js'
 export type { EditSequence } from './schema.js'

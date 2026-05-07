@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
-import type { ButtonNode, TextNode, Tree, TreeNode } from '@dworks/tree'
-import { updateButtonLabel, updateText } from '@dworks/tree-editor'
+import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import type { ButtonNode, ImageNode, TextNode, Tree, TreeNode } from '@dworks/tree'
+import { updateButtonLabel, updateImage, updateText } from '@dworks/tree-editor'
 import {
   defaultTreeFixture,
   getTreeFixture,
@@ -19,6 +19,7 @@ interface LayerItem {
 const nodeTypeLabels: Record<TreeNode['type'], string> = {
   text: 'text',
   button: 'button',
+  image: 'image',
   section: 'section',
   hero: 'hero',
   card: 'card',
@@ -82,6 +83,13 @@ export default function HomePage() {
     commitTreeEdit(updateButtonLabel(tree, node.id, label))
   }
 
+  function handleImageChange(
+    node: ImageNode,
+    patch: Pick<Partial<ImageNode>, 'src' | 'alt'>,
+  ) {
+    commitTreeEdit(updateImage(tree, node.id, patch))
+  }
+
   function handleUndo() {
     const previousTree = historyPast.at(-1)
     if (!previousTree) {
@@ -114,7 +122,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-base font-semibold">Dworks Editor</h1>
-            <p className="text-xs text-[#647067]">m2-edit-undo</p>
+            <p className="text-xs text-[#647067]">m2-image-node</p>
           </div>
           <label className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#4f5e56]">Fixture</span>
@@ -207,6 +215,7 @@ export default function HomePage() {
             node={selectedNode}
             onTextChange={handleTextChange}
             onButtonLabelChange={handleButtonLabelChange}
+            onImageChange={handleImageChange}
           />
         </aside>
       </div>
@@ -289,12 +298,20 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
       )
     }
 
-    case 'hero':
+    case 'hero': {
+      const imageChildren = node.children.filter(isImageNode)
+      const contentChildren = node.children.filter((child) => !isImageNode(child))
+      const hasImage = imageChildren.length > 0
+
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <section className="grid min-h-[420px] grid-cols-[1.05fr_0.95fr] gap-10 bg-[#102822] p-12 text-white">
+          <section
+            className={`grid min-h-[420px] gap-10 bg-[#102822] p-12 text-white ${
+              hasImage ? 'grid-cols-[1.05fr_0.95fr]' : 'grid-cols-1'
+            }`}
+          >
             <div className="flex flex-col justify-center gap-5">
-              {node.children.map((child) => (
+              {contentChildren.map((child) => (
                 <CanvasNode
                   key={child.id}
                   node={child}
@@ -303,15 +320,22 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                 />
               ))}
             </div>
-            <div className="min-h-[320px] border border-white/25 bg-[#d9e4df] p-4">
-              <div className="flex h-full flex-col justify-end bg-[#86b4aa] p-6 text-[#102822]">
-                <span className="text-xs font-semibold uppercase">Sehwa</span>
-                <span className="mt-2 text-3xl font-semibold">Sea, forest, route</span>
+            {hasImage ? (
+              <div className="min-h-[320px] space-y-4">
+                {imageChildren.map((child) => (
+                  <CanvasNode
+                    key={child.id}
+                    node={child}
+                    selectedNodeId={selectedNodeId}
+                    onSelect={onSelect}
+                  />
+                ))}
               </div>
-            </div>
+            ) : null}
           </section>
         </SelectableNode>
       )
+    }
 
     case 'card':
       return (
@@ -382,6 +406,13 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
           >
             {node.label}
           </span>
+        </SelectableNode>
+      )
+
+    case 'image':
+      return (
+        <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          <ImagePreview key={node.src} node={node} />
         </SelectableNode>
       )
   }
@@ -466,16 +497,65 @@ function TextPreview({ node }: { node: TextNode }) {
   }
 }
 
+function ImagePreview({ node }: { node: ImageNode }) {
+  const [hasError, setHasError] = useState(false)
+  const canRenderImage = node.src.trim().length > 0 && !hasError
+
+  useEffect(() => {
+    setHasError(false)
+  }, [node.src])
+
+  return (
+    <figure
+      className={`relative flex min-h-[320px] overflow-hidden border border-white/25 bg-[#d9e4df] ${
+        aspectRatioClasses[node.aspectRatio ?? 'wide']
+      }`}
+    >
+      {canRenderImage ? (
+        // Arbitrary design-source URLs cannot use next/image domain allowlists yet.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="h-full w-full object-cover"
+          src={node.src}
+          alt={node.alt}
+          onError={() => setHasError(true)}
+        />
+      ) : (
+        <div className="flex h-full w-full flex-col justify-end bg-[#86b4aa] p-6 text-[#102822]">
+          <span className="text-xs font-semibold uppercase tracking-wide">
+            이미지 슬롯
+          </span>
+          <span className="mt-2 max-w-sm text-2xl font-semibold leading-tight">
+            {node.alt || 'Source를 채우세요'}
+          </span>
+          {node.src ? (
+            <span className="mt-3 break-all text-xs text-[#27433b]">{node.src}</span>
+          ) : null}
+        </div>
+      )}
+    </figure>
+  )
+}
+
+const aspectRatioClasses: Record<NonNullable<ImageNode['aspectRatio']>, string> = {
+  square: 'aspect-square',
+  landscape: 'aspect-[3/2]',
+  portrait: 'aspect-[4/5]',
+  wide: 'aspect-video',
+}
+
 interface NodeInspectorProps {
   node: TreeNode
   onTextChange: (node: TextNode, content: string) => void
   onButtonLabelChange: (node: ButtonNode, label: string) => void
+  onImageChange: (node: ImageNode, patch: Pick<Partial<ImageNode>, 'src' | 'alt'>) => void
 }
 
 function NodeInspector({
   node,
   onTextChange,
   onButtonLabelChange,
+  onImageChange,
 }: NodeInspectorProps) {
   return (
     <section className="flex h-full flex-col">
@@ -509,6 +589,37 @@ function NodeInspector({
           </label>
         ) : null}
 
+        {node.type === 'image' ? (
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-[#4f5e56]">Source</span>
+              <input
+                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                value={node.src}
+                onChange={(event) => onImageChange(node, { src: event.target.value })}
+              />
+              {node.src.trim().length === 0 ? (
+                <span className="mt-2 block text-xs text-[#647067]">
+                  이미지 슬롯 - Source를 채우세요.
+                </span>
+              ) : null}
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold text-[#4f5e56]">Alt</span>
+              <input
+                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                value={node.alt}
+                onChange={(event) => onImageChange(node, { alt: event.target.value })}
+              />
+              {node.alt.length === 0 ? (
+                <span className="mt-2 block text-xs text-[#647067]">
+                  스크린리더가 이 이미지를 읽지 않습니다.
+                </span>
+              ) : null}
+            </label>
+          </div>
+        ) : null}
+
         {isContainerNode(node) ? (
           <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
             <h3 className="text-sm font-semibold">Container</h3>
@@ -538,6 +649,9 @@ function MetadataGrid({ node }: { node: TreeNode }) {
       ) : null}
       {'variant' in node && node.variant ? (
         <InspectorMetric label="variant" value={node.variant} />
+      ) : null}
+      {'aspectRatio' in node && node.aspectRatio ? (
+        <InspectorMetric label="aspect" value={node.aspectRatio} />
       ) : null}
     </dl>
   )
@@ -593,7 +707,7 @@ function flattenTree(node: TreeNode, depth = 0): LayerItem[] {
 }
 
 function countEditableNodes(node: TreeNode): number {
-  const current = node.type === 'text' || node.type === 'button' ? 1 : 0
+  const current = isEditableNode(node) ? 1 : 0
   if (!isContainerNode(node)) {
     return current
   }
@@ -602,7 +716,7 @@ function countEditableNodes(node: TreeNode): number {
 }
 
 function findFirstEditableNodeId(node: TreeNode): string | null {
-  if (node.type === 'text' || node.type === 'button') {
+  if (isEditableNode(node)) {
     return node.id
   }
 
@@ -618,6 +732,14 @@ function findFirstEditableNodeId(node: TreeNode): string | null {
   }
 
   return null
+}
+
+function isEditableNode(node: TreeNode): boolean {
+  return node.type === 'text' || node.type === 'button' || node.type === 'image'
+}
+
+function isImageNode(node: TreeNode): node is ImageNode {
+  return node.type === 'image'
 }
 
 function getSafeSelectedNodeId(tree: Tree, preferredNodeId: string): string {
