@@ -48,6 +48,12 @@ describe('eval summary', () => {
     const summary = summarizeResults([resultA, resultB])
     assert.equal(summary.briefs, 2)
     assert.equal(summary.axes, 2)
+    assert.deepEqual(summary.statusCounts, {
+      ok: 4,
+      unstable: 0,
+      'mixed-model': 0,
+      failed: 0,
+    })
     assert.equal(summary.perAxis['non-wireframe']?.mean, 2.5)
     assert.equal(summary.perAxis['emotional-fit']?.minBriefId, 'brief-b')
     assert.equal(summary.perAxis['emotional-fit']?.lowest.reason, 'fit')
@@ -62,6 +68,7 @@ describe('eval summary', () => {
     assert.match(report, /Axis Summary/)
     assert.match(report, /Axis Lowest Details/)
     assert.match(report, /brief-b/)
+    assert.match(report, /judge status: ok 4, unstable 0, mixed-model 0, failed 0/)
     assert.match(report, /unstable axes:/)
   })
 
@@ -84,9 +91,34 @@ describe('eval summary', () => {
       ],
     }
     const summary = summarizeResults([resultA, unstableResult])
+    assert.deepEqual(summary.statusCounts, {
+      ok: 2,
+      unstable: 2,
+      'mixed-model': 0,
+      failed: 0,
+    })
     assert.equal(summary.unstableAxes, 2)
     assert.equal(summary.perAxis['non-wireframe']?.unstableSamples, 1)
     assert.equal(summary.perAxis['emotional-fit']?.unstableSamples, 1)
+  })
+
+  it('counts mixed-model and failed judge statuses', () => {
+    const mixedAndFailed: EvalResult = {
+      ...resultA,
+      briefId: 'brief-status',
+      treeRootId: 'brief-status.root',
+      axes: [
+        { ...resultA.axes[0]!, judgeStatus: 'mixed-model' },
+        { ...resultA.axes[1]!, judgeStatus: 'failed' },
+      ],
+    }
+    const summary = summarizeResults([resultA, mixedAndFailed])
+    assert.deepEqual(summary.statusCounts, {
+      ok: 2,
+      unstable: 0,
+      'mixed-model': 1,
+      failed: 1,
+    })
   })
 
   it('omits unstable section when none', () => {

@@ -38,6 +38,8 @@ export interface EvalSummary {
   axes: number
   perAxis: Partial<Record<AxisId, AxisSummary>>
   perBrief: Record<string, BriefSummary>
+  // m1-live-7axis round 4/5: 252 calls 이상 장기 실행 audit용 상태 분포.
+  statusCounts: Record<AxisScore['judgeStatus'], number>
   // 라운드 4 §2.4: 전체 unstable axis 카운트. 빠르게 경고 신호 잡기 위함.
   unstableAxes: number
   estimate: EvalEstimate
@@ -70,6 +72,7 @@ export function createEmptySummary(
     axes: axisCount,
     perAxis: {},
     perBrief: {},
+    statusCounts: createEmptyStatusCounts(),
     unstableAxes: 0,
     estimate: createEstimate(0, mode, 1),
   }
@@ -96,6 +99,7 @@ export function summarizeResults(results: EvalResult[], options: SummarizeOption
     }
 
     for (const score of scores) {
+      summary.statusCounts[score.judgeStatus] += 1
       const current = axisAccum.get(score.axis) ?? {
         sum: 0,
         min: 6,
@@ -141,6 +145,7 @@ export function renderMarkdownReport(summary: EvalSummary): string {
     `- mode: ${summary.mode}`,
     `- briefs: ${summary.briefs}`,
     `- axes: ${summary.axes}`,
+    `- judge status: ok ${summary.statusCounts.ok}, unstable ${summary.statusCounts.unstable}, mixed-model ${summary.statusCounts['mixed-model']}, failed ${summary.statusCounts.failed}`,
     `- unstable axes: ${summary.unstableAxes}`,
     '',
     '## Run Estimate',
@@ -208,6 +213,15 @@ export function renderMarkdownReport(summary: EvalSummary): string {
 
   lines.push('')
   return lines.join('\n')
+}
+
+function createEmptyStatusCounts(): Record<AxisScore['judgeStatus'], number> {
+  return {
+    ok: 0,
+    unstable: 0,
+    'mixed-model': 0,
+    failed: 0,
+  }
 }
 
 function toLowestDetail(briefId: string, score: AxisScore): AxisLowestDetail {
