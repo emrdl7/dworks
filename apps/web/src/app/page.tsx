@@ -3,180 +3,17 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { ButtonNode, TextNode, Tree, TreeNode } from '@dworks/tree'
 import { updateButtonLabel, updateText } from '@dworks/tree-editor'
+import {
+  defaultTreeFixture,
+  getTreeFixture,
+  treeFixtures,
+} from './tree-fixtures'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
 interface LayerItem {
   node: TreeNode
   depth: number
-}
-
-const initialTree: Tree = {
-  version: '1',
-  root: {
-    id: 'page',
-    type: 'section',
-    editKind: 'structure',
-    role: 'travel-experience-page',
-    layoutIntent: 'stack',
-    children: [
-      {
-        id: 'hero',
-        type: 'hero',
-        editKind: 'structure',
-        layoutIntent: 'split',
-        children: [
-          {
-            id: 'hero.eyebrow',
-            type: 'text',
-            editKind: 'text',
-            content: '봄 여행 큐레이션',
-            emphasis: 'caption',
-            contentRole: 'caption',
-          },
-          {
-            id: 'hero.title',
-            type: 'text',
-            editKind: 'text',
-            content: '제주 동쪽 바다와 숲을 하루 동선으로 잇다',
-            emphasis: 'heading-1',
-            contentRole: 'heading',
-          },
-          {
-            id: 'hero.body',
-            type: 'text',
-            editKind: 'text',
-            content:
-              '성산 일출봉, 비자림, 세화 해변을 여유롭게 둘러보는 사진 중심 여행 코스입니다.',
-            emphasis: 'body',
-            contentRole: 'body',
-          },
-          {
-            id: 'hero.cta',
-            type: 'button',
-            editKind: 'text',
-            label: '코스 저장하기',
-            variant: 'primary',
-            href: '#route',
-            contentRole: 'cta',
-          },
-        ],
-      },
-      {
-        id: 'route',
-        type: 'section',
-        editKind: 'structure',
-        role: 'route-summary',
-        layoutIntent: 'grid',
-        children: [
-          {
-            id: 'route.heading',
-            type: 'text',
-            editKind: 'text',
-            content: '오늘의 추천 흐름',
-            emphasis: 'heading-2',
-            contentRole: 'heading',
-          },
-          {
-            id: 'route.card-1',
-            type: 'card',
-            editKind: 'structure',
-            layoutIntent: 'stack',
-            children: [
-              {
-                id: 'route.card-1.kicker',
-                type: 'text',
-                editKind: 'text',
-                content: '09:00',
-                emphasis: 'caption',
-                contentRole: 'label',
-              },
-              {
-                id: 'route.card-1.title',
-                type: 'text',
-                editKind: 'text',
-                content: '성산 일출봉 산책',
-                emphasis: 'heading-3',
-                contentRole: 'heading',
-              },
-              {
-                id: 'route.card-1.body',
-                type: 'text',
-                editKind: 'text',
-                content: '초입 전망대까지 가볍게 올라 바다 능선을 먼저 확인합니다.',
-                emphasis: 'body',
-                contentRole: 'body',
-              },
-            ],
-          },
-          {
-            id: 'route.card-2',
-            type: 'card',
-            editKind: 'structure',
-            layoutIntent: 'stack',
-            children: [
-              {
-                id: 'route.card-2.kicker',
-                type: 'text',
-                editKind: 'text',
-                content: '13:30',
-                emphasis: 'caption',
-                contentRole: 'label',
-              },
-              {
-                id: 'route.card-2.title',
-                type: 'text',
-                editKind: 'text',
-                content: '비자림 숲길',
-                emphasis: 'heading-3',
-                contentRole: 'heading',
-              },
-              {
-                id: 'route.card-2.body',
-                type: 'text',
-                editKind: 'text',
-                content: '햇빛이 낮아지는 시간대에 숲의 결을 천천히 기록합니다.',
-                emphasis: 'body',
-                contentRole: 'body',
-              },
-            ],
-          },
-          {
-            id: 'route.card-3',
-            type: 'card',
-            editKind: 'structure',
-            layoutIntent: 'stack',
-            children: [
-              {
-                id: 'route.card-3.kicker',
-                type: 'text',
-                editKind: 'text',
-                content: '17:20',
-                emphasis: 'caption',
-                contentRole: 'label',
-              },
-              {
-                id: 'route.card-3.title',
-                type: 'text',
-                editKind: 'text',
-                content: '세화 해변 노을',
-                emphasis: 'heading-3',
-                contentRole: 'heading',
-              },
-              {
-                id: 'route.card-3.body',
-                type: 'text',
-                editKind: 'text',
-                content: '해변 카페와 산책로를 묶어 하루의 마지막 장면을 정리합니다.',
-                emphasis: 'body',
-                contentRole: 'body',
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
 }
 
 const nodeTypeLabels: Record<TreeNode['type'], string> = {
@@ -197,15 +34,32 @@ const editKindLabels: Record<TreeNode['editKind'], string> = {
 }
 
 export default function HomePage() {
-  const [tree, setTree] = useState<Tree>(initialTree)
-  const [selectedNodeId, setSelectedNodeId] = useState('hero.title')
+  const [selectedFixtureId, setSelectedFixtureId] = useState(defaultTreeFixture.id)
+  const [tree, setTree] = useState<Tree>(defaultTreeFixture.tree)
+  const [selectedNodeId, setSelectedNodeId] = useState(
+    findFirstEditableNodeId(defaultTreeFixture.tree.root) ??
+      defaultTreeFixture.tree.root.id,
+  )
 
   const selectedNode = useMemo(
     () => findNode(tree.root, selectedNodeId) ?? tree.root,
     [selectedNodeId, tree],
   )
+  const selectedFixture = useMemo(
+    () => getTreeFixture(selectedFixtureId) ?? defaultTreeFixture,
+    [selectedFixtureId],
+  )
   const layerItems = useMemo(() => flattenTree(tree.root), [tree])
   const editableCount = useMemo(() => countEditableNodes(tree.root), [tree])
+
+  function handleFixtureChange(fixtureId: string) {
+    const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
+    setSelectedFixtureId(nextFixture.id)
+    setTree(nextFixture.tree)
+    setSelectedNodeId(
+      findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
+    )
+  }
 
   function handleTextChange(node: TextNode, content: string) {
     setTree((currentTree) => updateText(currentTree, node.id, content))
@@ -218,11 +72,31 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f5f7f4] text-[#18211d]">
       <header className="flex h-14 items-center justify-between border-b border-[#d7ddd2] bg-white px-5">
-        <div>
-          <h1 className="text-base font-semibold">Dworks Editor</h1>
-          <p className="text-xs text-[#647067]">m2-visible-editor</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-base font-semibold">Dworks Editor</h1>
+            <p className="text-xs text-[#647067]">m2-fixture-loader</p>
+          </div>
+          <label className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[#4f5e56]">Fixture</span>
+            <select
+              className="h-9 min-w-40 rounded-md border border-[#c9d4cd] bg-white px-3 text-sm text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+              value={selectedFixture.id}
+              title={selectedFixture.description}
+              onChange={(event) => handleFixtureChange(event.target.value)}
+            >
+              {treeFixtures.map((fixture) => (
+                <option key={fixture.id} title={fixture.description} value={fixture.id}>
+                  {fixture.name}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
         <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
+          <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
+            root {tree.root.id}
+          </span>
           <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
             editable {editableCount}
           </span>
@@ -375,7 +249,6 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
       )
 
     case 'list':
-    case 'form':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <div className="space-y-3">
@@ -388,6 +261,22 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
               />
             ))}
           </div>
+        </SelectableNode>
+      )
+
+    case 'form':
+      return (
+        <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          <form className="mx-auto max-w-[520px] space-y-5 rounded-lg border border-[#d7ddd2] bg-[#fbfcfa] p-8 shadow-sm">
+            {node.children.map((child) => (
+              <CanvasNode
+                key={child.id}
+                node={child}
+                selectedNodeId={selectedNodeId}
+                onSelect={onSelect}
+              />
+            ))}
+          </form>
         </SelectableNode>
       )
 
@@ -627,6 +516,25 @@ function countEditableNodes(node: TreeNode): number {
   }
 
   return current + node.children.reduce((sum, child) => sum + countEditableNodes(child), 0)
+}
+
+function findFirstEditableNodeId(node: TreeNode): string | null {
+  if (node.type === 'text' || node.type === 'button') {
+    return node.id
+  }
+
+  if (!isContainerNode(node)) {
+    return null
+  }
+
+  for (const child of node.children) {
+    const editableNodeId = findFirstEditableNodeId(child)
+    if (editableNodeId) {
+      return editableNodeId
+    }
+  }
+
+  return null
 }
 
 function isContainerNode(node: TreeNode): node is ContainerNode {
