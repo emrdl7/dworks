@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Dworks post-commit hook — 자율 협업 모드의 이벤트 발화원.
+# 새 커밋이 생기면 .git/feed.log 끝에 hash 한 줄 추가.
+# Claude / Codex 양측이 tail -F .git/feed.log + Monitor 도구로 실시간 감지.
+#
+# 본 hook은 scripts/hooks/post-commit의 사본이다.
+# 수정은 원본을 고치고 scripts/install-hooks.sh로 재설치할 것.
+# .git/hooks/는 git tracking 대상이 아니므로 직접 편집해도 push되지 않는다.
+
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+FEED="$ROOT/.git/feed.log"
+HASH="$(git rev-parse HEAD)"
+
+# 한 줄 = 한 hash. tail -F로 받는 쪽은 hash로 git show 호출해 정보 fetch.
+echo "$HASH" >> "$FEED"
