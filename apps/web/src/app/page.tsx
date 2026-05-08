@@ -2147,7 +2147,7 @@ function CanvasNode({
               node.color?.disabledTextColor !== undefined
                 ? 'data-[disabled=true]:!text-[var(--dw-disabled-text)]'
                 : ''
-            }`}
+            } data-[disabled=true]:pointer-events-none`}
             style={
               node.variant === 'secondary'
                 ? mergeStyles(
