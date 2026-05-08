@@ -79,7 +79,9 @@ import {
   type LayoutJustify,
   type LayoutWrap,
   type NodeColor,
+  type NodeCursor,
   type NodeTransition,
+  NODE_CURSOR_IDS,
   type NodeLayout,
   type ShadowPreset,
   type Shape,
@@ -273,6 +275,16 @@ const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
   sans: '산세리프',
   serif: '세리프',
   mono: '고정폭',
+}
+
+const nodeCursorLabels: Record<NodeCursor, string> = {
+  default: '기본',
+  pointer: '포인터',
+  text: '텍스트',
+  help: '도움말',
+  'not-allowed': '금지',
+  grab: '잡기',
+  crosshair: '십자',
 }
 
 const layoutDirectionLabels: Record<LayoutDirection, string> = {
@@ -2312,6 +2324,7 @@ function SelectableNode({
   const nodeMetaStyle: CSSProperties = {
     pointerEvents: isCanvasSelectable ? 'auto' : 'none',
     ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
+    ...(node.cursor === undefined ? {} : { cursor: node.cursor }),
   }
 
   function selectNode() {
@@ -3718,6 +3731,31 @@ function NodeVisibilityControls({
           label="캔버스에서 선택"
           onChange={updateCanvasSelection}
         />
+        <label className="block">
+          <span className="text-xs font-semibold text-[#4f5e56]">커서</span>
+          <select
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            value={node.cursor ?? ''}
+            onChange={(event) => {
+              const raw = event.target.value
+              onNodeMetaChange(
+                node,
+                {
+                  cursor:
+                    raw === '' ? undefined : (raw as NodeCursor),
+                },
+                { mergeKey: getNodeColorMergeKey(node.id, 'meta.cursor') },
+              )
+            }}
+          >
+            <option value="">자동</option>
+            {NODE_CURSOR_IDS.map((cursorId) => (
+              <option key={cursorId} value={cursorId}>
+                {nodeCursorLabels[cursorId]}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </InspectorDisclosure>
   )

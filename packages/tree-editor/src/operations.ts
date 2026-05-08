@@ -58,6 +58,7 @@ export interface NodeMetaPatch {
   opacity?: TreeNode['opacity']
   pointerEvents?: TreeNode['pointerEvents']
   transition?: TreeNode['transition']
+  cursor?: TreeNode['cursor']
 }
 
 export interface UpdateNodeMetaOperation {
@@ -406,6 +407,14 @@ function withNodeMetaPatch<T extends TreeNode>(
       delete next.transition
     } else {
       next.transition = patch.transition
+    }
+  }
+
+  if ('cursor' in patch) {
+    if (patch.cursor === undefined) {
+      delete next.cursor
+    } else {
+      next.cursor = patch.cursor
     }
   }
 

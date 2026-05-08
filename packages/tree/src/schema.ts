@@ -228,6 +228,18 @@ export const nodeTransitionSchema = z.object({
 })
 export type NodeTransition = z.infer<typeof nodeTransitionSchema>
 
+export const NODE_CURSOR_IDS = [
+  'default',
+  'pointer',
+  'text',
+  'help',
+  'not-allowed',
+  'grab',
+  'crosshair',
+] as const
+export const nodeCursorSchema = z.enum(NODE_CURSOR_IDS)
+export type NodeCursor = z.infer<typeof nodeCursorSchema>
+
 export const IMAGE_FIT_IDS = ['cover', 'contain'] as const
 export const imageFitSchema = z.enum(IMAGE_FIT_IDS)
 export type ImageFit = z.infer<typeof imageFitSchema>
@@ -360,6 +372,7 @@ interface BaseNodeMeta {
   disabled?: boolean
   opacity?: number
   pointerEvents?: NodePointerEvents
+  cursor?: NodeCursor
   responsive?: ResponsiveIntent
   styleTokens?: string[]
   spacing?: Spacing
@@ -454,6 +467,7 @@ const baseShape = {
   color: nodeColorSchema.optional(),
   layout: nodeLayoutSchema.optional(),
   transition: nodeTransitionSchema.optional(),
+  cursor: nodeCursorSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({
