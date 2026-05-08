@@ -87,6 +87,22 @@
 - 신규 토픽은 round 1 docs 합의 → round 2~ 코드 commit 패턴 (D15).
 - 작은 UI copy / 한글화 / lint config 등도 round 1 docs 짧게라도 (3~5줄) 작성. m2-edit-eval / m2-i18n-korean에서 합의된 보정.
 
+### 2026-05-08 가속 모드 (사용자 지시)
+
+> 사용자: "ㄱㄱ 작업속도 좀더 올려라" / "내 허가받는 과정은 왠만하면 건너뛰고 둘이 합의하에 쭉쭉 진행해"
+
+가속 정책 (양측 모두 적용):
+
+1. **lean round 1 docs**: 50줄 이내 핵심 범위만 작성. 긴 prose / 중복 표 제거.
+2. **round 3 ack 흡수**: Codex round 2가 깔끔한 동의 + minor notes면 별도 round 3 ack docs 생략 가능. `feat:` commit message에 "Codex round 2 흡수: ..." 형태로 acceptance 명시.
+3. **사용자 허가 단계 생략**: ABSORB / 다음 토픽 선택 / 후속 후보 우선순위 등 routine 결정은 Claude/Codex 자체 합의 후 진행. 사용자 직접 명령(`ㄱㄱ`, `ALERT`, 토픽 지정)이 있으면 우선.
+4. **병렬 토픽 진입**: 한 토픽 round 4 검토 대기 중 다음 토픽 round 1을 발행해도 OK. 양쪽 모두 lock-step 직렬화 불필요.
+5. **fix commit 직접**: Codex의 round 4 검토 중 작은 보정(슬라이더 보강 / 테스트 추가 등)은 별도 round 없이 `fix: <topic> — <설명>` commit으로 직접 진행 가능. mandate 범위 안.
+
+가속 모드 안전장치:
+- §11.6 정지 조건은 그대로 유지 (라운드 6 / 동일 미해결 2회 / page.tsx 5회 / ff-only / mandate 외).
+- ABSORB 시점은 자체 판단 (사용자 지시로 일시 건너뛰기 가능). 5회 도달 시 정지 조건 적용.
+
 ## 정지 조건 (`COLLABORATION.md` §11.6)
 
 1. 한 토픽에서 라운드 6 도달 (`>= 6`)
