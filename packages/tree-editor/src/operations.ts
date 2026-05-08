@@ -1,6 +1,7 @@
 import type {
   FocalPoint,
   ImageAspectRatio,
+  Shape,
   Spacing,
   StyleTokens,
   TextNode,
@@ -27,6 +28,12 @@ export interface UpdateSpacingOperation {
   type: 'updateSpacing'
   nodeId: string
   patch: Partial<Spacing>
+}
+
+export interface UpdateShapeOperation {
+  type: 'updateShape'
+  nodeId: string
+  patch: Partial<Shape>
 }
 
 export interface UpdateButtonLabelOperation {
@@ -70,6 +77,7 @@ type ContentEditOperation =
   | UpdateTextOperation
   | UpdateTextTypographyOperation
   | UpdateSpacingOperation
+  | UpdateShapeOperation
   | UpdateButtonLabelOperation
   | UpdateImageOperation
 
@@ -115,6 +123,14 @@ export function updateSpacing(
   patch: Partial<Spacing>,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateSpacing', nodeId, patch })
+}
+
+export function updateShape(
+  tree: Tree,
+  nodeId: string,
+  patch: Partial<Shape>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateShape', nodeId, patch })
 }
 
 export function replaceTextById(
@@ -259,6 +275,9 @@ function editMatchedNode(
     case 'updateSpacing':
       return withSpacingPatch(node, operation.patch)
 
+    case 'updateShape':
+      return withShapePatch(node, operation.patch)
+
     case 'updateButtonLabel':
       if (node.type !== 'button') {
         throw new Error(
@@ -285,6 +304,36 @@ function editMatchedNode(
           : {}),
       }
   }
+}
+
+function withShapePatch<T extends TreeNode>(node: T, patch: Partial<Shape>): T {
+  const shape = mergeShapePatch(node.shape, patch)
+  if (shape === undefined) {
+    const { shape: _removed, ...nodeWithoutShape } = node
+    return nodeWithoutShape as T
+  }
+
+  return { ...node, shape }
+}
+
+function mergeShapePatch(
+  current: Shape | undefined,
+  patch: Partial<Shape>,
+): Shape | undefined {
+  const next: Partial<Shape> = { ...(current ?? {}) }
+
+  for (const [key, value] of Object.entries(patch) as [
+    keyof Shape,
+    Shape[keyof Shape] | undefined,
+  ][]) {
+    if (value === undefined) {
+      delete next[key]
+    } else {
+      Object.assign(next, { [key]: value })
+    }
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined
 }
 
 function withSpacingPatch<T extends TreeNode>(

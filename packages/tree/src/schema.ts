@@ -85,6 +85,26 @@ export const spacingSchema = z.object({
 })
 export type Spacing = z.infer<typeof spacingSchema>
 
+export const BORDER_STYLE_IDS = ['solid', 'dashed', 'none'] as const
+export const borderStyleSchema = z.enum(BORDER_STYLE_IDS)
+export type BorderStyle = z.infer<typeof borderStyleSchema>
+
+export const SHADOW_PRESET_IDS = ['none', 'sm', 'md', 'lg', 'xl'] as const
+export const shadowPresetSchema = z.enum(SHADOW_PRESET_IDS)
+export type ShadowPreset = z.infer<typeof shadowPresetSchema>
+
+export const hexColorSchema = z
+  .string()
+  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+export const shapeSchema = z.object({
+  radius: z.number().min(0).max(120).optional(),
+  borderWidth: z.number().min(0).max(20).optional(),
+  borderColor: hexColorSchema.optional(),
+  borderStyle: borderStyleSchema.optional(),
+  shadow: shadowPresetSchema.optional(),
+})
+export type Shape = z.infer<typeof shapeSchema>
+
 export const imageAspectRatioSchema = z.enum([
   'square',
   'landscape',
@@ -204,6 +224,7 @@ interface BaseNodeMeta {
   responsive?: ResponsiveIntent
   styleTokens?: string[]
   spacing?: Spacing
+  shape?: Shape
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -282,6 +303,7 @@ const baseShape = {
   responsive: responsiveIntentSchema,
   styleTokens: z.array(z.string()).optional(),
   spacing: spacingSchema.optional(),
+  shape: shapeSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({

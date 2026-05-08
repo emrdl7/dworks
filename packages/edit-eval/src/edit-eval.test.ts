@@ -69,12 +69,17 @@ describe('edit-eval schema', () => {
           nodeId: 'hero.title',
           patch: { paddingTop: 12, marginBottom: 24 },
         },
+        {
+          type: 'updateShape',
+          nodeId: 'hero.title',
+          patch: { radius: 12, borderStyle: 'solid', shadow: 'md' },
+        },
         { type: 'updateButtonLabel', nodeId: 'hero.cta', label: '바로 시작' },
         { type: 'updateStyleTokens', patch: { colorPreset: 'plum' } },
       ],
     })
 
-    assert.equal(parsed.editSequence?.length, 5)
+    assert.equal(parsed.editSequence?.length, 6)
   })
 
   it('rejects invalid edit axis scores', () => {
@@ -166,6 +171,11 @@ describe('edit-eval dry-run judge', () => {
           nodeId: 'hero.title',
           patch: { paddingTop: 12, marginBottom: 24 },
         },
+        {
+          type: 'updateShape' as const,
+          nodeId: 'hero.title',
+          patch: { radius: 12, borderStyle: 'solid', shadow: 'md' },
+        },
         { type: 'updateStyleTokens' as const, patch: { colorPreset: 'navy' } },
       ]),
       [
@@ -173,7 +183,8 @@ describe('edit-eval dry-run judge', () => {
         '2. updateButtonLabel hero.cta label="바로 시작"',
         '3. updateTextTypography hero.title typography={"fontSize":52,"fontWeight":"700"}',
         '4. updateSpacing hero.title spacing={"paddingTop":12,"marginBottom":24}',
-        '5. updateStyleTokens colorPreset="navy"',
+        '5. updateShape hero.title shape={"radius":12,"borderStyle":"solid","shadow":"md"}',
+        '6. updateStyleTokens colorPreset="navy"',
       ].join('\n'),
     )
   })

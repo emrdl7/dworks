@@ -62,6 +62,28 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateShape operation', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateShape',
+      nodeId: 'hero.card',
+      patch: {
+        radius: 18,
+        borderWidth: 2,
+        borderColor: '#aabbcc',
+        borderStyle: 'dashed',
+        shadow: 'lg',
+      },
+    })
+
+    assert.equal(op.type, 'updateShape')
+    if (op.type === 'updateShape') {
+      assert.equal(op.nodeId, 'hero.card')
+      assert.equal(op.patch.radius, 18)
+      assert.equal(op.patch.borderColor, '#aabbcc')
+      assert.equal(op.patch.shadow, 'lg')
+    }
+  })
+
   it('parses updateButtonLabel operation', () => {
     const op = editOperationSchema.parse({
       type: 'updateButtonLabel',
@@ -244,6 +266,38 @@ describe('edit-operation schema', () => {
     )
   })
 
+  it('rejects invalid shape updates', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateShape',
+        nodeId: 'hero.card',
+        patch: {
+          borderWidth: 21,
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateShape',
+        nodeId: 'hero.card',
+        patch: {
+          borderColor: '#abcd',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateShape',
+        nodeId: 'hero.card',
+        patch: {
+          borderStyle: 'double',
+        },
+      }),
+    )
+  })
+
   it('rejects empty nodeId', () => {
     assert.throws(() =>
       editOperationSchema.parse({
@@ -272,6 +326,11 @@ describe('edit-sequence schema', () => {
         nodeId: 'foo',
         patch: { paddingTop: 24, marginBottom: 12, gap: 16 },
       },
+      {
+        type: 'updateShape',
+        nodeId: 'foo',
+        patch: { radius: 18, borderStyle: 'solid', shadow: 'md' },
+      },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
       { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
       { type: 'moveNode', nodeId: 'cards.card-a', direction: 'down' },
@@ -282,7 +341,7 @@ describe('edit-sequence schema', () => {
   it('parses a valid sequence', () => {
     const seq = editSequenceSchema.parse(validSequence)
     assert.equal(seq.id, 'test')
-    assert.equal(seq.operations.length, 7)
+    assert.equal(seq.operations.length, 8)
     assert.equal(seq.tree, '../../trees/x.json')
   })
 

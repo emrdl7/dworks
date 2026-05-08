@@ -95,6 +95,12 @@ export function summarizeEditOperations(operations: EditOperation[]): string {
             operation.type,
             operation.nodeId,
           )} spacing=${JSON.stringify(operation.patch)}`
+        case 'updateShape':
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} shape=${JSON.stringify(operation.patch)}`
         case 'updateButtonLabel':
           return `${operationPrefix(
             index,

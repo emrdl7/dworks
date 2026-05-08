@@ -13,12 +13,15 @@ import {
   COLOR_PRESETS,
   COLOR_PRESET_IDS,
   BUILT_IN_FONT_FAMILY_IDS,
+  type BorderStyle,
   type ButtonNode,
   type BuiltInFontFamily,
   type ColorPreset,
   type FontFamily,
   type FontWeight,
   type ImageNode,
+  type ShadowPreset,
+  type Shape,
   type Spacing,
   type TextNode,
   type TextAlign,
@@ -32,6 +35,7 @@ import {
   moveNode,
   updateButtonLabel,
   updateImage,
+  updateShape,
   updateSpacing,
   updateStyleTokens,
   updateText,
@@ -144,6 +148,20 @@ const textAlignLabels: Record<TextAlign, string> = {
   right: '우',
 }
 
+const borderStyleLabels: Record<BorderStyle, string> = {
+  solid: '실선',
+  dashed: '점선',
+  none: '없음',
+}
+
+const shadowPresetLabels: Record<ShadowPreset, string> = {
+  none: '없음',
+  sm: '옅게',
+  md: '기본',
+  lg: '진하게',
+  xl: '매우 진하게',
+}
+
 const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
   sans: '산세리프',
   serif: '세리프',
@@ -152,6 +170,8 @@ const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
 
 const fontWeightOptions: FontWeight[] = ['400', '500', '600', '700']
 const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
+const borderStyleOptions: BorderStyle[] = ['solid', 'dashed', 'none']
+const shadowPresetOptions: ShadowPreset[] = ['none', 'sm', 'md', 'lg', 'xl']
 const builtInFontFamilyOptions = [...BUILT_IN_FONT_FAMILY_IDS]
 const UPLOAD_FONT_OPTION = '__upload-font__'
 const typographyFields = [
@@ -172,6 +192,13 @@ const spacingFields = [
   'marginBottom',
   'marginLeft',
   'gap',
+] as const
+const shapeFields = [
+  'radius',
+  'borderWidth',
+  'borderColor',
+  'borderStyle',
+  'shadow',
 ] as const
 type SpacingField = (typeof spacingFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
@@ -210,6 +237,16 @@ const marginVerticalFields: readonly SpacingField[] = [
   'marginTop',
   'marginBottom',
 ]
+
+const DEFAULT_SHAPE_COLOR = '#d7ddd2'
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
+const SHADOW_VALUES: Record<ShadowPreset, string> = {
+  none: 'none',
+  sm: '0 1px 2px rgba(0, 0, 0, 0.06)',
+  md: '0 4px 12px rgba(0, 0, 0, 0.08)',
+  lg: '0 12px 32px rgba(0, 0, 0, 0.12)',
+  xl: '0 24px 64px rgba(0, 0, 0, 0.16)',
+}
 
 const MAX_HISTORY = 100
 
@@ -351,6 +388,22 @@ export default function HomePage() {
         Object.fromEntries(
           spacingFields.map((field) => [field, undefined]),
         ) as Partial<Spacing>,
+      ),
+    )
+  }
+
+  function handleShapeChange(node: TreeNode, patch: Partial<Shape>) {
+    commitTreeEdit(updateShape(tree, node.id, patch))
+  }
+
+  function handleShapeReset(node: TreeNode) {
+    commitTreeEdit(
+      updateShape(
+        tree,
+        node.id,
+        Object.fromEntries(
+          shapeFields.map((field) => [field, undefined]),
+        ) as Partial<Shape>,
       ),
     )
   }
@@ -604,6 +657,8 @@ export default function HomePage() {
             onTextTypographyReset={handleTextTypographyReset}
             onSpacingChange={handleSpacingChange}
             onSpacingReset={handleSpacingReset}
+            onShapeChange={handleShapeChange}
+            onShapeReset={handleShapeReset}
             registeredFonts={registeredFonts}
             fontUsageCounts={fontUsageCounts}
             fontRegistryMessage={fontRegistryMessage}
@@ -661,6 +716,9 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
   const boxSpacingStyle = getBoxSpacingStyle(node.spacing)
   const gapSpacingStyle = getGapSpacingStyle(node.spacing)
   const containerSpacingStyle = getContainerSpacingStyle(node.spacing)
+  const shapeStyle = getShapeStyle(node.shape)
+  const boxStyle = mergeStyles(boxSpacingStyle, shapeStyle)
+  const containerStyle = mergeStyles(containerSpacingStyle, shapeStyle)
 
   switch (node.type) {
     case 'section': {
@@ -668,7 +726,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
 
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <section className="flex flex-col gap-8 p-10" style={boxSpacingStyle}>
+          <section className="flex flex-col gap-8 p-10" style={boxStyle}>
             {firstChild ? (
               <CanvasNode
                 node={firstChild}
@@ -715,7 +773,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
             className={`grid min-h-[420px] gap-10 bg-[var(--dw-hero-surface)] p-12 text-[var(--dw-hero-text)] ${
               hasImage ? 'grid-cols-[1.05fr_0.95fr]' : 'grid-cols-1'
             }`}
-            style={containerSpacingStyle}
+            style={containerStyle}
           >
             <div className="flex flex-col justify-center gap-5">
               {contentChildren.map((child) => (
@@ -749,7 +807,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <article
             className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-5 shadow-sm"
-            style={boxSpacingStyle}
+            style={boxStyle}
           >
             <div className="flex flex-col gap-3" style={gapSpacingStyle}>
               {node.children.map((child) => (
@@ -768,7 +826,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'list':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <div className="flex flex-col gap-3" style={containerSpacingStyle}>
+          <div className="flex flex-col gap-3" style={containerStyle}>
             {node.children.map((child) => (
               <CanvasNode
                 key={child.id}
@@ -786,7 +844,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <form
             className="mx-auto flex max-w-[520px] flex-col gap-5 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-8 shadow-sm"
-            style={containerSpacingStyle}
+            style={containerStyle}
           >
             {node.children.map((child) => (
               <CanvasNode
@@ -803,7 +861,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'text':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <div style={boxSpacingStyle}>
+          <div style={boxStyle}>
             <TextPreview node={node} />
           </div>
         </SelectableNode>
@@ -818,7 +876,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                 ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
                 : 'bg-[var(--dw-accent)] text-[var(--dw-accent-text)]'
             }`}
-            style={boxSpacingStyle}
+            style={boxStyle}
           >
             {node.label}
           </span>
@@ -828,7 +886,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'image':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <ImagePreview key={node.src} node={node} style={boxSpacingStyle} />
+          <ImagePreview key={node.src} node={node} style={boxStyle} />
         </SelectableNode>
       )
   }
@@ -1011,6 +1069,47 @@ function getContainerSpacingStyle(spacing?: Spacing): CSSProperties | undefined 
   return mergeStyles(getBoxSpacingStyle(spacing), getGapSpacingStyle(spacing))
 }
 
+function getShapeStyle(shape?: Shape): CSSProperties | undefined {
+  if (!shape) {
+    return undefined
+  }
+
+  const hasBorderDetail =
+    shape.borderWidth !== undefined ||
+    shape.borderColor !== undefined ||
+    shape.borderStyle !== undefined
+  const effectiveBorderStyle =
+    shape.borderStyle ?? (hasBorderDetail ? 'solid' : undefined)
+  const effectiveBorderWidth =
+    effectiveBorderStyle === undefined
+      ? undefined
+      : effectiveBorderStyle === 'none'
+        ? 0
+        : (shape.borderWidth ?? 1)
+  const effectiveBorderColor =
+    effectiveBorderStyle === undefined
+      ? undefined
+      : effectiveBorderStyle === 'none'
+        ? 'transparent'
+        : (shape.borderColor ?? 'var(--dw-border)')
+
+  const style: CSSProperties = {
+    ...(shape.radius !== undefined ? { borderRadius: `${shape.radius}px` } : {}),
+    ...(effectiveBorderStyle !== undefined
+      ? { borderStyle: effectiveBorderStyle }
+      : {}),
+    ...(effectiveBorderWidth !== undefined
+      ? { borderWidth: `${effectiveBorderWidth}px` }
+      : {}),
+    ...(effectiveBorderColor !== undefined
+      ? { borderColor: effectiveBorderColor }
+      : {}),
+    ...(shape.shadow !== undefined ? { boxShadow: SHADOW_VALUES[shape.shadow] } : {}),
+  }
+
+  return Object.keys(style).length > 0 ? style : undefined
+}
+
 function mergeStyles(
   ...styles: Array<CSSProperties | undefined>
 ): CSSProperties | undefined {
@@ -1099,6 +1198,8 @@ interface NodeInspectorProps {
   onTextTypographyReset: (node: TextNode) => void
   onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
   onSpacingReset: (node: TreeNode) => void
+  onShapeChange: (node: TreeNode, patch: Partial<Shape>) => void
+  onShapeReset: (node: TreeNode) => void
   registeredFonts: RegisteredFontSummary[]
   fontUsageCounts: Map<string, number>
   fontRegistryMessage: string
@@ -1126,6 +1227,8 @@ function NodeInspector({
   onTextTypographyReset,
   onSpacingChange,
   onSpacingReset,
+  onShapeChange,
+  onShapeReset,
   registeredFonts,
   fontUsageCounts,
   fontRegistryMessage,
@@ -1159,6 +1262,12 @@ function NodeInspector({
           node={node}
           onSpacingChange={onSpacingChange}
           onSpacingReset={onSpacingReset}
+        />
+
+        <ShapeControls
+          node={node}
+          onShapeChange={onShapeChange}
+          onShapeReset={onShapeReset}
         />
 
         {node.type === 'text' ? (
@@ -1833,7 +1942,228 @@ function SpacingControls({
   )
 }
 
+interface ShapeControlsProps {
+  node: TreeNode
+  onShapeChange: (node: TreeNode, patch: Partial<Shape>) => void
+  onShapeReset: (node: TreeNode) => void
+}
+
+function ShapeControls({
+  node,
+  onShapeChange,
+  onShapeReset,
+}: ShapeControlsProps) {
+  const shape = node.shape ?? {}
+  const [borderColorInput, setBorderColorInput] = useState(shape.borderColor ?? '')
+  const [borderColorError, setBorderColorError] = useState(false)
+  const isBorderDisabled = shape.borderStyle === 'none'
+
+  useEffect(() => {
+    setBorderColorInput(shape.borderColor ?? '')
+    setBorderColorError(false)
+  }, [node.id, shape.borderColor])
+
+  function updateRadius(value: string) {
+    onShapeChange(node, {
+      radius: parseOptionalNumber(value, 0, 120),
+    })
+  }
+
+  function updateBorderWidth(value: string) {
+    const nextValue = parseOptionalNumber(value, 0, 20)
+
+    if (nextValue === undefined) {
+      onShapeChange(node, { borderWidth: undefined })
+      return
+    }
+
+    if (nextValue === 0) {
+      onShapeChange(node, {
+        borderWidth: 0,
+        borderStyle: 'none',
+      })
+      return
+    }
+
+    onShapeChange(node, {
+      borderWidth: nextValue,
+      borderStyle:
+        shape.borderStyle === undefined || shape.borderStyle === 'none'
+          ? 'solid'
+          : shape.borderStyle,
+    })
+  }
+
+  function updateBorderStyle(value: string) {
+    if (value === '') {
+      onShapeChange(node, { borderStyle: undefined })
+      return
+    }
+
+    const nextStyle = value as BorderStyle
+    if (nextStyle === 'none') {
+      onShapeChange(node, {
+        borderStyle: 'none',
+        borderWidth: 0,
+      })
+      return
+    }
+
+    onShapeChange(node, {
+      borderStyle: nextStyle,
+      borderWidth:
+        shape.borderWidth === undefined || shape.borderWidth === 0
+          ? 1
+          : shape.borderWidth,
+    })
+  }
+
+  function updateBorderColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setBorderColorInput(value)
+
+    if (trimmedValue === '') {
+      setBorderColorError(false)
+      onShapeChange(node, { borderColor: undefined })
+      return
+    }
+
+    if (!isValidHexColor(trimmedValue)) {
+      setBorderColorError(true)
+      return
+    }
+
+    setBorderColorError(false)
+    onShapeChange(node, {
+      borderColor: normalizeHexColor(trimmedValue),
+      ...getVisibleBorderPatch(shape),
+    })
+  }
+
+  function updateBorderColorFromPicker(value: string) {
+    setBorderColorInput(value)
+    setBorderColorError(false)
+    onShapeChange(node, {
+      borderColor: normalizeHexColor(value),
+      ...getVisibleBorderPatch(shape),
+    })
+  }
+
+  function updateShadow(value: string) {
+    onShapeChange(node, {
+      shadow: value === '' ? undefined : (value as ShadowPreset),
+    })
+  }
+
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">모양</h3>
+          <p className="mt-1 text-xs text-[#647067]">
+            선택한 노드의 테두리와 그림자
+          </p>
+        </div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+          onClick={() => onShapeReset(node)}
+        >
+          초기화
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <TypographyNumberField
+          label="모서리"
+          unit="px"
+          min={0}
+          max={120}
+          step={1}
+          value={shape.radius}
+          placeholder="기본"
+          onChange={updateRadius}
+        />
+        <label className="block">
+          <span className="text-xs font-semibold text-[#4f5e56]">
+            테두리 종류
+          </span>
+          <select
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            value={shape.borderStyle ?? ''}
+            onChange={(event) => updateBorderStyle(event.target.value)}
+          >
+            <option value="">기본</option>
+            {borderStyleOptions.map((style) => (
+              <option key={style} value={style}>
+                {borderStyleLabels[style]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <TypographyNumberField
+          label="테두리 두께"
+          unit="px"
+          min={0}
+          max={20}
+          step={1}
+          value={shape.borderWidth}
+          placeholder={isBorderDisabled ? '없음' : '기본'}
+          disabled={isBorderDisabled}
+          onChange={updateBorderWidth}
+        />
+        <label className={isBorderDisabled ? 'block opacity-50' : 'block'}>
+          <span className="text-xs font-semibold text-[#4f5e56]">
+            테두리 색상
+          </span>
+          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <input
+              type="color"
+              aria-label="테두리 색상 선택"
+              className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0 disabled:cursor-not-allowed"
+              value={toColorInputValue(borderColorInput)}
+              disabled={isBorderDisabled}
+              onChange={(event) => updateBorderColorFromPicker(event.target.value)}
+            />
+            <input
+              className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none disabled:cursor-not-allowed"
+              value={borderColorInput}
+              placeholder={isBorderDisabled ? '없음' : DEFAULT_SHAPE_COLOR}
+              aria-invalid={borderColorError}
+              disabled={isBorderDisabled}
+              onChange={(event) => updateBorderColorFromText(event.target.value)}
+            />
+          </span>
+          {borderColorError ? (
+            <span className="mt-2 block text-xs text-[#b42318]">
+              HEX 형식 (#RRGGBB)으로 입력해주세요.
+            </span>
+          ) : null}
+        </label>
+
+        <label className="col-span-2 block">
+          <span className="text-xs font-semibold text-[#4f5e56]">그림자</span>
+          <select
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            value={shape.shadow ?? ''}
+            onChange={(event) => updateShadow(event.target.value)}
+          >
+            <option value="">기본</option>
+            {shadowPresetOptions.map((shadow) => (
+              <option key={shadow} value={shadow}>
+                {shadowPresetLabels[shadow]}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
+  )
+}
+
 interface TypographyNumberFieldProps {
+  disabled?: boolean
   label: string
   max: number
   min: number
@@ -1845,6 +2175,7 @@ interface TypographyNumberFieldProps {
 }
 
 function TypographyNumberField({
+  disabled = false,
   label,
   max,
   min,
@@ -1855,17 +2186,18 @@ function TypographyNumberField({
   value,
 }: TypographyNumberFieldProps) {
   return (
-    <label className="block">
+    <label className={disabled ? 'block opacity-50' : 'block'}>
       <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
       <span className="mt-2 flex h-10 items-center rounded-md border border-[#cbd6cf] bg-white focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
         <input
-          className="h-full min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none"
+          className="h-full min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none disabled:cursor-not-allowed"
           type="number"
           min={min}
           max={max}
           step={step}
           value={value ?? ''}
           placeholder={placeholder}
+          disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
         />
         {unit ? (
@@ -2198,6 +2530,43 @@ function parseOptionalNumber(
   }
 
   return Math.min(max, Math.max(min, parsed))
+}
+
+function isValidHexColor(value: string): boolean {
+  return HEX_COLOR_PATTERN.test(value)
+}
+
+function normalizeHexColor(value: string): string {
+  return value.trim().toLowerCase()
+}
+
+function toColorInputValue(value: string): string {
+  const normalizedValue = normalizeHexColor(value)
+  if (!isValidHexColor(normalizedValue)) {
+    return DEFAULT_SHAPE_COLOR
+  }
+
+  if (normalizedValue.length === 4) {
+    const red = normalizedValue.slice(1, 2)
+    const green = normalizedValue.slice(2, 3)
+    const blue = normalizedValue.slice(3, 4)
+    return `#${red}${red}${green}${green}${blue}${blue}`
+  }
+
+  return normalizedValue
+}
+
+function getVisibleBorderPatch(shape: Partial<Shape>): Partial<Shape> {
+  return {
+    borderStyle:
+      shape.borderStyle === undefined || shape.borderStyle === 'none'
+        ? 'solid'
+        : shape.borderStyle,
+    borderWidth:
+      shape.borderWidth === undefined || shape.borderWidth === 0
+        ? 1
+        : shape.borderWidth,
+  }
 }
 
 function getSpacingGroupValue(

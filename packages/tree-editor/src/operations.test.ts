@@ -9,6 +9,7 @@ import {
   duplicateNode,
   moveNode,
   replaceTextById,
+  updateShape,
   updateSpacing,
   updateButtonLabel,
   updateImage,
@@ -155,6 +156,17 @@ describe('tree editor operations', () => {
         patch: { paddingTop: 24, marginBottom: 12, gap: 16 },
       },
       {
+        type: 'updateShape',
+        nodeId: 'landing.card',
+        patch: {
+          radius: 18,
+          borderWidth: 2,
+          borderColor: '#aabbcc',
+          borderStyle: 'dashed',
+          shadow: 'lg',
+        },
+      },
+      {
         type: 'updateImage',
         nodeId: 'landing.visual',
         alt: '새 이미지 설명',
@@ -195,6 +207,11 @@ describe('tree editor operations', () => {
         assert.equal(card.spacing?.paddingTop, 24)
         assert.equal(card.spacing?.marginBottom, 12)
         assert.equal(card.spacing?.gap, 16)
+        assert.equal(card.shape?.radius, 18)
+        assert.equal(card.shape?.borderWidth, 2)
+        assert.equal(card.shape?.borderColor, '#aabbcc')
+        assert.equal(card.shape?.borderStyle, 'dashed')
+        assert.equal(card.shape?.shadow, 'lg')
       }
     }
   })
@@ -380,6 +397,53 @@ describe('tree editor operations', () => {
       assert.equal(card?.type, 'card')
       if (card?.type === 'card') {
         assert.equal(card.spacing, undefined)
+      }
+    }
+  })
+
+  it('updates shape overrides on any node without changing content', () => {
+    const tree = fixtureTree()
+    const updated = updateShape(tree, 'landing.cta', {
+      radius: 12,
+      borderWidth: 1,
+      borderColor: '#112233',
+      borderStyle: 'solid',
+      shadow: 'md',
+    })
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      const cta = updated.root.children[1]
+      assert.equal(cta?.type, 'button')
+      if (cta?.type === 'button') {
+        assert.equal(cta.label, '시작하기')
+        assert.deepEqual(cta.shape, {
+          radius: 12,
+          borderWidth: 1,
+          borderColor: '#112233',
+          borderStyle: 'solid',
+          shadow: 'md',
+        })
+      }
+    }
+  })
+
+  it('removes shape fields and clears empty shape objects', () => {
+    const shaped = updateShape(fixtureTree(), 'landing.card', {
+      radius: 18,
+      shadow: 'lg',
+    })
+    const reset = updateShape(shaped, 'landing.card', {
+      radius: undefined,
+      shadow: undefined,
+    })
+
+    assert.equal(reset.root.type, 'section')
+    if (reset.root.type === 'section') {
+      const card = reset.root.children[3]
+      assert.equal(card?.type, 'card')
+      if (card?.type === 'card') {
+        assert.equal(card.shape, undefined)
       }
     }
   })

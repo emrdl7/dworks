@@ -220,7 +220,9 @@ function buildManifest(input: {
     ranAt: input.ranAt,
     treePath: input.treePath ? repoRelative(input.treePath) : null,
     operationsCount: operations.length,
-    operationNodeIds: operations.map((operation) => operation.nodeId),
+    operationNodeIds: operations.flatMap((operation) =>
+      'nodeId' in operation ? [operation.nodeId] : [],
+    ),
     status: input.status,
     errorMessage: input.errorMessage ?? null,
   }
