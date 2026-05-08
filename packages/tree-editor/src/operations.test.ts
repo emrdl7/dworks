@@ -220,6 +220,7 @@ describe('tree editor operations', () => {
       cursor: 'help',
       transition: {
         duration: 240,
+        timing: 'ease-in-out',
       },
     })
     const reset = updateNodeMeta(edited, 'landing.card', {
@@ -261,7 +262,10 @@ describe('tree editor operations', () => {
         assert.equal(editedCard.opacity, 0.42)
         assert.equal(editedCard.pointerEvents, 'none')
         assert.equal(editedCard.cursor, 'help')
-        assert.deepEqual(editedCard.transition, { duration: 240 })
+        assert.deepEqual(editedCard.transition, {
+          duration: 240,
+          timing: 'ease-in-out',
+        })
         assert.equal(resetCard.hidden, undefined)
         assert.equal(resetCard.disabled, undefined)
         assert.equal(resetCard.opacity, undefined)

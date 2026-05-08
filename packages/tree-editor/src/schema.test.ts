@@ -170,6 +170,7 @@ describe('edit-operation schema', () => {
         cursor: 'pointer',
         transition: {
           duration: 240,
+          timing: 'ease-in',
         },
       },
     })
@@ -183,6 +184,7 @@ describe('edit-operation schema', () => {
       assert.equal(op.patch.pointerEvents, 'none')
       assert.equal(op.patch.cursor, 'pointer')
       assert.equal(op.patch.transition?.duration, 240)
+      assert.equal(op.patch.transition?.timing, 'ease-in')
     }
   })
 
@@ -623,6 +625,18 @@ describe('edit-operation schema', () => {
         patch: {
           transition: {
             duration: 2001,
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transition: {
+            timing: 'spring',
           },
         },
       }),

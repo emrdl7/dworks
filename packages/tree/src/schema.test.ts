@@ -20,6 +20,7 @@ import {
   LAYOUT_JUSTIFY_IDS,
   LAYOUT_INTENTS,
   LAYOUT_WRAP_IDS,
+  NODE_TRANSITION_TIMING_IDS,
   TEXT_ALIGN_IDS,
   TREE_NODE_TYPES,
   treeNodeSchema,
@@ -81,6 +82,7 @@ describe('tree schema', () => {
       cursor: 'help',
       transition: {
         duration: 240,
+        timing: 'ease-out',
       },
       children: [],
     })
@@ -91,6 +93,7 @@ describe('tree schema', () => {
       assert.equal(parsed.pointerEvents, 'none')
       assert.equal(parsed.cursor, 'help')
       assert.equal(parsed.transition?.duration, 240)
+      assert.equal(parsed.transition?.timing, 'ease-out')
     }
   })
 
@@ -1130,6 +1133,18 @@ describe('tree schema', () => {
         },
       }),
     )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transition: {
+          timing: 'spring',
+        },
+        children: [],
+      }),
+    )
   })
 
   it('keeps M0.5 fixtures backward compatible without semantic fields', () => {
@@ -1412,5 +1427,15 @@ describe('tree schema', () => {
     ])
     assert.equal(COLOR_PRESETS.mint.accent, '#1b7f72')
     assert.equal(COLOR_PRESETS.graphite.accentText, '#0f1b1d')
+  })
+
+  it('exports stable transition timing values', () => {
+    assert.deepEqual(NODE_TRANSITION_TIMING_IDS, [
+      'linear',
+      'ease',
+      'ease-in',
+      'ease-out',
+      'ease-in-out',
+    ])
   })
 })
