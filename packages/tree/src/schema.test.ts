@@ -242,6 +242,7 @@ describe('tree schema', () => {
       id: 'landing.card',
       type: 'card',
       editKind: 'structure',
+      disabled: true,
       color: {
         backgroundColor: '#f8fafc',
         backgroundOpacity: 0.72,
@@ -263,12 +264,15 @@ describe('tree schema', () => {
         activeTextColor: '#f8fafc',
         focusBackgroundColor: '#114b5f',
         focusTextColor: '#f0fdfa',
+        disabledBackgroundColor: '#64748b',
+        disabledTextColor: '#f8fafc',
       },
       children: [],
     })
 
     assert.equal(parsed.type, 'card')
     if (parsed.type === 'card') {
+      assert.equal(parsed.disabled, true)
       assert.equal(parsed.color?.backgroundColor, '#f8fafc')
       assert.equal(parsed.color?.backgroundOpacity, 0.72)
       assert.deepEqual(parsed.color?.backgroundGradient, {
@@ -289,6 +293,8 @@ describe('tree schema', () => {
       assert.equal(parsed.color?.activeTextColor, '#f8fafc')
       assert.equal(parsed.color?.focusBackgroundColor, '#114b5f')
       assert.equal(parsed.color?.focusTextColor, '#f0fdfa')
+      assert.equal(parsed.color?.disabledBackgroundColor, '#64748b')
+      assert.equal(parsed.color?.disabledTextColor, '#f8fafc')
     }
   })
 
@@ -333,6 +339,30 @@ describe('tree schema', () => {
         editKind: 'structure',
         color: {
           backgroundColor: 'white',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          disabledBackgroundColor: 'gray',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          disabledTextColor: 'white',
         },
         children: [],
       }),

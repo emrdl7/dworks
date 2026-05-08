@@ -96,6 +96,8 @@ describe('edit-operation schema', () => {
         activeTextColor: '#f8fafc',
         focusBackgroundColor: '#114b5f',
         focusTextColor: '#f0fdfa',
+        disabledBackgroundColor: '#64748b',
+        disabledTextColor: '#f8fafc',
         textColor: '#123',
       },
     })
@@ -110,6 +112,8 @@ describe('edit-operation schema', () => {
       assert.equal(op.patch.activeTextColor, '#f8fafc')
       assert.equal(op.patch.focusBackgroundColor, '#114b5f')
       assert.equal(op.patch.focusTextColor, '#f0fdfa')
+      assert.equal(op.patch.disabledBackgroundColor, '#64748b')
+      assert.equal(op.patch.disabledTextColor, '#f8fafc')
       assert.equal(op.patch.textColor, '#123')
     }
   })
@@ -479,6 +483,26 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           focusTextColor: 'white',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateColor',
+        nodeId: 'hero.card',
+        patch: {
+          disabledBackgroundColor: 'gray',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateColor',
+        nodeId: 'hero.card',
+        patch: {
+          disabledTextColor: 'white',
         },
       }),
     )

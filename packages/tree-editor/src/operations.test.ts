@@ -601,6 +601,8 @@ describe('tree editor operations', () => {
       activeTextColor: '#f8fafc',
       focusBackgroundColor: '#114b5f',
       focusTextColor: '#f0fdfa',
+      disabledBackgroundColor: '#64748b',
+      disabledTextColor: '#f8fafc',
       textColor: '#123456',
     })
 
@@ -618,6 +620,8 @@ describe('tree editor operations', () => {
           activeTextColor: '#f8fafc',
           focusBackgroundColor: '#114b5f',
           focusTextColor: '#f0fdfa',
+          disabledBackgroundColor: '#64748b',
+          disabledTextColor: '#f8fafc',
           textColor: '#123456',
         })
       }
