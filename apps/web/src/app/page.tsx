@@ -423,6 +423,8 @@ const colorFields = [
   'hoverTextColor',
   'activeBackgroundColor',
   'activeTextColor',
+  'focusBackgroundColor',
+  'focusTextColor',
   'textColor',
   'textOpacity',
   'accentColor',
@@ -1860,6 +1862,8 @@ function CanvasNode({
   const hoverTextStyle = getHoverTextStyle(node.color)
   const activeBackgroundStyle = getActiveBackgroundStyle(node.color)
   const activeTextStyle = getActiveTextStyle(node.color)
+  const focusBackgroundStyle = getFocusBackgroundStyle(node.color)
+  const focusTextStyle = getFocusTextStyle(node.color)
   const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
@@ -2108,6 +2112,14 @@ function CanvasNode({
               node.color?.activeTextColor !== undefined
                 ? 'active:!text-[var(--dw-active-text)]'
                 : ''
+            } ${
+              node.color?.focusBackgroundColor !== undefined
+                ? 'group-focus-visible/dwnode:!bg-[var(--dw-focus-bg)] group-focus-visible/dwnode:!bg-none'
+                : ''
+            } ${
+              node.color?.focusTextColor !== undefined
+                ? 'group-focus-visible/dwnode:!text-[var(--dw-focus-text)]'
+                : ''
             }`}
             style={
               node.variant === 'secondary'
@@ -2117,6 +2129,8 @@ function CanvasNode({
                     hoverTextStyle,
                     activeBackgroundStyle,
                     activeTextStyle,
+                    focusBackgroundStyle,
+                    focusTextStyle,
                   )
                 : mergeStyles(
                     boxStyle,
@@ -2125,6 +2139,8 @@ function CanvasNode({
                     hoverTextStyle,
                     activeBackgroundStyle,
                     activeTextStyle,
+                    focusBackgroundStyle,
+                    focusTextStyle,
                   )
             }
           >
@@ -2303,7 +2319,7 @@ function SelectableNode({
       role="button"
       tabIndex={isCanvasSelectable ? 0 : -1}
       data-dworks-node-id={node.id}
-      className={`relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
+      className={`group/dwnode relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
         isSelected
           ? 'border-[var(--dw-accent)] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
           : 'border-transparent hover:border-[var(--dw-border)]'
@@ -2752,6 +2768,24 @@ function getActiveTextStyle(color?: NodeColor): CSSProperties | undefined {
     ? undefined
     : ({
         '--dw-active-text': getCssColorWithOpacity(color.activeTextColor),
+      } as CSSProperties)
+}
+
+function getFocusBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.focusBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-focus-bg': getCssColorWithOpacity(color.focusBackgroundColor),
+      } as CSSProperties)
+}
+
+function getFocusTextStyle(color?: NodeColor): CSSProperties | undefined {
+  return color?.focusTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-focus-text': getCssColorWithOpacity(color.focusTextColor),
       } as CSSProperties)
 }
 
@@ -3745,6 +3779,12 @@ function NodeColorControls({
   const [activeTextColorInput, setActiveTextColorInput] = useState(
     color.activeTextColor ?? '',
   )
+  const [focusBackgroundColorInput, setFocusBackgroundColorInput] = useState(
+    color.focusBackgroundColor ?? '',
+  )
+  const [focusTextColorInput, setFocusTextColorInput] = useState(
+    color.focusTextColor ?? '',
+  )
   const [backgroundColorError, setBackgroundColorError] = useState(false)
   const [backgroundGradientFromError, setBackgroundGradientFromError] =
     useState(false)
@@ -3758,6 +3798,9 @@ function NodeColorControls({
   const [activeBackgroundColorError, setActiveBackgroundColorError] =
     useState(false)
   const [activeTextColorError, setActiveTextColorError] = useState(false)
+  const [focusBackgroundColorError, setFocusBackgroundColorError] =
+    useState(false)
+  const [focusTextColorError, setFocusTextColorError] = useState(false)
 
   useEffect(() => {
     setBackgroundColorInput(color.backgroundColor ?? '')
@@ -3793,6 +3836,16 @@ function NodeColorControls({
     setActiveTextColorInput(color.activeTextColor ?? '')
     setActiveTextColorError(false)
   }, [node.id, color.activeTextColor])
+
+  useEffect(() => {
+    setFocusBackgroundColorInput(color.focusBackgroundColor ?? '')
+    setFocusBackgroundColorError(false)
+  }, [node.id, color.focusBackgroundColor])
+
+  useEffect(() => {
+    setFocusTextColorInput(color.focusTextColor ?? '')
+    setFocusTextColorError(false)
+  }, [node.id, color.focusTextColor])
 
   useEffect(() => {
     setBackgroundGradientFromInput(backgroundGradient.from)
@@ -3971,6 +4024,64 @@ function NodeColorControls({
       node,
       { activeTextColor: normalizedValue },
       { mergeKey: getNodeColorMergeKey(node.id, 'activeTextColor') },
+    )
+  }
+
+  function updateFocusBackgroundColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setFocusBackgroundColorInput(value)
+    if (trimmedValue === '') {
+      setFocusBackgroundColorError(false)
+      onNodeColorChange(node, { focusBackgroundColor: undefined })
+      return
+    }
+    if (!isValidHexColor(trimmedValue)) {
+      setFocusBackgroundColorError(true)
+      return
+    }
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setFocusBackgroundColorInput(normalizedValue)
+    setFocusBackgroundColorError(false)
+    onNodeColorChange(node, { focusBackgroundColor: normalizedValue })
+  }
+
+  function updateFocusBackgroundColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setFocusBackgroundColorInput(normalizedValue)
+    setFocusBackgroundColorError(false)
+    onNodeColorChange(
+      node,
+      { focusBackgroundColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'focusBackgroundColor') },
+    )
+  }
+
+  function updateFocusTextColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setFocusTextColorInput(value)
+    if (trimmedValue === '') {
+      setFocusTextColorError(false)
+      onNodeColorChange(node, { focusTextColor: undefined })
+      return
+    }
+    if (!isValidHexColor(trimmedValue)) {
+      setFocusTextColorError(true)
+      return
+    }
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setFocusTextColorInput(normalizedValue)
+    setFocusTextColorError(false)
+    onNodeColorChange(node, { focusTextColor: normalizedValue })
+  }
+
+  function updateFocusTextColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setFocusTextColorInput(normalizedValue)
+    setFocusTextColorError(false)
+    onNodeColorChange(
+      node,
+      { focusTextColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'focusTextColor') },
     )
   }
 
@@ -4483,6 +4594,80 @@ function NodeColorControls({
               />
             </span>
             {activeTextColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              포커스 배경
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={focusBackgroundColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={focusBackgroundColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateFocusBackgroundColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="포커스 배경 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  focusBackgroundColorInput,
+                  color.backgroundColor ?? DEFAULT_COLOR_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateFocusBackgroundColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {focusBackgroundColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              포커스 글자
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={focusTextColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={focusTextColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateFocusTextColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="포커스 글자 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  focusTextColorInput,
+                  color.textColor ?? DEFAULT_TEXT_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateFocusTextColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {focusTextColorError ? (
               <span className="mt-2 block text-xs text-[#b42318]">
                 HEX 형식 (#RRGGBB)으로 입력해주세요.
               </span>
