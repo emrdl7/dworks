@@ -420,6 +420,7 @@ const colorFields = [
   'backgroundOpacity',
   'backgroundGradient',
   'hoverBackgroundColor',
+  'hoverTextColor',
   'textColor',
   'textOpacity',
   'accentColor',
@@ -1854,6 +1855,7 @@ function CanvasNode({
   const accentBackgroundStyle = getAccentBackgroundStyle(node.color)
   const accentTextColorStyle = getAccentTextColorStyle(node.color)
   const hoverBackgroundStyle = getHoverBackgroundStyle(node.color)
+  const hoverTextStyle = getHoverTextStyle(node.color)
   const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
@@ -2090,11 +2092,20 @@ function CanvasNode({
               node.color?.hoverBackgroundColor !== undefined
                 ? 'hover:!bg-[var(--dw-hover-bg)] hover:!bg-none'
                 : ''
+            } ${
+              node.color?.hoverTextColor !== undefined
+                ? 'hover:!text-[var(--dw-hover-text)]'
+                : ''
             }`}
             style={
               node.variant === 'secondary'
-                ? mergeStyles(boxStyle, hoverBackgroundStyle)
-                : mergeStyles(boxStyle, accentBackgroundStyle, hoverBackgroundStyle)
+                ? mergeStyles(boxStyle, hoverBackgroundStyle, hoverTextStyle)
+                : mergeStyles(
+                    boxStyle,
+                    accentBackgroundStyle,
+                    hoverBackgroundStyle,
+                    hoverTextStyle,
+                  )
             }
           >
             {node.label}
@@ -2695,6 +2706,14 @@ function getHoverBackgroundStyle(color?: NodeColor): CSSProperties | undefined {
     ? undefined
     : ({
         '--dw-hover-bg': getCssColorWithOpacity(color.hoverBackgroundColor),
+      } as CSSProperties)
+}
+
+function getHoverTextStyle(color?: NodeColor): CSSProperties | undefined {
+  return color?.hoverTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-hover-text': getCssColorWithOpacity(color.hoverTextColor),
       } as CSSProperties)
 }
 
@@ -3679,6 +3698,9 @@ function NodeColorControls({
   const [hoverBackgroundColorInput, setHoverBackgroundColorInput] = useState(
     color.hoverBackgroundColor ?? '',
   )
+  const [hoverTextColorInput, setHoverTextColorInput] = useState(
+    color.hoverTextColor ?? '',
+  )
   const [backgroundColorError, setBackgroundColorError] = useState(false)
   const [backgroundGradientFromError, setBackgroundGradientFromError] =
     useState(false)
@@ -3688,6 +3710,7 @@ function NodeColorControls({
   const [accentColorError, setAccentColorError] = useState(false)
   const [hoverBackgroundColorError, setHoverBackgroundColorError] =
     useState(false)
+  const [hoverTextColorError, setHoverTextColorError] = useState(false)
 
   useEffect(() => {
     setBackgroundColorInput(color.backgroundColor ?? '')
@@ -3708,6 +3731,11 @@ function NodeColorControls({
     setHoverBackgroundColorInput(color.hoverBackgroundColor ?? '')
     setHoverBackgroundColorError(false)
   }, [node.id, color.hoverBackgroundColor])
+
+  useEffect(() => {
+    setHoverTextColorInput(color.hoverTextColor ?? '')
+    setHoverTextColorError(false)
+  }, [node.id, color.hoverTextColor])
 
   useEffect(() => {
     setBackgroundGradientFromInput(backgroundGradient.from)
@@ -3794,6 +3822,40 @@ function NodeColorControls({
       node,
       { hoverBackgroundColor: normalizedValue },
       { mergeKey: getNodeColorMergeKey(node.id, 'hoverBackgroundColor') },
+    )
+  }
+
+  function updateHoverTextColorFromText(value: string) {
+    const trimmedValue = value.trim()
+
+    setHoverTextColorInput(value)
+
+    if (trimmedValue === '') {
+      setHoverTextColorError(false)
+      onNodeColorChange(node, { hoverTextColor: undefined })
+      return
+    }
+
+    if (!isValidHexColor(trimmedValue)) {
+      setHoverTextColorError(true)
+      return
+    }
+
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setHoverTextColorInput(normalizedValue)
+    setHoverTextColorError(false)
+    onNodeColorChange(node, { hoverTextColor: normalizedValue })
+  }
+
+  function updateHoverTextColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setHoverTextColorInput(normalizedValue)
+    setHoverTextColorError(false)
+
+    onNodeColorChange(
+      node,
+      { hoverTextColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'hoverTextColor') },
     )
   }
 
@@ -4195,6 +4257,43 @@ function NodeColorControls({
               />
             </span>
             {hoverBackgroundColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              호버 글자
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={hoverTextColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={hoverTextColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateHoverTextColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="호버 글자 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  hoverTextColorInput,
+                  color.textColor ?? DEFAULT_TEXT_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateHoverTextColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {hoverTextColorError ? (
               <span className="mt-2 block text-xs text-[#b42318]">
                 HEX 형식 (#RRGGBB)으로 입력해주세요.
               </span>
