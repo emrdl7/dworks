@@ -419,3 +419,8 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-style-color` | r1 (Claude) → r2 (Codex) → 코드 (`9e27657`) → r3 (Claude) | colorPreset 5종 + 11키 토큰 + canvas CSS variable |
 | `m2-style-typography` | r1 (Codex) → r2 (Claude) + amend → r3 (Codex) + amend → 코드 (`f5f6f2a`) → r4 (Claude) → r5 (Codex) → follow-up patch (`7523747`) → r6 (Claude) | typography 자유 6필드 + TTF schema string 확장 + ALERT round 6 |
 | 사용자 결정 | (2026-05-08) | "ㄱㄱ" — m2-style-typography 종료 + 자율 모드 재개 + 다음 토픽 `m2-style-font-upload` 진입 OK |
+| `m2-style-font-upload` | r1 (Codex) → r2 (Claude) → 코드 (`4ff28bb`) → r3 (Claude) | IndexedDB registry + FontFace API + TTF/OTF magic byte 검증 + 한글 UI |
+| `m2-style-spacing` | r1 동시 충돌 (Codex+Claude) → r2 (Claude 통합) → r3 (Codex 수용) → r4 (Claude ack) → 코드 (`1dd22df`) → r5 (Claude) | 9 필드 padding/margin/gap + Figma 3 mode toggle (전체/X-Y/4면) |
+| `m2-style-shape` | r1 (Codex) → r2 (Claude) → 코드 (`d87b156`) → r3 (Claude) | radius/borderWidth/borderColor/borderStyle/shadow + hex 검증 + color picker |
+| `m2-style-color-free` | r1 (Codex) → r2 (Claude) → 코드 (`4f74d5a`) → r3 (Claude) | NodeColor (background/text) + textColor 상속 prop 전파 + preset override 보존 |
+| `m2-style-layout` | r1 (Codex) → r2 (Claude) → 코드 (`57cb809`) → r3 (Claude) | flex direction/align/justify (5종 evenly 포함)/wrap + spacing.gap 단일 source |
