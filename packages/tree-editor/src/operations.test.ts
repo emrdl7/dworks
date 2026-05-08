@@ -122,6 +122,70 @@ describe('tree editor operations', () => {
     }
   })
 
+  it('updates and clears image composition metadata', () => {
+    const tree = fixtureTree()
+    const composed = updateImage(tree, 'landing.visual', {
+      aspectRatio: 'portrait',
+      focalPoint: { x: 0.25, y: 0.75 },
+      presentation: {
+        fit: 'contain',
+        overlayColor: '#123456',
+        overlayOpacity: 0.4,
+      },
+    })
+    const retinted = updateImage(composed, 'landing.visual', {
+      presentation: {
+        overlayOpacity: 0.65,
+      },
+    })
+    const reset = updateImage(retinted, 'landing.visual', {
+      aspectRatio: undefined,
+      focalPoint: undefined,
+      presentation: {
+        fit: undefined,
+        overlayColor: undefined,
+        overlayOpacity: undefined,
+      },
+    })
+
+    assert.equal(composed.root.type, 'section')
+    assert.equal(retinted.root.type, 'section')
+    assert.equal(reset.root.type, 'section')
+    if (
+      composed.root.type === 'section' &&
+      retinted.root.type === 'section' &&
+      reset.root.type === 'section'
+    ) {
+      const composedVisual = composed.root.children[2]
+      const retintedVisual = retinted.root.children[2]
+      const resetVisual = reset.root.children[2]
+      assert.equal(composedVisual?.type, 'image')
+      assert.equal(retintedVisual?.type, 'image')
+      assert.equal(resetVisual?.type, 'image')
+      if (
+        composedVisual?.type === 'image' &&
+        retintedVisual?.type === 'image' &&
+        resetVisual?.type === 'image'
+      ) {
+        assert.equal(composedVisual.aspectRatio, 'portrait')
+        assert.deepEqual(composedVisual.focalPoint, { x: 0.25, y: 0.75 })
+        assert.deepEqual(composedVisual.presentation, {
+          fit: 'contain',
+          overlayColor: '#123456',
+          overlayOpacity: 0.4,
+        })
+        assert.deepEqual(retintedVisual.presentation, {
+          fit: 'contain',
+          overlayColor: '#123456',
+          overlayOpacity: 0.65,
+        })
+        assert.equal(resetVisual.aspectRatio, undefined)
+        assert.equal(resetVisual.focalPoint, undefined)
+        assert.equal(resetVisual.presentation, undefined)
+      }
+    }
+  })
+
   it('replaces text by id through the compatibility helper', () => {
     const updated = replaceTextById(fixtureTree(), 'landing.title', '새 이름')
 
@@ -190,6 +254,8 @@ describe('tree editor operations', () => {
         type: 'updateImage',
         nodeId: 'landing.visual',
         alt: '새 이미지 설명',
+        focalPoint: { x: 0.4, y: 0.6 },
+        presentation: { fit: 'contain', overlayOpacity: 0.25 },
       },
       {
         type: 'moveNode',
@@ -224,6 +290,11 @@ describe('tree editor operations', () => {
         assert.equal(title.typography?.textAlign, 'center')
         assert.equal(cta.label, '바로 시작')
         assert.equal(visual.alt, '새 이미지 설명')
+        assert.deepEqual(visual.focalPoint, { x: 0.4, y: 0.6 })
+        assert.deepEqual(visual.presentation, {
+          fit: 'contain',
+          overlayOpacity: 0.25,
+        })
         assert.equal(card.spacing?.paddingTop, 24)
         assert.equal(card.spacing?.marginBottom, 12)
         assert.equal(card.spacing?.gap, 16)

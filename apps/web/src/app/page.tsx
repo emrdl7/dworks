@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
+  type PointerEvent,
   type ReactNode,
 } from 'react'
 import {
@@ -17,9 +18,13 @@ import {
   type ButtonNode,
   type BuiltInFontFamily,
   type ColorPreset,
+  type FocalPoint,
   type FontFamily,
   type FontWeight,
+  type ImageAspectRatio,
+  type ImageFit,
   type ImageNode,
+  type ImagePresentation,
   type LayoutAlign,
   type LayoutDirection,
   type LayoutJustify,
@@ -127,6 +132,11 @@ const imageAspectRatioLabels = {
   wide: '와이드',
 } as const
 
+const imageFitLabels: Record<ImageFit, string> = {
+  cover: '채우기',
+  contain: '맞춤',
+}
+
 const layoutIntentLabels = {
   stack: '세로 쌓기',
   grid: '그리드',
@@ -205,6 +215,13 @@ const fontWeightOptions: FontWeight[] = ['400', '500', '600', '700']
 const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
 const borderStyleOptions: BorderStyle[] = ['solid', 'dashed', 'none']
 const shadowPresetOptions: ShadowPreset[] = ['none', 'sm', 'md', 'lg', 'xl']
+const imageAspectRatioOptions: ImageAspectRatio[] = [
+  'square',
+  'landscape',
+  'portrait',
+  'wide',
+]
+const imageFitOptions: ImageFit[] = ['cover', 'contain']
 const builtInFontFamilyOptions = [...BUILT_IN_FONT_FAMILY_IDS]
 const layoutDirectionOptions: LayoutDirection[] = ['row', 'column']
 const layoutAlignOptions: LayoutAlign[] = ['start', 'center', 'end', 'stretch']
@@ -245,8 +262,14 @@ const shapeFields = [
 ] as const
 const colorFields = ['backgroundColor', 'textColor'] as const
 const layoutFields = ['direction', 'align', 'justify', 'wrap'] as const
+const imagePresentationFields = [
+  'fit',
+  'overlayColor',
+  'overlayOpacity',
+] as const
 type SpacingField = (typeof spacingFields)[number]
 type ColorField = (typeof colorFields)[number]
+type ImagePresentationField = (typeof imagePresentationFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
 
 const spacingModes: SpacingMode[] = ['all', 'axis', 'sides']
@@ -286,6 +309,7 @@ const marginVerticalFields: readonly SpacingField[] = [
 
 const DEFAULT_SHAPE_COLOR = '#d7ddd2'
 const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
+const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const SHADOW_VALUES: Record<ShadowPreset, string> = {
   none: 'none',
@@ -296,6 +320,13 @@ const SHADOW_VALUES: Record<ShadowPreset, string> = {
 }
 
 const MAX_HISTORY = 100
+
+type ImageEditPatch = Pick<
+  Partial<ImageNode>,
+  'src' | 'alt' | 'aspectRatio' | 'focalPoint'
+> & {
+  presentation?: Partial<ImagePresentation>
+}
 
 export default function HomePage() {
   const [selectedFixtureId, setSelectedFixtureId] = useState(defaultTreeFixture.id)
@@ -574,7 +605,7 @@ export default function HomePage() {
 
   function handleImageChange(
     node: ImageNode,
-    patch: Pick<Partial<ImageNode>, 'src' | 'alt'>,
+    patch: ImageEditPatch,
   ) {
     commitTreeEdit(updateImage(tree, node.id, patch))
   }
@@ -1370,6 +1401,19 @@ function ImagePreview({
 }) {
   const [hasError, setHasError] = useState(false)
   const canRenderImage = node.src.trim().length > 0 && !hasError
+  const presentation = node.presentation ?? {}
+  const imageFit = presentation.fit ?? 'cover'
+  const overlayOpacity = presentation.overlayOpacity ?? 0
+  const shouldRenderOverlay =
+    canRenderImage &&
+    presentation.overlayColor !== undefined &&
+    overlayOpacity > 0
+  const imageStyle: CSSProperties = {
+    objectFit: imageFit,
+    ...(node.focalPoint
+      ? { objectPosition: getImageObjectPosition(node.focalPoint) }
+      : {}),
+  }
 
   useEffect(() => {
     setHasError(false)
@@ -1386,9 +1430,10 @@ function ImagePreview({
         // Arbitrary design-source URLs cannot use next/image domain allowlists yet.
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          className="h-full w-full object-cover"
+          className="h-full w-full"
           src={node.src}
           alt={node.alt}
+          style={imageStyle}
           onError={() => setHasError(true)}
         />
       ) : (
@@ -1409,8 +1454,21 @@ function ImagePreview({
           ) : null}
         </div>
       )}
+      {shouldRenderOverlay ? (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundColor: presentation.overlayColor,
+            opacity: overlayOpacity,
+          }}
+        />
+      ) : null}
     </figure>
   )
+}
+
+function getImageObjectPosition(focalPoint: FocalPoint): string {
+  return `${Math.round(focalPoint.x * 100)}% ${Math.round(focalPoint.y * 100)}%`
 }
 
 const aspectRatioClasses: Record<NonNullable<ImageNode['aspectRatio']>, string> = {
@@ -1445,7 +1503,7 @@ interface NodeInspectorProps {
   ) => Promise<RegisteredFontSummary | undefined>
   onFontDelete: (fontId: string) => Promise<void>
   onButtonLabelChange: (node: ButtonNode, label: string) => void
-  onImageChange: (node: ImageNode, patch: Pick<Partial<ImageNode>, 'src' | 'alt'>) => void
+  onImageChange: (node: ImageNode, patch: ImageEditPatch) => void
   onMoveUp: () => void
   onMoveDown: () => void
   onDuplicate: () => void
@@ -1589,6 +1647,10 @@ function NodeInspector({
                 </span>
               ) : null}
             </label>
+            <ImageCompositionControls
+              node={node}
+              onImageChange={onImageChange}
+            />
           </div>
         ) : null}
 
@@ -2696,6 +2758,313 @@ function ShapeControls({
   )
 }
 
+interface ImageCompositionControlsProps {
+  node: ImageNode
+  onImageChange: (node: ImageNode, patch: ImageEditPatch) => void
+}
+
+function ImageCompositionControls({
+  node,
+  onImageChange,
+}: ImageCompositionControlsProps) {
+  const presentation = node.presentation ?? {}
+  const effectiveFit = presentation.fit ?? 'cover'
+  const effectiveFocalPoint = node.focalPoint ?? { x: 0.5, y: 0.5 }
+  const focalXPercent = Math.round(effectiveFocalPoint.x * 100)
+  const focalYPercent = Math.round(effectiveFocalPoint.y * 100)
+  const overlayOpacityPercent = Math.round((presentation.overlayOpacity ?? 0) * 100)
+  const [overlayColorInput, setOverlayColorInput] = useState(
+    presentation.overlayColor ?? '',
+  )
+  const [overlayColorError, setOverlayColorError] = useState(false)
+
+  useEffect(() => {
+    setOverlayColorInput(presentation.overlayColor ?? '')
+    setOverlayColorError(false)
+  }, [node.id, presentation.overlayColor])
+
+  function updateAspectRatio(value: string) {
+    onImageChange(node, {
+      aspectRatio: value === '' ? undefined : (value as ImageAspectRatio),
+    })
+  }
+
+  function updateFit(fit: ImageFit) {
+    onImageChange(node, {
+      presentation: {
+        fit: fit === 'cover' ? undefined : fit,
+      },
+    })
+  }
+
+  function updateFocalPointField(field: keyof FocalPoint, value: string) {
+    const nextValue = parseOptionalNumber(value, 0, 100)
+    if (nextValue === undefined) {
+      onImageChange(node, { focalPoint: undefined })
+      return
+    }
+
+    onImageChange(node, {
+      focalPoint: {
+        ...effectiveFocalPoint,
+        [field]: roundFocalCoordinate(nextValue / 100),
+      },
+    })
+  }
+
+  function updateFocalPointFromPointer(event: PointerEvent<HTMLButtonElement>) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) {
+      return
+    }
+
+    onImageChange(node, {
+      focalPoint: {
+        x: roundFocalCoordinate((event.clientX - rect.left) / rect.width),
+        y: roundFocalCoordinate((event.clientY - rect.top) / rect.height),
+      },
+    })
+  }
+
+  function updateOverlayColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setOverlayColorInput(value)
+
+    if (trimmedValue === '') {
+      setOverlayColorError(false)
+      onImageChange(node, { presentation: { overlayColor: undefined } })
+      return
+    }
+
+    if (!isValidHexColor(trimmedValue)) {
+      setOverlayColorError(true)
+      return
+    }
+
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setOverlayColorError(false)
+    onImageChange(node, { presentation: { overlayColor: normalizedValue } })
+  }
+
+  function updateOverlayColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setOverlayColorInput(normalizedValue)
+    setOverlayColorError(false)
+    onImageChange(node, { presentation: { overlayColor: normalizedValue } })
+  }
+
+  function updateOverlayOpacity(value: string) {
+    const nextValue = parseOptionalNumber(value, 0, 100)
+    onImageChange(node, {
+      presentation: {
+        overlayOpacity:
+          nextValue === undefined ? undefined : roundFocalCoordinate(nextValue / 100),
+      },
+    })
+  }
+
+  function resetImageComposition() {
+    onImageChange(node, {
+      focalPoint: undefined,
+      presentation: getImagePresentationResetPatch(),
+    })
+  }
+
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">이미지 구도</h3>
+          <p className="mt-1 text-xs text-[#647067]">비율, 초점, 오버레이</p>
+        </div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+          onClick={resetImageComposition}
+        >
+          초기화
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <label className="block">
+          <span className="text-xs font-semibold text-[#4f5e56]">비율</span>
+          <select
+            aria-label="이미지 비율"
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            value={node.aspectRatio ?? ''}
+            onChange={(event) => updateAspectRatio(event.target.value)}
+          >
+            <option value="">기본 와이드</option>
+            {imageAspectRatioOptions.map((aspectRatio) => (
+              <option key={aspectRatio} value={aspectRatio}>
+                {imageAspectRatioLabels[aspectRatio]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div>
+          <span className="text-xs font-semibold text-[#4f5e56]">맞춤</span>
+          <div className="mt-2 grid grid-cols-2 gap-1">
+            {imageFitOptions.map((fit) => (
+              <TypographyToggleButton
+                key={fit}
+                isSelected={effectiveFit === fit}
+                onClick={() => updateFit(fit)}
+              >
+                {imageFitLabels[fit]}
+              </TypographyToggleButton>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-md border border-[#e0e5de] bg-white p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs font-semibold text-[#4f5e56]">초점</span>
+          <span className="text-[11px] font-semibold text-[#647067]">
+            {focalXPercent}% / {focalYPercent}%
+          </span>
+        </div>
+        <button
+          type="button"
+          aria-label="이미지 초점 미리보기"
+          className="relative mt-2 flex aspect-[3/2] w-full cursor-crosshair overflow-hidden rounded-md border border-[#d7ddd2] bg-[var(--dw-image-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId)
+            updateFocalPointFromPointer(event)
+          }}
+          onPointerMove={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              updateFocalPointFromPointer(event)
+            }
+          }}
+        >
+          {node.src.trim().length > 0 ? (
+            // Inspector preview uses arbitrary user URLs.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              alt=""
+              className="h-full w-full"
+              src={node.src}
+              style={{
+                objectFit: effectiveFit,
+                objectPosition: getImageObjectPosition(effectiveFocalPoint),
+              }}
+            />
+          ) : (
+            <span className="m-auto text-xs font-semibold text-[#647067]">
+              이미지 슬롯
+            </span>
+          )}
+          {presentation.overlayColor && presentation.overlayOpacity ? (
+            <span
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundColor: presentation.overlayColor,
+                opacity: presentation.overlayOpacity,
+              }}
+            />
+          ) : null}
+          <span
+            className="pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#1b7f72] shadow"
+            style={{
+              left: `${focalXPercent}%`,
+              top: `${focalYPercent}%`,
+            }}
+          />
+        </button>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <TypographyNumberField
+            label="가로 초점"
+            unit="%"
+            min={0}
+            max={100}
+            step={1}
+            value={node.focalPoint ? focalXPercent : undefined}
+            placeholder="50"
+            onChange={(value) => updateFocalPointField('x', value)}
+          />
+          <TypographyNumberField
+            label="세로 초점"
+            unit="%"
+            min={0}
+            max={100}
+            step={1}
+            value={node.focalPoint ? focalYPercent : undefined}
+            placeholder="50"
+            onChange={(value) => updateFocalPointField('y', value)}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <label className="block">
+          <span className="text-xs font-semibold text-[#4f5e56]">
+            오버레이 색상
+          </span>
+          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <input
+              type="color"
+              aria-label="오버레이 색상 선택"
+              className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+              value={toColorInputValue(
+                overlayColorInput,
+                DEFAULT_IMAGE_OVERLAY_COLOR,
+              )}
+              onChange={(event) => updateOverlayColorFromPicker(event.target.value)}
+            />
+            <input
+              className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
+              value={overlayColorInput}
+              placeholder={DEFAULT_IMAGE_OVERLAY_COLOR}
+              aria-invalid={overlayColorError}
+              onChange={(event) => updateOverlayColorFromText(event.target.value)}
+            />
+          </span>
+          {overlayColorError ? (
+            <span className="mt-2 block text-xs text-[#b42318]">
+              HEX 형식 (#RRGGBB)으로 입력해주세요.
+            </span>
+          ) : null}
+        </label>
+
+        <TypographyNumberField
+          label="오버레이 불투명도"
+          unit="%"
+          min={0}
+          max={100}
+          step={1}
+          value={
+            presentation.overlayOpacity === undefined
+              ? undefined
+              : overlayOpacityPercent
+          }
+          placeholder="0"
+          onChange={updateOverlayOpacity}
+        />
+      </div>
+      <label className="mt-3 block">
+        <span className="text-xs font-semibold text-[#4f5e56]">
+          오버레이 슬라이더
+        </span>
+        <input
+          className="mt-2 w-full accent-[#1b7f72]"
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={overlayOpacityPercent}
+          aria-label="오버레이 불투명도 슬라이더"
+          onChange={(event) => updateOverlayOpacity(event.target.value)}
+        />
+      </label>
+    </div>
+  )
+}
+
 interface TypographyNumberFieldProps {
   disabled?: boolean
   label: string
@@ -3067,6 +3436,20 @@ function parseOptionalNumber(
   }
 
   return Math.min(max, Math.max(min, parsed))
+}
+
+function roundFocalCoordinate(value: number): number {
+  const clampedValue = Math.min(1, Math.max(0, value))
+  return Math.round(clampedValue * 1000) / 1000
+}
+
+function getImagePresentationResetPatch(): Partial<ImagePresentation> {
+  return Object.fromEntries(
+    imagePresentationFields.map((field): [ImagePresentationField, undefined] => [
+      field,
+      undefined,
+    ]),
+  ) as Partial<ImagePresentation>
 }
 
 function isValidHexColor(value: string): boolean {

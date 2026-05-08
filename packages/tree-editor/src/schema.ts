@@ -6,6 +6,7 @@ import { z } from 'zod'
 import {
   focalPointSchema,
   imageAspectRatioSchema,
+  imagePresentationSchema,
   nodeColorSchema,
   nodeLayoutSchema,
   shapeSchema,
@@ -86,6 +87,7 @@ export const updateImageOperationSchema: z.ZodType<UpdateImageOperation> =
     alt: z.string().optional(),
     aspectRatio: imageAspectRatioSchema.optional(),
     focalPoint: focalPointSchema.optional(),
+    presentation: imagePresentationSchema.optional(),
   })
 
 export const moveNodeOperationSchema: z.ZodType<MoveNodeOperation> = z.object({
@@ -156,6 +158,7 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     alt: z.ZodOptional<z.ZodString>
     aspectRatio: z.ZodOptional<typeof imageAspectRatioSchema>
     focalPoint: z.ZodOptional<typeof focalPointSchema>
+    presentation: z.ZodOptional<typeof imagePresentationSchema>
   }>,
   moveNodeOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'moveNode'>

@@ -1,6 +1,8 @@
 import type {
   FocalPoint,
   ImageAspectRatio,
+  ImageNode,
+  ImagePresentation,
   NodeColor,
   NodeLayout,
   Shape,
@@ -63,6 +65,7 @@ export interface UpdateImageOperation {
   alt?: string
   aspectRatio?: ImageAspectRatio
   focalPoint?: FocalPoint
+  presentation?: Partial<ImagePresentation>
 }
 
 export interface MoveNodeOperation {
@@ -330,18 +333,70 @@ function editMatchedNode(
           `tree edit failed: updateImage requires image node, got ${node.type}: ${node.id}`,
         )
       }
-      return {
-        ...node,
-        ...(operation.src !== undefined ? { src: operation.src } : {}),
-        ...(operation.alt !== undefined ? { alt: operation.alt } : {}),
-        ...(operation.aspectRatio !== undefined
-          ? { aspectRatio: operation.aspectRatio }
-          : {}),
-        ...(operation.focalPoint !== undefined
-          ? { focalPoint: operation.focalPoint }
-          : {}),
-      }
+      return withImagePatch(node, operation)
   }
+}
+
+function withImagePatch(
+  node: ImageNode,
+  patch: Omit<UpdateImageOperation, 'type' | 'nodeId'>,
+): ImageNode {
+  const next: ImageNode = {
+    ...node,
+    ...(patch.src !== undefined ? { src: patch.src } : {}),
+    ...(patch.alt !== undefined ? { alt: patch.alt } : {}),
+  }
+
+  if ('aspectRatio' in patch) {
+    if (patch.aspectRatio === undefined) {
+      delete next.aspectRatio
+    } else {
+      next.aspectRatio = patch.aspectRatio
+    }
+  }
+
+  if ('focalPoint' in patch) {
+    if (patch.focalPoint === undefined) {
+      delete next.focalPoint
+    } else {
+      next.focalPoint = patch.focalPoint
+    }
+  }
+
+  if (patch.presentation !== undefined) {
+    const presentation = mergeImagePresentationPatch(
+      node.presentation,
+      patch.presentation,
+    )
+
+    if (presentation === undefined) {
+      delete next.presentation
+    } else {
+      next.presentation = presentation
+    }
+  }
+
+  return next
+}
+
+function mergeImagePresentationPatch(
+  current: ImagePresentation | undefined,
+  patch: Partial<ImagePresentation>,
+): ImagePresentation | undefined {
+  const next: Partial<ImagePresentation> = { ...(current ?? {}) }
+
+  for (const [key, value] of Object.entries(patch) as [
+    keyof ImagePresentation,
+    ImagePresentation[keyof ImagePresentation] | undefined,
+  ][]) {
+    if (value === undefined) {
+      delete next[key]
+    } else {
+      Object.assign(next, { [key]: value })
+    }
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined
 }
 
 function withLayoutPatch<T extends TreeNode>(

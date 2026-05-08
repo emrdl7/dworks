@@ -12,6 +12,7 @@ import {
   FONT_FAMILY_IDS,
   FONT_WEIGHT_IDS,
   IMAGE_ASPECT_RATIOS,
+  IMAGE_FIT_IDS,
   LAYOUT_ALIGN_IDS,
   LAYOUT_DIRECTION_IDS,
   LAYOUT_JUSTIFY_IDS,
@@ -357,6 +358,11 @@ describe('tree schema', () => {
       alt: '',
       aspectRatio: 'wide',
       focalPoint: { x: 0.45, y: 0.35 },
+      presentation: {
+        fit: 'contain',
+        overlayColor: '#123456',
+        overlayOpacity: 0.42,
+      },
     })
 
     assert.equal(parsed.type, 'image')
@@ -364,7 +370,47 @@ describe('tree schema', () => {
       assert.equal(parsed.alt, '')
       assert.equal(parsed.aspectRatio, 'wide')
       assert.deepEqual(parsed.focalPoint, { x: 0.45, y: 0.35 })
+      assert.deepEqual(parsed.presentation, {
+        fit: 'contain',
+        overlayColor: '#123456',
+        overlayOpacity: 0.42,
+      })
     }
+  })
+
+  it('rejects invalid image presentation values', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-fit',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { fit: 'stretch' },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-overlay-color',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { overlayColor: 'black' },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-overlay-opacity',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { overlayOpacity: 1.2 },
+      }),
+    )
   })
 
   it('parses tree root with version 1', () => {
@@ -580,6 +626,7 @@ describe('tree schema', () => {
       'portrait',
       'wide',
     ])
+    assert.deepEqual(IMAGE_FIT_IDS, ['cover', 'contain'])
     assert.deepEqual(FONT_WEIGHT_IDS, ['400', '500', '600', '700'])
     assert.deepEqual(TEXT_ALIGN_IDS, ['left', 'center', 'right'])
     assert.deepEqual(BUILT_IN_FONT_FAMILY_IDS, ['sans', 'serif', 'mono'])

@@ -84,12 +84,18 @@ describe('edit-eval schema', () => {
           nodeId: 'hero.section',
           patch: { direction: 'row', align: 'center', justify: 'evenly' },
         },
+        {
+          type: 'updateImage',
+          nodeId: 'hero.visual',
+          focalPoint: { x: 0.25, y: 0.75 },
+          presentation: { fit: 'contain', overlayOpacity: 0.35 },
+        },
         { type: 'updateButtonLabel', nodeId: 'hero.cta', label: '바로 시작' },
         { type: 'updateStyleTokens', patch: { colorPreset: 'plum' } },
       ],
     })
 
-    assert.equal(parsed.editSequence?.length, 8)
+    assert.equal(parsed.editSequence?.length, 9)
   })
 
   it('rejects invalid edit axis scores', () => {
@@ -196,6 +202,12 @@ describe('edit-eval dry-run judge', () => {
           nodeId: 'hero.section',
           patch: { direction: 'row', align: 'center', justify: 'evenly' },
         },
+        {
+          type: 'updateImage' as const,
+          nodeId: 'hero.visual',
+          focalPoint: { x: 0.25, y: 0.75 },
+          presentation: { fit: 'contain', overlayOpacity: 0.35 },
+        },
         { type: 'updateStyleTokens' as const, patch: { colorPreset: 'navy' } },
       ]),
       [
@@ -206,7 +218,8 @@ describe('edit-eval dry-run judge', () => {
         '5. updateShape hero.title shape={"radius":12,"borderStyle":"solid","shadow":"md"}',
         '6. updateColor hero.title color={"backgroundColor":"#f8fafc","textColor":"#123456"}',
         '7. updateLayout hero.section layout={"direction":"row","align":"center","justify":"evenly"}',
-        '8. updateStyleTokens colorPreset="navy"',
+        '8. updateImage hero.visual image={"focalPoint":{"x":0.25,"y":0.75},"presentation":{"fit":"contain","overlayOpacity":0.35}}',
+        '9. updateStyleTokens colorPreset="navy"',
       ].join('\n'),
     )
   })

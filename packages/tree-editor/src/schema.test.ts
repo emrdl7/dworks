@@ -142,6 +142,11 @@ describe('edit-operation schema', () => {
       alt: '',
       aspectRatio: 'wide',
       focalPoint: { x: 0.5, y: 0.25 },
+      presentation: {
+        fit: 'contain',
+        overlayColor: '#123456',
+        overlayOpacity: 0.4,
+      },
     })
 
     assert.equal(op.type, 'updateImage')
@@ -151,6 +156,11 @@ describe('edit-operation schema', () => {
       assert.equal(op.alt, '')
       assert.equal(op.aspectRatio, 'wide')
       assert.deepEqual(op.focalPoint, { x: 0.5, y: 0.25 })
+      assert.deepEqual(op.presentation, {
+        fit: 'contain',
+        overlayColor: '#123456',
+        overlayOpacity: 0.4,
+      })
     }
   })
 
@@ -235,6 +245,30 @@ describe('edit-operation schema', () => {
         type: 'updateImage',
         nodeId: 'hero.visual',
         focalPoint: { x: -0.1, y: 0.5 },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { fit: 'stretch' },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { overlayColor: 'black' },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { overlayOpacity: -0.01 },
       }),
     )
   })
@@ -424,7 +458,12 @@ describe('edit-sequence schema', () => {
         patch: { direction: 'row', align: 'center', justify: 'evenly' },
       },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
-      { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
+      {
+        type: 'updateImage',
+        nodeId: 'visual',
+        alt: '대체 텍스트',
+        presentation: { fit: 'contain', overlayOpacity: 0.25 },
+      },
       { type: 'moveNode', nodeId: 'cards.card-a', direction: 'down' },
       { type: 'updateStyleTokens', patch: { colorPreset: 'navy' } },
     ],

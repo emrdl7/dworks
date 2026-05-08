@@ -141,6 +141,10 @@ export const nodeColorSchema = z.object({
 })
 export type NodeColor = z.infer<typeof nodeColorSchema>
 
+export const IMAGE_FIT_IDS = ['cover', 'contain'] as const
+export const imageFitSchema = z.enum(IMAGE_FIT_IDS)
+export type ImageFit = z.infer<typeof imageFitSchema>
+
 export const imageAspectRatioSchema = z.enum([
   'square',
   'landscape',
@@ -154,6 +158,13 @@ export const focalPointSchema = z.object({
   y: z.number().min(0).max(1),
 })
 export type FocalPoint = z.infer<typeof focalPointSchema>
+
+export const imagePresentationSchema = z.object({
+  fit: imageFitSchema.optional(),
+  overlayColor: hexColorSchema.optional(),
+  overlayOpacity: z.number().min(0).max(1).optional(),
+})
+export type ImagePresentation = z.infer<typeof imagePresentationSchema>
 
 export const COLOR_PRESET_IDS = [
   'mint',
@@ -287,6 +298,7 @@ export interface ImageNode extends BaseNodeMeta {
   alt: string
   aspectRatio?: ImageAspectRatio
   focalPoint?: FocalPoint
+  presentation?: ImagePresentation
 }
 
 export interface SectionNode extends BaseNodeMeta {
@@ -371,6 +383,7 @@ export const imageNodeSchema: z.ZodType<ImageNode> = z.object({
   alt: z.string(),
   aspectRatio: imageAspectRatioSchema.optional(),
   focalPoint: focalPointSchema.optional(),
+  presentation: imagePresentationSchema.optional(),
 })
 
 // 재귀 union을 위해 children 필드는 z.lazy로 후행 참조.

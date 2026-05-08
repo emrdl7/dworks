@@ -120,7 +120,11 @@ export function summarizeEditOperations(operations: EditOperation[]): string {
             operation.nodeId,
           )} label="${truncate(operation.label)}"`
         case 'updateImage':
-          return `${operationPrefix(index, operation.type, operation.nodeId)} media`
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} image=${JSON.stringify(getImageOperationSummary(operation))}`
         case 'moveNode':
           return `${operationPrefix(
             index,
@@ -144,6 +148,18 @@ export function summarizeEditOperations(operations: EditOperation[]): string {
 
 function operationPrefix(index: number, type: string, nodeId: string): string {
   return `${index + 1}. ${type} ${nodeId}`
+}
+
+function getImageOperationSummary(operation: Extract<EditOperation, { type: 'updateImage' }>) {
+  return Object.fromEntries(
+    Object.entries({
+      src: operation.src,
+      alt: operation.alt,
+      aspectRatio: operation.aspectRatio,
+      focalPoint: operation.focalPoint,
+      presentation: operation.presentation,
+    }).filter(([, value]) => value !== undefined),
+  )
 }
 
 function stubEditJudge(input: EditJudgeInput): EditAxisScore {
