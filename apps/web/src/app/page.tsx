@@ -3856,6 +3856,28 @@ function NodeColorControls({
     )
   }
 
+  function updateBackgroundGradientConicGeometry(
+    field: GradientConicField,
+    value: number | undefined,
+  ) {
+    onNodeColorChange(
+      node,
+      {
+        backgroundColor: undefined,
+        backgroundOpacity: undefined,
+        backgroundGradient: getGradientWithPatch(backgroundGradient, {
+          [field]: value,
+        }),
+      },
+      {
+        mergeKey: getNodeColorMergeKey(
+          node.id,
+          `backgroundGradient.${field}`,
+        ),
+      },
+    )
+  }
+
   function updateNodeOpacity(value: string) {
     onNodeMetaChange(
       node,
@@ -3985,6 +4007,7 @@ function NodeColorControls({
                 toInput={backgroundGradientToInput}
                 onColorPicker={updateBackgroundGradientColorFromPicker}
                 onColorText={updateBackgroundGradientColorFromText}
+                onConicGeometry={updateBackgroundGradientConicGeometry}
                 onDirection={updateBackgroundGradientDirection}
                 onOpacity={updateBackgroundGradientOpacity}
                 onType={updateBackgroundGradientType}
@@ -4043,6 +4066,11 @@ function NodeColorControls({
   )
 }
 
+type GradientConicField =
+  | 'conicFromAngle'
+  | 'conicCenterX'
+  | 'conicCenterY'
+
 interface GradientControlsProps {
   fromError: boolean
   fromInput: string
@@ -4050,6 +4078,7 @@ interface GradientControlsProps {
   labelPrefix: string
   onColorPicker: (field: GradientColorStopField, value: string) => void
   onColorText: (field: GradientColorStopField, value: string) => void
+  onConicGeometry: (field: GradientConicField, value: number | undefined) => void
   onDirection: (direction: GradientDirection) => void
   onOpacity: (field: GradientOpacityStopField, value: string) => void
   onType: (type: GradientType) => void
@@ -4064,6 +4093,7 @@ function GradientControls({
   labelPrefix,
   onColorPicker,
   onColorText,
+  onConicGeometry,
   onDirection,
   onOpacity,
   onType,
@@ -4130,7 +4160,81 @@ function GradientControls({
           </div>
         </div>
       ) : null}
+
+      {gradient.type === 'conic' ? (
+        <div className="space-y-2">
+          <span className="text-xs font-semibold text-[#4f5e56]">원뿔형 위치</span>
+          <div className="grid grid-cols-3 gap-2">
+            <ConicGeometryInput
+              label="시작각 (°)"
+              max={360}
+              min={0}
+              placeholder="0"
+              value={gradient.conicFromAngle}
+              onChange={(value) => onConicGeometry('conicFromAngle', value)}
+            />
+            <ConicGeometryInput
+              label="중심 X (%)"
+              max={100}
+              min={0}
+              placeholder="50"
+              value={gradient.conicCenterX}
+              onChange={(value) => onConicGeometry('conicCenterX', value)}
+            />
+            <ConicGeometryInput
+              label="중심 Y (%)"
+              max={100}
+              min={0}
+              placeholder="50"
+              value={gradient.conicCenterY}
+              onChange={(value) => onConicGeometry('conicCenterY', value)}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
+  )
+}
+
+function ConicGeometryInput({
+  label,
+  max,
+  min,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string
+  max: number
+  min: number
+  placeholder: string
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+}) {
+  return (
+    <label className="block">
+      <span className="text-[11px] text-[#647067]">{label}</span>
+      <input
+        type="number"
+        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+        min={min}
+        max={max}
+        placeholder={placeholder}
+        value={value === undefined ? '' : value}
+        onChange={(event) => {
+          const raw = event.target.value
+          if (raw === '') {
+            onChange(undefined)
+            return
+          }
+          const next = Number(raw)
+          if (Number.isNaN(next)) {
+            return
+          }
+          onChange(Math.max(min, Math.min(max, next)))
+        }}
+      />
+    </label>
   )
 }
 
@@ -6007,6 +6111,25 @@ function ImageCompositionControls({
     )
   }
 
+  function updateOverlayGradientConicGeometry(
+    field: GradientConicField,
+    value: number | undefined,
+  ) {
+    onImageChange(
+      node,
+      {
+        presentation: {
+          overlayColor: undefined,
+          overlayOpacity: undefined,
+          overlayGradient: getGradientWithPatch(overlayGradient, {
+            [field]: value,
+          }),
+        },
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `overlayGradient.${field}`) },
+    )
+  }
+
   function updateOverlayGradientType(type: GradientType) {
     onImageChange(
       node,
@@ -6189,6 +6312,7 @@ function ImageCompositionControls({
             toInput={overlayGradientToInput}
             onColorPicker={updateOverlayGradientColorFromPicker}
             onColorText={updateOverlayGradientColorFromText}
+            onConicGeometry={updateOverlayGradientConicGeometry}
             onDirection={updateOverlayGradientDirection}
             onOpacity={updateOverlayGradientOpacity}
             onType={updateOverlayGradientType}
@@ -6835,6 +6959,15 @@ function getResolvedGradient(
         ? { fromOpacity: fallbackFromOpacity }
         : {}),
     ...(gradient?.toOpacity !== undefined ? { toOpacity: gradient.toOpacity } : {}),
+    ...(gradient?.conicFromAngle !== undefined
+      ? { conicFromAngle: gradient.conicFromAngle }
+      : {}),
+    ...(gradient?.conicCenterX !== undefined
+      ? { conicCenterX: gradient.conicCenterX }
+      : {}),
+    ...(gradient?.conicCenterY !== undefined
+      ? { conicCenterY: gradient.conicCenterY }
+      : {}),
   }
 }
 
@@ -6856,6 +6989,18 @@ function getGradientWithPatch(
     delete next.type
   }
 
+  if (next.conicFromAngle === undefined) {
+    delete next.conicFromAngle
+  }
+
+  if (next.conicCenterX === undefined) {
+    delete next.conicCenterX
+  }
+
+  if (next.conicCenterY === undefined) {
+    delete next.conicCenterY
+  }
+
   return next
 }
 
@@ -6868,7 +7013,10 @@ function gradientToCss(gradient: Gradient): string {
   }
 
   if (gradient.type === 'conic') {
-    return `conic-gradient(from 0deg at 50% 50%, ${from}, ${to})`
+    const angle = gradient.conicFromAngle ?? 0
+    const x = gradient.conicCenterX ?? 50
+    const y = gradient.conicCenterY ?? 50
+    return `conic-gradient(from ${angle}deg at ${x}% ${y}%, ${from}, ${to})`
   }
 
   return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${from}, ${to})`

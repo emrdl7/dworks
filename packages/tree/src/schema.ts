@@ -181,6 +181,9 @@ export const gradientSchema = z.object({
   direction: gradientDirectionSchema,
   fromOpacity: opacitySchema.optional(),
   toOpacity: opacitySchema.optional(),
+  conicFromAngle: z.number().min(0).max(360).optional(),
+  conicCenterX: z.number().min(0).max(100).optional(),
+  conicCenterY: z.number().min(0).max(100).optional(),
 })
 export type Gradient = z.infer<typeof gradientSchema>
 export const shapeSchema = z.object({
