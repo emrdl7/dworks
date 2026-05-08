@@ -1145,6 +1145,7 @@ export default function HomePage() {
 
   function handleLayerDragLeave(event: ReactDragEvent<HTMLDivElement>) {
     const relatedTarget = event.relatedTarget
+    const layerNodeId = event.currentTarget.dataset.layerNodeId
     if (
       relatedTarget instanceof Node &&
       event.currentTarget.contains(relatedTarget)
@@ -1153,7 +1154,7 @@ export default function HomePage() {
     }
 
     setLayerDropTarget((current) =>
-      current?.nodeId === event.currentTarget.dataset.layerNodeId ? null : current,
+      current?.nodeId === layerNodeId ? null : current,
     )
   }
 
