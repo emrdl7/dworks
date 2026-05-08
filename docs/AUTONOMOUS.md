@@ -48,6 +48,10 @@
 - ✓ `m2-i18n-korean` — UI 한글화
 - ✓ `m2-style-color` — colorPreset 5종 + 11키 토큰
 - ✓ `m2-style-typography` — typography 자유 6필드 + TTF schema 확장
+- ✓ `m2-style-gradient` — 배경 그라디언트 자유 입력
+- ✓ `m2-style-shadow-custom` — 모양 커스텀 그림자 자유 입력
+- ✓ `m2-style-text-shadow` — 텍스트 그림자 자유 입력
+- ✓ `m2-brand-logo` — Dworks header 로고 + App Router favicon 적용
 
 **남은 mandate (순차 진행)**:
 
