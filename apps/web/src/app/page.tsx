@@ -1823,18 +1823,19 @@ function NodeColorControls({
         <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
         <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
           <input
+            className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+            value={inputValue}
+            placeholder="#RRGGBB"
+            aria-invalid={error}
+            spellCheck={false}
+            onChange={(event) => updateColorFromText(field, event.target.value)}
+          />
+          <input
             type="color"
             aria-label={`${label} 선택`}
             className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
             value={toColorInputValue(inputValue, DEFAULT_COLOR_PICKER_COLOR)}
             onChange={(event) => updateColorFromPicker(field, event.target.value)}
-          />
-          <input
-            className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
-            value={inputValue}
-            placeholder="기본"
-            aria-invalid={error}
-            onChange={(event) => updateColorFromText(field, event.target.value)}
           />
         </span>
         {error ? (
@@ -2715,20 +2716,21 @@ function ShapeControls({
           </span>
           <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
             <input
+              className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none disabled:cursor-not-allowed"
+              value={borderColorInput}
+              placeholder={isBorderDisabled ? '없음' : '#RRGGBB'}
+              aria-invalid={borderColorError}
+              disabled={isBorderDisabled}
+              spellCheck={false}
+              onChange={(event) => updateBorderColorFromText(event.target.value)}
+            />
+            <input
               type="color"
               aria-label="테두리 색상 선택"
               className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0 disabled:cursor-not-allowed"
               value={toColorInputValue(borderColorInput)}
               disabled={isBorderDisabled}
               onChange={(event) => updateBorderColorFromPicker(event.target.value)}
-            />
-            <input
-              className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none disabled:cursor-not-allowed"
-              value={borderColorInput}
-              placeholder={isBorderDisabled ? '없음' : DEFAULT_SHAPE_COLOR}
-              aria-invalid={borderColorError}
-              disabled={isBorderDisabled}
-              onChange={(event) => updateBorderColorFromText(event.target.value)}
             />
           </span>
           {borderColorError ? (
@@ -3007,6 +3009,14 @@ function ImageCompositionControls({
           </span>
           <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
             <input
+              className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+              value={overlayColorInput}
+              placeholder="#RRGGBB"
+              aria-invalid={overlayColorError}
+              spellCheck={false}
+              onChange={(event) => updateOverlayColorFromText(event.target.value)}
+            />
+            <input
               type="color"
               aria-label="오버레이 색상 선택"
               className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
@@ -3015,13 +3025,6 @@ function ImageCompositionControls({
                 DEFAULT_IMAGE_OVERLAY_COLOR,
               )}
               onChange={(event) => updateOverlayColorFromPicker(event.target.value)}
-            />
-            <input
-              className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
-              value={overlayColorInput}
-              placeholder={DEFAULT_IMAGE_OVERLAY_COLOR}
-              aria-invalid={overlayColorError}
-              onChange={(event) => updateOverlayColorFromText(event.target.value)}
             />
           </span>
           {overlayColorError ? (
