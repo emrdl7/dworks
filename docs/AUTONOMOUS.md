@@ -69,17 +69,19 @@
 - ✓ `m2-style-font-stack` — Pretendard 한글 sans 도입 (`54fb9d6`)
 - ✓ `m2-style-a11y` — WCAG 텍스트 대비 readout (`85beb54`)
 - ✓ `m2-style-gradient-conic` — conic gradient 종류 (`00ef3dd`)
-- `m2-style-shadow-multi` — 다중 shadow
-- `m2-style-color-state` — link / hover / active 상태 색상 override
+- ✓ `m2-style-shadow-multi` — 다중 shadow (`e33941b`)
+- ✓ `m2-style-color-state` — 버튼 hover 배경 (`5bc7a61`)
 - `m2-responsive-override` — viewport별 속성 override
 - ✓ `m2-inspector-collapse-master` — 모두 접기 / 펼치기 master toggle (`6bdcc20`)
-- `m2-inspector-collapse-memory` — 노드별 토글 기억 (smart-collapse 후속)
+- ✓ `m2-inspector-collapse-memory` — 노드별 토글 기억 (`27fd8e1`)
 - ✓ `m2-style-a11y-large-text` — 큰 텍스트 임계값 (`7956d12`)
-- `m2-style-a11y-audit-panel` — 모든 노드 일괄 대비 감사 (a11y 후속)
-- `m2-style-gradient-conic-angle` — conic from 각도 입력 (gradient-conic 후속)
-- `m2-style-gradient-conic-center` — conic 중심 위치 입력 (gradient-conic 후속)
+- ✓ `m2-style-a11y-audit-panel` — 헤더 chip 전체 대비 표시 (`9410711`)
+- ✓ `m2-style-gradient-conic-controls` — conic 시작각/중심 (`53b7e36`)
 - `m2-style-gradient-stops` — 모든 gradient 다중 stop 지원
-- `m2-style-font-stack-self-host` — Pretendard self-host (next/font/local) (font-stack 후속)
+- ✓ `m2-style-font-stack-self-host` — Pretendard npm self-host (`8895de8`)
+- `m2-style-color-state-text` — hover textColor (color-state 후속)
+- `m2-style-color-state-active` — active / focus state (color-state 후속)
+- `m2-style-shadow-multi-inset` — inset shadow 지원 (shadow-multi 후속)
 
 ## 코드 변경 정책
 

@@ -454,3 +454,8 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-style-a11y-large-text` | r1 (Claude) → r2 (Codex) → 코드 (`7956d12`) → r4 (Codex) | 큰 텍스트 (fontSize>=24 OR fontSize>=19+weight>=700) AA 3.0/AAA 4.5 임계값, 본문 4.5/7.0 유지. 가속 §2: round 3 ack 흡수 첫 사례 |
 | `m2-inspector-collapse-master` | r1 (Claude) → r2 (Codex) → 코드 (`6bdcc20`) → r4 (Codex) | NodeInspector header에 master toggle (모두 접기/펼치기), visibleControlledSectionTitles 노드 타입별 동적 |
 | `m2-style-gradient-conic-controls` | r1 (Claude) → r2 (Codex) → 코드 (`53b7e36`) → fix (`5ffc434`) | conic 시작각/중심 X/Y schema 3 optional 필드 + 슬라이더+숫자 입력. Codex fix: range 슬라이더 보강 + schema 회귀 테스트 (가속 §5 첫 사례) |
+| `m2-inspector-collapse-memory` | r1 (Claude) → r2 (Codex) → 코드 (`27fd8e1`) → r4 (Codex) | NodeInspector openSections를 Record<nodeId, ...>로 lift, 노드 복귀 시 토글 상태 복원 (세션 메모리, localStorage 미포함) |
+| `m2-style-a11y-audit-panel` | r1 (Claude) → r2 (Codex) → 코드 (`9410711`) → r4 (Codex) | 캔버스 header에 "대비 AA {pass}/{total}" chip, computeContrastAuditSummary로 모든 text 노드 walk + computeTextContrast 재사용 |
+| `m2-style-shadow-multi` | r1 (Claude) → Codex 직접 feat (`e33941b`) → r4 (Claude) | shape.customShadows?: CustomShadow[] (max 3), getShapeBoxShadow 우선순위 helper, list UI + 추가/삭제/↑↓. 가속 §5 확장 첫 사례 (Codex round 2/3 생략) |
+| `m2-style-font-stack-self-host` | r1 (Claude) → Codex 직접 feat (`8895de8`) → r4 (Claude) | CDN 제거 + 공식 pretendard@1.3.9 npm 패키지 self-host (제 제안 @fontsource는 registry 404). page.tsx 미터치 |
+| `m2-style-color-state` | r1 (Claude) → Codex 직접 feat (`5bc7a61`) → r4 (Claude) | NodeColor.hoverBackgroundColor + button-only UI, --dw-hover-bg CSS 변수 + hover important class (inline 배경/그라디언트 위에서도 작동) |
