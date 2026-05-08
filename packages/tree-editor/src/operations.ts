@@ -52,6 +52,16 @@ export interface UpdateLayoutOperation {
   patch: Partial<NodeLayout>
 }
 
+export interface NodeMetaPatch {
+  opacity?: TreeNode['opacity']
+}
+
+export interface UpdateNodeMetaOperation {
+  type: 'updateNodeMeta'
+  nodeId: string
+  patch: NodeMetaPatch
+}
+
 export interface UpdateButtonLabelOperation {
   type: 'updateButtonLabel'
   nodeId: string
@@ -97,6 +107,7 @@ type ContentEditOperation =
   | UpdateShapeOperation
   | UpdateColorOperation
   | UpdateLayoutOperation
+  | UpdateNodeMetaOperation
   | UpdateButtonLabelOperation
   | UpdateImageOperation
 
@@ -166,6 +177,14 @@ export function updateLayout(
   patch: Partial<NodeLayout>,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateLayout', nodeId, patch })
+}
+
+export function updateNodeMeta(
+  tree: Tree,
+  nodeId: string,
+  patch: NodeMetaPatch,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateNodeMeta', nodeId, patch })
 }
 
 export function replaceTextById(
@@ -319,6 +338,9 @@ function editMatchedNode(
     case 'updateLayout':
       return withLayoutPatch(node, operation.patch)
 
+    case 'updateNodeMeta':
+      return withNodeMetaPatch(node, operation.patch)
+
     case 'updateButtonLabel':
       if (node.type !== 'button') {
         throw new Error(
@@ -335,6 +357,23 @@ function editMatchedNode(
       }
       return withImagePatch(node, operation)
   }
+}
+
+function withNodeMetaPatch<T extends TreeNode>(
+  node: T,
+  patch: NodeMetaPatch,
+): T {
+  const next: T = { ...node }
+
+  if ('opacity' in patch) {
+    if (patch.opacity === undefined) {
+      delete next.opacity
+    } else {
+      next.opacity = patch.opacity
+    }
+  }
+
+  return next
 }
 
 function withImagePatch(

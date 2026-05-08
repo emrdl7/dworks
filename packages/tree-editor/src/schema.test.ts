@@ -122,6 +122,22 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateNodeMeta operation', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateNodeMeta',
+      nodeId: 'hero.card',
+      patch: {
+        opacity: 0.64,
+      },
+    })
+
+    assert.equal(op.type, 'updateNodeMeta')
+    if (op.type === 'updateNodeMeta') {
+      assert.equal(op.nodeId, 'hero.card')
+      assert.equal(op.patch.opacity, 0.64)
+    }
+  })
+
   it('parses updateButtonLabel operation', () => {
     const op = editOperationSchema.parse({
       type: 'updateButtonLabel',

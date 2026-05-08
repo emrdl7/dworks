@@ -334,6 +334,7 @@ export type StyleTokens = z.infer<typeof styleTokensSchema>
 interface BaseNodeMeta {
   id: string
   editKind: EditKind
+  opacity?: number
   responsive?: ResponsiveIntent
   styleTokens?: string[]
   spacing?: Spacing
@@ -416,6 +417,7 @@ export type TreeNode =
 const baseShape = {
   id: z.string().min(1),
   editKind: editKindSchema,
+  opacity: opacitySchema.optional(),
   responsive: responsiveIntentSchema,
   styleTokens: z.array(z.string()).optional(),
   spacing: spacingSchema.optional(),

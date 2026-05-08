@@ -9,6 +9,7 @@ import {
   imagePresentationSchema,
   nodeColorSchema,
   nodeLayoutSchema,
+  opacitySchema,
   shapeSchema,
   spacingSchema,
   styleTokensSchema,
@@ -24,6 +25,7 @@ import type {
   UpdateColorOperation,
   UpdateImageOperation,
   UpdateLayoutOperation,
+  UpdateNodeMetaOperation,
   UpdateShapeOperation,
   UpdateSpacingOperation,
   UpdateStyleTokensOperation,
@@ -70,6 +72,15 @@ export const updateLayoutOperationSchema: z.ZodType<UpdateLayoutOperation> =
     type: z.literal('updateLayout'),
     nodeId: z.string().min(1),
     patch: nodeLayoutSchema,
+  })
+
+export const updateNodeMetaOperationSchema: z.ZodType<UpdateNodeMetaOperation> =
+  z.object({
+    type: z.literal('updateNodeMeta'),
+    nodeId: z.string().min(1),
+    patch: z.object({
+      opacity: opacitySchema.optional(),
+    }),
   })
 
 export const updateButtonLabelOperationSchema: z.ZodType<UpdateButtonLabelOperation> =
@@ -145,6 +156,13 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     type: z.ZodLiteral<'updateLayout'>
     nodeId: z.ZodString
     patch: typeof nodeLayoutSchema
+  }>,
+  updateNodeMetaOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateNodeMeta'>
+    nodeId: z.ZodString
+    patch: z.ZodObject<{
+      opacity: z.ZodOptional<typeof opacitySchema>
+    }>
   }>,
   updateButtonLabelOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'updateButtonLabel'>

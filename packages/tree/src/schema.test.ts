@@ -44,6 +44,33 @@ describe('tree schema', () => {
     assert.equal(parsed.id, 't1')
   })
 
+  it('parses common node opacity metadata', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'landing.card',
+      type: 'card',
+      editKind: 'structure',
+      opacity: 0.72,
+      children: [],
+    })
+
+    assert.equal(parsed.type, 'card')
+    if (parsed.type === 'card') {
+      assert.equal(parsed.opacity, 0.72)
+    }
+  })
+
+  it('rejects invalid common node opacity metadata', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        opacity: 1.2,
+        children: [],
+      }),
+    )
+  })
+
   it('parses text-node typography overrides', () => {
     const parsed = treeNodeSchema.parse({
       id: 'hero.title',

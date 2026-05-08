@@ -11,6 +11,7 @@ import {
   replaceTextById,
   updateColor,
   updateLayout,
+  updateNodeMeta,
   updateShape,
   updateSpacing,
   updateButtonLabel,
@@ -182,6 +183,37 @@ describe('tree editor operations', () => {
         assert.equal(resetVisual.aspectRatio, undefined)
         assert.equal(resetVisual.focalPoint, undefined)
         assert.equal(resetVisual.presentation, undefined)
+      }
+    }
+  })
+
+  it('updates and clears common node opacity metadata', () => {
+    const tree = fixtureTree()
+    const dimmed = updateNodeMeta(tree, 'landing.card', { opacity: 0.42 })
+    const reset = updateNodeMeta(dimmed, 'landing.card', { opacity: undefined })
+
+    assert.equal(tree.root.type, 'section')
+    assert.equal(dimmed.root.type, 'section')
+    assert.equal(reset.root.type, 'section')
+    if (
+      tree.root.type === 'section' &&
+      dimmed.root.type === 'section' &&
+      reset.root.type === 'section'
+    ) {
+      const originalCard = tree.root.children[3]
+      const dimmedCard = dimmed.root.children[3]
+      const resetCard = reset.root.children[3]
+      assert.equal(originalCard?.type, 'card')
+      assert.equal(dimmedCard?.type, 'card')
+      assert.equal(resetCard?.type, 'card')
+      if (
+        originalCard?.type === 'card' &&
+        dimmedCard?.type === 'card' &&
+        resetCard?.type === 'card'
+      ) {
+        assert.equal(originalCard.opacity, undefined)
+        assert.equal(dimmedCard.opacity, 0.42)
+        assert.equal(resetCard.opacity, undefined)
       }
     }
   })

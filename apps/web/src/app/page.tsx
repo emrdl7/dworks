@@ -92,6 +92,7 @@ import {
   updateButtonLabel,
   updateImage,
   updateLayout,
+  updateNodeMeta,
   updateShape,
   updateSpacing,
   updateStyleTokens,
@@ -737,15 +738,27 @@ export default function HomePage() {
     commitTreeEdit(updateColor(tree, node.id, patch), undefined, options)
   }
 
+  function handleNodeMetaChange(
+    node: TreeNode,
+    patch: Pick<TreeNode, 'opacity'>,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateNodeMeta(tree, node.id, patch), undefined, options)
+  }
+
   function handleNodeColorReset(node: TreeNode) {
+    const resetColorTree = updateColor(
+      tree,
+      node.id,
+      Object.fromEntries(
+        colorFields.map((field) => [field, undefined]),
+      ) as Partial<NodeColor>,
+    )
+
     commitTreeEdit(
-      updateColor(
-        tree,
-        node.id,
-        Object.fromEntries(
-          colorFields.map((field) => [field, undefined]),
-        ) as Partial<NodeColor>,
-      ),
+      updateNodeMeta(resetColorTree, node.id, {
+        opacity: undefined,
+      }),
     )
   }
 
@@ -1150,6 +1163,7 @@ export default function HomePage() {
             onShapeReset={handleShapeReset}
             onNodeColorChange={handleNodeColorChange}
             onNodeColorReset={handleNodeColorReset}
+            onNodeMetaChange={handleNodeMetaChange}
             onLayoutChange={handleLayoutChange}
             onLayoutReset={handleLayoutReset}
             registeredFonts={registeredFonts}
@@ -1556,6 +1570,8 @@ function SelectableNode({
   children,
 }: SelectableNodeProps) {
   const isSelected = node.id === selectedNodeId
+  const nodeOpacityStyle: CSSProperties | undefined =
+    node.opacity === undefined ? undefined : { opacity: node.opacity }
 
   function selectNode() {
     onSelect(node.id)
@@ -1579,6 +1595,7 @@ function SelectableNode({
           ? 'border-[var(--dw-accent)] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
           : 'border-transparent hover:border-[var(--dw-border)]'
       }`}
+      style={nodeOpacityStyle}
       onClick={(event) => {
         event.stopPropagation()
         selectNode()
@@ -2302,6 +2319,11 @@ interface NodeInspectorProps {
   onShapeReset: (node: TreeNode) => void
   onNodeColorChange: (node: TreeNode, patch: Partial<NodeColor>) => void
   onNodeColorReset: (node: TreeNode) => void
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: Pick<TreeNode, 'opacity'>,
+    options?: CommitTreeEditOptions,
+  ) => void
   onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
   onLayoutReset: (node: TreeNode) => void
   registeredFonts: RegisteredFontSummary[]
@@ -2336,6 +2358,7 @@ function NodeInspector({
   onShapeReset,
   onNodeColorChange,
   onNodeColorReset,
+  onNodeMetaChange,
   onLayoutChange,
   onLayoutReset,
   registeredFonts,
@@ -2374,6 +2397,7 @@ function NodeInspector({
           node={node}
           onNodeColorChange={onNodeColorChange}
           onNodeColorReset={onNodeColorReset}
+          onNodeMetaChange={onNodeMetaChange}
         />
 
         {node.type === 'text' ? (
@@ -2658,12 +2682,18 @@ interface NodeColorControlsProps {
     patch: Partial<NodeColor>,
     options?: CommitTreeEditOptions,
   ) => void
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: Pick<TreeNode, 'opacity'>,
+    options?: CommitTreeEditOptions,
+  ) => void
   onNodeColorReset: (node: TreeNode) => void
 }
 
 function NodeColorControls({
   node,
   onNodeColorChange,
+  onNodeMetaChange,
   onNodeColorReset,
 }: NodeColorControlsProps) {
   const color = node.color ?? {}
@@ -2933,6 +2963,16 @@ function NodeColorControls({
     )
   }
 
+  function updateNodeOpacity(value: string) {
+    onNodeMetaChange(
+      node,
+      {
+        opacity: parseOptionalOpacity(value),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'opacity') },
+    )
+  }
+
   function updateBackgroundGradientType(type: GradientType) {
     onNodeColorChange(
       node,
@@ -3095,6 +3135,12 @@ function NodeColorControls({
               })
             : null}
         </div>
+
+        <OpacityControl
+          label="노드 투명도"
+          value={node.opacity}
+          onChange={updateNodeOpacity}
+        />
       </div>
     </InspectorDisclosure>
   )
