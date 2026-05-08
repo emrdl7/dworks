@@ -213,6 +213,8 @@ export const nodeColorSchema = z.object({
   accentOpacity: opacitySchema.optional(),
   hoverBackgroundColor: hexColorSchema.optional(),
   hoverTextColor: hexColorSchema.optional(),
+  activeBackgroundColor: hexColorSchema.optional(),
+  activeTextColor: hexColorSchema.optional(),
 })
 export type NodeColor = z.infer<typeof nodeColorSchema>
 

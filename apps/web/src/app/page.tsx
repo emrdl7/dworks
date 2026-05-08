@@ -421,6 +421,8 @@ const colorFields = [
   'backgroundGradient',
   'hoverBackgroundColor',
   'hoverTextColor',
+  'activeBackgroundColor',
+  'activeTextColor',
   'textColor',
   'textOpacity',
   'accentColor',
@@ -1856,6 +1858,8 @@ function CanvasNode({
   const accentTextColorStyle = getAccentTextColorStyle(node.color)
   const hoverBackgroundStyle = getHoverBackgroundStyle(node.color)
   const hoverTextStyle = getHoverTextStyle(node.color)
+  const activeBackgroundStyle = getActiveBackgroundStyle(node.color)
+  const activeTextStyle = getActiveTextStyle(node.color)
   const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
@@ -2096,15 +2100,31 @@ function CanvasNode({
               node.color?.hoverTextColor !== undefined
                 ? 'hover:!text-[var(--dw-hover-text)]'
                 : ''
+            } ${
+              node.color?.activeBackgroundColor !== undefined
+                ? 'active:!bg-[var(--dw-active-bg)] active:!bg-none'
+                : ''
+            } ${
+              node.color?.activeTextColor !== undefined
+                ? 'active:!text-[var(--dw-active-text)]'
+                : ''
             }`}
             style={
               node.variant === 'secondary'
-                ? mergeStyles(boxStyle, hoverBackgroundStyle, hoverTextStyle)
+                ? mergeStyles(
+                    boxStyle,
+                    hoverBackgroundStyle,
+                    hoverTextStyle,
+                    activeBackgroundStyle,
+                    activeTextStyle,
+                  )
                 : mergeStyles(
                     boxStyle,
                     accentBackgroundStyle,
                     hoverBackgroundStyle,
                     hoverTextStyle,
+                    activeBackgroundStyle,
+                    activeTextStyle,
                   )
             }
           >
@@ -2714,6 +2734,24 @@ function getHoverTextStyle(color?: NodeColor): CSSProperties | undefined {
     ? undefined
     : ({
         '--dw-hover-text': getCssColorWithOpacity(color.hoverTextColor),
+      } as CSSProperties)
+}
+
+function getActiveBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.activeBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-active-bg': getCssColorWithOpacity(color.activeBackgroundColor),
+      } as CSSProperties)
+}
+
+function getActiveTextStyle(color?: NodeColor): CSSProperties | undefined {
+  return color?.activeTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-active-text': getCssColorWithOpacity(color.activeTextColor),
       } as CSSProperties)
 }
 
@@ -3701,6 +3739,12 @@ function NodeColorControls({
   const [hoverTextColorInput, setHoverTextColorInput] = useState(
     color.hoverTextColor ?? '',
   )
+  const [activeBackgroundColorInput, setActiveBackgroundColorInput] = useState(
+    color.activeBackgroundColor ?? '',
+  )
+  const [activeTextColorInput, setActiveTextColorInput] = useState(
+    color.activeTextColor ?? '',
+  )
   const [backgroundColorError, setBackgroundColorError] = useState(false)
   const [backgroundGradientFromError, setBackgroundGradientFromError] =
     useState(false)
@@ -3711,6 +3755,9 @@ function NodeColorControls({
   const [hoverBackgroundColorError, setHoverBackgroundColorError] =
     useState(false)
   const [hoverTextColorError, setHoverTextColorError] = useState(false)
+  const [activeBackgroundColorError, setActiveBackgroundColorError] =
+    useState(false)
+  const [activeTextColorError, setActiveTextColorError] = useState(false)
 
   useEffect(() => {
     setBackgroundColorInput(color.backgroundColor ?? '')
@@ -3736,6 +3783,16 @@ function NodeColorControls({
     setHoverTextColorInput(color.hoverTextColor ?? '')
     setHoverTextColorError(false)
   }, [node.id, color.hoverTextColor])
+
+  useEffect(() => {
+    setActiveBackgroundColorInput(color.activeBackgroundColor ?? '')
+    setActiveBackgroundColorError(false)
+  }, [node.id, color.activeBackgroundColor])
+
+  useEffect(() => {
+    setActiveTextColorInput(color.activeTextColor ?? '')
+    setActiveTextColorError(false)
+  }, [node.id, color.activeTextColor])
 
   useEffect(() => {
     setBackgroundGradientFromInput(backgroundGradient.from)
@@ -3856,6 +3913,64 @@ function NodeColorControls({
       node,
       { hoverTextColor: normalizedValue },
       { mergeKey: getNodeColorMergeKey(node.id, 'hoverTextColor') },
+    )
+  }
+
+  function updateActiveBackgroundColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setActiveBackgroundColorInput(value)
+    if (trimmedValue === '') {
+      setActiveBackgroundColorError(false)
+      onNodeColorChange(node, { activeBackgroundColor: undefined })
+      return
+    }
+    if (!isValidHexColor(trimmedValue)) {
+      setActiveBackgroundColorError(true)
+      return
+    }
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setActiveBackgroundColorInput(normalizedValue)
+    setActiveBackgroundColorError(false)
+    onNodeColorChange(node, { activeBackgroundColor: normalizedValue })
+  }
+
+  function updateActiveBackgroundColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setActiveBackgroundColorInput(normalizedValue)
+    setActiveBackgroundColorError(false)
+    onNodeColorChange(
+      node,
+      { activeBackgroundColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'activeBackgroundColor') },
+    )
+  }
+
+  function updateActiveTextColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setActiveTextColorInput(value)
+    if (trimmedValue === '') {
+      setActiveTextColorError(false)
+      onNodeColorChange(node, { activeTextColor: undefined })
+      return
+    }
+    if (!isValidHexColor(trimmedValue)) {
+      setActiveTextColorError(true)
+      return
+    }
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setActiveTextColorInput(normalizedValue)
+    setActiveTextColorError(false)
+    onNodeColorChange(node, { activeTextColor: normalizedValue })
+  }
+
+  function updateActiveTextColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setActiveTextColorInput(normalizedValue)
+    setActiveTextColorError(false)
+    onNodeColorChange(
+      node,
+      { activeTextColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'activeTextColor') },
     )
   }
 
@@ -4294,6 +4409,80 @@ function NodeColorControls({
               />
             </span>
             {hoverTextColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              활성 배경
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={activeBackgroundColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={activeBackgroundColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateActiveBackgroundColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="활성 배경 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  activeBackgroundColorInput,
+                  color.backgroundColor ?? DEFAULT_COLOR_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateActiveBackgroundColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {activeBackgroundColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              활성 글자
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={activeTextColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={activeTextColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateActiveTextColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="활성 글자 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  activeTextColorInput,
+                  color.textColor ?? DEFAULT_TEXT_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateActiveTextColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {activeTextColorError ? (
               <span className="mt-2 block text-xs text-[#b42318]">
                 HEX 형식 (#RRGGBB)으로 입력해주세요.
               </span>
