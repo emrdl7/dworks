@@ -626,6 +626,10 @@ export default function HomePage() {
     [tree],
   )
   const colorPreset = tree.styleTokens?.colorPreset ?? 'mint'
+  const contrastAuditSummary = useMemo(
+    () => computeContrastAuditSummary(tree, colorPreset),
+    [tree, colorPreset],
+  )
   const selectedViewportPreset = responsiveViewportPresets[responsiveViewport]
   const canvasStyle = useMemo(
     () => getCanvasStyle(colorPreset),
@@ -1296,7 +1300,7 @@ export default function HomePage() {
               onClick={handleRedo}
             />
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[#4f5e56]">
             <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
               루트 {tree.root.id}
             </span>
@@ -1308,6 +1312,19 @@ export default function HomePage() {
             </span>
             <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
               색상 {colorPresetLabels[colorPreset]}
+            </span>
+            <span
+              className={`rounded-full border px-3 py-1 ${
+                contrastAuditSummary.total === 0
+                  ? 'border-[#dde3df] bg-white text-[#9aa49d]'
+                  : contrastAuditSummary.passesAA ===
+                      contrastAuditSummary.total
+                    ? 'border-[#1b7f72] bg-[#eef8f6] text-[#1b7f72]'
+                    : 'border-[#c9d4cd] bg-white text-[#4f5e56]'
+              }`}
+            >
+              대비 AA {contrastAuditSummary.passesAA}/
+              {contrastAuditSummary.total}
             </span>
           </div>
         </div>
@@ -7583,6 +7600,50 @@ function computeTextContrast(
     aaThreshold,
     aaaThreshold,
   }
+}
+
+interface ContrastAuditSummary {
+  total: number
+  passesAA: number
+  passesAAA: number
+}
+
+function computeContrastAuditSummary(
+  tree: Tree,
+  colorPreset: ColorPreset,
+): ContrastAuditSummary {
+  const summary: ContrastAuditSummary = {
+    total: 0,
+    passesAA: 0,
+    passesAAA: 0,
+  }
+  collectTextNodes(tree.root).forEach((textNode) => {
+    const result = computeTextContrast(tree, textNode, colorPreset)
+    if (result === null) {
+      return
+    }
+    summary.total += 1
+    if (result.passesAA) {
+      summary.passesAA += 1
+    }
+    if (result.passesAAA) {
+      summary.passesAAA += 1
+    }
+  })
+  return summary
+}
+
+function collectTextNodes(node: TreeNode): TextNode[] {
+  const result: TextNode[] = []
+  if (node.type === 'text') {
+    result.push(node)
+  }
+  if (isContainerNode(node)) {
+    node.children.forEach((child) => {
+      result.push(...collectTextNodes(child))
+    })
+  }
+  return result
 }
 
 function getCanvasStyle(colorPreset: ColorPreset): CSSProperties {
