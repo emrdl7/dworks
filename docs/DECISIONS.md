@@ -424,3 +424,5 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-style-shape` | r1 (Codex) → r2 (Claude) → 코드 (`d87b156`) → r3 (Claude) | radius/borderWidth/borderColor/borderStyle/shadow + hex 검증 + color picker |
 | `m2-style-color-free` | r1 (Codex) → r2 (Claude) → 코드 (`4f74d5a`) → r3 (Claude) | NodeColor (background/text) + textColor 상속 prop 전파 + preset override 보존 |
 | `m2-style-layout` | r1 (Codex) → r2 (Claude) → 코드 (`57cb809`) → r3 (Claude) | flex direction/align/justify (5종 evenly 포함)/wrap + spacing.gap 단일 source |
+| `m2-image-crop` | r1 (Codex) → r2 (Claude) → 코드 (`ee16d93`) + hex fix (`ec3d309`) → r3 (Claude) | 이미지 비율/맞춤/초점 드래그/오버레이 + 4 색상 컨트롤 hex 우선 |
+| `m2-style-font-grouping` | Claude r1 사후 → Codex r2 (다중 업로드) → Claude r3 → 코드 (`e6563bb`) → r4 (Claude) → Codex r5 (9 weight 버그) → r6 ALERT (Claude) → 사용자 직접 지시 → 코드 (`b2dce7b`) → r7 (Claude) | 다중 업로드 + family/weight 자동 grouping + FontWeight 9단계 + collapsible 그룹 + 그룹 삭제 + 속성 패널 스크롤/접기 |
