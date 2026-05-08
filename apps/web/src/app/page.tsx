@@ -1415,6 +1415,7 @@ function TextPreview({
 }) {
   const typographyStyle = getTypographyStyle(node.typography)
   const textStyle = mergeStyles(typographyStyle, textColorStyle)
+  const content = parseInlineMarkdown(node.content)
 
   switch (node.emphasis) {
     case 'heading-1':
@@ -1423,7 +1424,7 @@ function TextPreview({
           className="max-w-3xl text-5xl font-semibold leading-tight"
           style={textStyle}
         >
-          {node.content}
+          {content}
         </h2>
       )
     case 'heading-2':
@@ -1432,7 +1433,7 @@ function TextPreview({
           className="text-2xl font-semibold text-[var(--dw-text-primary)]"
           style={textStyle}
         >
-          {node.content}
+          {content}
         </h3>
       )
     case 'heading-3':
@@ -1441,7 +1442,7 @@ function TextPreview({
           className="text-lg font-semibold text-[var(--dw-text-primary)]"
           style={textStyle}
         >
-          {node.content}
+          {content}
         </h4>
       )
     case 'caption':
@@ -1450,17 +1451,105 @@ function TextPreview({
           className="text-xs font-semibold uppercase text-[var(--dw-accent)]"
           style={textStyle}
         >
-          {node.content}
+          {content}
         </p>
       )
     case 'body':
     default:
       return (
         <p className="max-w-2xl text-base leading-7" style={textStyle}>
-          {node.content}
+          {content}
         </p>
       )
   }
+}
+
+function parseInlineMarkdown(content: string): ReactNode[] {
+  const nodes: ReactNode[] = []
+  const inlinePattern =
+    /\[([^\]\n]+)\]\(([^)\s]+)\)|\*\*([^*\n]+)\*\*|\*([^*\n]+)\*/g
+  let lastIndex = 0
+
+  for (const match of content.matchAll(inlinePattern)) {
+    const matchIndex = match.index ?? 0
+
+    if (matchIndex > lastIndex) {
+      nodes.push(content.slice(lastIndex, matchIndex))
+    }
+
+    const rawMatch = match[0]
+    const linkText = match[1]
+    const linkHref = match[2]
+    const boldText = match[3]
+    const italicText = match[4]
+    const key = `${matchIndex}-${rawMatch.length}`
+
+    if (linkText !== undefined && linkHref !== undefined) {
+      const safeHref = getSafeInlineHref(linkHref)
+
+      if (safeHref) {
+        nodes.push(
+          <a
+            key={`link-${key}`}
+            className="font-semibold text-[var(--dw-accent)] underline underline-offset-4"
+            href={safeHref}
+            target={isFragmentHref(safeHref) ? undefined : '_blank'}
+            rel={isFragmentHref(safeHref) ? undefined : 'noopener noreferrer'}
+            onClick={(event) => event.preventDefault()}
+          >
+            {linkText}
+          </a>,
+        )
+      } else {
+        nodes.push(rawMatch)
+      }
+    } else if (boldText !== undefined) {
+      nodes.push(
+        <strong key={`bold-${key}`} className="font-semibold">
+          {boldText}
+        </strong>,
+      )
+    } else if (italicText !== undefined) {
+      nodes.push(
+        <em key={`italic-${key}`} className="italic">
+          {italicText}
+        </em>,
+      )
+    }
+
+    lastIndex = matchIndex + rawMatch.length
+  }
+
+  if (lastIndex < content.length) {
+    nodes.push(content.slice(lastIndex))
+  }
+
+  return nodes.length > 0 ? nodes : [content]
+}
+
+function getSafeInlineHref(href: string): string | null {
+  const trimmedHref = href.trim()
+
+  if (trimmedHref.length === 0 || /[\u0000-\u001f\u007f]/.test(trimmedHref)) {
+    return null
+  }
+
+  if (isFragmentHref(trimmedHref)) {
+    return trimmedHref
+  }
+
+  try {
+    const parsedUrl = new URL(trimmedHref)
+    const allowedProtocols = new Set(['http:', 'https:', 'mailto:'])
+
+    return allowedProtocols.has(parsedUrl.protocol) ? trimmedHref : null
+  } catch {
+    return null
+  }
+}
+
+function isFragmentHref(href: string): boolean {
+  return href.startsWith('#')
 }
 
 function getTypographyStyle(typography?: Typography): CSSProperties | undefined {
@@ -2051,9 +2140,15 @@ function NodeInspector({
                 <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
                 <textarea
                   className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                  placeholder="내용을 입력하세요. 마크다운으로 **굵게**, *기울임*, [링크](URL)를 사용할 수 있습니다."
                   value={node.content}
                   onChange={(event) => onTextChange(node, event.target.value)}
                 />
+                <span className="mt-2 block text-xs leading-5 text-[#647067]">
+                  굵게 <code className="font-mono">**텍스트**</code> / 기울임{' '}
+                  <code className="font-mono">*텍스트*</code> / 링크{' '}
+                  <code className="font-mono">[텍스트](URL)</code>
+                </span>
               </label>
             </InspectorDisclosure>
             <TypographyControls
