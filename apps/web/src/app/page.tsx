@@ -425,6 +425,8 @@ const colorFields = [
   'activeTextColor',
   'focusBackgroundColor',
   'focusTextColor',
+  'disabledBackgroundColor',
+  'disabledTextColor',
   'textColor',
   'textOpacity',
   'accentColor',
@@ -1864,6 +1866,8 @@ function CanvasNode({
   const activeTextStyle = getActiveTextStyle(node.color)
   const focusBackgroundStyle = getFocusBackgroundStyle(node.color)
   const focusTextStyle = getFocusTextStyle(node.color)
+  const disabledBackgroundStyle = getDisabledBackgroundStyle(node.color)
+  const disabledTextStyle = getDisabledTextStyle(node.color)
   const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
@@ -2092,6 +2096,7 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <span
+            data-disabled={node.disabled === true ? 'true' : undefined}
             className={`inline-flex min-h-11 items-center rounded-md px-5 text-sm font-semibold transition ${
               node.variant === 'secondary'
                 ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
@@ -2120,6 +2125,14 @@ function CanvasNode({
               node.color?.focusTextColor !== undefined
                 ? 'group-focus-visible/dwnode:!text-[var(--dw-focus-text)]'
                 : ''
+            } ${
+              node.color?.disabledBackgroundColor !== undefined
+                ? 'data-[disabled=true]:!bg-[var(--dw-disabled-bg)] data-[disabled=true]:!bg-none'
+                : ''
+            } ${
+              node.color?.disabledTextColor !== undefined
+                ? 'data-[disabled=true]:!text-[var(--dw-disabled-text)]'
+                : ''
             }`}
             style={
               node.variant === 'secondary'
@@ -2131,6 +2144,8 @@ function CanvasNode({
                     activeTextStyle,
                     focusBackgroundStyle,
                     focusTextStyle,
+                    disabledBackgroundStyle,
+                    disabledTextStyle,
                   )
                 : mergeStyles(
                     boxStyle,
@@ -2141,6 +2156,8 @@ function CanvasNode({
                     activeTextStyle,
                     focusBackgroundStyle,
                     focusTextStyle,
+                    disabledBackgroundStyle,
+                    disabledTextStyle,
                   )
             }
           >
@@ -2786,6 +2803,26 @@ function getFocusTextStyle(color?: NodeColor): CSSProperties | undefined {
     ? undefined
     : ({
         '--dw-focus-text': getCssColorWithOpacity(color.focusTextColor),
+      } as CSSProperties)
+}
+
+function getDisabledBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.disabledBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-disabled-bg': getCssColorWithOpacity(
+          color.disabledBackgroundColor,
+        ),
+      } as CSSProperties)
+}
+
+function getDisabledTextStyle(color?: NodeColor): CSSProperties | undefined {
+  return color?.disabledTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-disabled-text': getCssColorWithOpacity(color.disabledTextColor),
       } as CSSProperties)
 }
 
@@ -3785,6 +3822,11 @@ function NodeColorControls({
   const [focusTextColorInput, setFocusTextColorInput] = useState(
     color.focusTextColor ?? '',
   )
+  const [disabledBackgroundColorInput, setDisabledBackgroundColorInput] =
+    useState(color.disabledBackgroundColor ?? '')
+  const [disabledTextColorInput, setDisabledTextColorInput] = useState(
+    color.disabledTextColor ?? '',
+  )
   const [backgroundColorError, setBackgroundColorError] = useState(false)
   const [backgroundGradientFromError, setBackgroundGradientFromError] =
     useState(false)
@@ -3801,6 +3843,9 @@ function NodeColorControls({
   const [focusBackgroundColorError, setFocusBackgroundColorError] =
     useState(false)
   const [focusTextColorError, setFocusTextColorError] = useState(false)
+  const [disabledBackgroundColorError, setDisabledBackgroundColorError] =
+    useState(false)
+  const [disabledTextColorError, setDisabledTextColorError] = useState(false)
 
   useEffect(() => {
     setBackgroundColorInput(color.backgroundColor ?? '')
@@ -3846,6 +3891,16 @@ function NodeColorControls({
     setFocusTextColorInput(color.focusTextColor ?? '')
     setFocusTextColorError(false)
   }, [node.id, color.focusTextColor])
+
+  useEffect(() => {
+    setDisabledBackgroundColorInput(color.disabledBackgroundColor ?? '')
+    setDisabledBackgroundColorError(false)
+  }, [node.id, color.disabledBackgroundColor])
+
+  useEffect(() => {
+    setDisabledTextColorInput(color.disabledTextColor ?? '')
+    setDisabledTextColorError(false)
+  }, [node.id, color.disabledTextColor])
 
   useEffect(() => {
     setBackgroundGradientFromInput(backgroundGradient.from)
@@ -4082,6 +4137,64 @@ function NodeColorControls({
       node,
       { focusTextColor: normalizedValue },
       { mergeKey: getNodeColorMergeKey(node.id, 'focusTextColor') },
+    )
+  }
+
+  function updateDisabledBackgroundColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setDisabledBackgroundColorInput(value)
+    if (trimmedValue === '') {
+      setDisabledBackgroundColorError(false)
+      onNodeColorChange(node, { disabledBackgroundColor: undefined })
+      return
+    }
+    if (!isValidHexColor(trimmedValue)) {
+      setDisabledBackgroundColorError(true)
+      return
+    }
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setDisabledBackgroundColorInput(normalizedValue)
+    setDisabledBackgroundColorError(false)
+    onNodeColorChange(node, { disabledBackgroundColor: normalizedValue })
+  }
+
+  function updateDisabledBackgroundColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setDisabledBackgroundColorInput(normalizedValue)
+    setDisabledBackgroundColorError(false)
+    onNodeColorChange(
+      node,
+      { disabledBackgroundColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'disabledBackgroundColor') },
+    )
+  }
+
+  function updateDisabledTextColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setDisabledTextColorInput(value)
+    if (trimmedValue === '') {
+      setDisabledTextColorError(false)
+      onNodeColorChange(node, { disabledTextColor: undefined })
+      return
+    }
+    if (!isValidHexColor(trimmedValue)) {
+      setDisabledTextColorError(true)
+      return
+    }
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setDisabledTextColorInput(normalizedValue)
+    setDisabledTextColorError(false)
+    onNodeColorChange(node, { disabledTextColor: normalizedValue })
+  }
+
+  function updateDisabledTextColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setDisabledTextColorInput(normalizedValue)
+    setDisabledTextColorError(false)
+    onNodeColorChange(
+      node,
+      { disabledTextColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'disabledTextColor') },
     )
   }
 
@@ -4668,6 +4781,80 @@ function NodeColorControls({
               />
             </span>
             {focusTextColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              비활성 배경
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={disabledBackgroundColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={disabledBackgroundColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateDisabledBackgroundColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="비활성 배경 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  disabledBackgroundColorInput,
+                  color.backgroundColor ?? DEFAULT_COLOR_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateDisabledBackgroundColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {disabledBackgroundColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              비활성 글자
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={disabledTextColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={disabledTextColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateDisabledTextColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="비활성 글자 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  disabledTextColorInput,
+                  color.textColor ?? DEFAULT_TEXT_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateDisabledTextColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {disabledTextColorError ? (
               <span className="mt-2 block text-xs text-[#b42318]">
                 HEX 형식 (#RRGGBB)으로 입력해주세요.
               </span>

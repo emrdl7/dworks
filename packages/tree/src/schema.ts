@@ -217,6 +217,8 @@ export const nodeColorSchema = z.object({
   activeTextColor: hexColorSchema.optional(),
   focusBackgroundColor: hexColorSchema.optional(),
   focusTextColor: hexColorSchema.optional(),
+  disabledBackgroundColor: hexColorSchema.optional(),
+  disabledTextColor: hexColorSchema.optional(),
 })
 export type NodeColor = z.infer<typeof nodeColorSchema>
 
@@ -349,6 +351,7 @@ interface BaseNodeMeta {
   id: string
   editKind: EditKind
   hidden?: boolean
+  disabled?: boolean
   opacity?: number
   pointerEvents?: NodePointerEvents
   responsive?: ResponsiveIntent
@@ -434,6 +437,7 @@ const baseShape = {
   id: z.string().min(1),
   editKind: editKindSchema,
   hidden: z.boolean().optional(),
+  disabled: z.boolean().optional(),
   opacity: opacitySchema.optional(),
   pointerEvents: nodePointerEventsSchema.optional(),
   responsive: responsiveIntentSchema,
