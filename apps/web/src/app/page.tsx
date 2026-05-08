@@ -311,6 +311,17 @@ const spacingModeLabels: Record<SpacingMode, string> = {
   axis: 'X-Y',
   sides: '4면',
 }
+const responsiveViewportPresets = {
+  mobile: { label: '모바일', width: 375 },
+  tablet: { label: '태블릿', width: 768 },
+  desktop: { label: '데스크톱', width: 1200 },
+} as const
+type ResponsiveViewport = keyof typeof responsiveViewportPresets
+const responsiveViewportOptions: ResponsiveViewport[] = [
+  'mobile',
+  'tablet',
+  'desktop',
+]
 const paddingSpacingFields: readonly SpacingField[] = [
   'paddingTop',
   'paddingRight',
@@ -386,6 +397,8 @@ export default function HomePage() {
     '등록한 글꼴을 불러오는 중입니다.',
   )
   const [isFontRegistryBusy, setIsFontRegistryBusy] = useState(false)
+  const [responsiveViewport, setResponsiveViewport] =
+    useState<ResponsiveViewport>('desktop')
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
 
   const selectedNode = useMemo(
@@ -407,6 +420,7 @@ export default function HomePage() {
     [tree],
   )
   const colorPreset = tree.styleTokens?.colorPreset ?? 'mint'
+  const selectedViewportPreset = responsiveViewportPresets[responsiveViewport]
   const canvasStyle = useMemo(
     () => getCanvasStyle(colorPreset),
     [colorPreset],
@@ -879,6 +893,10 @@ export default function HomePage() {
           </label>
         </div>
         <div className="flex shrink-0 items-center gap-4">
+          <ViewportSwitcher
+            value={responsiveViewport}
+            onChange={setResponsiveViewport}
+          />
           <div className="flex items-center gap-1">
             <HistoryButton
               ariaLabel="실행 취소"
@@ -940,10 +958,16 @@ export default function HomePage() {
         </aside>
 
         <section className="min-h-0 min-w-0 overflow-auto bg-[#eef2ec]">
-          <div className="min-w-[1040px] px-8 py-8">
+          <div
+            className="px-8 py-8"
+            style={{ minWidth: selectedViewportPreset.width + 64 }}
+          >
             <div
-              className="mx-auto w-full max-w-[1200px] border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
-              style={canvasStyle}
+              className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
+              style={{
+                ...canvasStyle,
+                width: selectedViewportPreset.width,
+              }}
             >
               <CanvasNode
                 node={tree.root}
@@ -1014,6 +1038,50 @@ function HistoryButton({
     >
       {children}
     </button>
+  )
+}
+
+interface ViewportSwitcherProps {
+  onChange: (viewport: ResponsiveViewport) => void
+  value: ResponsiveViewport
+}
+
+function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
+  const selectedPreset = responsiveViewportPresets[value]
+
+  return (
+    <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
+      <span className="font-semibold">화면</span>
+      <div
+        role="group"
+        aria-label="캔버스 화면 폭"
+        className="flex h-9 rounded-md border border-[#c9d4cd] bg-[#eef3ed] p-0.5"
+      >
+        {responsiveViewportOptions.map((viewport) => {
+          const preset = responsiveViewportPresets[viewport]
+          const isSelected = viewport === value
+
+          return (
+            <button
+              key={viewport}
+              type="button"
+              aria-pressed={isSelected}
+              className={`min-w-16 rounded px-3 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+                isSelected
+                  ? 'bg-white text-[#073d37] shadow-sm'
+                  : 'text-[#4f5e56] hover:bg-white/70'
+              }`}
+              onClick={() => onChange(viewport)}
+            >
+              {preset.label}
+            </button>
+          )
+        })}
+      </div>
+      <span className="rounded-full border border-[#c9d4cd] bg-white px-3 py-1 font-semibold text-[#26312b]">
+        {selectedPreset.width}px
+      </span>
+    </div>
   )
 }
 
