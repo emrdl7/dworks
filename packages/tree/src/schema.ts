@@ -157,6 +157,7 @@ export const customShadowSchema = z.object({
   spread: z.number().min(-100).max(100).optional(),
   color: hexColorSchema,
   opacity: opacitySchema.optional(),
+  inset: z.boolean().optional(),
 })
 export type CustomShadow = z.infer<typeof customShadowSchema>
 export const customShadowListSchema = z.array(customShadowSchema).max(3)

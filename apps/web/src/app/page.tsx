@@ -6479,6 +6479,14 @@ function ShapeControls({
     )
   }
 
+  function updateCustomShadowInset(index: number, next: boolean) {
+    updateCustomShadowAt(
+      index,
+      { inset: next ? true : undefined },
+      { mergeKey: getNodeColorMergeKey(node.id, `customShadow.${index}.inset`) },
+    )
+  }
+
   return (
     <InspectorDisclosure
       title="모양"
@@ -6822,6 +6830,18 @@ function ShapeControls({
                         }
                       />
                     </div>
+
+                    <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#4f5e56]">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer accent-[#1b7f72]"
+                        checked={customShadow.inset === true}
+                        onChange={(event) =>
+                          updateCustomShadowInset(index, event.target.checked)
+                        }
+                      />
+                      안쪽 그림자
+                    </label>
                   </div>
                 )
               })}
@@ -8027,13 +8047,14 @@ function gradientToCss(gradient: Gradient): string {
 }
 
 function customShadowToCss(shadow: CustomShadow): string {
-  return [
+  const parts = [
     `${shadow.offsetX}px`,
     `${shadow.offsetY}px`,
     `${shadow.blur}px`,
     `${shadow.spread ?? 0}px`,
     getCssColorWithOpacity(shadow.color, shadow.opacity),
-  ].join(' ')
+  ]
+  return shadow.inset === true ? `inset ${parts.join(' ')}` : parts.join(' ')
 }
 
 function textShadowToCss(shadow: TextShadow): string {
