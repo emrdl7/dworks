@@ -3045,6 +3045,27 @@ function NodeInspector({
   onDelete,
   onColorPresetChange,
 }: NodeInspectorProps) {
+  const isSelectedNodeContainer = isContainerNode(node)
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
+    computeInspectorSmartDefaults(node.type, isSelectedNodeContainer),
+  )
+
+  useEffect(() => {
+    setOpenSections(
+      computeInspectorSmartDefaults(node.type, isSelectedNodeContainer),
+    )
+  }, [node.id, node.type, isSelectedNodeContainer])
+
+  function bindSection(title: string) {
+    return {
+      open: openSections[title] === true,
+      onOpenChange: (next: boolean) =>
+        setOpenSections((prev) =>
+          prev[title] === next ? prev : { ...prev, [title]: next },
+        ),
+    }
+  }
+
   return (
     <section className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b border-[#e0e5de] px-5 py-4">
@@ -3059,6 +3080,7 @@ function NodeInspector({
 
         <NodeVisibilityControls
           node={node}
+          disclosure={bindSection('표시')}
           onNodeMetaChange={onNodeMetaChange}
         />
 
@@ -3069,6 +3091,7 @@ function NodeInspector({
 
         <NodeColorControls
           node={node}
+          disclosure={bindSection('색상')}
           onNodeColorChange={onNodeColorChange}
           onNodeColorReset={onNodeColorReset}
           onNodeMetaChange={onNodeMetaChange}
@@ -3076,7 +3099,11 @@ function NodeInspector({
 
         {node.type === 'text' ? (
           <>
-            <InspectorDisclosure title="내용" defaultOpen={false}>
+            <InspectorDisclosure
+              title="내용"
+              defaultOpen={false}
+              {...bindSection('내용')}
+            >
               <label className="block">
                 <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
                 <textarea
@@ -3094,6 +3121,7 @@ function NodeInspector({
             </InspectorDisclosure>
             <TypographyControls
               node={node}
+              disclosure={bindSection('타이포그래피')}
               onTypographyChange={onTextTypographyChange}
               onTypographyReset={onTextTypographyReset}
               registeredFonts={registeredFonts}
@@ -3109,6 +3137,7 @@ function NodeInspector({
 
         <LayoutControls
           node={node}
+          disclosure={bindSection('레이아웃')}
           onLayoutChange={onLayoutChange}
           onLayoutReset={onLayoutReset}
           onSpacingChange={onSpacingChange}
@@ -3116,18 +3145,20 @@ function NodeInspector({
 
         <SpacingControls
           node={node}
+          disclosure={bindSection('간격')}
           onSpacingChange={onSpacingChange}
           onSpacingReset={onSpacingReset}
         />
 
         <ShapeControls
           node={node}
+          disclosure={bindSection('모양')}
           onShapeChange={onShapeChange}
           onShapeReset={onShapeReset}
         />
 
         {node.type === 'button' ? (
-          <InspectorDisclosure title="내용">
+          <InspectorDisclosure title="내용" {...bindSection('내용')}>
             <label className="block">
               <span className="text-xs font-semibold text-[#4f5e56]">버튼 문구</span>
               <input
@@ -3141,7 +3172,7 @@ function NodeInspector({
 
         {node.type === 'image' ? (
           <>
-            <InspectorDisclosure title="이미지">
+            <InspectorDisclosure title="이미지" {...bindSection('이미지')}>
               <div className="space-y-4">
                 <label className="block">
                   <span className="text-xs font-semibold text-[#4f5e56]">
@@ -3181,6 +3212,7 @@ function NodeInspector({
             </InspectorDisclosure>
             <ImageCompositionControls
               node={node}
+              disclosure={bindSection('이미지 구도')}
               onImageChange={onImageChange}
             />
           </>
@@ -3188,6 +3220,7 @@ function NodeInspector({
 
         <StructureControls
           info={structureInfo}
+          disclosure={bindSection('구조')}
           onMoveUp={onMoveUp}
           onMoveDown={onMoveDown}
           onDuplicate={onDuplicate}
@@ -3220,6 +3253,11 @@ interface StyleControlsProps {
   onColorPresetChange: (colorPreset: ColorPreset) => void
 }
 
+interface InspectorDisclosureControl {
+  onOpenChange: (next: boolean) => void
+  open: boolean
+}
+
 interface InspectorDisclosureProps {
   actionLabel?: string
   children: ReactNode
@@ -3227,6 +3265,8 @@ interface InspectorDisclosureProps {
   description?: string
   isActionDisabled?: boolean
   onAction?: () => void
+  onOpenChange?: (next: boolean) => void
+  open?: boolean
   summaryEnd?: ReactNode
   title: string
 }
@@ -3238,13 +3278,28 @@ function InspectorDisclosure({
   description,
   isActionDisabled = false,
   onAction,
+  onOpenChange,
+  open,
   summaryEnd,
   title,
 }: InspectorDisclosureProps) {
+  const isControlled = open !== undefined && onOpenChange !== undefined
+  const detailsOpen = isControlled ? open : defaultOpen
+
   return (
     <details
       className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] [&[open]>summary_.dw-chevron]:rotate-180"
-      open={defaultOpen}
+      open={detailsOpen}
+      onToggle={
+        isControlled
+          ? (event) => {
+              const next = event.currentTarget.open
+              if (next !== open) {
+                onOpenChange(next)
+              }
+            }
+          : undefined
+      }
     >
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
@@ -3350,6 +3405,7 @@ function StyleControls({
 }
 
 interface NodeVisibilityControlsProps {
+  disclosure?: InspectorDisclosureControl
   node: TreeNode
   onNodeMetaChange: (
     node: TreeNode,
@@ -3359,6 +3415,7 @@ interface NodeVisibilityControlsProps {
 }
 
 function NodeVisibilityControls({
+  disclosure,
   node,
   onNodeMetaChange,
 }: NodeVisibilityControlsProps) {
@@ -3405,6 +3462,7 @@ function NodeVisibilityControls({
       }
       onAction={resetVisibility}
       isActionDisabled={isResetDisabled}
+      {...disclosure}
     >
       <div className="space-y-3">
         <VisibilitySwitch
@@ -3465,6 +3523,7 @@ function VisibilitySwitch({
 }
 
 interface NodeColorControlsProps {
+  disclosure?: InspectorDisclosureControl
   node: TreeNode
   onNodeColorChange: (
     node: TreeNode,
@@ -3480,6 +3539,7 @@ interface NodeColorControlsProps {
 }
 
 function NodeColorControls({
+  disclosure,
   node,
   onNodeColorChange,
   onNodeMetaChange,
@@ -3844,6 +3904,7 @@ function NodeColorControls({
       title="색상"
       description="선택한 노드의 배경, 글자, 강조"
       onAction={() => onNodeColorReset(node)}
+      {...disclosure}
     >
       <div className="space-y-4">
         <div>
@@ -4088,6 +4149,7 @@ function GradientColorField({
 }
 
 interface TypographyControlsProps {
+  disclosure?: InspectorDisclosureControl
   node: TextNode
   onTypographyChange: (
     node: TextNode,
@@ -4108,6 +4170,7 @@ interface TypographyControlsProps {
 }
 
 function TypographyControls({
+  disclosure,
   node,
   onTypographyChange,
   onTypographyReset,
@@ -4278,6 +4341,7 @@ function TypographyControls({
       title="타이포그래피"
       description="선택한 텍스트만 조정"
       onAction={() => onTypographyReset(node)}
+      {...disclosure}
     >
       <label className="block">
         <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
@@ -4595,12 +4659,14 @@ function TypographyControls({
 }
 
 interface SpacingControlsProps {
+  disclosure?: InspectorDisclosureControl
   node: TreeNode
   onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
   onSpacingReset: (node: TreeNode) => void
 }
 
 interface LayoutControlsProps {
+  disclosure?: InspectorDisclosureControl
   node: TreeNode
   onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
   onLayoutReset: (node: TreeNode) => void
@@ -4608,6 +4674,7 @@ interface LayoutControlsProps {
 }
 
 function LayoutControls({
+  disclosure,
   node,
   onLayoutChange,
   onLayoutReset,
@@ -4670,6 +4737,7 @@ function LayoutControls({
       isActionDisabled={!canEditLayout}
       onAction={() => onLayoutReset(node)}
       defaultOpen={canEditLayout}
+      {...disclosure}
     >
 
       {!canEditLayout ? (
@@ -4738,6 +4806,7 @@ function LayoutControls({
 }
 
 function SpacingControls({
+  disclosure,
   node,
   onSpacingChange,
   onSpacingReset,
@@ -4919,6 +4988,7 @@ function SpacingControls({
       description="선택한 노드의 여백 조정"
       defaultOpen={false}
       onAction={() => onSpacingReset(node)}
+      {...disclosure}
     >
       <div className="space-y-3">
         {renderSpacingGroup({
@@ -4963,6 +5033,7 @@ function SpacingControls({
 }
 
 interface ShapeControlsProps {
+  disclosure?: InspectorDisclosureControl
   node: TreeNode
   onShapeChange: (
     node: TreeNode,
@@ -4973,6 +5044,7 @@ interface ShapeControlsProps {
 }
 
 function ShapeControls({
+  disclosure,
   node,
   onShapeChange,
   onShapeReset,
@@ -5251,6 +5323,7 @@ function ShapeControls({
       description="선택한 노드의 테두리와 그림자"
       defaultOpen={false}
       onAction={() => onShapeReset(node)}
+      {...disclosure}
     >
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-3">
@@ -5506,6 +5579,7 @@ function ShapeControls({
 }
 
 interface ImageCompositionControlsProps {
+  disclosure?: InspectorDisclosureControl
   node: ImageNode
   onImageChange: (
     node: ImageNode,
@@ -5515,6 +5589,7 @@ interface ImageCompositionControlsProps {
 }
 
 function ImageCompositionControls({
+  disclosure,
   node,
   onImageChange,
 }: ImageCompositionControlsProps) {
@@ -5813,6 +5888,7 @@ function ImageCompositionControls({
       title="이미지 구도"
       description="비율, 초점, 오버레이"
       onAction={resetImageComposition}
+      {...disclosure}
     >
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
@@ -6178,6 +6254,7 @@ function IconToggleButton({
 }
 
 interface StructureControlsProps {
+  disclosure?: InspectorDisclosureControl
   info: StructureInfo
   onMoveUp: () => void
   onMoveDown: () => void
@@ -6186,6 +6263,7 @@ interface StructureControlsProps {
 }
 
 function StructureControls({
+  disclosure,
   info,
   onMoveUp,
   onMoveDown,
@@ -6201,6 +6279,7 @@ function StructureControls({
     <InspectorDisclosure
       title="구조"
       defaultOpen={false}
+      {...disclosure}
       summaryEnd={
         info.parentId ? (
           <span className="max-w-36 truncate text-xs text-[#647067]">
@@ -6871,6 +6950,25 @@ function collectNodeIds(node: TreeNode, ids = new Set<string>()): Set<string> {
 
 function isContainerNode(node: TreeNode): node is ContainerNode {
   return 'children' in node
+}
+
+function computeInspectorSmartDefaults(
+  nodeType: TreeNode['type'],
+  isContainer: boolean,
+): Record<string, boolean> {
+  if (nodeType === 'text') {
+    return { 내용: true, 타이포그래피: true }
+  }
+  if (nodeType === 'image') {
+    return { 이미지: true }
+  }
+  if (nodeType === 'button') {
+    return { 내용: true }
+  }
+  if (isContainer) {
+    return { 레이아웃: true }
+  }
+  return {}
 }
 
 function getCanvasStyle(colorPreset: ColorPreset): CSSProperties {
