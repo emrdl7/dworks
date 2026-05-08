@@ -1,6 +1,8 @@
 'use client'
 
 import {
+  createContext,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -1451,11 +1453,22 @@ export default function HomePage() {
                 width: selectedViewportPreset.width,
               }}
             >
-              <CanvasNode
-                node={tree.root}
-                selectedNodeId={selectedNodeId}
-                onSelect={setSelectedNodeId}
-              />
+              <CanvasToolbarContext.Provider
+                value={{
+                  selectedNodeId,
+                  selectedStructureInfo,
+                  onMoveUp: () => handleMoveSelected('up'),
+                  onMoveDown: () => handleMoveSelected('down'),
+                  onDuplicate: handleDuplicateSelected,
+                  onDelete: handleDeleteSelected,
+                }}
+              >
+                <CanvasNode
+                  node={tree.root}
+                  selectedNodeId={selectedNodeId}
+                  onSelect={setSelectedNodeId}
+                />
+              </CanvasToolbarContext.Provider>
             </div>
           </div>
         </section>
@@ -2075,6 +2088,116 @@ function CanvasNode({
   }
 }
 
+interface CanvasToolbarContextValue {
+  selectedNodeId: string
+  selectedStructureInfo: StructureInfo
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDuplicate: () => void
+  onDelete: () => void
+}
+
+const CanvasToolbarContext = createContext<CanvasToolbarContextValue | null>(
+  null,
+)
+
+function CanvasNodeToolbar({ nodeId }: { nodeId: string }) {
+  const ctx = useContext(CanvasToolbarContext)
+  if (ctx === null || ctx.selectedNodeId !== nodeId) {
+    return null
+  }
+
+  const {
+    selectedStructureInfo: info,
+    onMoveUp,
+    onMoveDown,
+    onDuplicate,
+    onDelete,
+  } = ctx
+
+  if (info.isRoot) {
+    return null
+  }
+
+  const canMoveUp = (info.index ?? 0) > 0
+  const canMoveDown = (info.index ?? 0) < (info.siblingCount ?? 0) - 1
+
+  return (
+    <div
+      role="toolbar"
+      aria-label="선택 노드 툴바"
+      className="pointer-events-auto absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded border border-[#c9d4cd] bg-white px-1 py-0.5 shadow"
+      onClick={(event) => event.stopPropagation()}
+      onContextMenu={(event) => event.stopPropagation()}
+    >
+      <CanvasToolbarButton
+        ariaLabel="위로 이동"
+        disabled={!canMoveUp}
+        icon={ArrowUp}
+        onClick={onMoveUp}
+      />
+      <CanvasToolbarButton
+        ariaLabel="아래로 이동"
+        disabled={!canMoveDown}
+        icon={ArrowDown}
+        onClick={onMoveDown}
+      />
+      <CanvasToolbarButton
+        ariaLabel="복제"
+        icon={Copy}
+        onClick={onDuplicate}
+      />
+      <CanvasToolbarButton
+        ariaLabel="삭제"
+        icon={Trash2}
+        onClick={onDelete}
+        tone="danger"
+      />
+    </div>
+  )
+}
+
+interface CanvasToolbarButtonProps {
+  ariaLabel: string
+  disabled?: boolean
+  icon: LucideIcon
+  onClick: () => void
+  tone?: 'neutral' | 'danger'
+}
+
+function CanvasToolbarButton({
+  ariaLabel,
+  disabled = false,
+  icon: Icon,
+  onClick,
+  tone = 'neutral',
+}: CanvasToolbarButtonProps) {
+  const toneClass =
+    tone === 'danger'
+      ? 'text-[#7a1f1f] hover:bg-[#fff1f1] focus-visible:bg-[#fff1f1]'
+      : 'text-[#26312b] hover:bg-[#eef8f6] focus-visible:bg-[#eef8f6]'
+
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      className={`inline-flex h-6 w-6 items-center justify-center rounded outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--dw-accent)] disabled:cursor-not-allowed disabled:text-[#9aa49d] disabled:hover:bg-transparent ${toneClass}`}
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation()
+        onClick()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.stopPropagation()
+        }
+      }}
+    >
+      <Icon aria-hidden="true" className="h-3.5 w-3.5" />
+    </button>
+  )
+}
+
 interface SelectableNodeProps {
   node: TreeNode
   selectedNodeId: string
@@ -2138,6 +2261,7 @@ function SelectableNode({
           {nodeTypeLabels[node.type]}
         </span>
       ) : null}
+      {isSelected ? <CanvasNodeToolbar nodeId={node.id} /> : null}
       {children}
     </div>
   )
