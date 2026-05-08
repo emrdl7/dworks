@@ -239,6 +239,7 @@ const layoutJustifyOptions: LayoutJustify[] = [
 const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
 const UPLOAD_FONT_OPTION = '__upload-font__'
 const REGISTERED_FONT_OPTION_PREFIX = 'registered-font:'
+const MAX_FONT_UPLOAD_FILES = 20
 const typographyFields = [
   'fontSize',
   'fontWeight',
@@ -524,53 +525,128 @@ export default function HomePage() {
   }
 
   async function handleFontUpload(
-    file: File,
+    files: File[],
     node: TextNode,
-  ): Promise<RegisteredFontSummary | undefined> {
+  ): Promise<RegisteredFontSummary[]> {
+    if (files.length === 0) {
+      return []
+    }
+
+    if (files.length > MAX_FONT_UPLOAD_FILES) {
+      setFontRegistryMessage(
+        `한 번에 최대 ${MAX_FONT_UPLOAD_FILES}개까지 등록할 수 있습니다.`,
+      )
+      return []
+    }
+
+    const isBatchUpload = files.length > 1
     setIsFontRegistryBusy(true)
-    setFontRegistryMessage('글꼴을 등록하는 중입니다.')
+    setFontRegistryMessage(
+      isBatchUpload
+        ? `글꼴 ${files.length}개를 등록하는 중입니다.`
+        : '글꼴을 등록하는 중입니다.',
+    )
 
     try {
-      const { bytes, mimeType } = await readSupportedFontFile(file)
-      const defaultName = getDefaultFontDisplayName(file.name)
-      const displayName = window
-        .prompt('글꼴 이름을 입력해주세요.', defaultName)
-        ?.trim()
-
-      if (!displayName) {
-        setFontRegistryMessage('글꼴 등록을 취소했습니다.')
-        return undefined
-      }
-
       const existingIds = new Set([
         ...builtInFontFamilyOptions,
         ...registeredFonts.map((font) => font.id),
       ])
-      const metadata = inferFontMetadata(displayName, file.name)
-      const font: RegisteredFontRecord = {
-        id: generateFontId(displayName, existingIds),
-        displayName,
-        ...metadata,
-        fileName: file.name,
-        mimeType,
-        createdAt: new Date().toISOString(),
-        bytes,
+      const uploadedFonts: RegisteredFontSummary[] = []
+      const failures: string[] = []
+      const replacedFontIds = new Set<string>()
+
+      for (const [index, file] of files.entries()) {
+        if (isBatchUpload) {
+          setFontRegistryMessage(`등록 중... (${index + 1}/${files.length})`)
+        }
+
+        try {
+          const { bytes, mimeType } = await readSupportedFontFile(file)
+          const defaultName = getDefaultFontDisplayName(file.name)
+          const displayName = isBatchUpload
+            ? defaultName
+            : window.prompt('글꼴 이름을 입력해주세요.', defaultName)?.trim()
+
+          if (!displayName) {
+            if (!isBatchUpload) {
+              setFontRegistryMessage('글꼴 등록을 취소했습니다.')
+              return []
+            }
+
+            failures.push(file.name)
+            continue
+          }
+
+          const metadata = inferFontMetadata(displayName, file.name)
+          const duplicateFont = findDuplicateFontVariant(
+            [...registeredFonts, ...uploadedFonts],
+            metadata,
+          )
+          const font: RegisteredFontRecord = {
+            id: duplicateFont?.id ?? generateFontId(displayName, existingIds),
+            displayName,
+            ...metadata,
+            fileName: file.name,
+            mimeType,
+            createdAt: new Date().toISOString(),
+            bytes,
+          }
+
+          await registerFontFace(font)
+          await saveRegisteredFont(font)
+
+          const summary = toRegisteredFontSummary(font, 'available')
+          replaceRegisteredFontSummary(uploadedFonts, summary)
+          existingIds.add(font.id)
+
+          if (duplicateFont) {
+            replacedFontIds.add(duplicateFont.id)
+          }
+        } catch (error) {
+          console.warn('글꼴 등록 실패', file.name, error)
+          const failureMessage = getFontRegistryErrorMessage(error)
+
+          if (!isBatchUpload) {
+            setFontRegistryMessage(failureMessage)
+            return []
+          }
+
+          failures.push(failureMessage)
+        }
       }
 
-      await registerFontFace(font)
-      await saveRegisteredFont(font)
+      if (uploadedFonts.length === 0) {
+        setFontRegistryMessage(
+          failures.length > 0
+            ? `글꼴 ${failures.length}개 등록에 실패했습니다.`
+            : '글꼴 등록을 취소했습니다.',
+        )
+        return []
+      }
 
-      const summary = toRegisteredFontSummary(font, 'available')
-      setRegisteredFonts((fonts) => [...fonts, summary])
+      setRegisteredFonts((fonts) => mergeRegisteredFontSummaries(fonts, uploadedFonts))
       setFontRegistryMessage(
-        `${getRegisteredFontFamilyName(summary)} 글꼴을 ${getFontWeightLabel(summary)}로 등록했습니다.`,
+        getFontUploadMessage(
+          uploadedFonts,
+          failures,
+          replacedFontIds.size,
+        ),
       )
-      handleTextTypographyChange(node, getRegisteredFontTypographyPatch(summary))
+      handleTextTypographyChange(
+        node,
+        getRegisteredFontTypographyPatch(
+          getPreferredUploadedFont(
+            uploadedFonts,
+            node.typography?.fontWeight ?? getTypographyDefaults(node).fontWeight,
+          ),
+        ),
+      )
 
-      return summary
+      return uploadedFonts
     } catch (error) {
       setFontRegistryMessage(getFontRegistryErrorMessage(error))
-      return undefined
+      return []
     } finally {
       setIsFontRegistryBusy(false)
     }
@@ -1466,6 +1542,44 @@ function getRegisteredFontTypographyPatch(
   }
 }
 
+function findDuplicateFontVariant(
+  fonts: RegisteredFontSummary[],
+  metadata: Pick<RegisteredFontRecord, 'familyId' | 'weight'>,
+): RegisteredFontSummary | undefined {
+  return fonts.find(
+    (font) =>
+      getRegisteredFontFamilyId(font) === metadata.familyId &&
+      getRegisteredFontWeight(font) === metadata.weight,
+  )
+}
+
+function replaceRegisteredFontSummary(
+  fonts: RegisteredFontSummary[],
+  summary: RegisteredFontSummary,
+) {
+  const existingIndex = fonts.findIndex((font) => font.id === summary.id)
+
+  if (existingIndex >= 0) {
+    fonts[existingIndex] = summary
+    return
+  }
+
+  fonts.push(summary)
+}
+
+function mergeRegisteredFontSummaries(
+  currentFonts: RegisteredFontSummary[],
+  nextFonts: RegisteredFontSummary[],
+): RegisteredFontSummary[] {
+  const mergedFonts = [...currentFonts]
+
+  for (const font of nextFonts) {
+    replaceRegisteredFontSummary(mergedFonts, font)
+  }
+
+  return mergedFonts
+}
+
 function getRegisteredFontOptionLabel(font: RegisteredFontSummary): string {
   const missingSuffix = font.status === 'missing' ? ' (누락)' : ''
   return `${getFontWeightLabel(font)} · ${font.displayName}${missingSuffix}`
@@ -1475,6 +1589,75 @@ function getFontWeightLabel(font: RegisteredFontSummary): string {
   const weight = getRegisteredFontWeight(font)
 
   return weight ? `${fontWeightLabels[weight]} ${weight}` : '굵기 미분류'
+}
+
+function getPreferredUploadedFont(
+  fonts: RegisteredFontSummary[],
+  preferredWeight: FontWeight,
+): RegisteredFontSummary {
+  const fallbackFont = fonts[0]
+
+  if (!fallbackFont) {
+    throw new Error('등록한 글꼴이 없습니다.')
+  }
+
+  const preferredWeightValue = Number(preferredWeight)
+  const closestFont = fonts
+    .map((font) => ({
+      font,
+      weight: Number(getRegisteredFontWeight(font) ?? Number.NaN),
+    }))
+    .filter(({ weight }) => Number.isFinite(weight))
+    .sort(
+      (first, second) =>
+        Math.abs(first.weight - preferredWeightValue) -
+          Math.abs(second.weight - preferredWeightValue) ||
+        second.weight - first.weight,
+    )[0]?.font
+
+  return closestFont ?? fallbackFont
+}
+
+function getFontUploadMessage(
+  uploadedFonts: RegisteredFontSummary[],
+  failures: string[],
+  replacedCount: number,
+): string {
+  const failureSuffix = getFontFailureMessage(failures)
+  const replacedSuffix =
+    replacedCount > 0 ? ` 기존 ${replacedCount}개는 새 파일로 교체했습니다.` : ''
+
+  if (uploadedFonts.length === 1) {
+    const font = uploadedFonts[0]
+
+    if (!font) {
+      return '등록한 글꼴 없음'
+    }
+
+    return `${getRegisteredFontFamilyName(font)} 글꼴을 ${getFontWeightLabel(font)}로 등록했습니다.${replacedSuffix}${failureSuffix}`
+  }
+
+  const familyCount = new Set(uploadedFonts.map(getRegisteredFontFamilyId)).size
+
+  return `글꼴 ${uploadedFonts.length}개를 등록했고 ${familyCount}개 패밀리로 묶었습니다.${replacedSuffix}${failureSuffix}`
+}
+
+function getFontFailureMessage(failures: string[]): string {
+  if (failures.length === 0) {
+    return ''
+  }
+
+  const groupedFailures = new Map<string, number>()
+
+  for (const failure of failures) {
+    groupedFailures.set(failure, (groupedFailures.get(failure) ?? 0) + 1)
+  }
+
+  const detail = [...groupedFailures.entries()]
+    .map(([message, count]) => `${message} ${count}개`)
+    .join(', ')
+
+  return ` 실패 ${failures.length}개 (${detail}).`
 }
 
 function isRegisteredFontFamilyMatch(
@@ -1606,9 +1789,9 @@ interface NodeInspectorProps {
   fontRegistryMessage: string
   isFontRegistryBusy: boolean
   onFontUpload: (
-    file: File,
+    files: File[],
     node: TextNode,
-  ) => Promise<RegisteredFontSummary | undefined>
+  ) => Promise<RegisteredFontSummary[]>
   onFontDelete: (fontId: string) => Promise<void>
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: ImageEditPatch) => void
@@ -2000,9 +2183,9 @@ interface TypographyControlsProps {
   fontRegistryMessage: string
   isFontRegistryBusy: boolean
   onFontUpload: (
-    file: File,
+    files: File[],
     node: TextNode,
-  ) => Promise<RegisteredFontSummary | undefined>
+  ) => Promise<RegisteredFontSummary[]>
   onFontDelete: (fontId: string) => Promise<void>
 }
 
@@ -2048,13 +2231,13 @@ function TypographyControls({
   }
 
   async function handleFontFileChange(fileList: FileList | null) {
-    const file = fileList?.item(0)
+    const files = Array.from(fileList ?? [])
 
-    if (!file) {
+    if (files.length === 0) {
       return
     }
 
-    await onFontUpload(file, node)
+    await onFontUpload(files, node)
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -2226,6 +2409,7 @@ function TypographyControls({
         ref={fileInputRef}
         type="file"
         accept=".ttf,.otf"
+        multiple
         className="sr-only"
         onChange={(event) => handleFontFileChange(event.target.files)}
       />
@@ -2235,7 +2419,7 @@ function TypographyControls({
         disabled={isFontRegistryBusy}
         onClick={() => fileInputRef.current?.click()}
       >
-        {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 업로드'}
+        {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 여러 개 업로드'}
       </button>
       <p className="mt-2 text-xs leading-5 text-[#647067]">
         글꼴은 브라우저에만 저장됩니다. 같은 패밀리의 굵기 파일은 자동으로 묶으며, 라이선스 준수는 사용자 책임입니다.
