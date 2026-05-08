@@ -223,8 +223,19 @@ export const nodeColorSchema = z.object({
 })
 export type NodeColor = z.infer<typeof nodeColorSchema>
 
+export const NODE_TRANSITION_TIMING_IDS = [
+  'linear',
+  'ease',
+  'ease-in',
+  'ease-out',
+  'ease-in-out',
+] as const
+export const nodeTransitionTimingSchema = z.enum(NODE_TRANSITION_TIMING_IDS)
+export type NodeTransitionTiming = z.infer<typeof nodeTransitionTimingSchema>
+
 export const nodeTransitionSchema = z.object({
   duration: z.number().min(0).max(2000).optional(),
+  timing: nodeTransitionTimingSchema.optional(),
 })
 export type NodeTransition = z.infer<typeof nodeTransitionSchema>
 

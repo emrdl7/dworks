@@ -82,7 +82,9 @@ import {
   type NodeColor,
   type NodeCursor,
   type NodeTransition,
+  type NodeTransitionTiming,
   NODE_CURSOR_IDS,
+  NODE_TRANSITION_TIMING_IDS,
   type NodeLayout,
   type ShadowPreset,
   type Shape,
@@ -286,6 +288,14 @@ const nodeCursorLabels: Record<NodeCursor, string> = {
   'not-allowed': '금지',
   grab: '잡기',
   crosshair: '십자',
+}
+
+const nodeTransitionTimingLabels: Record<NodeTransitionTiming, string> = {
+  linear: '선형',
+  ease: '기본',
+  'ease-in': '시작 가속',
+  'ease-out': '끝 가속',
+  'ease-in-out': '양쪽 가속',
 }
 
 const layoutDirectionLabels: Record<LayoutDirection, string> = {
@@ -2848,9 +2858,17 @@ function getDisabledTextStyle(color?: NodeColor): CSSProperties | undefined {
 function getTransitionStyle(
   transition?: NodeTransition,
 ): CSSProperties | undefined {
-  return transition?.duration === undefined
-    ? undefined
-    : { transitionDuration: `${transition.duration}ms` }
+  if (transition === undefined) {
+    return undefined
+  }
+  const style: CSSProperties = {}
+  if (transition.duration !== undefined) {
+    style.transitionDuration = `${transition.duration}ms`
+  }
+  if (transition.timing !== undefined) {
+    style.transitionTimingFunction = transition.timing
+  }
+  return Object.keys(style).length === 0 ? undefined : style
 }
 
 function getAccentTextColorStyle(color?: NodeColor): CSSProperties | undefined {
@@ -4880,10 +4898,15 @@ function NodeColorControls({
               className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
               onChange={(event) => {
                 const raw = event.target.value
+                const currentTiming = node.transition?.timing
                 if (raw === '') {
+                  const nextTransition =
+                    currentTiming === undefined
+                      ? undefined
+                      : { timing: currentTiming }
                   onNodeMetaChange(
                     node,
-                    { transition: undefined },
+                    { transition: nextTransition },
                     {
                       mergeKey: getNodeColorMergeKey(
                         node.id,
@@ -4900,7 +4923,14 @@ function NodeColorControls({
                 const clamped = Math.max(0, Math.min(2000, next))
                 onNodeMetaChange(
                   node,
-                  { transition: { duration: clamped } },
+                  {
+                    transition: {
+                      duration: clamped,
+                      ...(currentTiming !== undefined
+                        ? { timing: currentTiming }
+                        : {}),
+                    },
+                  },
                   {
                     mergeKey: getNodeColorMergeKey(
                       node.id,
@@ -4910,6 +4940,52 @@ function NodeColorControls({
                 )
               }}
             />
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              전환 곡선
+            </span>
+            <select
+              className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+              value={node.transition?.timing ?? ''}
+              onChange={(event) => {
+                const raw = event.target.value
+                const currentDuration = node.transition?.duration
+                const nextTiming =
+                  raw === '' ? undefined : (raw as NodeTransitionTiming)
+                const nextTransition =
+                  currentDuration === undefined && nextTiming === undefined
+                    ? undefined
+                    : {
+                        ...(currentDuration !== undefined
+                          ? { duration: currentDuration }
+                          : {}),
+                        ...(nextTiming !== undefined
+                          ? { timing: nextTiming }
+                          : {}),
+                      }
+                onNodeMetaChange(
+                  node,
+                  { transition: nextTransition },
+                  {
+                    mergeKey: getNodeColorMergeKey(
+                      node.id,
+                      'meta.transition.timing',
+                    ),
+                  },
+                )
+              }}
+            >
+              <option value="">자동</option>
+              {NODE_TRANSITION_TIMING_IDS.map((timingId) => (
+                <option key={timingId} value={timingId}>
+                  {nodeTransitionTimingLabels[timingId]}
+                </option>
+              ))}
+            </select>
           </label>
         ) : null}
 
