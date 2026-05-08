@@ -3,6 +3,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
@@ -39,6 +40,18 @@ import {
   getTreeFixture,
   treeFixtures,
 } from './tree-fixtures'
+import {
+  deleteRegisteredFont,
+  generateFontId,
+  getDefaultFontDisplayName,
+  listRegisteredFonts,
+  readSupportedFontFile,
+  registerFontFace,
+  saveRegisteredFont,
+  toRegisteredFontSummary,
+  type RegisteredFontRecord,
+  type RegisteredFontSummary,
+} from './font-registry'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -138,6 +151,7 @@ const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
 const fontWeightOptions: FontWeight[] = ['400', '500', '600', '700']
 const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
 const builtInFontFamilyOptions = [...BUILT_IN_FONT_FAMILY_IDS]
+const UPLOAD_FONT_OPTION = '__upload-font__'
 const typographyFields = [
   'fontSize',
   'fontWeight',
@@ -158,6 +172,11 @@ export default function HomePage() {
   )
   const [historyPast, setHistoryPast] = useState<Tree[]>([])
   const [historyFuture, setHistoryFuture] = useState<Tree[]>([])
+  const [registeredFonts, setRegisteredFonts] = useState<RegisteredFontSummary[]>([])
+  const [fontRegistryMessage, setFontRegistryMessage] = useState(
+    '등록한 글꼴을 불러오는 중입니다.',
+  )
+  const [isFontRegistryBusy, setIsFontRegistryBusy] = useState(false)
 
   const selectedNode = useMemo(
     () => findNode(tree.root, selectedNodeId) ?? tree.root,
@@ -173,11 +192,59 @@ export default function HomePage() {
   )
   const layerItems = useMemo(() => flattenTree(tree.root), [tree])
   const editableCount = useMemo(() => countEditableNodes(tree.root), [tree])
+  const fontUsageCounts = useMemo(
+    () => countTypographyFontUsage(tree.root),
+    [tree],
+  )
   const colorPreset = tree.styleTokens?.colorPreset ?? 'mint'
   const canvasStyle = useMemo(
     () => getCanvasStyle(colorPreset),
     [colorPreset],
   )
+
+  useEffect(() => {
+    let isActive = true
+
+    async function restoreFonts() {
+      try {
+        const fonts = await listRegisteredFonts()
+        const summaries = await Promise.all(
+          fonts.map(async (font) => {
+            try {
+              await registerFontFace(font)
+              return toRegisteredFontSummary(font, 'available')
+            } catch (error) {
+              console.warn('글꼴 복원 실패', font.id, error)
+              return toRegisteredFontSummary(font, 'missing')
+            }
+          }),
+        )
+
+        if (!isActive) {
+          return
+        }
+
+        setRegisteredFonts(summaries)
+        setFontRegistryMessage(
+          summaries.length > 0
+            ? `등록한 글꼴 ${summaries.length}개를 불러왔습니다.`
+            : '등록된 글꼴 없음',
+        )
+      } catch (error) {
+        if (!isActive) {
+          return
+        }
+
+        setFontRegistryMessage(getFontRegistryErrorMessage(error))
+      }
+    }
+
+    restoreFonts()
+
+    return () => {
+      isActive = false
+    }
+  }, [])
 
   function handleFixtureChange(fixtureId: string) {
     const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
@@ -220,6 +287,87 @@ export default function HomePage() {
         ) as Partial<Typography>,
       ),
     )
+  }
+
+  async function handleFontUpload(
+    file: File,
+    node: TextNode,
+  ): Promise<RegisteredFontSummary | undefined> {
+    setIsFontRegistryBusy(true)
+    setFontRegistryMessage('글꼴을 등록하는 중입니다.')
+
+    try {
+      const { bytes, mimeType } = await readSupportedFontFile(file)
+      const defaultName = getDefaultFontDisplayName(file.name)
+      const displayName = window
+        .prompt('글꼴 이름을 입력해주세요.', defaultName)
+        ?.trim()
+
+      if (!displayName) {
+        setFontRegistryMessage('글꼴 등록을 취소했습니다.')
+        return undefined
+      }
+
+      const existingIds = new Set([
+        ...builtInFontFamilyOptions,
+        ...registeredFonts.map((font) => font.id),
+      ])
+      const font: RegisteredFontRecord = {
+        id: generateFontId(displayName, existingIds),
+        displayName,
+        fileName: file.name,
+        mimeType,
+        createdAt: new Date().toISOString(),
+        bytes,
+      }
+
+      await registerFontFace(font)
+      await saveRegisteredFont(font)
+
+      const summary = toRegisteredFontSummary(font, 'available')
+      setRegisteredFonts((fonts) => [...fonts, summary])
+      setFontRegistryMessage(`${displayName} 글꼴을 등록했습니다.`)
+      handleTextTypographyChange(node, { fontFamily: summary.id })
+
+      return summary
+    } catch (error) {
+      setFontRegistryMessage(getFontRegistryErrorMessage(error))
+      return undefined
+    } finally {
+      setIsFontRegistryBusy(false)
+    }
+  }
+
+  async function handleFontDelete(fontId: string) {
+    const font = registeredFonts.find((item) => item.id === fontId)
+
+    if (!font) {
+      return
+    }
+
+    const usageCount = fontUsageCounts.get(font.id) ?? 0
+    const confirmed = window.confirm(
+      usageCount > 0
+        ? `이 글꼴은 ${usageCount}개 노드에서 사용 중입니다. 삭제 후 기본 글꼴로 표시됩니다. 삭제할까요?`
+        : `${font.displayName} 글꼴을 삭제할까요?`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setIsFontRegistryBusy(true)
+    setFontRegistryMessage('글꼴을 삭제하는 중입니다.')
+
+    try {
+      await deleteRegisteredFont(font.id)
+      setRegisteredFonts((fonts) => fonts.filter((item) => item.id !== font.id))
+      setFontRegistryMessage(`${font.displayName} 글꼴을 삭제했습니다.`)
+    } catch (error) {
+      setFontRegistryMessage(getFontRegistryErrorMessage(error))
+    } finally {
+      setIsFontRegistryBusy(false)
+    }
   }
 
   function handleButtonLabelChange(node: ButtonNode, label: string) {
@@ -388,6 +536,12 @@ export default function HomePage() {
             onTextChange={handleTextChange}
             onTextTypographyChange={handleTextTypographyChange}
             onTextTypographyReset={handleTextTypographyReset}
+            registeredFonts={registeredFonts}
+            fontUsageCounts={fontUsageCounts}
+            fontRegistryMessage={fontRegistryMessage}
+            isFontRegistryBusy={isFontRegistryBusy}
+            onFontUpload={handleFontUpload}
+            onFontDelete={handleFontDelete}
             onButtonLabelChange={handleButtonLabelChange}
             onImageChange={handleImageChange}
             onMoveUp={() => handleMoveSelected('up')}
@@ -800,6 +954,15 @@ interface NodeInspectorProps {
   onTextChange: (node: TextNode, content: string) => void
   onTextTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
   onTextTypographyReset: (node: TextNode) => void
+  registeredFonts: RegisteredFontSummary[]
+  fontUsageCounts: Map<string, number>
+  fontRegistryMessage: string
+  isFontRegistryBusy: boolean
+  onFontUpload: (
+    file: File,
+    node: TextNode,
+  ) => Promise<RegisteredFontSummary | undefined>
+  onFontDelete: (fontId: string) => Promise<void>
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: Pick<Partial<ImageNode>, 'src' | 'alt'>) => void
   onMoveUp: () => void
@@ -816,6 +979,12 @@ function NodeInspector({
   onTextChange,
   onTextTypographyChange,
   onTextTypographyReset,
+  registeredFonts,
+  fontUsageCounts,
+  fontRegistryMessage,
+  isFontRegistryBusy,
+  onFontUpload,
+  onFontDelete,
   onButtonLabelChange,
   onImageChange,
   onMoveUp,
@@ -853,6 +1022,12 @@ function NodeInspector({
               node={node}
               onTypographyChange={onTextTypographyChange}
               onTypographyReset={onTextTypographyReset}
+              registeredFonts={registeredFonts}
+              fontUsageCounts={fontUsageCounts}
+              fontRegistryMessage={fontRegistryMessage}
+              isFontRegistryBusy={isFontRegistryBusy}
+              onFontUpload={onFontUpload}
+              onFontDelete={onFontDelete}
             />
           </div>
         ) : null}
@@ -994,18 +1169,37 @@ interface TypographyControlsProps {
   node: TextNode
   onTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
   onTypographyReset: (node: TextNode) => void
+  registeredFonts: RegisteredFontSummary[]
+  fontUsageCounts: Map<string, number>
+  fontRegistryMessage: string
+  isFontRegistryBusy: boolean
+  onFontUpload: (
+    file: File,
+    node: TextNode,
+  ) => Promise<RegisteredFontSummary | undefined>
+  onFontDelete: (fontId: string) => Promise<void>
 }
 
 function TypographyControls({
   node,
   onTypographyChange,
   onTypographyReset,
+  registeredFonts,
+  fontUsageCounts,
+  fontRegistryMessage,
+  isFontRegistryBusy,
+  onFontUpload,
+  onFontDelete,
 }: TypographyControlsProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const defaults = getTypographyDefaults(node)
   const typography = node.typography ?? {}
   const effectiveTextAlign = typography.textAlign ?? defaults.textAlign
   const effectiveFontFamily = typography.fontFamily ?? defaults.fontFamily
   const sliderFontSize = typography.fontSize ?? defaults.fontSize
+  const hasSelectedMissingFont =
+    !builtInFontFamilyOptions.includes(effectiveFontFamily as BuiltInFontFamily) &&
+    !registeredFonts.some((font) => font.id === effectiveFontFamily)
 
   function updateNumberField(
     field: 'fontSize' | 'lineHeight' | 'letterSpacing',
@@ -1016,6 +1210,29 @@ function TypographyControls({
     onTypographyChange(node, {
       [field]: parseOptionalNumber(value, min, max),
     })
+  }
+
+  async function handleFontFileChange(fileList: FileList | null) {
+    const file = fileList?.item(0)
+
+    if (!file) {
+      return
+    }
+
+    await onFontUpload(file, node)
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  function handleFontSelect(value: string) {
+    if (value === UPLOAD_FONT_OPTION) {
+      fileInputRef.current?.click()
+      return
+    }
+
+    onTypographyChange(node, { fontFamily: value })
   }
 
   return (
@@ -1130,25 +1347,93 @@ function TypographyControls({
           <select
             className="mt-2 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-xs font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
             value={effectiveFontFamily}
-            onChange={(event) =>
-              onTypographyChange(node, { fontFamily: event.target.value })
-            }
+            disabled={isFontRegistryBusy}
+            onChange={(event) => handleFontSelect(event.target.value)}
           >
             {builtInFontFamilyOptions.map((family) => (
               <option key={family} value={family}>
                 {builtInFontFamilyLabels[family]}
               </option>
             ))}
+            {registeredFonts.length > 0 ? (
+              <optgroup label="등록한 글꼴">
+                {registeredFonts.map((font) => (
+                  <option key={font.id} value={font.id}>
+                    {font.status === 'missing'
+                      ? `${font.displayName} (누락)`
+                      : font.displayName}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
+            {hasSelectedMissingFont ? (
+              <option value={effectiveFontFamily}>
+                누락된 글꼴 ({effectiveFontFamily})
+              </option>
+            ) : null}
+            <option value={UPLOAD_FONT_OPTION}>+ TTF/OTF 업로드...</option>
           </select>
         </label>
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".ttf,.otf"
+        className="sr-only"
+        onChange={(event) => handleFontFileChange(event.target.files)}
+      />
       <button
         type="button"
-        className="mt-3 h-9 w-full cursor-not-allowed rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#8a958d]"
-        disabled
+        className="mt-3 h-9 w-full rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#1b7f72] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:bg-white"
+        disabled={isFontRegistryBusy}
+        onClick={() => fileInputRef.current?.click()}
       >
-        TTF 업로드 준비 중
+        {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 업로드'}
       </button>
+      <p className="mt-2 text-xs leading-5 text-[#647067]">
+        글꼴은 브라우저에만 저장됩니다. 등록한 글꼴의 라이선스 준수는 사용자 책임입니다.
+      </p>
+      <p className="mt-1 text-xs leading-5 text-[#647067]" aria-live="polite">
+        {fontRegistryMessage}
+      </p>
+      {registeredFonts.length > 0 ? (
+        <div className="mt-3 rounded-md border border-[#e0e5de] bg-white p-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              등록한 글꼴
+            </span>
+            <span className="text-[11px] text-[#647067]">
+              {registeredFonts.length}개
+            </span>
+          </div>
+          <div className="mt-2 space-y-2">
+            {registeredFonts.map((font) => (
+              <div
+                key={font.id}
+                className="flex min-h-9 items-center justify-between gap-2 rounded-md border border-[#eef1ec] px-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-[#26312b]">
+                    {font.displayName}
+                    {font.status === 'missing' ? ' (누락)' : ''}
+                  </p>
+                  <p className="truncate text-[11px] text-[#647067]">
+                    사용 {fontUsageCounts.get(font.id) ?? 0}개
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="shrink-0 rounded border border-[#d7ddd2] px-2 py-1 text-[11px] font-semibold text-[#7f1d1d] transition hover:bg-[#fff1f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isFontRegistryBusy}
+                  onClick={() => onFontDelete(font.id)}
+                >
+                  삭제
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -1413,6 +1698,28 @@ function countEditableNodes(node: TreeNode): number {
   return current + node.children.reduce((sum, child) => sum + countEditableNodes(child), 0)
 }
 
+function countTypographyFontUsage(
+  node: TreeNode,
+  counts = new Map<string, number>(),
+): Map<string, number> {
+  if (node.type === 'text' && node.typography?.fontFamily) {
+    counts.set(
+      node.typography.fontFamily,
+      (counts.get(node.typography.fontFamily) ?? 0) + 1,
+    )
+  }
+
+  if (!isContainerNode(node)) {
+    return counts
+  }
+
+  for (const child of node.children) {
+    countTypographyFontUsage(child, counts)
+  }
+
+  return counts
+}
+
 function findFirstEditableNodeId(node: TreeNode): string | null {
   if (isEditableNode(node)) {
     return node.id
@@ -1496,6 +1803,22 @@ function parseOptionalNumber(
   }
 
   return Math.min(max, Math.max(min, parsed))
+}
+
+function getFontRegistryErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    if (
+      error.name === 'QuotaExceededError' ||
+      error.message.includes('quota') ||
+      error.message.includes('Quota')
+    ) {
+      return '브라우저 저장 공간이 부족합니다. 등록한 글꼴을 정리해주세요.'
+    }
+
+    return error.message
+  }
+
+  return '글꼴 작업에 실패했습니다.'
 }
 
 type TypographyDefaults = Required<Typography>
