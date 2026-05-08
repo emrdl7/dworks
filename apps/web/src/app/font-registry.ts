@@ -39,10 +39,15 @@ const fontWeightInferenceRules: Array<{
   weight: FontWeight
 }> = [
   {
-    pattern: /(?:extra|ultra)[\s_-]*bold|black|heavy|extrabold|ultrabold|헤비|블랙|매우[\s_-]*굵게/i,
+    pattern: /black|heavy|블랙|헤비|가장[\s_-]*굵게/i,
+    removePattern: /black|heavy|블랙|헤비|가장[\s_-]*굵게/gi,
+    weight: '900',
+  },
+  {
+    pattern: /(?:extra|ultra)[\s_-]*bold|extrabold|ultrabold|엑스트라[\s_-]*볼드|울트라[\s_-]*볼드|매우[\s_-]*굵게/i,
     removePattern:
-      /(?:extra|ultra)[\s_-]*bold|black|heavy|extrabold|ultrabold|헤비|블랙|매우[\s_-]*굵게/gi,
-    weight: '700',
+      /(?:extra|ultra)[\s_-]*bold|extrabold|ultrabold|엑스트라[\s_-]*볼드|울트라[\s_-]*볼드|매우[\s_-]*굵게/gi,
+    weight: '800',
   },
   {
     pattern: /semi[\s_-]*bold|demi[\s_-]*bold|semibold|demibold|세미[\s_-]*볼드|준[\s_-]*굵게/i,
@@ -66,9 +71,20 @@ const fontWeightInferenceRules: Array<{
     weight: '400',
   },
   {
-    pattern: /thin|hairline|light|extralight|ultralight|가는|얇은|라이트/i,
-    removePattern: /thin|hairline|light|extralight|ultralight|가는|얇은|라이트/gi,
-    weight: '400',
+    pattern: /(?:extra|ultra)[\s_-]*light|extralight|ultralight|엑스트라[\s_-]*라이트|울트라[\s_-]*라이트/i,
+    removePattern:
+      /(?:extra|ultra)[\s_-]*light|extralight|ultralight|엑스트라[\s_-]*라이트|울트라[\s_-]*라이트/gi,
+    weight: '200',
+  },
+  {
+    pattern: /light|라이트/i,
+    removePattern: /light|라이트/gi,
+    weight: '300',
+  },
+  {
+    pattern: /thin|hairline|가는|얇은/i,
+    removePattern: /thin|hairline|가는|얇은/gi,
+    weight: '100',
   },
 ]
 
@@ -163,11 +179,12 @@ export async function readSupportedFontFile(file: File): Promise<{
 export async function listRegisteredFonts(): Promise<RegisteredFontRecord[]> {
   const database = await openFontDatabase()
   const transaction = database.transaction(FONT_STORE_NAME, 'readonly')
+  const transactionDone = waitForTransaction(transaction)
   const request = transaction
     .objectStore(FONT_STORE_NAME)
     .getAll() as IDBRequest<RegisteredFontRecord[]>
   const fonts = await requestToPromise(request)
-  await waitForTransaction(transaction)
+  await transactionDone
 
   return fonts.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
@@ -177,15 +194,17 @@ export async function saveRegisteredFont(
 ): Promise<void> {
   const database = await openFontDatabase()
   const transaction = database.transaction(FONT_STORE_NAME, 'readwrite')
+  const transactionDone = waitForTransaction(transaction)
   transaction.objectStore(FONT_STORE_NAME).put(font)
-  await waitForTransaction(transaction)
+  await transactionDone
 }
 
 export async function deleteRegisteredFont(fontId: string): Promise<void> {
   const database = await openFontDatabase()
   const transaction = database.transaction(FONT_STORE_NAME, 'readwrite')
+  const transactionDone = waitForTransaction(transaction)
   transaction.objectStore(FONT_STORE_NAME).delete(fontId)
-  await waitForTransaction(transaction)
+  await transactionDone
   unregisterFontFace(fontId)
 }
 

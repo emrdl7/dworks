@@ -567,7 +567,7 @@ describe('tree schema', () => {
         type: 'text',
         editKind: 'text',
         content: 'Bad weight',
-        typography: { fontWeight: '900' },
+        typography: { fontWeight: '950' },
       }),
     )
 
@@ -627,7 +627,17 @@ describe('tree schema', () => {
       'wide',
     ])
     assert.deepEqual(IMAGE_FIT_IDS, ['cover', 'contain'])
-    assert.deepEqual(FONT_WEIGHT_IDS, ['400', '500', '600', '700'])
+    assert.deepEqual(FONT_WEIGHT_IDS, [
+      '100',
+      '200',
+      '300',
+      '400',
+      '500',
+      '600',
+      '700',
+      '800',
+      '900',
+    ])
     assert.deepEqual(TEXT_ALIGN_IDS, ['left', 'center', 'right'])
     assert.deepEqual(BUILT_IN_FONT_FAMILY_IDS, ['sans', 'serif', 'mono'])
     assert.deepEqual(FONT_FAMILY_IDS, ['sans', 'serif', 'mono'])

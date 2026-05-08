@@ -78,7 +78,17 @@ export const contentRoleSchema = z.enum([
 ])
 export type ContentRole = z.infer<typeof contentRoleSchema>
 
-export const FONT_WEIGHT_IDS = ['400', '500', '600', '700'] as const
+export const FONT_WEIGHT_IDS = [
+  '100',
+  '200',
+  '300',
+  '400',
+  '500',
+  '600',
+  '700',
+  '800',
+  '900',
+] as const
 export const fontWeightSchema = z.enum(FONT_WEIGHT_IDS)
 export type FontWeight = z.infer<typeof fontWeightSchema>
 

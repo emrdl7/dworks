@@ -158,10 +158,15 @@ const colorPresetLabels: Record<ColorPreset, string> = {
 }
 
 const fontWeightLabels: Record<FontWeight, string> = {
+  '100': '씬',
+  '200': '엑스트라 라이트',
+  '300': '라이트',
   '400': '보통',
   '500': '중간',
-  '600': '볼드',
-  '700': '굵게',
+  '600': '세미볼드',
+  '700': '볼드',
+  '800': '엑스트라볼드',
+  '900': '블랙',
 }
 
 const textAlignLabels: Record<TextAlign, string> = {
@@ -215,7 +220,17 @@ const layoutWrapLabels: Record<LayoutWrap, string> = {
   wrap: '줄바꿈',
 }
 
-const fontWeightOptions: FontWeight[] = ['400', '500', '600', '700']
+const fontWeightOptions: FontWeight[] = [
+  '100',
+  '200',
+  '300',
+  '400',
+  '500',
+  '600',
+  '700',
+  '800',
+  '900',
+]
 const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
 const borderStyleOptions: BorderStyle[] = ['solid', 'dashed', 'none']
 const shadowPresetOptions: ShadowPreset[] = ['none', 'sm', 'md', 'lg', 'xl']
@@ -238,7 +253,7 @@ const layoutJustifyOptions: LayoutJustify[] = [
 ]
 const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
 const UPLOAD_FONT_OPTION = '__upload-font__'
-const REGISTERED_FONT_OPTION_PREFIX = 'registered-font:'
+const REGISTERED_FONT_FAMILY_OPTION_PREFIX = 'registered-family:'
 const MAX_FONT_UPLOAD_FILES = 20
 const typographyFields = [
   'fontSize',
@@ -635,12 +650,14 @@ export default function HomePage() {
       )
       handleTextTypographyChange(
         node,
-        getRegisteredFontTypographyPatch(
-          getPreferredUploadedFont(
-            uploadedFonts,
-            node.typography?.fontWeight ?? getTypographyDefaults(node).fontWeight,
+        {
+          fontFamily: getRegisteredFontFamilyId(
+            getPreferredUploadedFont(
+              uploadedFonts,
+              node.typography?.fontWeight ?? getTypographyDefaults(node).fontWeight,
+            ),
           ),
-        ),
+        },
       )
 
       return uploadedFonts
@@ -663,7 +680,7 @@ export default function HomePage() {
     const usageCount = fontUsageCounts.get(getRegisteredFontFamilyId(font)) ?? 0
     const confirmed = window.confirm(
       usageCount > 0
-        ? `${familyName} 패밀리는 ${usageCount}개 노드에서 사용 중입니다. 이 굵기를 삭제하면 해당 굵기는 기본 표시로 대체될 수 있습니다. 삭제할까요?`
+        ? `${familyName} 패밀리는 ${usageCount}개 노드에서 사용 중입니다. 이 파일을 삭제하면 해당 굵기는 기본 표시로 대체될 수 있습니다. 삭제할까요?`
         : `${font.displayName} 글꼴을 삭제할까요?`,
     )
 
@@ -678,6 +695,48 @@ export default function HomePage() {
       await deleteRegisteredFont(font.id)
       setRegisteredFonts((fonts) => fonts.filter((item) => item.id !== font.id))
       setFontRegistryMessage(`${font.displayName} 글꼴을 삭제했습니다.`)
+    } catch (error) {
+      setFontRegistryMessage(getFontRegistryErrorMessage(error))
+    } finally {
+      setIsFontRegistryBusy(false)
+    }
+  }
+
+  async function handleFontFamilyDelete(familyId: string) {
+    const familyFonts = registeredFonts.filter(
+      (font) => getRegisteredFontFamilyId(font) === familyId,
+    )
+
+    if (familyFonts.length === 0) {
+      return
+    }
+
+    const familyName = getRegisteredFontFamilyName(familyFonts[0]!)
+    const usageCount = fontUsageCounts.get(familyId) ?? 0
+    const confirmed = window.confirm(
+      usageCount > 0
+        ? `${familyName} 글꼴 그룹은 ${usageCount}개 노드에서 사용 중입니다. 등록된 ${familyFonts.length}개 파일을 모두 삭제하면 기본 글꼴로 표시됩니다. 삭제할까요?`
+        : `${familyName} 글꼴 그룹의 ${familyFonts.length}개 파일을 모두 삭제할까요?`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setIsFontRegistryBusy(true)
+    setFontRegistryMessage('글꼴 그룹을 삭제하는 중입니다.')
+
+    try {
+      for (const font of familyFonts) {
+        await deleteRegisteredFont(font.id)
+      }
+
+      setRegisteredFonts((fonts) =>
+        fonts.filter((font) => getRegisteredFontFamilyId(font) !== familyId),
+      )
+      setFontRegistryMessage(
+        `${familyName} 글꼴 그룹 ${familyFonts.length}개 파일을 삭제했습니다.`,
+      )
     } catch (error) {
       setFontRegistryMessage(getFontRegistryErrorMessage(error))
     } finally {
@@ -802,8 +861,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="grid min-h-[calc(100vh-56px)] grid-cols-[260px_minmax(0,1fr)_340px]">
-        <aside className="border-r border-[#d7ddd2] bg-[#fbfcfa]">
+      <div className="grid h-[calc(100vh-56px)] min-h-0 grid-cols-[260px_minmax(0,1fr)_360px]">
+        <aside className="min-h-0 border-r border-[#d7ddd2] bg-[#fbfcfa]">
           <div className="border-b border-[#e0e5de] px-4 py-3">
             <h2 className="text-sm font-semibold">레이어</h2>
           </div>
@@ -829,7 +888,7 @@ export default function HomePage() {
           </nav>
         </aside>
 
-        <section className="min-w-0 overflow-auto bg-[#eef2ec]">
+        <section className="min-h-0 min-w-0 overflow-auto bg-[#eef2ec]">
           <div className="min-w-[1040px] px-8 py-8">
             <div
               className="mx-auto w-full max-w-[1200px] border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
@@ -844,7 +903,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <aside className="border-l border-[#d7ddd2] bg-white">
+        <aside className="min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white">
           <NodeInspector
             node={selectedNode}
             structureInfo={selectedStructureInfo}
@@ -865,6 +924,7 @@ export default function HomePage() {
             isFontRegistryBusy={isFontRegistryBusy}
             onFontUpload={handleFontUpload}
             onFontDelete={handleFontDelete}
+            onFontFamilyDelete={handleFontFamilyDelete}
             onButtonLabelChange={handleButtonLabelChange}
             onImageChange={handleImageChange}
             onMoveUp={() => handleMoveSelected('up')}
@@ -1505,47 +1565,35 @@ function groupRegisteredFonts(fonts: RegisteredFontSummary[]): RegisteredFontGro
     .sort((a, b) => a.familyName.localeCompare(b.familyName, 'ko'))
 }
 
-function getRegisteredFontSelectValue(font: RegisteredFontSummary): string {
-  return `${REGISTERED_FONT_OPTION_PREFIX}${font.id}`
+function getRegisteredFontFamilySelectValue(familyId: string): string {
+  return `${REGISTERED_FONT_FAMILY_OPTION_PREFIX}${familyId}`
 }
 
 function getSelectedFontSelectValue(
   fontFamily: FontFamily,
-  fontWeight: FontWeight | undefined,
   fonts: RegisteredFontSummary[],
 ): string {
   if (builtInFontFamilyOptions.includes(fontFamily as BuiltInFontFamily)) {
     return fontFamily
   }
 
-  const exactFont = fonts.find(
-    (font) =>
-      isRegisteredFontFamilyMatch(font, fontFamily) &&
-      getRegisteredFontWeight(font) === fontWeight,
-  )
-  const fallbackFont = fonts.find((font) =>
+  const selectedFont = fonts.find((font) =>
     isRegisteredFontFamilyMatch(font, fontFamily),
   )
-  const selectedFont = exactFont ?? fallbackFont
 
-  return selectedFont ? getRegisteredFontSelectValue(selectedFont) : fontFamily
-}
-
-function getRegisteredFontTypographyPatch(
-  font: RegisteredFontSummary,
-): Partial<Typography> {
-  const weight = getRegisteredFontWeight(font)
-
-  return {
-    fontFamily: getRegisteredFontFamilyId(font),
-    ...(weight ? { fontWeight: weight } : {}),
-  }
+  return selectedFont
+    ? getRegisteredFontFamilySelectValue(getRegisteredFontFamilyId(selectedFont))
+    : fontFamily
 }
 
 function findDuplicateFontVariant(
   fonts: RegisteredFontSummary[],
   metadata: Pick<RegisteredFontRecord, 'familyId' | 'weight'>,
 ): RegisteredFontSummary | undefined {
+  if (!metadata.familyId || !metadata.weight) {
+    return undefined
+  }
+
   return fonts.find(
     (font) =>
       getRegisteredFontFamilyId(font) === metadata.familyId &&
@@ -1580,9 +1628,11 @@ function mergeRegisteredFontSummaries(
   return mergedFonts
 }
 
-function getRegisteredFontOptionLabel(font: RegisteredFontSummary): string {
-  const missingSuffix = font.status === 'missing' ? ' (누락)' : ''
-  return `${getFontWeightLabel(font)} · ${font.displayName}${missingSuffix}`
+function getRegisteredFontGroupLabel(group: RegisteredFontGroup): string {
+  const missingCount = group.fonts.filter((font) => font.status === 'missing').length
+  const missingSuffix = missingCount > 0 ? ` · 누락 ${missingCount}개` : ''
+
+  return `${group.familyName} (${group.fonts.length}개 굵기${missingSuffix})`
 }
 
 function getFontWeightLabel(font: RegisteredFontSummary): string {
@@ -1793,6 +1843,7 @@ interface NodeInspectorProps {
     node: TextNode,
   ) => Promise<RegisteredFontSummary[]>
   onFontDelete: (fontId: string) => Promise<void>
+  onFontFamilyDelete: (familyId: string) => Promise<void>
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: ImageEditPatch) => void
   onMoveUp: () => void
@@ -1823,6 +1874,7 @@ function NodeInspector({
   isFontRegistryBusy,
   onFontUpload,
   onFontDelete,
+  onFontFamilyDelete,
   onButtonLabelChange,
   onImageChange,
   onMoveUp,
@@ -1832,14 +1884,16 @@ function NodeInspector({
   onColorPresetChange,
 }: NodeInspectorProps) {
   return (
-    <section className="flex h-full flex-col">
-      <div className="border-b border-[#e0e5de] px-5 py-4">
+    <section className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0 border-b border-[#e0e5de] px-5 py-4">
         <h2 className="text-sm font-semibold">속성</h2>
         <p className="mt-1 break-all text-xs text-[#647067]">{node.id}</p>
       </div>
 
-      <div className="space-y-5 overflow-auto p-5">
-        <MetadataGrid node={node} />
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
+        <InspectorDisclosure title="기본 정보" defaultOpen={false}>
+          <MetadataGrid node={node} />
+        </InspectorDisclosure>
 
         <StyleControls
           colorPreset={colorPreset}
@@ -1853,15 +1907,17 @@ function NodeInspector({
         />
 
         {node.type === 'text' ? (
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-xs font-semibold text-[#4f5e56]">내용</span>
-              <textarea
-                className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-                value={node.content}
-                onChange={(event) => onTextChange(node, event.target.value)}
-              />
-            </label>
+          <>
+            <InspectorDisclosure title="내용" defaultOpen={false}>
+              <label className="block">
+                <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
+                <textarea
+                  className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                  value={node.content}
+                  onChange={(event) => onTextChange(node, event.target.value)}
+                />
+              </label>
+            </InspectorDisclosure>
             <TypographyControls
               node={node}
               onTypographyChange={onTextTypographyChange}
@@ -1872,8 +1928,9 @@ function NodeInspector({
               isFontRegistryBusy={isFontRegistryBusy}
               onFontUpload={onFontUpload}
               onFontDelete={onFontDelete}
+              onFontFamilyDelete={onFontFamilyDelete}
             />
-          </div>
+          </>
         ) : null}
 
         <LayoutControls
@@ -1896,53 +1953,63 @@ function NodeInspector({
         />
 
         {node.type === 'button' ? (
-          <label className="block">
-            <span className="text-xs font-semibold text-[#4f5e56]">버튼 문구</span>
-            <input
-              className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-              value={node.label}
-              onChange={(event) => onButtonLabelChange(node, event.target.value)}
-            />
-          </label>
+          <InspectorDisclosure title="내용">
+            <label className="block">
+              <span className="text-xs font-semibold text-[#4f5e56]">버튼 문구</span>
+              <input
+                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                value={node.label}
+                onChange={(event) => onButtonLabelChange(node, event.target.value)}
+              />
+            </label>
+          </InspectorDisclosure>
         ) : null}
 
         {node.type === 'image' ? (
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-xs font-semibold text-[#4f5e56]">
-                이미지 주소
-              </span>
-              <input
-                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-                value={node.src}
-                onChange={(event) => onImageChange(node, { src: event.target.value })}
-              />
-              {node.src.trim().length === 0 ? (
-                <span className="mt-2 block text-xs text-[#647067]">
-                  이미지 슬롯 - 이미지 주소를 입력하세요.
-                </span>
-              ) : null}
-            </label>
-            <label className="block">
-              <span className="text-xs font-semibold text-[#4f5e56]">
-                대체 텍스트
-              </span>
-              <input
-                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-                value={node.alt}
-                onChange={(event) => onImageChange(node, { alt: event.target.value })}
-              />
-              {node.alt.length === 0 ? (
-                <span className="mt-2 block text-xs text-[#647067]">
-                  스크린리더가 이 이미지를 읽지 않습니다.
-                </span>
-              ) : null}
-            </label>
+          <>
+            <InspectorDisclosure title="이미지">
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="text-xs font-semibold text-[#4f5e56]">
+                    이미지 주소
+                  </span>
+                  <input
+                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                    value={node.src}
+                    onChange={(event) =>
+                      onImageChange(node, { src: event.target.value })
+                    }
+                  />
+                  {node.src.trim().length === 0 ? (
+                    <span className="mt-2 block text-xs text-[#647067]">
+                      이미지 슬롯 - 이미지 주소를 입력하세요.
+                    </span>
+                  ) : null}
+                </label>
+                <label className="block">
+                  <span className="text-xs font-semibold text-[#4f5e56]">
+                    대체 텍스트
+                  </span>
+                  <input
+                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                    value={node.alt}
+                    onChange={(event) =>
+                      onImageChange(node, { alt: event.target.value })
+                    }
+                  />
+                  {node.alt.length === 0 ? (
+                    <span className="mt-2 block text-xs text-[#647067]">
+                      스크린리더가 이 이미지를 읽지 않습니다.
+                    </span>
+                  ) : null}
+                </label>
+              </div>
+            </InspectorDisclosure>
             <ImageCompositionControls
               node={node}
               onImageChange={onImageChange}
             />
-          </div>
+          </>
         ) : null}
 
         <StructureControls
@@ -1954,9 +2021,8 @@ function NodeInspector({
         />
 
         {isContainerNode(node) ? (
-          <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-            <h3 className="text-sm font-semibold">그룹</h3>
-            <dl className="mt-3 space-y-2 text-sm">
+          <InspectorDisclosure title="그룹" defaultOpen={false}>
+            <dl className="space-y-2 text-sm">
               <InspectorRow label="하위 요소" value={String(node.children.length)} />
               {'layoutIntent' in node && node.layoutIntent ? (
                 <InspectorRow
@@ -1968,7 +2034,7 @@ function NodeInspector({
                 <InspectorRow label="역할" value={node.role} />
               ) : null}
             </dl>
-          </div>
+          </InspectorDisclosure>
         ) : null}
       </div>
     </section>
@@ -1980,22 +2046,99 @@ interface StyleControlsProps {
   onColorPresetChange: (colorPreset: ColorPreset) => void
 }
 
+interface InspectorDisclosureProps {
+  actionLabel?: string
+  children: ReactNode
+  defaultOpen?: boolean
+  description?: string
+  isActionDisabled?: boolean
+  onAction?: () => void
+  summaryEnd?: ReactNode
+  title: string
+}
+
+function InspectorDisclosure({
+  actionLabel,
+  children,
+  defaultOpen = true,
+  description,
+  isActionDisabled = false,
+  onAction,
+  summaryEnd,
+  title,
+}: InspectorDisclosureProps) {
+  return (
+    <details
+      className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] [&[open]>summary_.dw-chevron]:rotate-180"
+      open={defaultOpen}
+    >
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-[#1d2923]">{title}</h3>
+          {description ? (
+            <p className="mt-1 truncate text-xs text-[#647067]">{description}</p>
+          ) : null}
+        </div>
+        <span className="flex shrink-0 items-center gap-2">
+          {onAction ? (
+            <button
+              type="button"
+              className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:no-underline"
+              disabled={isActionDisabled}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onAction()
+              }}
+            >
+              {actionLabel ?? '초기화'}
+            </button>
+          ) : (
+            summaryEnd
+          )}
+          <DisclosureChevron />
+        </span>
+      </summary>
+      <div className="border-t border-[#e0e5de] p-4">{children}</div>
+    </details>
+  )
+}
+
+function DisclosureChevron() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="dw-chevron h-4 w-4 text-[#647067] transition-transform"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="m6 9 6 6 6-6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  )
+}
+
 function StyleControls({
   colorPreset,
   onColorPresetChange,
 }: StyleControlsProps) {
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">문서 스타일</h3>
-          <p className="mt-1 text-xs text-[#647067]">캔버스 전체 색상</p>
-        </div>
+    <InspectorDisclosure
+      title="문서 스타일"
+      description="캔버스 전체 색상"
+      defaultOpen={false}
+      summaryEnd={
         <span className="rounded-full border border-[#c9d4cd] bg-white px-2 py-1 text-[11px] font-semibold text-[#4f5e56]">
           {colorPresetLabels[colorPreset]}
         </span>
-      </div>
-      <div className="mt-3 grid grid-cols-5 gap-2">
+      }
+    >
+      <div className="grid grid-cols-5 gap-2">
         {COLOR_PRESET_IDS.map((presetId) => {
           const colors = COLOR_PRESETS[presetId]
           const isSelected = presetId === colorPreset
@@ -2028,7 +2171,7 @@ function StyleControls({
           )
         })}
       </div>
-    </div>
+    </InspectorDisclosure>
   )
 }
 
@@ -2139,24 +2282,12 @@ function NodeColorControls({
   }
 
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">색상</h3>
-          <p className="mt-1 text-xs text-[#647067]">
-            선택한 노드의 배경과 글자
-          </p>
-        </div>
-        <button
-          type="button"
-          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
-          onClick={() => onNodeColorReset(node)}
-        >
-          초기화
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
+    <InspectorDisclosure
+      title="색상"
+      description="선택한 노드의 배경과 글자"
+      onAction={() => onNodeColorReset(node)}
+    >
+      <div className="grid grid-cols-2 gap-3">
         {renderColorField({
           error: backgroundColorError,
           field: 'backgroundColor',
@@ -2170,7 +2301,7 @@ function NodeColorControls({
           label: '글자 색상',
         })}
       </div>
-    </div>
+    </InspectorDisclosure>
   )
 }
 
@@ -2187,6 +2318,7 @@ interface TypographyControlsProps {
     node: TextNode,
   ) => Promise<RegisteredFontSummary[]>
   onFontDelete: (fontId: string) => Promise<void>
+  onFontFamilyDelete: (familyId: string) => Promise<void>
 }
 
 function TypographyControls({
@@ -2199,6 +2331,7 @@ function TypographyControls({
   isFontRegistryBusy,
   onFontUpload,
   onFontDelete,
+  onFontFamilyDelete,
 }: TypographyControlsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const defaults = getTypographyDefaults(node)
@@ -2209,7 +2342,6 @@ function TypographyControls({
   const registeredFontGroups = groupRegisteredFonts(registeredFonts)
   const selectedFontValue = getSelectedFontSelectValue(
     effectiveFontFamily,
-    typography.fontWeight,
     registeredFonts,
   )
   const hasRegisteredFamily = registeredFonts.some(
@@ -2250,14 +2382,10 @@ function TypographyControls({
       return
     }
 
-    if (value.startsWith(REGISTERED_FONT_OPTION_PREFIX)) {
-      const fontId = value.slice(REGISTERED_FONT_OPTION_PREFIX.length)
-      const font = registeredFonts.find((item) => item.id === fontId)
+    if (value.startsWith(REGISTERED_FONT_FAMILY_OPTION_PREFIX)) {
+      const familyId = value.slice(REGISTERED_FONT_FAMILY_OPTION_PREFIX.length)
 
-      if (font) {
-        onTypographyChange(node, getRegisteredFontTypographyPatch(font))
-      }
-
+      onTypographyChange(node, { fontFamily: familyId as FontFamily })
       return
     }
 
@@ -2265,22 +2393,131 @@ function TypographyControls({
   }
 
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">타이포그래피</h3>
-          <p className="mt-1 text-xs text-[#647067]">
-            선택한 텍스트만 조정
-          </p>
-        </div>
-        <button
-          type="button"
-          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
-          onClick={() => onTypographyReset(node)}
+    <InspectorDisclosure
+      title="타이포그래피"
+      description="선택한 텍스트만 조정"
+      onAction={() => onTypographyReset(node)}
+    >
+      <label className="block">
+        <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
+        <select
+          className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+          value={selectedFontValue}
+          disabled={isFontRegistryBusy}
+          onChange={(event) => handleFontSelect(event.target.value)}
         >
-          초기화
-        </button>
-      </div>
+          {builtInFontFamilyOptions.map((family) => (
+            <option key={family} value={family}>
+              {builtInFontFamilyLabels[family]}
+            </option>
+          ))}
+          {registeredFontGroups.map((group) => (
+            <option
+              key={group.familyId}
+              value={getRegisteredFontFamilySelectValue(group.familyId)}
+            >
+              등록한 글꼴 · {getRegisteredFontGroupLabel(group)}
+            </option>
+          ))}
+          {hasSelectedMissingFont ? (
+            <option value={effectiveFontFamily}>
+              누락된 글꼴 ({effectiveFontFamily})
+            </option>
+          ) : null}
+          <option value={UPLOAD_FONT_OPTION}>+ TTF/OTF 업로드...</option>
+        </select>
+      </label>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".ttf,.otf"
+        multiple
+        className="sr-only"
+        onChange={(event) => handleFontFileChange(event.target.files)}
+      />
+      <button
+        type="button"
+        className="mt-3 h-9 w-full rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#1b7f72] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:bg-white"
+        disabled={isFontRegistryBusy}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 여러 개 업로드'}
+      </button>
+      <p className="mt-2 text-xs leading-5 text-[#647067]">
+        등록한 글꼴은 이 브라우저의 모든 프로젝트에서 함께 사용됩니다. 같은 패밀리의 굵기 파일은 자동으로 묶습니다.
+      </p>
+      <p className="mt-1 text-xs leading-5 text-[#647067]" aria-live="polite">
+        {fontRegistryMessage}
+      </p>
+      {registeredFonts.length > 0 ? (
+        <details className="mt-3 rounded-md border border-[#e0e5de] bg-white [&[open]>summary_.dw-chevron]:rotate-180">
+          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              글꼴 관리
+            </span>
+            <span className="flex items-center gap-2 text-[11px] text-[#647067]">
+              {registeredFontGroups.length}개 그룹 · {registeredFonts.length}개 파일
+              <DisclosureChevron />
+            </span>
+          </summary>
+          <div className="max-h-64 space-y-2 overflow-y-auto border-t border-[#eef1ec] p-2">
+            {registeredFontGroups.map((group) => (
+              <details
+                key={group.familyId}
+                className="rounded-md border border-[#eef1ec] bg-[#fbfcfa] [&[open]>summary_.dw-chevron]:rotate-180"
+              >
+                <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0">
+                    <span className="block truncate text-xs font-semibold text-[#26312b]">
+                      {group.familyName}
+                    </span>
+                    <span className="block truncate text-[11px] text-[#647067]">
+                      {group.fonts.length}개 굵기 · 사용{' '}
+                      {fontUsageCounts.get(group.familyId) ?? 0}개
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      className="rounded border border-[#d7ddd2] px-2 py-1 text-[11px] font-semibold text-[#7f1d1d] transition hover:bg-[#fff1f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={isFontRegistryBusy}
+                      onClick={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        onFontFamilyDelete(group.familyId)
+                      }}
+                    >
+                      그룹 삭제
+                    </button>
+                    <DisclosureChevron />
+                  </span>
+                </summary>
+                <div className="space-y-1 border-t border-[#eef1ec] p-2">
+                  {group.fonts.map((font) => (
+                    <div
+                      key={font.id}
+                      className="flex min-h-8 items-center justify-between gap-2 rounded border border-[#f2f4f1] bg-white px-2"
+                    >
+                      <span className="min-w-0 truncate text-[11px] text-[#647067]">
+                        {getFontWeightLabel(font)} · {font.displayName}
+                        {font.status === 'missing' ? ' (누락)' : ''}
+                      </span>
+                      <button
+                        type="button"
+                        className="shrink-0 text-[11px] font-semibold text-[#7f1d1d] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={isFontRegistryBusy}
+                        onClick={() => onFontDelete(font.id)}
+                      >
+                        파일 삭제
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        </details>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <TypographyNumberField
@@ -2355,7 +2592,7 @@ function TypographyControls({
         />
       </label>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4">
         <div>
           <span className="text-xs font-semibold text-[#4f5e56]">정렬</span>
           <div className="mt-2 grid grid-cols-3 gap-1">
@@ -2370,103 +2607,8 @@ function TypographyControls({
             ))}
           </div>
         </div>
-
-        <label className="block">
-          <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
-          <select
-            className="mt-2 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-xs font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-            value={selectedFontValue}
-            disabled={isFontRegistryBusy}
-            onChange={(event) => handleFontSelect(event.target.value)}
-          >
-            {builtInFontFamilyOptions.map((family) => (
-              <option key={family} value={family}>
-                {builtInFontFamilyLabels[family]}
-              </option>
-            ))}
-            {registeredFontGroups.map((group) => (
-              <optgroup
-                key={group.familyId}
-                label={`등록한 글꼴 · ${group.familyName}`}
-              >
-                {group.fonts.map((font) => (
-                  <option key={font.id} value={getRegisteredFontSelectValue(font)}>
-                    {getRegisteredFontOptionLabel(font)}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-            {hasSelectedMissingFont ? (
-              <option value={effectiveFontFamily}>
-                누락된 글꼴 ({effectiveFontFamily})
-              </option>
-            ) : null}
-            <option value={UPLOAD_FONT_OPTION}>+ TTF/OTF 업로드...</option>
-          </select>
-        </label>
       </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".ttf,.otf"
-        multiple
-        className="sr-only"
-        onChange={(event) => handleFontFileChange(event.target.files)}
-      />
-      <button
-        type="button"
-        className="mt-3 h-9 w-full rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#1b7f72] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:bg-white"
-        disabled={isFontRegistryBusy}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 여러 개 업로드'}
-      </button>
-      <p className="mt-2 text-xs leading-5 text-[#647067]">
-        글꼴은 브라우저에만 저장됩니다. 같은 패밀리의 굵기 파일은 자동으로 묶으며, 라이선스 준수는 사용자 책임입니다.
-      </p>
-      <p className="mt-1 text-xs leading-5 text-[#647067]" aria-live="polite">
-        {fontRegistryMessage}
-      </p>
-      {registeredFonts.length > 0 ? (
-        <div className="mt-3 rounded-md border border-[#e0e5de] bg-white p-3">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-semibold text-[#4f5e56]">
-              등록한 글꼴
-            </span>
-            <span className="text-[11px] text-[#647067]">
-              {registeredFonts.length}개
-            </span>
-          </div>
-          <div className="mt-2 space-y-2">
-            {registeredFonts.map((font) => (
-              <div
-                key={font.id}
-                className="flex min-h-9 items-center justify-between gap-2 rounded-md border border-[#eef1ec] px-2"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-[#26312b]">
-                    {font.displayName}
-                    {font.status === 'missing' ? ' (누락)' : ''}
-                  </p>
-                  <p className="truncate text-[11px] text-[#647067]">
-                    {getRegisteredFontFamilyName(font)} · {getFontWeightLabel(font)} · 사용{' '}
-                    {fontUsageCounts.get(getRegisteredFontFamilyId(font)) ?? 0}개
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="shrink-0 rounded border border-[#d7ddd2] px-2 py-1 text-[11px] font-semibold text-[#7f1d1d] transition hover:bg-[#fff1f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={isFontRegistryBusy}
-                  onClick={() => onFontDelete(font.id)}
-                >
-                  삭제
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
+    </InspectorDisclosure>
   )
 }
 
@@ -2538,26 +2680,16 @@ function LayoutControls({
   }
 
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">레이아웃</h3>
-          <p className="mt-1 text-xs text-[#647067]">
-            선택한 노드의 자식 배치
-          </p>
-        </div>
-        <button
-          type="button"
-          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:no-underline"
-          disabled={!canEditLayout}
-          onClick={() => onLayoutReset(node)}
-        >
-          초기화
-        </button>
-      </div>
+    <InspectorDisclosure
+      title="레이아웃"
+      description="선택한 노드의 자식 배치"
+      isActionDisabled={!canEditLayout}
+      onAction={() => onLayoutReset(node)}
+      defaultOpen={canEditLayout}
+    >
 
       {!canEditLayout ? (
-        <p className="mt-3 rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 py-2 text-xs text-[#647067]">
+        <p className="rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 py-2 text-xs text-[#647067]">
           자식이 있는 노드에서 사용할 수 있습니다.
         </p>
       ) : null}
@@ -2613,7 +2745,7 @@ function LayoutControls({
           }
         />
       </div>
-    </div>
+    </InspectorDisclosure>
   )
 }
 
@@ -2794,24 +2926,13 @@ function SpacingControls({
   }
 
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">간격</h3>
-          <p className="mt-1 text-xs text-[#647067]">
-            선택한 노드의 여백 조정
-          </p>
-        </div>
-        <button
-          type="button"
-          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
-          onClick={() => onSpacingReset(node)}
-        >
-          초기화
-        </button>
-      </div>
-
-      <div className="mt-4 space-y-3">
+    <InspectorDisclosure
+      title="간격"
+      description="선택한 노드의 여백 조정"
+      defaultOpen={false}
+      onAction={() => onSpacingReset(node)}
+    >
+      <div className="space-y-3">
         {renderSpacingGroup({
           title: '안쪽 여백',
           mode: paddingMode,
@@ -2849,7 +2970,7 @@ function SpacingControls({
           </div>
         ) : null}
       </div>
-    </div>
+    </InspectorDisclosure>
   )
 }
 
@@ -2967,24 +3088,13 @@ function ShapeControls({
   }
 
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">모양</h3>
-          <p className="mt-1 text-xs text-[#647067]">
-            선택한 노드의 테두리와 그림자
-          </p>
-        </div>
-        <button
-          type="button"
-          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
-          onClick={() => onShapeReset(node)}
-        >
-          초기화
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
+    <InspectorDisclosure
+      title="모양"
+      description="선택한 노드의 테두리와 그림자"
+      defaultOpen={false}
+      onAction={() => onShapeReset(node)}
+    >
+      <div className="grid grid-cols-2 gap-3">
         <TypographyNumberField
           label="모서리"
           unit="px"
@@ -3070,7 +3180,7 @@ function ShapeControls({
           </select>
         </label>
       </div>
-    </div>
+    </InspectorDisclosure>
   )
 }
 
@@ -3187,22 +3297,12 @@ function ImageCompositionControls({
   }
 
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold">이미지 구도</h3>
-          <p className="mt-1 text-xs text-[#647067]">비율, 초점, 오버레이</p>
-        </div>
-        <button
-          type="button"
-          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
-          onClick={resetImageComposition}
-        >
-          초기화
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
+    <InspectorDisclosure
+      title="이미지 구도"
+      description="비율, 초점, 오버레이"
+      onAction={resetImageComposition}
+    >
+      <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="text-xs font-semibold text-[#4f5e56]">비율</span>
           <select
@@ -3378,7 +3478,7 @@ function ImageCompositionControls({
           onChange={(event) => updateOverlayOpacity(event.target.value)}
         />
       </label>
-    </div>
+    </InspectorDisclosure>
   )
 }
 
@@ -3481,16 +3581,18 @@ function StructureControls({
   const canEditStructure = !info.isRoot
 
   return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">구조</h3>
-        {info.parentId ? (
+    <InspectorDisclosure
+      title="구조"
+      defaultOpen={false}
+      summaryEnd={
+        info.parentId ? (
           <span className="max-w-36 truncate text-xs text-[#647067]">
             상위 {info.parentId}
           </span>
-        ) : null}
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+        ) : null
+      }
+    >
+      <div className="grid grid-cols-2 gap-2">
         <InspectorActionButton
           ariaLabel="위로 이동"
           disabled={!canMoveUp}
@@ -3526,7 +3628,7 @@ function StructureControls({
           루트는 이동/삭제할 수 없습니다.
         </p>
       ) : null}
-    </div>
+    </InspectorDisclosure>
   )
 }
 

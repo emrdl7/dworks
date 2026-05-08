@@ -27,6 +27,28 @@ describe('font registry metadata', () => {
     assert.equal(metadata.weight, '600')
   })
 
+  it('infers every CSS weight bucket for one uploaded font family', () => {
+    const cases = [
+      ['Pretendard Thin', 'Pretendard-Thin.otf', '100'],
+      ['Pretendard ExtraLight', 'Pretendard-ExtraLight.otf', '200'],
+      ['Pretendard Light', 'Pretendard-Light.otf', '300'],
+      ['Pretendard Regular', 'Pretendard-Regular.otf', '400'],
+      ['Pretendard Medium', 'Pretendard-Medium.otf', '500'],
+      ['Pretendard SemiBold', 'Pretendard-SemiBold.otf', '600'],
+      ['Pretendard Bold', 'Pretendard-Bold.otf', '700'],
+      ['Pretendard ExtraBold', 'Pretendard-ExtraBold.otf', '800'],
+      ['Pretendard Black', 'Pretendard-Black.otf', '900'],
+    ] as const
+
+    for (const [displayName, fileName, weight] of cases) {
+      const metadata = inferFontMetadata(displayName, fileName)
+
+      assert.equal(metadata.familyId, 'user-font-pretendard')
+      assert.equal(metadata.familyName, 'Pretendard')
+      assert.equal(metadata.weight, weight)
+    }
+  })
+
   it('keeps uploaded family metadata in registered font summaries', () => {
     const font: RegisteredFontRecord = {
       id: 'pretendard-bold',
