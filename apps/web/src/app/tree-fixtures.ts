@@ -13,22 +13,22 @@ export interface TreeFixture {
 
 const simpleHeroFixture: TreeFixture = {
   id: 'simple-hero',
-  name: 'Simple hero',
-  description: 'Hero headline, body copy, primary CTA',
+  name: '단순 히어로',
+  description: '히어로 제목, 본문, 주요 행동 버튼',
   tree: parseFixtureTree(simpleHeroRaw),
 }
 
 const cardGridFixture: TreeFixture = {
   id: 'card-grid',
-  name: 'Card grid',
-  description: 'Section heading and three feature cards',
+  name: '카드 그리드',
+  description: '섹션 제목과 기능 카드 3개',
   tree: parseFixtureTree(cardGridRaw),
 }
 
 const signupFormFixture: TreeFixture = {
   id: 'signup-form',
-  name: 'Signup form',
-  description: 'Short form with labels and CTA',
+  name: '가입 폼',
+  description: '라벨과 주요 행동 버튼이 있는 짧은 폼',
   tree: parseFixtureTree(signupFormRaw),
 }
 

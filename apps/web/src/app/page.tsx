@@ -31,14 +31,14 @@ interface StructureInfo {
 }
 
 const nodeTypeLabels: Record<TreeNode['type'], string> = {
-  text: 'text',
-  button: 'button',
-  image: 'image',
-  section: 'section',
-  hero: 'hero',
-  card: 'card',
-  list: 'list',
-  form: 'form',
+  text: '텍스트',
+  button: '버튼',
+  image: '이미지',
+  section: '섹션',
+  hero: '히어로',
+  card: '카드',
+  list: '목록',
+  form: '폼',
 }
 
 const editKindLabels: Record<TreeNode['editKind'], string> = {
@@ -47,6 +47,42 @@ const editKindLabels: Record<TreeNode['editKind'], string> = {
   structure: '구조',
   style: '스타일',
 }
+
+const contentRoleLabels = {
+  heading: '제목',
+  body: '본문',
+  caption: '캡션',
+  cta: '주요 행동',
+  label: '라벨',
+  value: '값',
+} as const
+
+const buttonVariantLabels = {
+  primary: '주요',
+  secondary: '보조',
+  ghost: '투명',
+} as const
+
+const listVariantLabels = {
+  ordered: '순서 목록',
+  unordered: '기본 목록',
+  description: '설명 목록',
+} as const
+
+const imageAspectRatioLabels = {
+  square: '정사각형',
+  landscape: '가로형',
+  portrait: '세로형',
+  wide: '와이드',
+} as const
+
+const layoutIntentLabels = {
+  stack: '세로 쌓기',
+  grid: '그리드',
+  inline: '가로 배치',
+  split: '분할',
+  'dashboard-grid': '대시보드 그리드',
+} as const
 
 const MAX_HISTORY = 100
 
@@ -159,11 +195,11 @@ export default function HomePage() {
       <header className="flex h-14 items-center justify-between border-b border-[#d7ddd2] bg-white px-5">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-base font-semibold">Dworks Editor</h1>
+            <h1 className="text-base font-semibold">Dworks 편집기</h1>
             <p className="text-xs text-[#647067]">m2-structure-ops</p>
           </div>
           <label className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#4f5e56]">Fixture</span>
+            <span className="text-xs font-semibold text-[#4f5e56]">예제</span>
             <select
               className="h-9 min-w-40 rounded-md border border-[#c9d4cd] bg-white px-3 text-sm text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
               value={selectedFixture.id}
@@ -185,25 +221,25 @@ export default function HomePage() {
               disabled={historyPast.length === 0}
               onClick={handleUndo}
             >
-              Undo
+              실행 취소
             </HistoryButton>
             <HistoryButton
               ariaLabel="다시 실행"
               disabled={historyFuture.length === 0}
               onClick={handleRedo}
             >
-              Redo
+              다시 실행
             </HistoryButton>
           </div>
           <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
             <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-              root {tree.root.id}
+              루트 {tree.root.id}
             </span>
             <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-              editable {editableCount}
+              편집 가능 {editableCount}
             </span>
             <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-              selected {selectedNode.id}
+              선택 {selectedNode.id}
             </span>
           </div>
         </div>
@@ -212,7 +248,7 @@ export default function HomePage() {
       <div className="grid min-h-[calc(100vh-56px)] grid-cols-[260px_minmax(0,1fr)_340px]">
         <aside className="border-r border-[#d7ddd2] bg-[#fbfcfa]">
           <div className="border-b border-[#e0e5de] px-4 py-3">
-            <h2 className="text-sm font-semibold">Layers</h2>
+            <h2 className="text-sm font-semibold">레이어</h2>
           </div>
           <nav className="max-h-[calc(100vh-105px)] overflow-auto p-2">
             {layerItems.map(({ node, depth }) => (
@@ -569,7 +605,7 @@ function ImagePreview({ node }: { node: ImageNode }) {
             이미지 슬롯
           </span>
           <span className="mt-2 max-w-sm text-2xl font-semibold leading-tight">
-            {node.alt || 'Source를 채우세요'}
+            {node.alt || '이미지 주소를 입력하세요'}
           </span>
           {node.src ? (
             <span className="mt-3 break-all text-xs text-[#27433b]">{node.src}</span>
@@ -613,7 +649,7 @@ function NodeInspector({
   return (
     <section className="flex h-full flex-col">
       <div className="border-b border-[#e0e5de] px-5 py-4">
-        <h2 className="text-sm font-semibold">Inspector</h2>
+        <h2 className="text-sm font-semibold">속성</h2>
         <p className="mt-1 break-all text-xs text-[#647067]">{node.id}</p>
       </div>
 
@@ -630,7 +666,7 @@ function NodeInspector({
 
         {node.type === 'text' ? (
           <label className="block">
-            <span className="text-xs font-semibold text-[#4f5e56]">Content</span>
+            <span className="text-xs font-semibold text-[#4f5e56]">내용</span>
             <textarea
               className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
               value={node.content}
@@ -641,7 +677,7 @@ function NodeInspector({
 
         {node.type === 'button' ? (
           <label className="block">
-            <span className="text-xs font-semibold text-[#4f5e56]">Label</span>
+            <span className="text-xs font-semibold text-[#4f5e56]">버튼 문구</span>
             <input
               className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
               value={node.label}
@@ -653,7 +689,9 @@ function NodeInspector({
         {node.type === 'image' ? (
           <div className="space-y-4">
             <label className="block">
-              <span className="text-xs font-semibold text-[#4f5e56]">Source</span>
+              <span className="text-xs font-semibold text-[#4f5e56]">
+                이미지 주소
+              </span>
               <input
                 className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
                 value={node.src}
@@ -661,12 +699,14 @@ function NodeInspector({
               />
               {node.src.trim().length === 0 ? (
                 <span className="mt-2 block text-xs text-[#647067]">
-                  이미지 슬롯 - Source를 채우세요.
+                  이미지 슬롯 - 이미지 주소를 입력하세요.
                 </span>
               ) : null}
             </label>
             <label className="block">
-              <span className="text-xs font-semibold text-[#4f5e56]">Alt</span>
+              <span className="text-xs font-semibold text-[#4f5e56]">
+                대체 텍스트
+              </span>
               <input
                 className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
                 value={node.alt}
@@ -683,14 +723,17 @@ function NodeInspector({
 
         {isContainerNode(node) ? (
           <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
-            <h3 className="text-sm font-semibold">Container</h3>
+            <h3 className="text-sm font-semibold">그룹</h3>
             <dl className="mt-3 space-y-2 text-sm">
-              <InspectorRow label="children" value={String(node.children.length)} />
+              <InspectorRow label="하위 요소" value={String(node.children.length)} />
               {'layoutIntent' in node && node.layoutIntent ? (
-                <InspectorRow label="layout" value={node.layoutIntent} />
+                <InspectorRow
+                  label="배치"
+                  value={layoutIntentLabels[node.layoutIntent]}
+                />
               ) : null}
               {'role' in node && node.role ? (
-                <InspectorRow label="role" value={node.role} />
+                <InspectorRow label="역할" value={node.role} />
               ) : null}
             </dl>
           </div>
@@ -723,47 +766,47 @@ function StructureControls({
   return (
     <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold">Structure</h3>
+        <h3 className="text-sm font-semibold">구조</h3>
         {info.parentId ? (
           <span className="max-w-36 truncate text-xs text-[#647067]">
-            parent {info.parentId}
+            상위 {info.parentId}
           </span>
         ) : null}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
         <InspectorActionButton
-          ariaLabel="Move up"
+          ariaLabel="위로 이동"
           disabled={!canMoveUp}
           onClick={onMoveUp}
         >
-          Move up
+          위로 이동
         </InspectorActionButton>
         <InspectorActionButton
-          ariaLabel="Move down"
+          ariaLabel="아래로 이동"
           disabled={!canMoveDown}
           onClick={onMoveDown}
         >
-          Move down
+          아래로 이동
         </InspectorActionButton>
         <InspectorActionButton
-          ariaLabel="Duplicate"
+          ariaLabel="복제"
           disabled={!canEditStructure}
           onClick={onDuplicate}
         >
-          Duplicate
+          복제
         </InspectorActionButton>
         <InspectorActionButton
-          ariaLabel="Delete"
+          ariaLabel="삭제"
           disabled={!canEditStructure}
           tone="danger"
           onClick={onDelete}
         >
-          Delete
+          삭제
         </InspectorActionButton>
       </div>
       {info.isRoot ? (
         <p className="mt-3 text-xs text-[#647067]">
-          Root는 이동/삭제할 수 없습니다.
+          루트는 이동/삭제할 수 없습니다.
         </p>
       ) : null}
     </div>
@@ -806,16 +849,25 @@ function InspectorActionButton({
 function MetadataGrid({ node }: { node: TreeNode }) {
   return (
     <dl className="grid grid-cols-2 gap-3 text-sm">
-      <InspectorMetric label="type" value={nodeTypeLabels[node.type]} />
-      <InspectorMetric label="editKind" value={editKindLabels[node.editKind]} />
+      <InspectorMetric label="노드 유형" value={nodeTypeLabels[node.type]} />
+      <InspectorMetric label="편집 유형" value={editKindLabels[node.editKind]} />
       {'contentRole' in node && node.contentRole ? (
-        <InspectorMetric label="role" value={node.contentRole} />
+        <InspectorMetric
+          label="역할"
+          value={contentRoleLabels[node.contentRole]}
+        />
       ) : null}
-      {'variant' in node && node.variant ? (
-        <InspectorMetric label="variant" value={node.variant} />
+      {node.type === 'button' && node.variant ? (
+        <InspectorMetric label="버튼 종류" value={buttonVariantLabels[node.variant]} />
+      ) : null}
+      {node.type === 'list' && node.variant ? (
+        <InspectorMetric label="목록 종류" value={listVariantLabels[node.variant]} />
       ) : null}
       {'aspectRatio' in node && node.aspectRatio ? (
-        <InspectorMetric label="aspect" value={node.aspectRatio} />
+        <InspectorMetric
+          label="이미지 비율"
+          value={imageAspectRatioLabels[node.aspectRatio]}
+        />
       ) : null}
     </dl>
   )
