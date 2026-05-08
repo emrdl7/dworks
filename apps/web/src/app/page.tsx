@@ -20,7 +20,12 @@ import {
   type FontFamily,
   type FontWeight,
   type ImageNode,
+  type LayoutAlign,
+  type LayoutDirection,
+  type LayoutJustify,
+  type LayoutWrap,
   type NodeColor,
+  type NodeLayout,
   type ShadowPreset,
   type Shape,
   type Spacing,
@@ -37,6 +42,7 @@ import {
   updateColor,
   updateButtonLabel,
   updateImage,
+  updateLayout,
   updateShape,
   updateSpacing,
   updateStyleTokens,
@@ -170,11 +176,46 @@ const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
   mono: '고정폭',
 }
 
+const layoutDirectionLabels: Record<LayoutDirection, string> = {
+  row: '가로',
+  column: '세로',
+}
+
+const layoutAlignLabels: Record<LayoutAlign, string> = {
+  start: '시작',
+  center: '가운데',
+  end: '끝',
+  stretch: '채움',
+}
+
+const layoutJustifyLabels: Record<LayoutJustify, string> = {
+  start: '시작',
+  center: '가운데',
+  end: '끝',
+  between: '양끝',
+  evenly: '균등',
+}
+
+const layoutWrapLabels: Record<LayoutWrap, string> = {
+  nowrap: '고정',
+  wrap: '줄바꿈',
+}
+
 const fontWeightOptions: FontWeight[] = ['400', '500', '600', '700']
 const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
 const borderStyleOptions: BorderStyle[] = ['solid', 'dashed', 'none']
 const shadowPresetOptions: ShadowPreset[] = ['none', 'sm', 'md', 'lg', 'xl']
 const builtInFontFamilyOptions = [...BUILT_IN_FONT_FAMILY_IDS]
+const layoutDirectionOptions: LayoutDirection[] = ['row', 'column']
+const layoutAlignOptions: LayoutAlign[] = ['start', 'center', 'end', 'stretch']
+const layoutJustifyOptions: LayoutJustify[] = [
+  'start',
+  'center',
+  'end',
+  'between',
+  'evenly',
+]
+const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
 const UPLOAD_FONT_OPTION = '__upload-font__'
 const typographyFields = [
   'fontSize',
@@ -203,6 +244,7 @@ const shapeFields = [
   'shadow',
 ] as const
 const colorFields = ['backgroundColor', 'textColor'] as const
+const layoutFields = ['direction', 'align', 'justify', 'wrap'] as const
 type SpacingField = (typeof spacingFields)[number]
 type ColorField = (typeof colorFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
@@ -425,6 +467,22 @@ export default function HomePage() {
         Object.fromEntries(
           colorFields.map((field) => [field, undefined]),
         ) as Partial<NodeColor>,
+      ),
+    )
+  }
+
+  function handleLayoutChange(node: TreeNode, patch: Partial<NodeLayout>) {
+    commitTreeEdit(updateLayout(tree, node.id, patch))
+  }
+
+  function handleLayoutReset(node: TreeNode) {
+    commitTreeEdit(
+      updateLayout(
+        tree,
+        node.id,
+        Object.fromEntries(
+          layoutFields.map((field) => [field, undefined]),
+        ) as Partial<NodeLayout>,
       ),
     )
   }
@@ -682,6 +740,8 @@ export default function HomePage() {
             onShapeReset={handleShapeReset}
             onNodeColorChange={handleNodeColorChange}
             onNodeColorReset={handleNodeColorReset}
+            onLayoutChange={handleLayoutChange}
+            onLayoutReset={handleLayoutReset}
             registeredFonts={registeredFonts}
             fontUsageCounts={fontUsageCounts}
             fontRegistryMessage={fontRegistryMessage}
@@ -747,15 +807,41 @@ function CanvasNode({
   const containerSpacingStyle = getContainerSpacingStyle(node.spacing)
   const shapeStyle = getShapeStyle(node.shape)
   const colorStyle = getColorStyle(node.color, inheritedTextColor)
+  const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor = node.color?.textColor ?? inheritedTextColor
   const textColorStyle = getTextColorStyle(effectiveTextColor)
   const boxStyle = mergeStyles(boxSpacingStyle, shapeStyle, colorStyle)
   const containerStyle = mergeStyles(containerSpacingStyle, shapeStyle, colorStyle)
+  const childLayoutStyle = mergeStyles(gapSpacingStyle, layoutStyle)
 
   switch (node.type) {
     case 'section': {
-      const [firstChild, ...remainingChildren] = node.children
+      if (hasLayoutOverride(node.layout)) {
+        return (
+          <SelectableNode
+            node={node}
+            selectedNodeId={selectedNodeId}
+            onSelect={onSelect}
+          >
+            <section
+              className="flex flex-col gap-8 p-10"
+              style={mergeStyles(boxStyle, childLayoutStyle)}
+            >
+              {node.children.map((child) => (
+                <CanvasNode
+                  key={child.id}
+                  node={child}
+                  inheritedTextColor={effectiveTextColor}
+                  selectedNodeId={selectedNodeId}
+                  onSelect={onSelect}
+                />
+              ))}
+            </section>
+          </SelectableNode>
+        )
+      }
 
+      const [firstChild, ...remainingChildren] = node.children
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <section className="flex flex-col gap-8 p-10" style={boxStyle}>
@@ -802,6 +888,31 @@ function CanvasNode({
       const contentChildren = node.children.filter((child) => !isImageNode(child))
       const hasImage = imageChildren.length > 0
 
+      if (hasLayoutOverride(node.layout)) {
+        return (
+          <SelectableNode
+            node={node}
+            selectedNodeId={selectedNodeId}
+            onSelect={onSelect}
+          >
+            <section
+              className="grid min-h-[420px] gap-10 bg-[var(--dw-hero-surface)] p-12 text-[var(--dw-hero-text)]"
+              style={mergeStyles(containerStyle, childLayoutStyle)}
+            >
+              {node.children.map((child) => (
+                <CanvasNode
+                  key={child.id}
+                  node={child}
+                  inheritedTextColor={effectiveTextColor}
+                  selectedNodeId={selectedNodeId}
+                  onSelect={onSelect}
+                />
+              ))}
+            </section>
+          </SelectableNode>
+        )
+      }
+
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <section
@@ -846,7 +957,7 @@ function CanvasNode({
             className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-5 shadow-sm"
             style={boxStyle}
           >
-            <div className="flex flex-col gap-3" style={gapSpacingStyle}>
+            <div className="flex flex-col gap-3" style={childLayoutStyle}>
               {node.children.map((child) => (
                 <CanvasNode
                   key={child.id}
@@ -864,7 +975,10 @@ function CanvasNode({
     case 'list':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <div className="flex flex-col gap-3" style={containerStyle}>
+          <div
+            className="flex flex-col gap-3"
+            style={mergeStyles(containerStyle, layoutStyle)}
+          >
             {node.children.map((child) => (
               <CanvasNode
                 key={child.id}
@@ -883,7 +997,7 @@ function CanvasNode({
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <form
             className="mx-auto flex max-w-[520px] flex-col gap-5 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-8 shadow-sm"
-            style={containerStyle}
+            style={mergeStyles(containerStyle, layoutStyle)}
           >
             {node.children.map((child) => (
               <CanvasNode
@@ -1117,6 +1231,46 @@ function getGapSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
   return { gap: `${spacing.gap}px` }
 }
 
+function hasLayoutOverride(layout?: NodeLayout): boolean {
+  return layout !== undefined && Object.keys(layout).length > 0
+}
+
+function getLayoutStyle(layout?: NodeLayout): CSSProperties | undefined {
+  if (!hasLayoutOverride(layout)) {
+    return undefined
+  }
+
+  const style: CSSProperties = {
+    display: 'flex',
+    ...(layout?.direction !== undefined
+      ? { flexDirection: layout.direction }
+      : {}),
+    ...(layout?.align !== undefined
+      ? { alignItems: toFlexAlignment(layout.align) }
+      : {}),
+    ...(layout?.justify !== undefined
+      ? { justifyContent: toFlexJustify(layout.justify) }
+      : {}),
+    ...(layout?.wrap !== undefined ? { flexWrap: layout.wrap } : {}),
+  }
+
+  return style
+}
+
+function toFlexAlignment(value: LayoutAlign): CSSProperties['alignItems'] {
+  if (value === 'start') return 'flex-start'
+  if (value === 'end') return 'flex-end'
+  return value
+}
+
+function toFlexJustify(value: LayoutJustify): CSSProperties['justifyContent'] {
+  if (value === 'start') return 'flex-start'
+  if (value === 'end') return 'flex-end'
+  if (value === 'between') return 'space-between'
+  if (value === 'evenly') return 'space-evenly'
+  return value
+}
+
 function getContainerSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
   return mergeStyles(getBoxSpacingStyle(spacing), getGapSpacingStyle(spacing))
 }
@@ -1279,6 +1433,8 @@ interface NodeInspectorProps {
   onShapeReset: (node: TreeNode) => void
   onNodeColorChange: (node: TreeNode, patch: Partial<NodeColor>) => void
   onNodeColorReset: (node: TreeNode) => void
+  onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
+  onLayoutReset: (node: TreeNode) => void
   registeredFonts: RegisteredFontSummary[]
   fontUsageCounts: Map<string, number>
   fontRegistryMessage: string
@@ -1310,6 +1466,8 @@ function NodeInspector({
   onShapeReset,
   onNodeColorChange,
   onNodeColorReset,
+  onLayoutChange,
+  onLayoutReset,
   registeredFonts,
   fontUsageCounts,
   fontRegistryMessage,
@@ -1345,18 +1503,6 @@ function NodeInspector({
           onNodeColorReset={onNodeColorReset}
         />
 
-        <SpacingControls
-          node={node}
-          onSpacingChange={onSpacingChange}
-          onSpacingReset={onSpacingReset}
-        />
-
-        <ShapeControls
-          node={node}
-          onShapeChange={onShapeChange}
-          onShapeReset={onShapeReset}
-        />
-
         {node.type === 'text' ? (
           <div className="space-y-4">
             <label className="block">
@@ -1380,6 +1526,25 @@ function NodeInspector({
             />
           </div>
         ) : null}
+
+        <LayoutControls
+          node={node}
+          onLayoutChange={onLayoutChange}
+          onLayoutReset={onLayoutReset}
+          onSpacingChange={onSpacingChange}
+        />
+
+        <SpacingControls
+          node={node}
+          onSpacingChange={onSpacingChange}
+          onSpacingReset={onSpacingReset}
+        />
+
+        <ShapeControls
+          node={node}
+          onShapeChange={onShapeChange}
+          onShapeReset={onShapeReset}
+        />
 
         {node.type === 'button' ? (
           <label className="block">
@@ -1934,6 +2099,147 @@ interface SpacingControlsProps {
   onSpacingReset: (node: TreeNode) => void
 }
 
+interface LayoutControlsProps {
+  node: TreeNode
+  onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
+  onLayoutReset: (node: TreeNode) => void
+  onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
+}
+
+function LayoutControls({
+  node,
+  onLayoutChange,
+  onLayoutReset,
+  onSpacingChange,
+}: LayoutControlsProps) {
+  const canEditLayout = isContainerNode(node)
+  const layout = node.layout ?? {}
+  const spacing = node.spacing ?? {}
+
+  function updateLayoutField<T extends keyof NodeLayout>(
+    field: T,
+    value: NodeLayout[T],
+  ) {
+    onLayoutChange(node, { [field]: value })
+  }
+
+  function renderToggleGroup<T extends keyof NodeLayout>({
+    disabled,
+    field,
+    labels,
+    options,
+    title,
+  }: {
+    disabled: boolean
+    field: T
+    labels: Record<NonNullable<NodeLayout[T]>, string>
+    options: Array<NonNullable<NodeLayout[T]>>
+    title: string
+  }) {
+    return (
+      <div>
+        <span className="text-xs font-semibold text-[#4f5e56]">{title}</span>
+        <div className="mt-2 grid grid-cols-2 gap-1">
+          {options.map((option) => (
+            <TypographyToggleButton
+              key={option}
+              disabled={disabled}
+              isSelected={layout[field] === option}
+              onClick={() =>
+                updateLayoutField(
+                  field,
+                  layout[field] === option ? undefined : option,
+                )
+              }
+            >
+              {labels[option]}
+            </TypographyToggleButton>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">레이아웃</h3>
+          <p className="mt-1 text-xs text-[#647067]">
+            선택한 노드의 자식 배치
+          </p>
+        </div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:no-underline"
+          disabled={!canEditLayout}
+          onClick={() => onLayoutReset(node)}
+        >
+          초기화
+        </button>
+      </div>
+
+      {!canEditLayout ? (
+        <p className="mt-3 rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 py-2 text-xs text-[#647067]">
+          자식이 있는 노드에서 사용할 수 있습니다.
+        </p>
+      ) : null}
+
+      <div className={canEditLayout ? 'mt-4 space-y-4' : 'mt-4 space-y-4 opacity-50'}>
+        <div className="grid grid-cols-2 gap-3">
+          {renderToggleGroup({
+            disabled: !canEditLayout,
+            field: 'direction',
+            labels: layoutDirectionLabels,
+            options: layoutDirectionOptions,
+            title: '방향',
+          })}
+          {renderToggleGroup({
+            disabled: !canEditLayout,
+            field: 'wrap',
+            labels: layoutWrapLabels,
+            options: layoutWrapOptions,
+            title: '줄바꿈',
+          })}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {renderToggleGroup({
+            disabled: !canEditLayout,
+            field: 'align',
+            labels: layoutAlignLabels,
+            options: layoutAlignOptions,
+            title: '정렬',
+          })}
+          {renderToggleGroup({
+            disabled: !canEditLayout,
+            field: 'justify',
+            labels: layoutJustifyLabels,
+            options: layoutJustifyOptions,
+            title: '분배',
+          })}
+        </div>
+
+        <TypographyNumberField
+          disabled={!canEditLayout}
+          label="항목 간격"
+          unit="px"
+          min={0}
+          max={200}
+          step={1}
+          value={spacing.gap}
+          placeholder="기본"
+          onChange={(value) =>
+            onSpacingChange(node, {
+              gap: parseOptionalNumber(value, 0, 200),
+            })
+          }
+        />
+      </div>
+    </div>
+  )
+}
+
 function SpacingControls({
   node,
   onSpacingChange,
@@ -2440,12 +2746,14 @@ function TypographyNumberField({
 
 interface TypographyToggleButtonProps {
   children: ReactNode
+  disabled?: boolean
   isSelected: boolean
   onClick: () => void
 }
 
 function TypographyToggleButton({
   children,
+  disabled = false,
   isSelected,
   onClick,
 }: TypographyToggleButtonProps) {
@@ -2457,7 +2765,8 @@ function TypographyToggleButton({
         isSelected
           ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
           : 'border-[#c9d4cd] bg-white text-[#26312b] hover:bg-[#eef3ed]'
-      }`}
+      } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
+      disabled={disabled}
       onClick={onClick}
     >
       {children}

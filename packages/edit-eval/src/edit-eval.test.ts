@@ -79,12 +79,17 @@ describe('edit-eval schema', () => {
           nodeId: 'hero.title',
           patch: { backgroundColor: '#f8fafc', textColor: '#123456' },
         },
+        {
+          type: 'updateLayout',
+          nodeId: 'hero.section',
+          patch: { direction: 'row', align: 'center', justify: 'evenly' },
+        },
         { type: 'updateButtonLabel', nodeId: 'hero.cta', label: '바로 시작' },
         { type: 'updateStyleTokens', patch: { colorPreset: 'plum' } },
       ],
     })
 
-    assert.equal(parsed.editSequence?.length, 7)
+    assert.equal(parsed.editSequence?.length, 8)
   })
 
   it('rejects invalid edit axis scores', () => {
@@ -186,6 +191,11 @@ describe('edit-eval dry-run judge', () => {
           nodeId: 'hero.title',
           patch: { backgroundColor: '#f8fafc', textColor: '#123456' },
         },
+        {
+          type: 'updateLayout' as const,
+          nodeId: 'hero.section',
+          patch: { direction: 'row', align: 'center', justify: 'evenly' },
+        },
         { type: 'updateStyleTokens' as const, patch: { colorPreset: 'navy' } },
       ]),
       [
@@ -195,7 +205,8 @@ describe('edit-eval dry-run judge', () => {
         '4. updateSpacing hero.title spacing={"paddingTop":12,"marginBottom":24}',
         '5. updateShape hero.title shape={"radius":12,"borderStyle":"solid","shadow":"md"}',
         '6. updateColor hero.title color={"backgroundColor":"#f8fafc","textColor":"#123456"}',
-        '7. updateStyleTokens colorPreset="navy"',
+        '7. updateLayout hero.section layout={"direction":"row","align":"center","justify":"evenly"}',
+        '8. updateStyleTokens colorPreset="navy"',
       ].join('\n'),
     )
   })

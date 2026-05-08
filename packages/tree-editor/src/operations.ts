@@ -2,6 +2,7 @@ import type {
   FocalPoint,
   ImageAspectRatio,
   NodeColor,
+  NodeLayout,
   Shape,
   Spacing,
   StyleTokens,
@@ -41,6 +42,12 @@ export interface UpdateColorOperation {
   type: 'updateColor'
   nodeId: string
   patch: Partial<NodeColor>
+}
+
+export interface UpdateLayoutOperation {
+  type: 'updateLayout'
+  nodeId: string
+  patch: Partial<NodeLayout>
 }
 
 export interface UpdateButtonLabelOperation {
@@ -86,6 +93,7 @@ type ContentEditOperation =
   | UpdateSpacingOperation
   | UpdateShapeOperation
   | UpdateColorOperation
+  | UpdateLayoutOperation
   | UpdateButtonLabelOperation
   | UpdateImageOperation
 
@@ -147,6 +155,14 @@ export function updateColor(
   patch: Partial<NodeColor>,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateColor', nodeId, patch })
+}
+
+export function updateLayout(
+  tree: Tree,
+  nodeId: string,
+  patch: Partial<NodeLayout>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateLayout', nodeId, patch })
 }
 
 export function replaceTextById(
@@ -297,6 +313,9 @@ function editMatchedNode(
     case 'updateColor':
       return withColorPatch(node, operation.patch)
 
+    case 'updateLayout':
+      return withLayoutPatch(node, operation.patch)
+
     case 'updateButtonLabel':
       if (node.type !== 'button') {
         throw new Error(
@@ -323,6 +342,39 @@ function editMatchedNode(
           : {}),
       }
   }
+}
+
+function withLayoutPatch<T extends TreeNode>(
+  node: T,
+  patch: Partial<NodeLayout>,
+): T {
+  const layout = mergeLayoutPatch(node.layout, patch)
+  if (layout === undefined) {
+    const { layout: _removed, ...nodeWithoutLayout } = node
+    return nodeWithoutLayout as T
+  }
+
+  return { ...node, layout }
+}
+
+function mergeLayoutPatch(
+  current: NodeLayout | undefined,
+  patch: Partial<NodeLayout>,
+): NodeLayout | undefined {
+  const next: Partial<NodeLayout> = { ...(current ?? {}) }
+
+  for (const [key, value] of Object.entries(patch) as [
+    keyof NodeLayout,
+    NodeLayout[keyof NodeLayout] | undefined,
+  ][]) {
+    if (value === undefined) {
+      delete next[key]
+    } else {
+      Object.assign(next, { [key]: value })
+    }
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined
 }
 
 function withColorPatch<T extends TreeNode>(

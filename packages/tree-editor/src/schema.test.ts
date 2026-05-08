@@ -102,6 +102,26 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateLayout operation', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateLayout',
+      nodeId: 'hero.card',
+      patch: {
+        direction: 'row',
+        align: 'center',
+        justify: 'evenly',
+        wrap: 'wrap',
+      },
+    })
+
+    assert.equal(op.type, 'updateLayout')
+    if (op.type === 'updateLayout') {
+      assert.equal(op.nodeId, 'hero.card')
+      assert.equal(op.patch.direction, 'row')
+      assert.equal(op.patch.justify, 'evenly')
+    }
+  })
+
   it('parses updateButtonLabel operation', () => {
     const op = editOperationSchema.parse({
       type: 'updateButtonLabel',
@@ -338,6 +358,28 @@ describe('edit-operation schema', () => {
     )
   })
 
+  it('rejects invalid layout updates', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateLayout',
+        nodeId: 'hero.card',
+        patch: {
+          direction: 'row-reverse',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateLayout',
+        nodeId: 'hero.card',
+        patch: {
+          justify: 'around',
+        },
+      }),
+    )
+  })
+
   it('rejects empty nodeId', () => {
     assert.throws(() =>
       editOperationSchema.parse({
@@ -376,6 +418,11 @@ describe('edit-sequence schema', () => {
         nodeId: 'foo',
         patch: { backgroundColor: '#f8fafc', textColor: '#123456' },
       },
+      {
+        type: 'updateLayout',
+        nodeId: 'foo',
+        patch: { direction: 'row', align: 'center', justify: 'evenly' },
+      },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
       { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
       { type: 'moveNode', nodeId: 'cards.card-a', direction: 'down' },
@@ -386,7 +433,7 @@ describe('edit-sequence schema', () => {
   it('parses a valid sequence', () => {
     const seq = editSequenceSchema.parse(validSequence)
     assert.equal(seq.id, 'test')
-    assert.equal(seq.operations.length, 9)
+    assert.equal(seq.operations.length, 10)
     assert.equal(seq.tree, '../../trees/x.json')
   })
 

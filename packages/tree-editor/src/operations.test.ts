@@ -10,6 +10,7 @@ import {
   moveNode,
   replaceTextById,
   updateColor,
+  updateLayout,
   updateShape,
   updateSpacing,
   updateButtonLabel,
@@ -176,6 +177,16 @@ describe('tree editor operations', () => {
         },
       },
       {
+        type: 'updateLayout',
+        nodeId: 'landing.card',
+        patch: {
+          direction: 'row',
+          align: 'center',
+          justify: 'evenly',
+          wrap: 'wrap',
+        },
+      },
+      {
         type: 'updateImage',
         nodeId: 'landing.visual',
         alt: '새 이미지 설명',
@@ -223,6 +234,10 @@ describe('tree editor operations', () => {
         assert.equal(card.shape?.shadow, 'lg')
         assert.equal(card.color?.backgroundColor, '#f8fafc')
         assert.equal(card.color?.textColor, '#123456')
+        assert.equal(card.layout?.direction, 'row')
+        assert.equal(card.layout?.align, 'center')
+        assert.equal(card.layout?.justify, 'evenly')
+        assert.equal(card.layout?.wrap, 'wrap')
       }
     }
   })
@@ -496,6 +511,51 @@ describe('tree editor operations', () => {
       assert.equal(card?.type, 'card')
       if (card?.type === 'card') {
         assert.equal(card.color, undefined)
+      }
+    }
+  })
+
+  it('updates layout overrides on any node without changing content', () => {
+    const tree = fixtureTree()
+    const updated = updateLayout(tree, 'landing.card', {
+      direction: 'row',
+      align: 'center',
+      justify: 'evenly',
+      wrap: 'wrap',
+    })
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      const card = updated.root.children[3]
+      assert.equal(card?.type, 'card')
+      if (card?.type === 'card') {
+        assert.equal(card.children[0]?.id, 'landing.card.title')
+        assert.deepEqual(card.layout, {
+          direction: 'row',
+          align: 'center',
+          justify: 'evenly',
+          wrap: 'wrap',
+        })
+      }
+    }
+  })
+
+  it('removes layout fields and clears empty layout objects', () => {
+    const layouted = updateLayout(fixtureTree(), 'landing.card', {
+      direction: 'column',
+      justify: 'between',
+    })
+    const reset = updateLayout(layouted, 'landing.card', {
+      direction: undefined,
+      justify: undefined,
+    })
+
+    assert.equal(reset.root.type, 'section')
+    if (reset.root.type === 'section') {
+      const card = reset.root.children[3]
+      assert.equal(card?.type, 'card')
+      if (card?.type === 'card') {
+        assert.equal(card.layout, undefined)
       }
     }
   })

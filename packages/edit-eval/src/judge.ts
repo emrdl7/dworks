@@ -107,6 +107,12 @@ export function summarizeEditOperations(operations: EditOperation[]): string {
             operation.type,
             operation.nodeId,
           )} color=${JSON.stringify(operation.patch)}`
+        case 'updateLayout':
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} layout=${JSON.stringify(operation.patch)}`
         case 'updateButtonLabel':
           return `${operationPrefix(
             index,

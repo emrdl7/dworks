@@ -12,7 +12,11 @@ import {
   FONT_FAMILY_IDS,
   FONT_WEIGHT_IDS,
   IMAGE_ASPECT_RATIOS,
+  LAYOUT_ALIGN_IDS,
+  LAYOUT_DIRECTION_IDS,
+  LAYOUT_JUSTIFY_IDS,
   LAYOUT_INTENTS,
+  LAYOUT_WRAP_IDS,
   TEXT_ALIGN_IDS,
   TREE_NODE_TYPES,
   treeNodeSchema,
@@ -156,6 +160,55 @@ describe('tree schema', () => {
         editKind: 'structure',
         color: {
           textColor: '#abcd',
+        },
+        children: [],
+      }),
+    )
+  })
+
+  it('parses node layout overrides', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'landing.card',
+      type: 'card',
+      editKind: 'structure',
+      layout: {
+        direction: 'row',
+        align: 'center',
+        justify: 'evenly',
+        wrap: 'wrap',
+      },
+      children: [],
+    })
+
+    assert.equal(parsed.type, 'card')
+    if (parsed.type === 'card') {
+      assert.equal(parsed.layout?.direction, 'row')
+      assert.equal(parsed.layout?.align, 'center')
+      assert.equal(parsed.layout?.justify, 'evenly')
+      assert.equal(parsed.layout?.wrap, 'wrap')
+    }
+  })
+
+  it('rejects invalid node layout values', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        layout: {
+          direction: 'row-reverse',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        layout: {
+          justify: 'around',
         },
         children: [],
       }),
@@ -531,6 +584,16 @@ describe('tree schema', () => {
     assert.deepEqual(TEXT_ALIGN_IDS, ['left', 'center', 'right'])
     assert.deepEqual(BUILT_IN_FONT_FAMILY_IDS, ['sans', 'serif', 'mono'])
     assert.deepEqual(FONT_FAMILY_IDS, ['sans', 'serif', 'mono'])
+    assert.deepEqual(LAYOUT_DIRECTION_IDS, ['row', 'column'])
+    assert.deepEqual(LAYOUT_ALIGN_IDS, ['start', 'center', 'end', 'stretch'])
+    assert.deepEqual(LAYOUT_JUSTIFY_IDS, [
+      'start',
+      'center',
+      'end',
+      'between',
+      'evenly',
+    ])
+    assert.deepEqual(LAYOUT_WRAP_IDS, ['nowrap', 'wrap'])
     assert.deepEqual(COLOR_PRESET_IDS, [
       'mint',
       'navy',

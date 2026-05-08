@@ -38,6 +38,36 @@ export const layoutIntentSchema = z.enum([
 ])
 export type LayoutIntent = z.infer<typeof layoutIntentSchema>
 
+export const LAYOUT_DIRECTION_IDS = ['row', 'column'] as const
+export const layoutDirectionSchema = z.enum(LAYOUT_DIRECTION_IDS)
+export type LayoutDirection = z.infer<typeof layoutDirectionSchema>
+
+export const LAYOUT_ALIGN_IDS = ['start', 'center', 'end', 'stretch'] as const
+export const layoutAlignSchema = z.enum(LAYOUT_ALIGN_IDS)
+export type LayoutAlign = z.infer<typeof layoutAlignSchema>
+
+export const LAYOUT_JUSTIFY_IDS = [
+  'start',
+  'center',
+  'end',
+  'between',
+  'evenly',
+] as const
+export const layoutJustifySchema = z.enum(LAYOUT_JUSTIFY_IDS)
+export type LayoutJustify = z.infer<typeof layoutJustifySchema>
+
+export const LAYOUT_WRAP_IDS = ['nowrap', 'wrap'] as const
+export const layoutWrapSchema = z.enum(LAYOUT_WRAP_IDS)
+export type LayoutWrap = z.infer<typeof layoutWrapSchema>
+
+export const nodeLayoutSchema = z.object({
+  direction: layoutDirectionSchema.optional(),
+  align: layoutAlignSchema.optional(),
+  justify: layoutJustifySchema.optional(),
+  wrap: layoutWrapSchema.optional(),
+})
+export type NodeLayout = z.infer<typeof nodeLayoutSchema>
+
 export const contentRoleSchema = z.enum([
   'heading',
   'body',
@@ -232,6 +262,7 @@ interface BaseNodeMeta {
   spacing?: Spacing
   shape?: Shape
   color?: NodeColor
+  layout?: NodeLayout
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -312,6 +343,7 @@ const baseShape = {
   spacing: spacingSchema.optional(),
   shape: shapeSchema.optional(),
   color: nodeColorSchema.optional(),
+  layout: nodeLayoutSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({
