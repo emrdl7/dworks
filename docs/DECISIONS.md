@@ -440,3 +440,8 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-style-color-accent` | r1~r3 ack → 코드 (`d18e359`) → r4 (Claude) | NodeColor.accentColor + button primary/caption 노드별 강조 색상 override |
 | `m2-style-shape-per-side` | r1~r3 ack → 코드 (`717af41`) → r4 (Claude) | 코너별 radius 4 키 (TL/TR/BR/BL) + 전체/분리 mode |
 | `m2-style-gradient-radial` | r1~r3 ack → 코드 (`a12bb39`) → r4 (Claude) | radial circle gradient + 종류 선택 (선형/원형) |
+| `m2-style-node-opacity` | r1~r3 ack → 코드 (`800e653`) → r4 (Claude) | BaseNodeMeta.opacity + updateNodeMeta operation |
+| `m2-style-visibility` | r1 (Codex) → r2 (Claude) → 코드 (`70ee7a5`) → r3 (Claude) | hidden + pointerEvents + 레이어 chip |
+| `m2-interaction-uplift` | r1 (Claude) → r2 (Codex) → r3 (Claude) | 인터랙션 분산 영역 합의 (context-menu / layer-drag / canvas-toolbar / smart-collapse) |
+| `m2-context-menu` | r1 (Codex) → r2 (Claude) → 코드 (`3c4f720`) → r3 (Claude) | 캔버스/레이어 우클릭 메뉴 7 항목 + Shift+F10 + Escape (자체 구현) |
+| `m2-layer-drag` | r1 (Codex) → r2 (Claude) → 코드 (`5337b33`) → r3 (사용자 버그) → fix (`8c09a99`) → r4 (Claude) | 레이어 드래그 정렬 + React 이벤트 풀링 fix |
