@@ -3053,23 +3053,42 @@ function NodeInspector({
   onColorPresetChange,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() =>
-    computeInspectorSmartDefaults(node.type, isSelectedNodeContainer),
-  )
+  const [openSectionsByNode, setOpenSectionsByNode] = useState<
+    Record<string, Record<string, boolean>>
+  >(() => ({
+    [node.id]: computeInspectorSmartDefaults(node.type, isSelectedNodeContainer),
+  }))
 
   useEffect(() => {
-    setOpenSections(
-      computeInspectorSmartDefaults(node.type, isSelectedNodeContainer),
-    )
+    setOpenSectionsByNode((prev) => {
+      if (prev[node.id] !== undefined) {
+        return prev
+      }
+      return {
+        ...prev,
+        [node.id]: computeInspectorSmartDefaults(
+          node.type,
+          isSelectedNodeContainer,
+        ),
+      }
+    })
   }, [node.id, node.type, isSelectedNodeContainer])
+
+  const openSections =
+    openSectionsByNode[node.id] ??
+    computeInspectorSmartDefaults(node.type, isSelectedNodeContainer)
 
   function bindSection(title: string) {
     return {
       open: openSections[title] === true,
       onOpenChange: (next: boolean) =>
-        setOpenSections((prev) =>
-          prev[title] === next ? prev : { ...prev, [title]: next },
-        ),
+        setOpenSectionsByNode((prev) => {
+          const current = prev[node.id] ?? {}
+          if (current[title] === next) {
+            return prev
+          }
+          return { ...prev, [node.id]: { ...current, [title]: next } }
+        }),
     }
   }
 
@@ -3081,12 +3100,13 @@ function NodeInspector({
   )
 
   function handleMasterCollapseToggle() {
-    setOpenSections((prev) => {
-      const next: Record<string, boolean> = { ...prev }
+    setOpenSectionsByNode((prev) => {
+      const current = prev[node.id] ?? {}
+      const next: Record<string, boolean> = { ...current }
       visibleControlledSectionTitles.forEach((title) => {
         next[title] = !anyVisibleSectionOpen
       })
-      return next
+      return { ...prev, [node.id]: next }
     })
   }
 
