@@ -1476,6 +1476,7 @@ export default function HomePage() {
         <aside className="min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white">
           <NodeInspector
             node={selectedNode}
+            tree={tree}
             structureInfo={selectedStructureInfo}
             onTextChange={handleTextChange}
             onTextTypographyChange={handleTextTypographyChange}
@@ -2980,6 +2981,7 @@ const aspectRatioClasses: Record<NonNullable<ImageNode['aspectRatio']>, string> 
 
 interface NodeInspectorProps {
   node: TreeNode
+  tree: Tree
   structureInfo: StructureInfo
   colorPreset: ColorPreset
   onTextChange: (node: TextNode, content: string) => void
@@ -3019,6 +3021,7 @@ interface NodeInspectorProps {
 
 function NodeInspector({
   node,
+  tree,
   structureInfo,
   colorPreset,
   onTextChange,
@@ -3094,6 +3097,8 @@ function NodeInspector({
 
         <NodeColorControls
           node={node}
+          tree={tree}
+          colorPreset={colorPreset}
           disclosure={bindSection('색상')}
           onNodeColorChange={onNodeColorChange}
           onNodeColorReset={onNodeColorReset}
@@ -3528,6 +3533,8 @@ function VisibilitySwitch({
 interface NodeColorControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TreeNode
+  tree: Tree
+  colorPreset: ColorPreset
   onNodeColorChange: (
     node: TreeNode,
     patch: Partial<NodeColor>,
@@ -3544,10 +3551,14 @@ interface NodeColorControlsProps {
 function NodeColorControls({
   disclosure,
   node,
+  tree,
+  colorPreset,
   onNodeColorChange,
   onNodeMetaChange,
   onNodeColorReset,
 }: NodeColorControlsProps) {
+  const textContrast =
+    node.type === 'text' ? computeTextContrast(tree, node, colorPreset) : null
   const color = node.color ?? {}
   const supportsAccentColor = canUseAccentColor(node)
   const backgroundMode: ColorMode =
@@ -3909,6 +3920,9 @@ function NodeColorControls({
       onAction={() => onNodeColorReset(node)}
       {...disclosure}
     >
+      {textContrast ? (
+        <TextContrastReadout contrast={textContrast} />
+      ) : null}
       <div className="space-y-4">
         <div>
           <div className="flex items-center justify-between gap-3">
@@ -4087,6 +4101,49 @@ function GradientControls({
         </div>
       ) : null}
     </div>
+  )
+}
+
+function TextContrastReadout({ contrast }: { contrast: TextContrastResult }) {
+  return (
+    <div className="mb-4 rounded-md border border-[#d7ddd2] bg-white p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-[#4f5e56]">
+          대비 (본문 기준)
+        </span>
+        <span className="text-sm font-semibold tabular-nums text-[#26312b]">
+          {contrast.ratio.toFixed(1)} : 1
+        </span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <ContrastBadge
+          label={contrast.passesAA ? 'AA 통과' : 'AA 미달'}
+          pass={contrast.passesAA}
+        />
+        <ContrastBadge
+          label={contrast.passesAAA ? 'AAA 통과' : 'AAA 미달'}
+          pass={contrast.passesAAA}
+        />
+      </div>
+      {contrast.viaGradient ? (
+        <p className="mt-2 text-xs text-[#647067]">
+          그라디언트 또는 이미지 배경에서는 정확한 검사가 어렵습니다.
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function ContrastBadge({ label, pass }: { label: string; pass: boolean }) {
+  const className = pass
+    ? 'border-[#1b7f72] bg-[#eef8f6] text-[#1b7f72]'
+    : 'border-[#cbd6cf] bg-white text-[#647067]'
+  return (
+    <span
+      className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${className}`}
+    >
+      {label}
+    </span>
   )
 }
 
@@ -7029,6 +7086,234 @@ function computeInspectorSmartDefaults(
     return { 레이아웃: true }
   }
   return {}
+}
+
+type RGB = { r: number; g: number; b: number }
+
+function parseHexColor(hex: string): RGB | null {
+  if (typeof hex !== 'string') {
+    return null
+  }
+  const cleaned = hex.trim().replace(/^#/, '')
+  if (cleaned.length === 3) {
+    const r = Number.parseInt(cleaned.slice(0, 1).repeat(2), 16)
+    const g = Number.parseInt(cleaned.slice(1, 2).repeat(2), 16)
+    const b = Number.parseInt(cleaned.slice(2, 3).repeat(2), 16)
+    if ([r, g, b].some((c) => Number.isNaN(c))) {
+      return null
+    }
+    return { r, g, b }
+  }
+  if (cleaned.length === 6) {
+    const r = Number.parseInt(cleaned.slice(0, 2), 16)
+    const g = Number.parseInt(cleaned.slice(2, 4), 16)
+    const b = Number.parseInt(cleaned.slice(4, 6), 16)
+    if ([r, g, b].some((c) => Number.isNaN(c))) {
+      return null
+    }
+    return { r, g, b }
+  }
+  return null
+}
+
+function srgbChannelToLinear(channel: number): number {
+  const v = channel / 255
+  return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+}
+
+function relativeLuminance({ r, g, b }: RGB): number {
+  return (
+    0.2126 * srgbChannelToLinear(r) +
+    0.7152 * srgbChannelToLinear(g) +
+    0.0722 * srgbChannelToLinear(b)
+  )
+}
+
+function contrastRatio(c1: RGB, c2: RGB): number {
+  const L1 = relativeLuminance(c1)
+  const L2 = relativeLuminance(c2)
+  const lighter = Math.max(L1, L2)
+  const darker = Math.min(L1, L2)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+function blendOver(fg: RGB, fgAlpha: number, bg: RGB): RGB {
+  const a = Math.max(0, Math.min(1, fgAlpha))
+  return {
+    r: Math.round(fg.r * a + bg.r * (1 - a)),
+    g: Math.round(fg.g * a + bg.g * (1 - a)),
+    b: Math.round(fg.b * a + bg.b * (1 - a)),
+  }
+}
+
+function clampOpacity(value: number | undefined): number {
+  if (value === undefined || Number.isNaN(value)) {
+    return 1
+  }
+  return Math.max(0, Math.min(1, value))
+}
+
+function getAncestorChain(tree: Tree, nodeId: string): string[] {
+  const chain: string[] = []
+  let currentId: string | undefined = nodeId
+  while (currentId) {
+    const info = getStructureInfo(tree, currentId)
+    if (info.isRoot || info.parentId === undefined) {
+      break
+    }
+    chain.push(info.parentId)
+    currentId = info.parentId
+  }
+  return chain
+}
+
+function resolveBackgroundColor(
+  tree: Tree,
+  nodeId: string,
+  colorPreset: ColorPreset,
+): { color: RGB; viaGradient: boolean } {
+  let viaGradient = false
+  const visit = [nodeId, ...getAncestorChain(tree, nodeId)]
+
+  for (let i = 0; i < visit.length; i++) {
+    const id = visit[i]
+    if (id === undefined) {
+      continue
+    }
+    const node = findNode(tree.root, id)
+    if (!node) {
+      continue
+    }
+    const color = node.color
+    if (color?.backgroundGradient !== undefined) {
+      viaGradient = true
+    }
+    if (color?.backgroundColor !== undefined) {
+      const parsed = parseHexColor(color.backgroundColor)
+      if (parsed === null) {
+        continue
+      }
+      const alpha = clampOpacity(color.backgroundOpacity)
+      if (alpha >= 1) {
+        return { color: parsed, viaGradient }
+      }
+      // Background has opacity — blend with parent's effective bg (or canvas surface)
+      const restChain = visit.slice(i + 1)
+      const parentBg = resolveBackgroundFromChain(tree, restChain, colorPreset)
+      return {
+        color: blendOver(parsed, alpha, parentBg.color),
+        viaGradient: viaGradient || parentBg.viaGradient,
+      }
+    }
+  }
+
+  const surface = parseHexColor(COLOR_PRESETS[colorPreset].surface) ?? {
+    r: 255,
+    g: 255,
+    b: 255,
+  }
+  return { color: surface, viaGradient }
+}
+
+function resolveBackgroundFromChain(
+  tree: Tree,
+  chain: string[],
+  colorPreset: ColorPreset,
+): { color: RGB; viaGradient: boolean } {
+  let viaGradient = false
+  for (let i = 0; i < chain.length; i++) {
+    const id = chain[i]
+    if (id === undefined) {
+      continue
+    }
+    const node = findNode(tree.root, id)
+    if (!node) {
+      continue
+    }
+    const color = node.color
+    if (color?.backgroundGradient !== undefined) {
+      viaGradient = true
+    }
+    if (color?.backgroundColor !== undefined) {
+      const parsed = parseHexColor(color.backgroundColor)
+      if (parsed === null) {
+        continue
+      }
+      const alpha = clampOpacity(color.backgroundOpacity)
+      if (alpha >= 1) {
+        return { color: parsed, viaGradient }
+      }
+      const restChain = chain.slice(i + 1)
+      const parentBg = resolveBackgroundFromChain(tree, restChain, colorPreset)
+      return {
+        color: blendOver(parsed, alpha, parentBg.color),
+        viaGradient: viaGradient || parentBg.viaGradient,
+      }
+    }
+  }
+  const surface = parseHexColor(COLOR_PRESETS[colorPreset].surface) ?? {
+    r: 255,
+    g: 255,
+    b: 255,
+  }
+  return { color: surface, viaGradient }
+}
+
+function resolveTextColor(
+  tree: Tree,
+  nodeId: string,
+  colorPreset: ColorPreset,
+): { color: RGB; alpha: number } {
+  const visit = [nodeId, ...getAncestorChain(tree, nodeId)]
+  for (const id of visit) {
+    const node = findNode(tree.root, id)
+    if (!node) {
+      continue
+    }
+    if (node.color?.textColor !== undefined) {
+      const parsed = parseHexColor(node.color.textColor)
+      if (parsed !== null) {
+        return { color: parsed, alpha: clampOpacity(node.color.textOpacity) }
+      }
+    }
+  }
+  const fallback = parseHexColor(COLOR_PRESETS[colorPreset].textPrimary) ?? {
+    r: 0,
+    g: 0,
+    b: 0,
+  }
+  return { color: fallback, alpha: 1 }
+}
+
+interface TextContrastResult {
+  ratio: number
+  passesAA: boolean
+  passesAAA: boolean
+  viaGradient: boolean
+}
+
+function computeTextContrast(
+  tree: Tree,
+  node: TreeNode,
+  colorPreset: ColorPreset,
+): TextContrastResult | null {
+  if (node.type !== 'text') {
+    return null
+  }
+  const text = resolveTextColor(tree, node.id, colorPreset)
+  const bg = resolveBackgroundColor(tree, node.id, colorPreset)
+  const textOnBg =
+    text.alpha < 1 ? blendOver(text.color, text.alpha, bg.color) : text.color
+  const nodeAlpha = clampOpacity(node.opacity)
+  const finalText =
+    nodeAlpha < 1 ? blendOver(textOnBg, nodeAlpha, bg.color) : textOnBg
+  const ratio = contrastRatio(finalText, bg.color)
+  return {
+    ratio,
+    passesAA: ratio >= 4.5,
+    passesAAA: ratio >= 7,
+    viaGradient: bg.viaGradient,
+  }
 }
 
 function getCanvasStyle(colorPreset: ColorPreset): CSSProperties {
