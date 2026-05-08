@@ -379,6 +379,8 @@ const colorFields = [
   'backgroundGradient',
   'textColor',
   'textOpacity',
+  'accentColor',
+  'accentOpacity',
 ] as const
 const layoutFields = ['direction', 'align', 'justify', 'wrap'] as const
 const imagePresentationFields = [
@@ -390,11 +392,11 @@ const imagePresentationFields = [
 type SpacingField = (typeof spacingFields)[number]
 type ColorField = Extract<
   (typeof colorFields)[number],
-  'backgroundColor' | 'textColor'
+  'backgroundColor' | 'textColor' | 'accentColor'
 >
 type ColorOpacityField = Extract<
   (typeof colorFields)[number],
-  'backgroundOpacity' | 'textOpacity'
+  'backgroundOpacity' | 'textOpacity' | 'accentOpacity'
 >
 type CustomShadowNumberField = 'offsetX' | 'offsetY' | 'blur' | 'spread'
 type ImagePresentationField = (typeof imagePresentationFields)[number]
@@ -458,6 +460,7 @@ const marginVerticalFields: readonly SpacingField[] = [
 const DEFAULT_SHAPE_COLOR = '#d7ddd2'
 const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
 const DEFAULT_TEXT_PICKER_COLOR = '#18211d'
+const DEFAULT_ACCENT_PICKER_COLOR = '#1b7f72'
 const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
 const DEFAULT_GRADIENT_TO_COLOR = '#000000'
 const DEFAULT_GRADIENT_DIRECTION: GradientDirection = 'to-bottom-right'
@@ -1250,6 +1253,8 @@ function CanvasNode({
   const containerSpacingStyle = getContainerSpacingStyle(node.spacing)
   const shapeStyle = getShapeStyle(node.shape)
   const colorStyle = getColorStyle(node.color, inheritedTextColor)
+  const accentBackgroundStyle = getAccentBackgroundStyle(node.color)
+  const accentTextColorStyle = getAccentTextColorStyle(node.color)
   const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
@@ -1465,7 +1470,11 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <div style={boxStyle}>
-            <TextPreview node={node} textColorStyle={textColorStyle} />
+            <TextPreview
+              node={node}
+              accentColorStyle={accentTextColorStyle}
+              textColorStyle={textColorStyle}
+            />
           </div>
         </SelectableNode>
       )
@@ -1479,7 +1488,11 @@ function CanvasNode({
                 ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
                 : 'bg-[var(--dw-accent)] text-[var(--dw-accent-text)]'
             }`}
-            style={boxStyle}
+            style={
+              node.variant === 'secondary'
+                ? boxStyle
+                : mergeStyles(boxStyle, accentBackgroundStyle)
+            }
           >
             {node.label}
           </span>
@@ -1554,14 +1567,17 @@ function SelectableNode({
 }
 
 function TextPreview({
+  accentColorStyle,
   node,
   textColorStyle,
 }: {
+  accentColorStyle?: CSSProperties
   node: TextNode
   textColorStyle?: CSSProperties
 }) {
   const typographyStyle = getTypographyStyle(node.typography)
   const textStyle = mergeStyles(typographyStyle, textColorStyle)
+  const captionTextStyle = mergeStyles(textStyle, accentColorStyle)
   const content = parseInlineMarkdown(node.content)
 
   switch (node.emphasis) {
@@ -1596,7 +1612,7 @@ function TextPreview({
       return (
         <p
           className="text-xs font-semibold uppercase text-[var(--dw-accent)]"
-          style={textStyle}
+          style={captionTextStyle}
         >
           {content}
         </p>
@@ -1892,6 +1908,25 @@ function getColorStyle(
   }
 
   return Object.keys(style).length > 0 ? style : undefined
+}
+
+function getAccentBackgroundStyle(color?: NodeColor): CSSProperties | undefined {
+  return color?.accentColor === undefined
+    ? undefined
+    : {
+        backgroundColor: getCssColorWithOpacity(
+          color.accentColor,
+          color.accentOpacity,
+        ),
+      }
+}
+
+function getAccentTextColorStyle(color?: NodeColor): CSSProperties | undefined {
+  return color?.accentColor === undefined
+    ? undefined
+    : {
+        color: getCssColorWithOpacity(color.accentColor, color.accentOpacity),
+      }
 }
 
 function getTextColorStyle(textColor?: string): CSSProperties | undefined {
@@ -2587,6 +2622,7 @@ function NodeColorControls({
   onNodeColorReset,
 }: NodeColorControlsProps) {
   const color = node.color ?? {}
+  const supportsAccentColor = canUseAccentColor(node)
   const backgroundMode: ColorMode =
     color.backgroundGradient === undefined ? 'solid' : 'gradient'
   const backgroundGradient = getResolvedGradient(
@@ -2604,12 +2640,16 @@ function NodeColorControls({
     backgroundGradient.to,
   )
   const [textColorInput, setTextColorInput] = useState(color.textColor ?? '')
+  const [accentColorInput, setAccentColorInput] = useState(
+    color.accentColor ?? '',
+  )
   const [backgroundColorError, setBackgroundColorError] = useState(false)
   const [backgroundGradientFromError, setBackgroundGradientFromError] =
     useState(false)
   const [backgroundGradientToError, setBackgroundGradientToError] =
     useState(false)
   const [textColorError, setTextColorError] = useState(false)
+  const [accentColorError, setAccentColorError] = useState(false)
 
   useEffect(() => {
     setBackgroundColorInput(color.backgroundColor ?? '')
@@ -2620,6 +2660,11 @@ function NodeColorControls({
     setTextColorInput(color.textColor ?? '')
     setTextColorError(false)
   }, [node.id, color.textColor])
+
+  useEffect(() => {
+    setAccentColorInput(color.accentColor ?? '')
+    setAccentColorError(false)
+  }, [node.id, color.accentColor])
 
   useEffect(() => {
     setBackgroundGradientFromInput(backgroundGradient.from)
@@ -2635,15 +2680,11 @@ function NodeColorControls({
 
   function updateColorFromText(field: ColorField, value: string) {
     const trimmedValue = value.trim()
-    const setInput =
-      field === 'backgroundColor' ? setBackgroundColorInput : setTextColorInput
-    const setError =
-      field === 'backgroundColor' ? setBackgroundColorError : setTextColorError
 
-    setInput(value)
+    setColorFieldInput(field, value)
 
     if (trimmedValue === '') {
-      setError(false)
+      setColorFieldError(field, false)
       onNodeColorChange(
         node,
         {
@@ -2655,11 +2696,11 @@ function NodeColorControls({
     }
 
     if (!isValidHexColor(trimmedValue)) {
-      setError(true)
+      setColorFieldError(field, true)
       return
     }
 
-    setError(false)
+    setColorFieldError(field, false)
     onNodeColorChange(
       node,
       { [field]: normalizeHexColor(trimmedValue) } as Partial<NodeColor>,
@@ -2668,13 +2709,8 @@ function NodeColorControls({
 
   function updateColorFromPicker(field: ColorField, value: string) {
     const normalizedValue = normalizeHexColor(value)
-    if (field === 'backgroundColor') {
-      setBackgroundColorInput(normalizedValue)
-      setBackgroundColorError(false)
-    } else {
-      setTextColorInput(normalizedValue)
-      setTextColorError(false)
-    }
+    setColorFieldInput(field, normalizedValue)
+    setColorFieldError(field, false)
 
     onNodeColorChange(
       node,
@@ -2694,16 +2730,32 @@ function NodeColorControls({
 
     if (nextOpacity !== undefined && color[colorField] === undefined) {
       Object.assign(patch, { [colorField]: defaultColor })
-      if (colorField === 'backgroundColor') {
-        setBackgroundColorInput(defaultColor)
-      } else {
-        setTextColorInput(defaultColor)
-      }
+      setColorFieldInput(colorField, defaultColor)
     }
 
     onNodeColorChange(node, patch, {
       mergeKey: getNodeColorMergeKey(node.id, field),
     })
+  }
+
+  function setColorFieldInput(field: ColorField, value: string) {
+    if (field === 'backgroundColor') {
+      setBackgroundColorInput(value)
+    } else if (field === 'textColor') {
+      setTextColorInput(value)
+    } else {
+      setAccentColorInput(value)
+    }
+  }
+
+  function setColorFieldError(field: ColorField, value: boolean) {
+    if (field === 'backgroundColor') {
+      setBackgroundColorError(value)
+    } else if (field === 'textColor') {
+      setTextColorError(value)
+    } else {
+      setAccentColorError(value)
+    }
   }
 
   function updateBackgroundMode(mode: ColorMode) {
@@ -2899,7 +2951,7 @@ function NodeColorControls({
   return (
     <InspectorDisclosure
       title="색상"
-      description="선택한 노드의 배경과 글자"
+      description="선택한 노드의 배경, 글자, 강조"
       onAction={() => onNodeColorReset(node)}
     >
       <div className="space-y-4">
@@ -2952,7 +3004,11 @@ function NodeColorControls({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div
+          className={
+            supportsAccentColor ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-1 gap-3'
+          }
+        >
           {renderColorField({
             colorField: 'textColor',
             defaultColor: DEFAULT_TEXT_PICKER_COLOR,
@@ -2963,6 +3019,18 @@ function NodeColorControls({
             opacityLabel: '글자 투명도',
             opacityValue: color.textOpacity,
           })}
+          {supportsAccentColor
+            ? renderColorField({
+                colorField: 'accentColor',
+                defaultColor: DEFAULT_ACCENT_PICKER_COLOR,
+                error: accentColorError,
+                inputValue: accentColorInput,
+                label: '강조 색상',
+                opacityField: 'accentOpacity',
+                opacityLabel: '강조 투명도',
+                opacityValue: color.accentOpacity,
+              })
+            : null}
         </div>
       </div>
     </InspectorDisclosure>
@@ -5322,6 +5390,13 @@ function isEditableNode(node: TreeNode): boolean {
   return node.type === 'text' || node.type === 'button' || node.type === 'image'
 }
 
+function canUseAccentColor(node: TreeNode): boolean {
+  return (
+    (node.type === 'button' && node.variant === 'primary') ||
+    (node.type === 'text' && node.emphasis === 'caption')
+  )
+}
+
 function isImageNode(node: TreeNode): node is ImageNode {
   return node.type === 'image'
 }
@@ -5485,7 +5560,11 @@ function textShadowToCss(shadow: TextShadow): string {
 }
 
 function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
-  return field === 'backgroundColor' ? 'backgroundOpacity' : 'textOpacity'
+  if (field === 'backgroundColor') {
+    return 'backgroundOpacity'
+  }
+
+  return field === 'textColor' ? 'textOpacity' : 'accentOpacity'
 }
 
 function toColorInputValue(

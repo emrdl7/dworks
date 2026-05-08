@@ -193,6 +193,8 @@ export const nodeColorSchema = z.object({
   backgroundGradient: gradientSchema.optional(),
   textColor: hexColorSchema.optional(),
   textOpacity: opacitySchema.optional(),
+  accentColor: hexColorSchema.optional(),
+  accentOpacity: opacitySchema.optional(),
 })
 export type NodeColor = z.infer<typeof nodeColorSchema>
 
