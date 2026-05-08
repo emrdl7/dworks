@@ -117,6 +117,51 @@ describe('tree schema', () => {
     }
   })
 
+  it('parses node color overrides', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'landing.card',
+      type: 'card',
+      editKind: 'structure',
+      color: {
+        backgroundColor: '#f8fafc',
+        textColor: '#123',
+      },
+      children: [],
+    })
+
+    assert.equal(parsed.type, 'card')
+    if (parsed.type === 'card') {
+      assert.equal(parsed.color?.backgroundColor, '#f8fafc')
+      assert.equal(parsed.color?.textColor, '#123')
+    }
+  })
+
+  it('rejects invalid node color values', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          backgroundColor: 'white',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          textColor: '#abcd',
+        },
+        children: [],
+      }),
+    )
+  })
+
   it('rejects invalid shape values', () => {
     assert.throws(() =>
       treeNodeSchema.parse({

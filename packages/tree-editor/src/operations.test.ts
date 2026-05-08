@@ -9,6 +9,7 @@ import {
   duplicateNode,
   moveNode,
   replaceTextById,
+  updateColor,
   updateShape,
   updateSpacing,
   updateButtonLabel,
@@ -167,6 +168,14 @@ describe('tree editor operations', () => {
         },
       },
       {
+        type: 'updateColor',
+        nodeId: 'landing.card',
+        patch: {
+          backgroundColor: '#f8fafc',
+          textColor: '#123456',
+        },
+      },
+      {
         type: 'updateImage',
         nodeId: 'landing.visual',
         alt: '새 이미지 설명',
@@ -212,6 +221,8 @@ describe('tree editor operations', () => {
         assert.equal(card.shape?.borderColor, '#aabbcc')
         assert.equal(card.shape?.borderStyle, 'dashed')
         assert.equal(card.shape?.shadow, 'lg')
+        assert.equal(card.color?.backgroundColor, '#f8fafc')
+        assert.equal(card.color?.textColor, '#123456')
       }
     }
   })
@@ -444,6 +455,47 @@ describe('tree editor operations', () => {
       assert.equal(card?.type, 'card')
       if (card?.type === 'card') {
         assert.equal(card.shape, undefined)
+      }
+    }
+  })
+
+  it('updates color overrides on any node without changing content', () => {
+    const tree = fixtureTree()
+    const updated = updateColor(tree, 'landing.cta', {
+      backgroundColor: '#f8fafc',
+      textColor: '#123456',
+    })
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      const cta = updated.root.children[1]
+      assert.equal(cta?.type, 'button')
+      if (cta?.type === 'button') {
+        assert.equal(cta.label, '시작하기')
+        assert.deepEqual(cta.color, {
+          backgroundColor: '#f8fafc',
+          textColor: '#123456',
+        })
+      }
+    }
+  })
+
+  it('removes color fields and clears empty color objects', () => {
+    const colored = updateColor(fixtureTree(), 'landing.card', {
+      backgroundColor: '#f8fafc',
+      textColor: '#123456',
+    })
+    const reset = updateColor(colored, 'landing.card', {
+      backgroundColor: undefined,
+      textColor: undefined,
+    })
+
+    assert.equal(reset.root.type, 'section')
+    if (reset.root.type === 'section') {
+      const card = reset.root.children[3]
+      assert.equal(card?.type, 'card')
+      if (card?.type === 'card') {
+        assert.equal(card.color, undefined)
       }
     }
   })

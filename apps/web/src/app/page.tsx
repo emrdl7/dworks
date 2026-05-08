@@ -20,6 +20,7 @@ import {
   type FontFamily,
   type FontWeight,
   type ImageNode,
+  type NodeColor,
   type ShadowPreset,
   type Shape,
   type Spacing,
@@ -33,6 +34,7 @@ import {
   deleteNode,
   duplicateNode,
   moveNode,
+  updateColor,
   updateButtonLabel,
   updateImage,
   updateShape,
@@ -200,7 +202,9 @@ const shapeFields = [
   'borderStyle',
   'shadow',
 ] as const
+const colorFields = ['backgroundColor', 'textColor'] as const
 type SpacingField = (typeof spacingFields)[number]
+type ColorField = (typeof colorFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
 
 const spacingModes: SpacingMode[] = ['all', 'axis', 'sides']
@@ -239,6 +243,7 @@ const marginVerticalFields: readonly SpacingField[] = [
 ]
 
 const DEFAULT_SHAPE_COLOR = '#d7ddd2'
+const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const SHADOW_VALUES: Record<ShadowPreset, string> = {
   none: 'none',
@@ -404,6 +409,22 @@ export default function HomePage() {
         Object.fromEntries(
           shapeFields.map((field) => [field, undefined]),
         ) as Partial<Shape>,
+      ),
+    )
+  }
+
+  function handleNodeColorChange(node: TreeNode, patch: Partial<NodeColor>) {
+    commitTreeEdit(updateColor(tree, node.id, patch))
+  }
+
+  function handleNodeColorReset(node: TreeNode) {
+    commitTreeEdit(
+      updateColor(
+        tree,
+        node.id,
+        Object.fromEntries(
+          colorFields.map((field) => [field, undefined]),
+        ) as Partial<NodeColor>,
       ),
     )
   }
@@ -659,6 +680,8 @@ export default function HomePage() {
             onSpacingReset={handleSpacingReset}
             onShapeChange={handleShapeChange}
             onShapeReset={handleShapeReset}
+            onNodeColorChange={handleNodeColorChange}
+            onNodeColorReset={handleNodeColorReset}
             registeredFonts={registeredFonts}
             fontUsageCounts={fontUsageCounts}
             fontRegistryMessage={fontRegistryMessage}
@@ -707,18 +730,27 @@ function HistoryButton({
 }
 
 interface CanvasNodeProps {
+  inheritedTextColor?: string
   node: TreeNode
   selectedNodeId: string
   onSelect: (nodeId: string) => void
 }
 
-function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
+function CanvasNode({
+  inheritedTextColor,
+  node,
+  selectedNodeId,
+  onSelect,
+}: CanvasNodeProps) {
   const boxSpacingStyle = getBoxSpacingStyle(node.spacing)
   const gapSpacingStyle = getGapSpacingStyle(node.spacing)
   const containerSpacingStyle = getContainerSpacingStyle(node.spacing)
   const shapeStyle = getShapeStyle(node.shape)
-  const boxStyle = mergeStyles(boxSpacingStyle, shapeStyle)
-  const containerStyle = mergeStyles(containerSpacingStyle, shapeStyle)
+  const colorStyle = getColorStyle(node.color, inheritedTextColor)
+  const effectiveTextColor = node.color?.textColor ?? inheritedTextColor
+  const textColorStyle = getTextColorStyle(effectiveTextColor)
+  const boxStyle = mergeStyles(boxSpacingStyle, shapeStyle, colorStyle)
+  const containerStyle = mergeStyles(containerSpacingStyle, shapeStyle, colorStyle)
 
   switch (node.type) {
     case 'section': {
@@ -730,6 +762,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
             {firstChild ? (
               <CanvasNode
                 node={firstChild}
+                inheritedTextColor={effectiveTextColor}
                 selectedNodeId={selectedNodeId}
                 onSelect={onSelect}
               />
@@ -740,6 +773,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                   <CanvasNode
                     key={child.id}
                     node={child}
+                    inheritedTextColor={effectiveTextColor}
                     selectedNodeId={selectedNodeId}
                     onSelect={onSelect}
                   />
@@ -751,6 +785,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                   <CanvasNode
                     key={child.id}
                     node={child}
+                    inheritedTextColor={effectiveTextColor}
                     selectedNodeId={selectedNodeId}
                     onSelect={onSelect}
                   />
@@ -780,6 +815,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                 <CanvasNode
                   key={child.id}
                   node={child}
+                  inheritedTextColor={effectiveTextColor}
                   selectedNodeId={selectedNodeId}
                   onSelect={onSelect}
                 />
@@ -791,6 +827,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                   <CanvasNode
                     key={child.id}
                     node={child}
+                    inheritedTextColor={effectiveTextColor}
                     selectedNodeId={selectedNodeId}
                     onSelect={onSelect}
                   />
@@ -814,6 +851,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                 <CanvasNode
                   key={child.id}
                   node={child}
+                  inheritedTextColor={effectiveTextColor}
                   selectedNodeId={selectedNodeId}
                   onSelect={onSelect}
                 />
@@ -831,6 +869,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
               <CanvasNode
                 key={child.id}
                 node={child}
+                inheritedTextColor={effectiveTextColor}
                 selectedNodeId={selectedNodeId}
                 onSelect={onSelect}
               />
@@ -850,6 +889,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
               <CanvasNode
                 key={child.id}
                 node={child}
+                inheritedTextColor={effectiveTextColor}
                 selectedNodeId={selectedNodeId}
                 onSelect={onSelect}
               />
@@ -862,7 +902,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <div style={boxStyle}>
-            <TextPreview node={node} />
+            <TextPreview node={node} textColorStyle={textColorStyle} />
           </div>
         </SelectableNode>
       )
@@ -886,7 +926,12 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'image':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <ImagePreview key={node.src} node={node} style={boxStyle} />
+          <ImagePreview
+            key={node.src}
+            node={node}
+            fallbackStyle={colorStyle}
+            style={boxStyle}
+          />
         </SelectableNode>
       )
   }
@@ -945,15 +990,22 @@ function SelectableNode({
   )
 }
 
-function TextPreview({ node }: { node: TextNode }) {
+function TextPreview({
+  node,
+  textColorStyle,
+}: {
+  node: TextNode
+  textColorStyle?: CSSProperties
+}) {
   const typographyStyle = getTypographyStyle(node.typography)
+  const textStyle = mergeStyles(typographyStyle, textColorStyle)
 
   switch (node.emphasis) {
     case 'heading-1':
       return (
         <h2
           className="max-w-3xl text-5xl font-semibold leading-tight"
-          style={typographyStyle}
+          style={textStyle}
         >
           {node.content}
         </h2>
@@ -962,7 +1014,7 @@ function TextPreview({ node }: { node: TextNode }) {
       return (
         <h3
           className="text-2xl font-semibold text-[var(--dw-text-primary)]"
-          style={typographyStyle}
+          style={textStyle}
         >
           {node.content}
         </h3>
@@ -971,7 +1023,7 @@ function TextPreview({ node }: { node: TextNode }) {
       return (
         <h4
           className="text-lg font-semibold text-[var(--dw-text-primary)]"
-          style={typographyStyle}
+          style={textStyle}
         >
           {node.content}
         </h4>
@@ -980,7 +1032,7 @@ function TextPreview({ node }: { node: TextNode }) {
       return (
         <p
           className="text-xs font-semibold uppercase text-[var(--dw-accent)]"
-          style={typographyStyle}
+          style={textStyle}
         >
           {node.content}
         </p>
@@ -988,7 +1040,7 @@ function TextPreview({ node }: { node: TextNode }) {
     case 'body':
     default:
       return (
-        <p className="max-w-2xl text-base leading-7" style={typographyStyle}>
+        <p className="max-w-2xl text-base leading-7" style={textStyle}>
           {node.content}
         </p>
       )
@@ -1110,6 +1162,26 @@ function getShapeStyle(shape?: Shape): CSSProperties | undefined {
   return Object.keys(style).length > 0 ? style : undefined
 }
 
+function getColorStyle(
+  color?: NodeColor,
+  inheritedTextColor?: string,
+): CSSProperties | undefined {
+  const style: CSSProperties = {
+    ...(color?.backgroundColor !== undefined
+      ? { backgroundColor: color.backgroundColor }
+      : {}),
+    ...(color?.textColor !== undefined || inheritedTextColor !== undefined
+      ? { color: color?.textColor ?? inheritedTextColor }
+      : {}),
+  }
+
+  return Object.keys(style).length > 0 ? style : undefined
+}
+
+function getTextColorStyle(textColor?: string): CSSProperties | undefined {
+  return textColor ? { color: textColor } : undefined
+}
+
 function mergeStyles(
   ...styles: Array<CSSProperties | undefined>
 ): CSSProperties | undefined {
@@ -1134,9 +1206,11 @@ function getFontFamilyStack(fontFamily: FontFamily): string {
 }
 
 function ImagePreview({
+  fallbackStyle,
   node,
   style,
 }: {
+  fallbackStyle?: CSSProperties
   node: ImageNode
   style?: CSSProperties
 }) {
@@ -1164,7 +1238,10 @@ function ImagePreview({
           onError={() => setHasError(true)}
         />
       ) : (
-        <div className="flex h-full w-full flex-col justify-end bg-[var(--dw-image-accent)] p-6 text-[var(--dw-text-primary)]">
+        <div
+          className="flex h-full w-full flex-col justify-end bg-[var(--dw-image-accent)] p-6 text-[var(--dw-text-primary)]"
+          style={fallbackStyle}
+        >
           <span className="text-xs font-semibold uppercase tracking-wide">
             이미지 슬롯
           </span>
@@ -1200,6 +1277,8 @@ interface NodeInspectorProps {
   onSpacingReset: (node: TreeNode) => void
   onShapeChange: (node: TreeNode, patch: Partial<Shape>) => void
   onShapeReset: (node: TreeNode) => void
+  onNodeColorChange: (node: TreeNode, patch: Partial<NodeColor>) => void
+  onNodeColorReset: (node: TreeNode) => void
   registeredFonts: RegisteredFontSummary[]
   fontUsageCounts: Map<string, number>
   fontRegistryMessage: string
@@ -1229,6 +1308,8 @@ function NodeInspector({
   onSpacingReset,
   onShapeChange,
   onShapeReset,
+  onNodeColorChange,
+  onNodeColorReset,
   registeredFonts,
   fontUsageCounts,
   fontRegistryMessage,
@@ -1256,6 +1337,12 @@ function NodeInspector({
         <StyleControls
           colorPreset={colorPreset}
           onColorPresetChange={onColorPresetChange}
+        />
+
+        <NodeColorControls
+          node={node}
+          onNodeColorChange={onNodeColorChange}
+          onNodeColorReset={onNodeColorReset}
         />
 
         <SpacingControls
@@ -1421,6 +1508,147 @@ function StyleControls({
               </span>
             </button>
           )
+        })}
+      </div>
+    </div>
+  )
+}
+
+interface NodeColorControlsProps {
+  node: TreeNode
+  onNodeColorChange: (node: TreeNode, patch: Partial<NodeColor>) => void
+  onNodeColorReset: (node: TreeNode) => void
+}
+
+function NodeColorControls({
+  node,
+  onNodeColorChange,
+  onNodeColorReset,
+}: NodeColorControlsProps) {
+  const color = node.color ?? {}
+  const [backgroundColorInput, setBackgroundColorInput] = useState(
+    color.backgroundColor ?? '',
+  )
+  const [textColorInput, setTextColorInput] = useState(color.textColor ?? '')
+  const [backgroundColorError, setBackgroundColorError] = useState(false)
+  const [textColorError, setTextColorError] = useState(false)
+
+  useEffect(() => {
+    setBackgroundColorInput(color.backgroundColor ?? '')
+    setBackgroundColorError(false)
+  }, [node.id, color.backgroundColor])
+
+  useEffect(() => {
+    setTextColorInput(color.textColor ?? '')
+    setTextColorError(false)
+  }, [node.id, color.textColor])
+
+  function updateColorFromText(field: ColorField, value: string) {
+    const trimmedValue = value.trim()
+    const setInput =
+      field === 'backgroundColor' ? setBackgroundColorInput : setTextColorInput
+    const setError =
+      field === 'backgroundColor' ? setBackgroundColorError : setTextColorError
+
+    setInput(value)
+
+    if (trimmedValue === '') {
+      setError(false)
+      onNodeColorChange(node, { [field]: undefined })
+      return
+    }
+
+    if (!isValidHexColor(trimmedValue)) {
+      setError(true)
+      return
+    }
+
+    setError(false)
+    onNodeColorChange(node, { [field]: normalizeHexColor(trimmedValue) })
+  }
+
+  function updateColorFromPicker(field: ColorField, value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    if (field === 'backgroundColor') {
+      setBackgroundColorInput(normalizedValue)
+      setBackgroundColorError(false)
+    } else {
+      setTextColorInput(normalizedValue)
+      setTextColorError(false)
+    }
+
+    onNodeColorChange(node, { [field]: normalizedValue })
+  }
+
+  function renderColorField({
+    error,
+    field,
+    inputValue,
+    label,
+  }: {
+    error: boolean
+    field: ColorField
+    inputValue: string
+    label: string
+  }) {
+    return (
+      <label className="block">
+        <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
+        <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+          <input
+            type="color"
+            aria-label={`${label} 선택`}
+            className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+            value={toColorInputValue(inputValue, DEFAULT_COLOR_PICKER_COLOR)}
+            onChange={(event) => updateColorFromPicker(field, event.target.value)}
+          />
+          <input
+            className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
+            value={inputValue}
+            placeholder="기본"
+            aria-invalid={error}
+            onChange={(event) => updateColorFromText(field, event.target.value)}
+          />
+        </span>
+        {error ? (
+          <span className="mt-2 block text-xs text-[#b42318]">
+            HEX 형식 (#RRGGBB)으로 입력해주세요.
+          </span>
+        ) : null}
+      </label>
+    )
+  }
+
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">색상</h3>
+          <p className="mt-1 text-xs text-[#647067]">
+            선택한 노드의 배경과 글자
+          </p>
+        </div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+          onClick={() => onNodeColorReset(node)}
+        >
+          초기화
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {renderColorField({
+          error: backgroundColorError,
+          field: 'backgroundColor',
+          inputValue: backgroundColorInput,
+          label: '배경 색상',
+        })}
+        {renderColorField({
+          error: textColorError,
+          field: 'textColor',
+          inputValue: textColorInput,
+          label: '글자 색상',
         })}
       </div>
     </div>
@@ -2540,10 +2768,13 @@ function normalizeHexColor(value: string): string {
   return value.trim().toLowerCase()
 }
 
-function toColorInputValue(value: string): string {
+function toColorInputValue(
+  value: string,
+  fallback = DEFAULT_SHAPE_COLOR,
+): string {
   const normalizedValue = normalizeHexColor(value)
   if (!isValidHexColor(normalizedValue)) {
-    return DEFAULT_SHAPE_COLOR
+    return fallback
   }
 
   if (normalizedValue.length === 4) {

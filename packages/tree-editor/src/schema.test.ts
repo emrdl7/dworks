@@ -84,6 +84,24 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateColor operation', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateColor',
+      nodeId: 'hero.card',
+      patch: {
+        backgroundColor: '#f8fafc',
+        textColor: '#123',
+      },
+    })
+
+    assert.equal(op.type, 'updateColor')
+    if (op.type === 'updateColor') {
+      assert.equal(op.nodeId, 'hero.card')
+      assert.equal(op.patch.backgroundColor, '#f8fafc')
+      assert.equal(op.patch.textColor, '#123')
+    }
+  })
+
   it('parses updateButtonLabel operation', () => {
     const op = editOperationSchema.parse({
       type: 'updateButtonLabel',
@@ -298,6 +316,28 @@ describe('edit-operation schema', () => {
     )
   })
 
+  it('rejects invalid color updates', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateColor',
+        nodeId: 'hero.card',
+        patch: {
+          backgroundColor: 'white',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateColor',
+        nodeId: 'hero.card',
+        patch: {
+          textColor: '#abcd',
+        },
+      }),
+    )
+  })
+
   it('rejects empty nodeId', () => {
     assert.throws(() =>
       editOperationSchema.parse({
@@ -331,6 +371,11 @@ describe('edit-sequence schema', () => {
         nodeId: 'foo',
         patch: { radius: 18, borderStyle: 'solid', shadow: 'md' },
       },
+      {
+        type: 'updateColor',
+        nodeId: 'foo',
+        patch: { backgroundColor: '#f8fafc', textColor: '#123456' },
+      },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
       { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
       { type: 'moveNode', nodeId: 'cards.card-a', direction: 'down' },
@@ -341,7 +386,7 @@ describe('edit-sequence schema', () => {
   it('parses a valid sequence', () => {
     const seq = editSequenceSchema.parse(validSequence)
     assert.equal(seq.id, 'test')
-    assert.equal(seq.operations.length, 8)
+    assert.equal(seq.operations.length, 9)
     assert.equal(seq.tree, '../../trees/x.json')
   })
 

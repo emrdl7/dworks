@@ -6,6 +6,7 @@ import { z } from 'zod'
 import {
   focalPointSchema,
   imageAspectRatioSchema,
+  nodeColorSchema,
   shapeSchema,
   spacingSchema,
   styleTokensSchema,
@@ -18,6 +19,7 @@ import type {
   EditOperation,
   MoveNodeOperation,
   UpdateButtonLabelOperation,
+  UpdateColorOperation,
   UpdateImageOperation,
   UpdateShapeOperation,
   UpdateSpacingOperation,
@@ -51,6 +53,13 @@ export const updateShapeOperationSchema: z.ZodType<UpdateShapeOperation> =
     type: z.literal('updateShape'),
     nodeId: z.string().min(1),
     patch: shapeSchema,
+  })
+
+export const updateColorOperationSchema: z.ZodType<UpdateColorOperation> =
+  z.object({
+    type: z.literal('updateColor'),
+    nodeId: z.string().min(1),
+    patch: nodeColorSchema,
   })
 
 export const updateButtonLabelOperationSchema: z.ZodType<UpdateButtonLabelOperation> =
@@ -115,6 +124,11 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     type: z.ZodLiteral<'updateShape'>
     nodeId: z.ZodString
     patch: typeof shapeSchema
+  }>,
+  updateColorOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateColor'>
+    nodeId: z.ZodString
+    patch: typeof nodeColorSchema
   }>,
   updateButtonLabelOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'updateButtonLabel'>

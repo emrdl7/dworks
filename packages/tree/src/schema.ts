@@ -105,6 +105,12 @@ export const shapeSchema = z.object({
 })
 export type Shape = z.infer<typeof shapeSchema>
 
+export const nodeColorSchema = z.object({
+  backgroundColor: hexColorSchema.optional(),
+  textColor: hexColorSchema.optional(),
+})
+export type NodeColor = z.infer<typeof nodeColorSchema>
+
 export const imageAspectRatioSchema = z.enum([
   'square',
   'landscape',
@@ -225,6 +231,7 @@ interface BaseNodeMeta {
   styleTokens?: string[]
   spacing?: Spacing
   shape?: Shape
+  color?: NodeColor
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -304,6 +311,7 @@ const baseShape = {
   styleTokens: z.array(z.string()).optional(),
   spacing: spacingSchema.optional(),
   shape: shapeSchema.optional(),
+  color: nodeColorSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({
