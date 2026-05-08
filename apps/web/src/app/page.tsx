@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { ButtonNode, ImageNode, TextNode, Tree, TreeNode } from '@dworks/tree'
-import { updateButtonLabel, updateImage, updateText } from '@dworks/tree-editor'
+import {
+  deleteNode,
+  duplicateNode,
+  moveNode,
+  updateButtonLabel,
+  updateImage,
+  updateText,
+} from '@dworks/tree-editor'
 import {
   defaultTreeFixture,
   getTreeFixture,
@@ -14,6 +21,13 @@ type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 interface LayerItem {
   node: TreeNode
   depth: number
+}
+
+interface StructureInfo {
+  isRoot: boolean
+  parentId?: string
+  index?: number
+  siblingCount?: number
 }
 
 const nodeTypeLabels: Record<TreeNode['type'], string> = {
@@ -50,6 +64,10 @@ export default function HomePage() {
     () => findNode(tree.root, selectedNodeId) ?? tree.root,
     [selectedNodeId, tree],
   )
+  const selectedStructureInfo = useMemo(
+    () => getStructureInfo(tree, selectedNodeId),
+    [selectedNodeId, tree],
+  )
   const selectedFixture = useMemo(
     () => getTreeFixture(selectedFixtureId) ?? defaultTreeFixture,
     [selectedFixtureId],
@@ -68,11 +86,13 @@ export default function HomePage() {
     )
   }
 
-  function commitTreeEdit(nextTree: Tree) {
+  function commitTreeEdit(nextTree: Tree, nextSelectedNodeId?: string) {
     setHistoryPast((past) => [...past, tree].slice(-MAX_HISTORY))
     setHistoryFuture([])
     setTree(nextTree)
-    setSelectedNodeId((currentNodeId) => getSafeSelectedNodeId(nextTree, currentNodeId))
+    setSelectedNodeId((currentNodeId) =>
+      getSafeSelectedNodeId(nextTree, nextSelectedNodeId ?? currentNodeId),
+    )
   }
 
   function handleTextChange(node: TextNode, content: string) {
@@ -88,6 +108,24 @@ export default function HomePage() {
     patch: Pick<Partial<ImageNode>, 'src' | 'alt'>,
   ) {
     commitTreeEdit(updateImage(tree, node.id, patch))
+  }
+
+  function handleMoveSelected(direction: 'up' | 'down') {
+    commitTreeEdit(moveNode(tree, selectedNodeId, direction), selectedNodeId)
+  }
+
+  function handleDuplicateSelected() {
+    const duplicatedNodeId = createDuplicateNodeId(tree, selectedNodeId)
+    commitTreeEdit(
+      duplicateNode(tree, selectedNodeId, duplicatedNodeId),
+      duplicatedNodeId,
+    )
+  }
+
+  function handleDeleteSelected() {
+    const parentId = selectedStructureInfo.parentId
+    const nextTree = deleteNode(tree, selectedNodeId)
+    commitTreeEdit(nextTree, parentId)
   }
 
   function handleUndo() {
@@ -122,7 +160,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-base font-semibold">Dworks Editor</h1>
-            <p className="text-xs text-[#647067]">m2-image-node</p>
+            <p className="text-xs text-[#647067]">m2-structure-ops</p>
           </div>
           <label className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#4f5e56]">Fixture</span>
@@ -213,9 +251,14 @@ export default function HomePage() {
         <aside className="border-l border-[#d7ddd2] bg-white">
           <NodeInspector
             node={selectedNode}
+            structureInfo={selectedStructureInfo}
             onTextChange={handleTextChange}
             onButtonLabelChange={handleButtonLabelChange}
             onImageChange={handleImageChange}
+            onMoveUp={() => handleMoveSelected('up')}
+            onMoveDown={() => handleMoveSelected('down')}
+            onDuplicate={handleDuplicateSelected}
+            onDelete={handleDeleteSelected}
           />
         </aside>
       </div>
@@ -546,16 +589,26 @@ const aspectRatioClasses: Record<NonNullable<ImageNode['aspectRatio']>, string> 
 
 interface NodeInspectorProps {
   node: TreeNode
+  structureInfo: StructureInfo
   onTextChange: (node: TextNode, content: string) => void
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: Pick<Partial<ImageNode>, 'src' | 'alt'>) => void
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDuplicate: () => void
+  onDelete: () => void
 }
 
 function NodeInspector({
   node,
+  structureInfo,
   onTextChange,
   onButtonLabelChange,
   onImageChange,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onDelete,
 }: NodeInspectorProps) {
   return (
     <section className="flex h-full flex-col">
@@ -566,6 +619,14 @@ function NodeInspector({
 
       <div className="space-y-5 overflow-auto p-5">
         <MetadataGrid node={node} />
+
+        <StructureControls
+          info={structureInfo}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+        />
 
         {node.type === 'text' ? (
           <label className="block">
@@ -636,6 +697,109 @@ function NodeInspector({
         ) : null}
       </div>
     </section>
+  )
+}
+
+interface StructureControlsProps {
+  info: StructureInfo
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDuplicate: () => void
+  onDelete: () => void
+}
+
+function StructureControls({
+  info,
+  onMoveUp,
+  onMoveDown,
+  onDuplicate,
+  onDelete,
+}: StructureControlsProps) {
+  const canMoveUp = !info.isRoot && (info.index ?? 0) > 0
+  const canMoveDown =
+    !info.isRoot && (info.index ?? 0) < (info.siblingCount ?? 0) - 1
+  const canEditStructure = !info.isRoot
+
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">Structure</h3>
+        {info.parentId ? (
+          <span className="max-w-36 truncate text-xs text-[#647067]">
+            parent {info.parentId}
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <InspectorActionButton
+          ariaLabel="Move up"
+          disabled={!canMoveUp}
+          onClick={onMoveUp}
+        >
+          Move up
+        </InspectorActionButton>
+        <InspectorActionButton
+          ariaLabel="Move down"
+          disabled={!canMoveDown}
+          onClick={onMoveDown}
+        >
+          Move down
+        </InspectorActionButton>
+        <InspectorActionButton
+          ariaLabel="Duplicate"
+          disabled={!canEditStructure}
+          onClick={onDuplicate}
+        >
+          Duplicate
+        </InspectorActionButton>
+        <InspectorActionButton
+          ariaLabel="Delete"
+          disabled={!canEditStructure}
+          tone="danger"
+          onClick={onDelete}
+        >
+          Delete
+        </InspectorActionButton>
+      </div>
+      {info.isRoot ? (
+        <p className="mt-3 text-xs text-[#647067]">
+          Root는 이동/삭제할 수 없습니다.
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+interface InspectorActionButtonProps {
+  ariaLabel: string
+  children: ReactNode
+  disabled: boolean
+  onClick: () => void
+  tone?: 'neutral' | 'danger'
+}
+
+function InspectorActionButton({
+  ariaLabel,
+  children,
+  disabled,
+  onClick,
+  tone = 'neutral',
+}: InspectorActionButtonProps) {
+  const toneClass =
+    tone === 'danger'
+      ? 'hover:border-[#a04545] hover:text-[#7a1f1f] focus-visible:border-[#a04545] focus-visible:text-[#7a1f1f]'
+      : 'hover:bg-[#eef3ed]'
+
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      className={`h-9 rounded-md border border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#26312b] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d4cd] disabled:hover:bg-white disabled:hover:text-[#26312b] ${toneClass}`}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -748,6 +912,66 @@ function getSafeSelectedNodeId(tree: Tree, preferredNodeId: string): string {
     findFirstEditableNodeId(tree.root) ??
     tree.root.id
   )
+}
+
+function getStructureInfo(tree: Tree, nodeId: string): StructureInfo {
+  if (tree.root.id === nodeId) {
+    return { isRoot: true }
+  }
+
+  return findStructureInfo(tree.root, nodeId) ?? { isRoot: true }
+}
+
+function findStructureInfo(node: TreeNode, nodeId: string): StructureInfo | null {
+  if (!isContainerNode(node)) {
+    return null
+  }
+
+  const index = node.children.findIndex((child) => child.id === nodeId)
+  if (index >= 0) {
+    return {
+      isRoot: false,
+      parentId: node.id,
+      index,
+      siblingCount: node.children.length,
+    }
+  }
+
+  for (const child of node.children) {
+    const matched = findStructureInfo(child, nodeId)
+    if (matched) {
+      return matched
+    }
+  }
+
+  return null
+}
+
+function createDuplicateNodeId(tree: Tree, nodeId: string): string {
+  const existingIds = collectNodeIds(tree.root)
+  const firstCandidate = `${nodeId}.copy`
+  if (!existingIds.has(firstCandidate)) {
+    return firstCandidate
+  }
+
+  let copyIndex = 2
+  while (existingIds.has(`${nodeId}.copy-${copyIndex}`)) {
+    copyIndex += 1
+  }
+
+  return `${nodeId}.copy-${copyIndex}`
+}
+
+function collectNodeIds(node: TreeNode, ids = new Set<string>()): Set<string> {
+  ids.add(node.id)
+
+  if (isContainerNode(node)) {
+    for (const child of node.children) {
+      collectNodeIds(child, ids)
+    }
+  }
+
+  return ids
 }
 
 function isContainerNode(node: TreeNode): node is ContainerNode {

@@ -5,6 +5,9 @@ import type { Tree } from '@dworks/tree'
 
 import {
   applyEditSequence,
+  deleteNode,
+  duplicateNode,
+  moveNode,
   replaceTextById,
   updateButtonLabel,
   updateImage,
@@ -40,6 +43,20 @@ function fixtureTree(): Tree {
           src: '',
           alt: '',
           aspectRatio: 'wide',
+        },
+        {
+          id: 'landing.card',
+          type: 'card',
+          editKind: 'structure',
+          children: [
+            {
+              id: 'landing.card.title',
+              type: 'text',
+              editKind: 'text',
+              emphasis: 'heading-3',
+              content: '카드 제목',
+            },
+          ],
         },
       ],
     },
@@ -129,13 +146,18 @@ describe('tree editor operations', () => {
         nodeId: 'landing.visual',
         alt: '새 이미지 설명',
       },
+      {
+        type: 'moveNode',
+        nodeId: 'landing.visual',
+        direction: 'up',
+      },
     ])
 
     assert.equal(updated.root.type, 'section')
     if (updated.root.type === 'section') {
       const title = updated.root.children[0]
-      const cta = updated.root.children[1]
-      const visual = updated.root.children[2]
+      const visual = updated.root.children[1]
+      const cta = updated.root.children[2]
       assert.equal(title?.type, 'text')
       assert.equal(cta?.type, 'button')
       assert.equal(visual?.type, 'image')
@@ -149,6 +171,100 @@ describe('tree editor operations', () => {
         assert.equal(visual.alt, '새 이미지 설명')
       }
     }
+  })
+
+  it('moves a node within the same parent without mutating siblings', () => {
+    const tree = fixtureTree()
+    const movedUp = moveNode(tree, 'landing.visual', 'up')
+
+    assert.equal(movedUp.root.type, 'section')
+    if (movedUp.root.type === 'section') {
+      assert.deepEqual(
+        movedUp.root.children.map((child) => child.id),
+        ['landing.title', 'landing.visual', 'landing.cta', 'landing.card'],
+      )
+    }
+
+    const movedDown = moveNode(movedUp, 'landing.visual', 'down')
+    assert.equal(movedDown.root.type, 'section')
+    if (movedDown.root.type === 'section') {
+      assert.deepEqual(
+        movedDown.root.children.map((child) => child.id),
+        ['landing.title', 'landing.cta', 'landing.visual', 'landing.card'],
+      )
+    }
+  })
+
+  it('duplicates a node subtree with deterministic ids', () => {
+    const duplicated = duplicateNode(fixtureTree(), 'landing.card')
+
+    assert.equal(duplicated.root.type, 'section')
+    if (duplicated.root.type === 'section') {
+      const card = duplicated.root.children[4]
+      assert.equal(card?.type, 'card')
+      if (card?.type === 'card') {
+        assert.equal(card.id, 'landing.card.copy')
+        assert.equal(card.children[0]?.id, 'landing.card.copy.title')
+      }
+    }
+  })
+
+  it('increments duplicated root ids when a copy already exists', () => {
+    const once = duplicateNode(fixtureTree(), 'landing.card')
+    const twice = duplicateNode(once, 'landing.card')
+
+    assert.equal(twice.root.type, 'section')
+    if (twice.root.type === 'section') {
+      assert.deepEqual(
+        twice.root.children.map((child) => child.id),
+        [
+          'landing.title',
+          'landing.cta',
+          'landing.visual',
+          'landing.card',
+          'landing.card.copy-2',
+          'landing.card.copy',
+        ],
+      )
+    }
+  })
+
+  it('deletes a node from its parent', () => {
+    const updated = deleteNode(fixtureTree(), 'landing.cta')
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      assert.deepEqual(
+        updated.root.children.map((child) => child.id),
+        ['landing.title', 'landing.visual', 'landing.card'],
+      )
+    }
+  })
+
+  it('throws when structure operations target the root', () => {
+    assert.throws(
+      () => moveNode(fixtureTree(), 'landing', 'down'),
+      /moveNode cannot target root node: landing/,
+    )
+    assert.throws(
+      () => duplicateNode(fixtureTree(), 'landing'),
+      /duplicateNode cannot target root node: landing/,
+    )
+    assert.throws(
+      () => deleteNode(fixtureTree(), 'landing'),
+      /deleteNode cannot target root node: landing/,
+    )
+  })
+
+  it('throws when a node cannot move beyond sibling bounds', () => {
+    assert.throws(
+      () => moveNode(fixtureTree(), 'landing.title', 'up'),
+      /cannot move up: landing.title/,
+    )
+    assert.throws(
+      () => moveNode(fixtureTree(), 'landing.card', 'down'),
+      /cannot move down: landing.card/,
+    )
   })
 
   it('throws when the node id does not exist', () => {

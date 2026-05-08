@@ -49,12 +49,49 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses structure operations', () => {
+    const moveOp = editOperationSchema.parse({
+      type: 'moveNode',
+      nodeId: 'cards.card-a',
+      direction: 'down',
+    })
+    const duplicateOp = editOperationSchema.parse({
+      type: 'duplicateNode',
+      nodeId: 'cards.card-a',
+      newNodeId: 'cards.card-a.copy',
+    })
+    const deleteOp = editOperationSchema.parse({
+      type: 'deleteNode',
+      nodeId: 'cards.card-a.copy',
+    })
+
+    assert.equal(moveOp.type, 'moveNode')
+    if (moveOp.type === 'moveNode') {
+      assert.equal(moveOp.direction, 'down')
+    }
+    assert.equal(duplicateOp.type, 'duplicateNode')
+    if (duplicateOp.type === 'duplicateNode') {
+      assert.equal(duplicateOp.newNodeId, 'cards.card-a.copy')
+    }
+    assert.equal(deleteOp.type, 'deleteNode')
+  })
+
   it('rejects unknown operation type', () => {
     assert.throws(() =>
       editOperationSchema.parse({
         type: 'updateMedia',
         nodeId: 'foo',
         src: '/x.png',
+      }),
+    )
+  })
+
+  it('rejects invalid move direction', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'moveNode',
+        nodeId: 'cards.card-a',
+        direction: 'left',
       }),
     )
   })
@@ -103,13 +140,14 @@ describe('edit-sequence schema', () => {
       { type: 'updateText', nodeId: 'foo', content: 'bar' },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
       { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
+      { type: 'moveNode', nodeId: 'cards.card-a', direction: 'down' },
     ],
   }
 
   it('parses a valid sequence', () => {
     const seq = editSequenceSchema.parse(validSequence)
     assert.equal(seq.id, 'test')
-    assert.equal(seq.operations.length, 3)
+    assert.equal(seq.operations.length, 4)
     assert.equal(seq.tree, '../../trees/x.json')
   })
 

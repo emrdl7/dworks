@@ -1,5 +1,7 @@
 import type { FocalPoint, ImageAspectRatio, Tree, TreeNode } from '@dworks/tree'
 
+type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
+
 export interface UpdateTextOperation {
   type: 'updateText'
   nodeId: string
@@ -21,10 +23,36 @@ export interface UpdateImageOperation {
   focalPoint?: FocalPoint
 }
 
-export type EditOperation =
+export interface MoveNodeOperation {
+  type: 'moveNode'
+  nodeId: string
+  direction: 'up' | 'down'
+}
+
+export interface DuplicateNodeOperation {
+  type: 'duplicateNode'
+  nodeId: string
+  newNodeId?: string
+}
+
+export interface DeleteNodeOperation {
+  type: 'deleteNode'
+  nodeId: string
+}
+
+type ContentEditOperation =
   | UpdateTextOperation
   | UpdateButtonLabelOperation
   | UpdateImageOperation
+
+type StructureEditOperation =
+  | MoveNodeOperation
+  | DuplicateNodeOperation
+  | DeleteNodeOperation
+
+export type EditOperation =
+  | ContentEditOperation
+  | StructureEditOperation
 
 interface EditState {
   matched: boolean
@@ -62,6 +90,26 @@ export function updateImage(
   return applyEditOperation(tree, { type: 'updateImage', nodeId, ...patch })
 }
 
+export function moveNode(
+  tree: Tree,
+  nodeId: string,
+  direction: MoveNodeOperation['direction'],
+): Tree {
+  return applyEditOperation(tree, { type: 'moveNode', nodeId, direction })
+}
+
+export function duplicateNode(
+  tree: Tree,
+  nodeId: string,
+  newNodeId?: string,
+): Tree {
+  return applyEditOperation(tree, { type: 'duplicateNode', nodeId, newNodeId })
+}
+
+export function deleteNode(tree: Tree, nodeId: string): Tree {
+  return applyEditOperation(tree, { type: 'deleteNode', nodeId })
+}
+
 export function applyEditSequence(
   tree: Tree,
   operations: EditOperation[],
@@ -73,6 +121,10 @@ export function applyEditSequence(
 }
 
 export function applyEditOperation(tree: Tree, operation: EditOperation): Tree {
+  if (isStructureOperation(operation)) {
+    return applyStructureOperation(tree, operation)
+  }
+
   const state: EditState = { matched: false }
   const root = editNode(tree.root, operation, state)
   if (!state.matched) {
@@ -83,7 +135,7 @@ export function applyEditOperation(tree: Tree, operation: EditOperation): Tree {
 
 function editNode(
   node: TreeNode,
-  operation: EditOperation,
+  operation: ContentEditOperation,
   state: EditState,
 ): TreeNode {
   if (node.id === operation.nodeId) {
@@ -110,7 +162,7 @@ function editNode(
 
 function editMatchedNode(
   node: TreeNode,
-  operation: EditOperation,
+  operation: ContentEditOperation,
 ): TreeNode {
   switch (operation.type) {
     case 'updateText':
@@ -147,4 +199,222 @@ function editMatchedNode(
           : {}),
       }
   }
+}
+
+function applyStructureOperation(
+  tree: Tree,
+  operation: StructureEditOperation,
+): Tree {
+  if (tree.root.id === operation.nodeId) {
+    throw new Error(
+      `tree edit failed: ${operation.type} cannot target root node: ${operation.nodeId}`,
+    )
+  }
+
+  const state: EditState = { matched: false }
+  const existingIds = collectNodeIds(tree.root)
+  const root = isContainerNode(tree.root)
+    ? editContainerNode(tree.root, operation, state, existingIds)
+    : tree.root
+
+  if (!state.matched) {
+    throw new Error(`tree edit failed: node not found: ${operation.nodeId}`)
+  }
+
+  return { ...tree, root }
+}
+
+function editContainerNode(
+  node: ContainerNode,
+  operation: StructureEditOperation,
+  state: EditState,
+  existingIds: Set<string>,
+): ContainerNode {
+  const directChildIndex = node.children.findIndex(
+    (child) => child.id === operation.nodeId,
+  )
+
+  if (directChildIndex >= 0) {
+    state.matched = true
+    return withChildren(
+      node,
+      editDirectChildren(node.children, directChildIndex, operation, existingIds),
+    )
+  }
+
+  return withChildren(
+    node,
+    node.children.map((child) => {
+      if (state.matched || !isContainerNode(child)) {
+        return child
+      }
+
+      return editContainerNode(child, operation, state, existingIds)
+    }),
+  )
+}
+
+function editDirectChildren(
+  children: TreeNode[],
+  targetIndex: number,
+  operation: StructureEditOperation,
+  existingIds: Set<string>,
+): TreeNode[] {
+  switch (operation.type) {
+    case 'moveNode': {
+      const nextIndex =
+        operation.direction === 'up' ? targetIndex - 1 : targetIndex + 1
+      if (nextIndex < 0 || nextIndex >= children.length) {
+        throw new Error(
+          `tree edit failed: cannot move ${operation.direction}: ${operation.nodeId}`,
+        )
+      }
+
+      const nextChildren = [...children]
+      const target = nextChildren[targetIndex]
+      const sibling = nextChildren[nextIndex]
+      if (!target || !sibling) {
+        return children
+      }
+
+      nextChildren[targetIndex] = sibling
+      nextChildren[nextIndex] = target
+      return nextChildren
+    }
+
+    case 'duplicateNode': {
+      const target = children[targetIndex]
+      if (!target) {
+        return children
+      }
+
+      const newRootId = resolveDuplicateRootId(
+        existingIds,
+        operation.nodeId,
+        operation.newNodeId,
+      )
+      const duplicatedNode = duplicateTreeNode(
+        target,
+        operation.nodeId,
+        newRootId,
+        existingIds,
+      )
+      return [
+        ...children.slice(0, targetIndex + 1),
+        duplicatedNode,
+        ...children.slice(targetIndex + 1),
+      ]
+    }
+
+    case 'deleteNode':
+      return [
+        ...children.slice(0, targetIndex),
+        ...children.slice(targetIndex + 1),
+      ]
+  }
+}
+
+function resolveDuplicateRootId(
+  existingIds: Set<string>,
+  sourceNodeId: string,
+  requestedNodeId?: string,
+): string {
+  if (requestedNodeId !== undefined) {
+    if (requestedNodeId.trim().length === 0) {
+      throw new Error('tree edit failed: duplicateNode newNodeId cannot be empty')
+    }
+    if (existingIds.has(requestedNodeId)) {
+      throw new Error(
+        `tree edit failed: duplicateNode id already exists: ${requestedNodeId}`,
+      )
+    }
+    return requestedNodeId
+  }
+
+  return generateCopyId(existingIds, sourceNodeId)
+}
+
+function duplicateTreeNode(
+  node: TreeNode,
+  sourceRootId: string,
+  newRootId: string,
+  existingIds: Set<string>,
+): TreeNode {
+  const nextId =
+    node.id === sourceRootId
+      ? newRootId
+      : generateUniqueId(
+          existingIds,
+          rewriteDuplicateId(node.id, sourceRootId, newRootId),
+        )
+
+  existingIds.add(nextId)
+
+  if (!isContainerNode(node)) {
+    return { ...node, id: nextId }
+  }
+
+  return withChildren(
+    { ...node, id: nextId },
+    node.children.map((child) =>
+      duplicateTreeNode(child, sourceRootId, newRootId, existingIds),
+    ),
+  )
+}
+
+function rewriteDuplicateId(
+  nodeId: string,
+  sourceRootId: string,
+  newRootId: string,
+): string {
+  return nodeId.startsWith(`${sourceRootId}.`)
+    ? `${newRootId}${nodeId.slice(sourceRootId.length)}`
+    : `${nodeId}.copy`
+}
+
+function generateCopyId(existingIds: Set<string>, baseId: string): string {
+  return generateUniqueId(existingIds, `${baseId}.copy`)
+}
+
+function generateUniqueId(existingIds: Set<string>, preferredId: string): string {
+  if (!existingIds.has(preferredId)) {
+    return preferredId
+  }
+
+  let copyIndex = 2
+  while (existingIds.has(`${preferredId}-${copyIndex}`)) {
+    copyIndex += 1
+  }
+
+  return `${preferredId}-${copyIndex}`
+}
+
+function collectNodeIds(node: TreeNode, ids = new Set<string>()): Set<string> {
+  ids.add(node.id)
+
+  if (isContainerNode(node)) {
+    for (const child of node.children) {
+      collectNodeIds(child, ids)
+    }
+  }
+
+  return ids
+}
+
+function isStructureOperation(
+  operation: EditOperation,
+): operation is StructureEditOperation {
+  return (
+    operation.type === 'moveNode' ||
+    operation.type === 'duplicateNode' ||
+    operation.type === 'deleteNode'
+  )
+}
+
+function isContainerNode(node: TreeNode): node is ContainerNode {
+  return 'children' in node
+}
+
+function withChildren(node: ContainerNode, children: TreeNode[]): ContainerNode {
+  return { ...node, children } as ContainerNode
 }

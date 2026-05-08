@@ -6,7 +6,10 @@ import { z } from 'zod'
 import { focalPointSchema, imageAspectRatioSchema } from '@dworks/tree'
 
 import type {
+  DeleteNodeOperation,
+  DuplicateNodeOperation,
   EditOperation,
+  MoveNodeOperation,
   UpdateButtonLabelOperation,
   UpdateImageOperation,
   UpdateTextOperation,
@@ -35,6 +38,24 @@ export const updateImageOperationSchema: z.ZodType<UpdateImageOperation> =
     focalPoint: focalPointSchema.optional(),
   })
 
+export const moveNodeOperationSchema: z.ZodType<MoveNodeOperation> = z.object({
+  type: z.literal('moveNode'),
+  nodeId: z.string().min(1),
+  direction: z.enum(['up', 'down']),
+})
+
+export const duplicateNodeOperationSchema: z.ZodType<DuplicateNodeOperation> =
+  z.object({
+    type: z.literal('duplicateNode'),
+    nodeId: z.string().min(1),
+    newNodeId: z.string().min(1).optional(),
+  })
+
+export const deleteNodeOperationSchema: z.ZodType<DeleteNodeOperation> = z.object({
+  type: z.literal('deleteNode'),
+  nodeId: z.string().min(1),
+})
+
 // discriminatedUnion으로 type 리터럴 분기 — exhaustiveness check 강제.
 export const editOperationSchema = z.discriminatedUnion('type', [
   updateTextOperationSchema as z.ZodObject<{
@@ -54,6 +75,20 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     alt: z.ZodOptional<z.ZodString>
     aspectRatio: z.ZodOptional<typeof imageAspectRatioSchema>
     focalPoint: z.ZodOptional<typeof focalPointSchema>
+  }>,
+  moveNodeOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'moveNode'>
+    nodeId: z.ZodString
+    direction: z.ZodEnum<{ up: 'up'; down: 'down' }>
+  }>,
+  duplicateNodeOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'duplicateNode'>
+    nodeId: z.ZodString
+    newNodeId: z.ZodOptional<z.ZodString>
+  }>,
+  deleteNodeOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'deleteNode'>
+    nodeId: z.ZodString
   }>,
 ]) satisfies z.ZodType<EditOperation>
 

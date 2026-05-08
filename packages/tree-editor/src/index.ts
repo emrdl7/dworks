@@ -4,13 +4,19 @@
 export {
   applyEditOperation,
   applyEditSequence,
+  deleteNode,
+  duplicateNode,
+  moveNode,
   replaceTextById,
   updateButtonLabel,
   updateImage,
   updateText,
 } from './operations.js'
 export type {
+  DeleteNodeOperation,
+  DuplicateNodeOperation,
   EditOperation,
+  MoveNodeOperation,
   UpdateButtonLabelOperation,
   UpdateImageOperation,
   UpdateTextOperation,
@@ -18,8 +24,11 @@ export type {
 
 // m2-edit-fixtures round 2 합의: schema/type 외부 노출.
 export {
+  deleteNodeOperationSchema,
+  duplicateNodeOperationSchema,
   editOperationSchema,
   editSequenceSchema,
+  moveNodeOperationSchema,
   updateButtonLabelOperationSchema,
   updateImageOperationSchema,
   updateTextOperationSchema,
