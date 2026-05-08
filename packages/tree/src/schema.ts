@@ -223,6 +223,11 @@ export const nodeColorSchema = z.object({
 })
 export type NodeColor = z.infer<typeof nodeColorSchema>
 
+export const nodeTransitionSchema = z.object({
+  duration: z.number().min(0).max(2000).optional(),
+})
+export type NodeTransition = z.infer<typeof nodeTransitionSchema>
+
 export const IMAGE_FIT_IDS = ['cover', 'contain'] as const
 export const imageFitSchema = z.enum(IMAGE_FIT_IDS)
 export type ImageFit = z.infer<typeof imageFitSchema>
@@ -361,6 +366,7 @@ interface BaseNodeMeta {
   shape?: Shape
   color?: NodeColor
   layout?: NodeLayout
+  transition?: NodeTransition
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -447,6 +453,7 @@ const baseShape = {
   shape: shapeSchema.optional(),
   color: nodeColorSchema.optional(),
   layout: nodeLayoutSchema.optional(),
+  transition: nodeTransitionSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({

@@ -79,6 +79,7 @@ import {
   type LayoutJustify,
   type LayoutWrap,
   type NodeColor,
+  type NodeTransition,
   type NodeLayout,
   type ShadowPreset,
   type Shape,
@@ -1868,6 +1869,7 @@ function CanvasNode({
   const focusTextStyle = getFocusTextStyle(node.color)
   const disabledBackgroundStyle = getDisabledBackgroundStyle(node.color)
   const disabledTextStyle = getDisabledTextStyle(node.color)
+  const transitionStyle = getTransitionStyle(node.transition)
   const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
@@ -2146,6 +2148,7 @@ function CanvasNode({
                     focusTextStyle,
                     disabledBackgroundStyle,
                     disabledTextStyle,
+                    transitionStyle,
                   )
                 : mergeStyles(
                     boxStyle,
@@ -2158,6 +2161,7 @@ function CanvasNode({
                     focusTextStyle,
                     disabledBackgroundStyle,
                     disabledTextStyle,
+                    transitionStyle,
                   )
             }
           >
@@ -2824,6 +2828,14 @@ function getDisabledTextStyle(color?: NodeColor): CSSProperties | undefined {
     : ({
         '--dw-disabled-text': getCssColorWithOpacity(color.disabledTextColor),
       } as CSSProperties)
+}
+
+function getTransitionStyle(
+  transition?: NodeTransition,
+): CSSProperties | undefined {
+  return transition?.duration === undefined
+    ? undefined
+    : { transitionDuration: `${transition.duration}ms` }
 }
 
 function getAccentTextColorStyle(color?: NodeColor): CSSProperties | undefined {
@@ -4785,6 +4797,54 @@ function NodeColorControls({
                 HEX 형식 (#RRGGBB)으로 입력해주세요.
               </span>
             ) : null}
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              전환 시간 (ms)
+            </span>
+            <input
+              type="number"
+              min={0}
+              max={2000}
+              step={10}
+              placeholder="150"
+              value={node.transition?.duration ?? ''}
+              className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+              onChange={(event) => {
+                const raw = event.target.value
+                if (raw === '') {
+                  onNodeMetaChange(
+                    node,
+                    { transition: undefined },
+                    {
+                      mergeKey: getNodeColorMergeKey(
+                        node.id,
+                        'meta.transition.duration',
+                      ),
+                    },
+                  )
+                  return
+                }
+                const next = Number(raw)
+                if (Number.isNaN(next)) {
+                  return
+                }
+                const clamped = Math.max(0, Math.min(2000, next))
+                onNodeMetaChange(
+                  node,
+                  { transition: { duration: clamped } },
+                  {
+                    mergeKey: getNodeColorMergeKey(
+                      node.id,
+                      'meta.transition.duration',
+                    ),
+                  },
+                )
+              }}
+            />
           </label>
         ) : null}
 
