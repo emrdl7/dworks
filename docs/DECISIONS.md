@@ -401,3 +401,21 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | 1 | Claude | `docs/discussions/2026-05-07-m1-runner-timeout-config-round-1-claude.md` | timeout 설정 가능화 설계 + 합의 요청 2건 |
 | 2 | Codex | `docs/discussions/2026-05-07-m1-runner-timeout-config-round-2-codex.md` | 합의 OK + 코드 (`f443673`) — `resolveJudgeTimeoutMs` + `DWORKS_JUDGE_TIMEOUT_MS` |
 | 3 | Claude | `docs/discussions/2026-05-07-m1-runner-timeout-config-round-3-claude.md` | 코드 검토 OK + 토픽 종료 |
+
+### dworks 라운드 (M2 visible editor 트랙 — 2026-05-08)
+
+사용자 mandate (2026-05-08): "디자이너가 만족할 수준 디자인툴" + "타이포 우선" + "TTF 직접 등록" + "나머지 순차". preset toggle은 데모 수준, 노드 단위 자유 편집 mandate.
+
+| 토픽 | 라운드 / 코드 | 핵심 기여 |
+|------|--------------|-----------|
+| `m2-edit-runner` | r1 (Claude) → r2 (Codex) → 코드 (`8b0216a`) → r3 (Claude) | apps/edit-runner CLI MVP + 단계별 status 분류 |
+| `m2-edit-eval` | r1 (Claude 사후) → r2 (Codex) | D6 5축 dry-run + EditEvalInput Zod schema + 컨벤션 위반 1차 |
+| `m2-visible-editor` | r1 (Codex) → r2 (Claude) → 코드 (`d2c4a23`) → r3 (Claude) | apps/web 첫 화면 — Layers/Canvas/Inspector 3-column |
+| `m2-fixture-loader` | r1 (Codex) → r2 (Claude) → 코드 (`355d906`) → r3 (Claude) | seeds/trees 3종 catalog + header switcher + safe re-select |
+| `m2-edit-undo` | r1 (Codex) → r2 (Claude) → 코드 (`1e113fb`) → r3 (Claude) | snapshot stack 100-step + Undo/Redo + history 통합 |
+| `m2-image-node` | r1 (Codex) → r2 (Claude) → 코드 (`68566cc`) → r3 (Claude) | image 1급 노드 + hero visual 트리화 + ImagePreview onError fallback |
+| `m2-structure-ops` | r1 (Codex) → r2 (Claude) → 코드 (`20876d6`) → r3 (Claude) | move/duplicate/delete + id 충돌 방지 + Delete muted danger |
+| `m2-i18n-korean` | r1 (Claude 사후) → r2 (Codex) | UI 한글화 + contract 영문 유지 + 컨벤션 위반 2차 |
+| `m2-style-color` | r1 (Claude) → r2 (Codex) → 코드 (`9e27657`) → r3 (Claude) | colorPreset 5종 + 11키 토큰 + canvas CSS variable |
+| `m2-style-typography` | r1 (Codex) → r2 (Claude) + amend → r3 (Codex) + amend → 코드 (`f5f6f2a`) → r4 (Claude) → r5 (Codex) → follow-up patch (`7523747`) → r6 (Claude) | typography 자유 6필드 + TTF schema string 확장 + ALERT round 6 |
+| 사용자 결정 | (2026-05-08) | "ㄱㄱ" — m2-style-typography 종료 + 자율 모드 재개 + 다음 토픽 `m2-style-font-upload` 진입 OK |
