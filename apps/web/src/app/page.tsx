@@ -4789,6 +4789,24 @@ function NodeColorControls({
         ) : null}
 
         {supportsHoverBackgroundColor ? (
+          <label className="flex items-center gap-2 text-xs font-semibold text-[#4f5e56]">
+            <input
+              type="checkbox"
+              className="h-4 w-4 cursor-pointer accent-[#1b7f72]"
+              checked={node.disabled === true}
+              onChange={(event) =>
+                onNodeMetaChange(
+                  node,
+                  { disabled: event.target.checked ? true : undefined },
+                  { mergeKey: getNodeColorMergeKey(node.id, 'meta.disabled') },
+                )
+              }
+            />
+            비활성 상태
+          </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor ? (
           <label className="block">
             <span className="text-xs font-semibold text-[#4f5e56]">
               비활성 배경

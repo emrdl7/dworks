@@ -81,6 +81,7 @@ export const updateNodeMetaOperationSchema: z.ZodType<UpdateNodeMetaOperation> =
     nodeId: z.string().min(1),
     patch: z.object({
       hidden: z.boolean().optional(),
+      disabled: z.boolean().optional(),
       opacity: opacitySchema.optional(),
       pointerEvents: nodePointerEventsSchema.optional(),
     }),
@@ -165,6 +166,7 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     nodeId: z.ZodString
     patch: z.ZodObject<{
       hidden: z.ZodOptional<z.ZodBoolean>
+      disabled: z.ZodOptional<z.ZodBoolean>
       opacity: z.ZodOptional<typeof opacitySchema>
       pointerEvents: z.ZodOptional<typeof nodePointerEventsSchema>
     }>

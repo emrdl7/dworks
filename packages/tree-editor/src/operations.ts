@@ -54,6 +54,7 @@ export interface UpdateLayoutOperation {
 
 export interface NodeMetaPatch {
   hidden?: TreeNode['hidden']
+  disabled?: TreeNode['disabled']
   opacity?: TreeNode['opacity']
   pointerEvents?: TreeNode['pointerEvents']
 }
@@ -372,6 +373,14 @@ function withNodeMetaPatch<T extends TreeNode>(
       delete next.hidden
     } else {
       next.hidden = patch.hidden
+    }
+  }
+
+  if ('disabled' in patch) {
+    if (patch.disabled === undefined) {
+      delete next.disabled
+    } else {
+      next.disabled = patch.disabled
     }
   }
 
