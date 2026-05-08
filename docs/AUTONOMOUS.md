@@ -65,9 +65,13 @@
 8. `m2-text-inline` — paragraph 안 inline bold/italic/link 스팬.
 
 후속 후보 (사용자 우선순위 위임):
-- `m2-style-typography-preset` — 자유 입력 위의 빠른 preset shortcut
+- ✓ `m2-style-typography-preset` — 자유 입력 위의 빠른 preset shortcut (`7d415dc`)
 - `m2-style-font-stack` — 한글 폰트 stack 정밀화 (Pretendard/Noto Sans KR)
 - `m2-style-a11y` — WCAG 대비 자동 검사 + 노드별 검사 표시
+- `m2-style-shadow-multi` — 다중 shadow
+- `m2-style-gradient-conic` — conic gradient
+- `m2-style-color-state` — link / hover / active 상태 색상 override
+- `m2-responsive-override` — viewport별 속성 override
 
 ## 코드 변경 정책
 

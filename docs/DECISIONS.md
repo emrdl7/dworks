@@ -445,3 +445,6 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-interaction-uplift` | r1 (Claude) → r2 (Codex) → r3 (Claude) | 인터랙션 분산 영역 합의 (context-menu / layer-drag / canvas-toolbar / smart-collapse) |
 | `m2-context-menu` | r1 (Codex) → r2 (Claude) → 코드 (`3c4f720`) → r3 (Claude) | 캔버스/레이어 우클릭 메뉴 7 항목 + Shift+F10 + Escape (자체 구현) |
 | `m2-layer-drag` | r1 (Codex) → r2 (Claude) → 코드 (`5337b33`) → r3 (사용자 버그) → fix (`8c09a99`) → r4 (Claude) | 레이어 드래그 정렬 + React 이벤트 풀링 fix |
+| `m2-canvas-toolbar` | r1 (Claude) → r2 (Codex) → r3 ack (Claude) → 코드 (`ee311e9`) → r4 (Codex) | 선택 노드 우상단 인라인 toolbar 4 버튼 (위/아래/복제/삭제) + CanvasToolbarContext (12 CanvasNode 재귀 prop 회피) |
+| `m2-inspector-smart-collapse` | r1 (Claude) → r2 (Codex) → r3 ack (Claude) → 코드 (`bb1ae8b`) → r4 (Codex) | InspectorDisclosure 선택 controlled mode + NodeInspector 노드 종류별 smart default (text→내용+타이포 / image→이미지 / button→내용 / 컨테이너→레이아웃) |
+| `m2-style-typography-preset` | r1 (Claude) → r2 (Codex) → r3 ack (Claude) → 코드 (`7d415dc`) → r4 (Codex) | 텍스트 위계 5 preset (캡션/본문/소제목/제목/큰 제목) — fontSize/fontWeight/lineHeight/letterSpacing 4필드 일괄, fontFamily/textShadow/textAlign 보존 |
