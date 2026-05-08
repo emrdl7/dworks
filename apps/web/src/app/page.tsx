@@ -4148,6 +4148,40 @@ function GradientColorField({
   )
 }
 
+type TypographyPreset = {
+  id: string
+  label: string
+  typography: Partial<Typography>
+}
+
+const TYPOGRAPHY_PRESETS = [
+  {
+    id: 'caption',
+    label: '캡션',
+    typography: { fontSize: 13, fontWeight: '400', lineHeight: 1.4, letterSpacing: 0 },
+  },
+  {
+    id: 'body',
+    label: '본문',
+    typography: { fontSize: 16, fontWeight: '400', lineHeight: 1.5, letterSpacing: 0 },
+  },
+  {
+    id: 'subtitle',
+    label: '소제목',
+    typography: { fontSize: 18, fontWeight: '600', lineHeight: 1.4, letterSpacing: 0 },
+  },
+  {
+    id: 'heading',
+    label: '제목',
+    typography: { fontSize: 24, fontWeight: '700', lineHeight: 1.3, letterSpacing: 0 },
+  },
+  {
+    id: 'display',
+    label: '큰 제목',
+    typography: { fontSize: 36, fontWeight: '700', lineHeight: 1.2, letterSpacing: 0 },
+  },
+] as const satisfies readonly TypographyPreset[]
+
 interface TypographyControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TextNode
@@ -4343,6 +4377,29 @@ function TypographyControls({
       onAction={() => onTypographyReset(node)}
       {...disclosure}
     >
+      <div
+        role="group"
+        aria-label="타이포그래피 프리셋"
+        className="flex flex-wrap gap-1.5 pb-3"
+      >
+        {TYPOGRAPHY_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            className="rounded-full border border-[#cbd6cf] px-3 py-1 text-xs font-semibold text-[#26312b] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+            onClick={() =>
+              onTypographyChange(node, preset.typography, {
+                mergeKey: getNodeColorMergeKey(
+                  node.id,
+                  `typography.preset.${preset.id}`,
+                ),
+              })
+            }
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
       <label className="block">
         <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
         <select
