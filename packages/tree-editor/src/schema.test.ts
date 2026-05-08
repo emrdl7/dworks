@@ -167,6 +167,9 @@ describe('edit-operation schema', () => {
         disabled: true,
         opacity: 0.64,
         pointerEvents: 'none',
+        transition: {
+          duration: 240,
+        },
       },
     })
 
@@ -177,6 +180,7 @@ describe('edit-operation schema', () => {
       assert.equal(op.patch.disabled, true)
       assert.equal(op.patch.opacity, 0.64)
       assert.equal(op.patch.pointerEvents, 'none')
+      assert.equal(op.patch.transition?.duration, 240)
     }
   })
 
@@ -576,6 +580,18 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           disabled: 'true',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transition: {
+            duration: 2001,
+          },
         },
       }),
     )

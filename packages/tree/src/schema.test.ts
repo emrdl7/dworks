@@ -78,6 +78,9 @@ describe('tree schema', () => {
       editKind: 'structure',
       hidden: true,
       pointerEvents: 'none',
+      transition: {
+        duration: 240,
+      },
       children: [],
     })
 
@@ -85,6 +88,7 @@ describe('tree schema', () => {
     if (parsed.type === 'card') {
       assert.equal(parsed.hidden, true)
       assert.equal(parsed.pointerEvents, 'none')
+      assert.equal(parsed.transition?.duration, 240)
     }
   })
 
@@ -95,6 +99,30 @@ describe('tree schema', () => {
         type: 'card',
         editKind: 'structure',
         pointerEvents: 'visible',
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transition: {
+          duration: 2001,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transition: {
+          duration: -1,
+        },
         children: [],
       }),
     )

@@ -194,12 +194,16 @@ describe('tree editor operations', () => {
       disabled: true,
       opacity: 0.42,
       pointerEvents: 'none',
+      transition: {
+        duration: 240,
+      },
     })
     const reset = updateNodeMeta(edited, 'landing.card', {
       hidden: undefined,
       disabled: undefined,
       opacity: undefined,
       pointerEvents: undefined,
+      transition: undefined,
     })
 
     assert.equal(tree.root.type, 'section')
@@ -225,14 +229,17 @@ describe('tree editor operations', () => {
         assert.equal(originalCard.disabled, undefined)
         assert.equal(originalCard.opacity, undefined)
         assert.equal(originalCard.pointerEvents, undefined)
+        assert.equal(originalCard.transition, undefined)
         assert.equal(editedCard.hidden, true)
         assert.equal(editedCard.disabled, true)
         assert.equal(editedCard.opacity, 0.42)
         assert.equal(editedCard.pointerEvents, 'none')
+        assert.deepEqual(editedCard.transition, { duration: 240 })
         assert.equal(resetCard.hidden, undefined)
         assert.equal(resetCard.disabled, undefined)
         assert.equal(resetCard.opacity, undefined)
         assert.equal(resetCard.pointerEvents, undefined)
+        assert.equal(resetCard.transition, undefined)
       }
     }
   })
