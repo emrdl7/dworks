@@ -83,9 +83,15 @@
 - ✓ `m2-style-color-state-active` — active 배경 + 글자 (`ed92b0c`)
 - ✓ `m2-style-color-state-focus` — focus-visible 배경 + 글자 (`1ff7047`)
 - ✓ `m2-style-color-state-disabled` — disabled 배경 + 글자 (`4e268a8`)
-- `m2-style-shadow-multi-inset` — inset shadow 지원 (shadow-multi 후속)
-- `m2-color-state-disabled-toggle` — disabled boolean 토글 UI (Codex 제안)
+- ✓ `m2-style-shadow-multi-inset` — inset shadow (`2d9d624` + Codex fix)
+- ✓ `m2-color-state-disabled-toggle` — disabled 토글 UI (`a6483a6`)
+- ✓ `m2-style-transition` — transition duration (`87ac637`)
 - `m2-responsive-override` — viewport별 속성 override
+- `m2-style-gradient-stops` — 모든 gradient 다중 stop
+- `m2-style-cursor` — 노드별 cursor (pointer/help/text/not-allowed)
+- `m2-style-image-filter` — 이미지 노드 CSS filter (blur/grayscale/sepia/brightness/contrast)
+- `m2-style-transition-timing` — transition timing function 선택 (linear/ease-in/out/cubic-bezier)
+- `m2-color-state-disabled-pointerevents` — disabled=true 시 pointerEvents='none' 자동
 
 ## 코드 변경 정책
 
