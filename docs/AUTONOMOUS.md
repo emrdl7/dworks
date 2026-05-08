@@ -79,9 +79,13 @@
 - ✓ `m2-style-gradient-conic-controls` — conic 시작각/중심 (`53b7e36`)
 - `m2-style-gradient-stops` — 모든 gradient 다중 stop 지원
 - ✓ `m2-style-font-stack-self-host` — Pretendard npm self-host (`8895de8`)
-- `m2-style-color-state-text` — hover textColor (color-state 후속)
-- `m2-style-color-state-active` — active / focus state (color-state 후속)
+- ✓ `m2-style-color-state-text` — hover textColor (`e28914c`)
+- ✓ `m2-style-color-state-active` — active 배경 + 글자 (`ed92b0c`)
+- ✓ `m2-style-color-state-focus` — focus-visible 배경 + 글자 (`1ff7047`)
+- ✓ `m2-style-color-state-disabled` — disabled 배경 + 글자 (`4e268a8`)
 - `m2-style-shadow-multi-inset` — inset shadow 지원 (shadow-multi 후속)
+- `m2-color-state-disabled-toggle` — disabled boolean 토글 UI (Codex 제안)
+- `m2-responsive-override` — viewport별 속성 override
 
 ## 코드 변경 정책
 
