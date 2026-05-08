@@ -178,6 +178,10 @@ export const gradientSchema = z.object({
 export type Gradient = z.infer<typeof gradientSchema>
 export const shapeSchema = z.object({
   radius: z.number().min(0).max(120).optional(),
+  radiusTopLeft: z.number().min(0).max(120).optional(),
+  radiusTopRight: z.number().min(0).max(120).optional(),
+  radiusBottomRight: z.number().min(0).max(120).optional(),
+  radiusBottomLeft: z.number().min(0).max(120).optional(),
   borderWidth: z.number().min(0).max(20).optional(),
   borderColor: hexColorSchema.optional(),
   borderOpacity: opacitySchema.optional(),

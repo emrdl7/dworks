@@ -366,6 +366,10 @@ const spacingFields = [
 ] as const
 const shapeFields = [
   'radius',
+  'radiusTopLeft',
+  'radiusTopRight',
+  'radiusBottomRight',
+  'radiusBottomLeft',
   'borderWidth',
   'borderColor',
   'borderOpacity',
@@ -398,9 +402,14 @@ type ColorOpacityField = Extract<
   (typeof colorFields)[number],
   'backgroundOpacity' | 'textOpacity' | 'accentOpacity'
 >
+type ShapeRadiusField = Extract<
+  (typeof shapeFields)[number],
+  'radiusTopLeft' | 'radiusTopRight' | 'radiusBottomRight' | 'radiusBottomLeft'
+>
 type CustomShadowNumberField = 'offsetX' | 'offsetY' | 'blur' | 'spread'
 type ImagePresentationField = (typeof imagePresentationFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
+type ShapeRadiusMode = 'all' | 'corners'
 type GradientColorStopField = 'from' | 'to'
 type GradientOpacityStopField = 'fromOpacity' | 'toOpacity'
 type ColorMode = 'solid' | 'gradient'
@@ -456,6 +465,18 @@ const marginVerticalFields: readonly SpacingField[] = [
   'marginTop',
   'marginBottom',
 ]
+const shapeCornerRadiusFields: readonly ShapeRadiusField[] = [
+  'radiusTopLeft',
+  'radiusTopRight',
+  'radiusBottomLeft',
+  'radiusBottomRight',
+]
+const shapeCornerRadiusLabels: Record<ShapeRadiusField, string> = {
+  radiusTopLeft: '좌상',
+  radiusTopRight: '우상',
+  radiusBottomLeft: '좌하',
+  radiusBottomRight: '우하',
+}
 
 const DEFAULT_SHAPE_COLOR = '#d7ddd2'
 const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
@@ -1837,6 +1858,7 @@ function getShapeStyle(shape?: Shape): CSSProperties | undefined {
     return undefined
   }
 
+  const borderRadius = getBorderRadiusValue(shape)
   const hasBorderDetail =
     shape.borderWidth !== undefined ||
     shape.borderColor !== undefined ||
@@ -1860,7 +1882,7 @@ function getShapeStyle(shape?: Shape): CSSProperties | undefined {
           )
 
   const style: CSSProperties = {
-    ...(shape.radius !== undefined ? { borderRadius: `${shape.radius}px` } : {}),
+    ...(borderRadius !== undefined ? { borderRadius } : {}),
     ...(effectiveBorderStyle !== undefined
       ? { borderStyle: effectiveBorderStyle }
       : {}),
@@ -1878,6 +1900,21 @@ function getShapeStyle(shape?: Shape): CSSProperties | undefined {
   }
 
   return Object.keys(style).length > 0 ? style : undefined
+}
+
+function getBorderRadiusValue(shape: Shape): string | undefined {
+  if (hasCornerRadiusOverride(shape)) {
+    return [
+      getResolvedCornerRadius(shape, 'radiusTopLeft'),
+      getResolvedCornerRadius(shape, 'radiusTopRight'),
+      getResolvedCornerRadius(shape, 'radiusBottomRight'),
+      getResolvedCornerRadius(shape, 'radiusBottomLeft'),
+    ]
+      .map((value) => `${value}px`)
+      .join(' ')
+  }
+
+  return shape.radius !== undefined ? `${shape.radius}px` : undefined
 }
 
 function getColorStyle(
@@ -4061,6 +4098,9 @@ function ShapeControls({
   onShapeReset,
 }: ShapeControlsProps) {
   const shape = node.shape ?? {}
+  const radiusMode: ShapeRadiusMode = hasCornerRadiusOverride(shape)
+    ? 'corners'
+    : 'all'
   const [borderColorInput, setBorderColorInput] = useState(shape.borderColor ?? '')
   const [borderColorError, setBorderColorError] = useState(false)
   const effectiveCustomShadow = getResolvedCustomShadow(shape.customShadow)
@@ -4082,9 +4122,50 @@ function ShapeControls({
   }, [node.id, effectiveCustomShadow.color])
 
   function updateRadius(value: string) {
+    onShapeChange(
+      node,
+      {
+        radius: parseOptionalNumber(value, 0, 120),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'radius') },
+    )
+  }
+
+  function updateRadiusMode(mode: ShapeRadiusMode) {
+    if (mode === radiusMode) {
+      return
+    }
+
+    if (mode === 'corners') {
+      onShapeChange(
+        node,
+        Object.fromEntries(
+          shapeCornerRadiusFields.map((field) => [
+            field,
+            getResolvedCornerRadius(shape, field),
+          ]),
+        ) as Partial<Shape>,
+      )
+      return
+    }
+
     onShapeChange(node, {
-      radius: parseOptionalNumber(value, 0, 120),
+      radius: getResolvedCornerRadius(shape, 'radiusTopLeft'),
+      radiusTopLeft: undefined,
+      radiusTopRight: undefined,
+      radiusBottomRight: undefined,
+      radiusBottomLeft: undefined,
     })
+  }
+
+  function updateCornerRadius(field: ShapeRadiusField, value: string) {
+    onShapeChange(
+      node,
+      {
+        [field]: parseOptionalNumber(value, 0, 120),
+      } as Partial<Shape>,
+      { mergeKey: getNodeColorMergeKey(node.id, field) },
+    )
   }
 
   function updateBorderWidth(value: string) {
@@ -4292,16 +4373,56 @@ function ShapeControls({
       onAction={() => onShapeReset(node)}
     >
       <div className="grid grid-cols-2 gap-3">
-        <TypographyNumberField
-          label="모서리"
-          unit="px"
-          min={0}
-          max={120}
-          step={1}
-          value={shape.radius}
-          placeholder="기본"
-          onChange={updateRadius}
-        />
+        <div className="col-span-2 rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-[#4f5e56]">모서리</span>
+            <div className="grid grid-cols-2 gap-1 rounded-md border border-[#cbd6cf] bg-white p-1">
+              <TypographyToggleButton
+                isSelected={radiusMode === 'all'}
+                onClick={() => updateRadiusMode('all')}
+              >
+                전체
+              </TypographyToggleButton>
+              <TypographyToggleButton
+                isSelected={radiusMode === 'corners'}
+                onClick={() => updateRadiusMode('corners')}
+              >
+                분리
+              </TypographyToggleButton>
+            </div>
+          </div>
+
+          {radiusMode === 'all' ? (
+            <div className="mt-3">
+              <TypographyNumberField
+                label="전체"
+                unit="px"
+                min={0}
+                max={120}
+                step={1}
+                value={shape.radius}
+                placeholder="기본"
+                onChange={updateRadius}
+              />
+            </div>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {shapeCornerRadiusFields.map((field) => (
+                <TypographyNumberField
+                  key={field}
+                  label={shapeCornerRadiusLabels[field]}
+                  unit="px"
+                  min={0}
+                  max={120}
+                  step={1}
+                  value={getResolvedCornerRadius(shape, field)}
+                  placeholder="0"
+                  onChange={(value) => updateCornerRadius(field, value)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
         <label className="block">
           <span className="text-xs font-semibold text-[#4f5e56]">
             테두리 종류
@@ -5388,6 +5509,17 @@ function findFirstEditableNodeId(node: TreeNode): string | null {
 
 function isEditableNode(node: TreeNode): boolean {
   return node.type === 'text' || node.type === 'button' || node.type === 'image'
+}
+
+function hasCornerRadiusOverride(shape: Partial<Shape>): boolean {
+  return shapeCornerRadiusFields.some((field) => shape[field] !== undefined)
+}
+
+function getResolvedCornerRadius(
+  shape: Partial<Shape>,
+  field: ShapeRadiusField,
+): number {
+  return shape[field] ?? shape.radius ?? 0
 }
 
 function canUseAccentColor(node: TreeNode): boolean {

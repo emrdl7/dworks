@@ -117,6 +117,10 @@ describe('tree schema', () => {
       editKind: 'structure',
       shape: {
         radius: 18,
+        radiusTopLeft: 24,
+        radiusTopRight: 12,
+        radiusBottomRight: 4,
+        radiusBottomLeft: 16,
         borderWidth: 2,
         borderColor: '#aabbcc',
         borderOpacity: 0.45,
@@ -137,6 +141,10 @@ describe('tree schema', () => {
     assert.equal(parsed.type, 'card')
     if (parsed.type === 'card') {
       assert.equal(parsed.shape?.radius, 18)
+      assert.equal(parsed.shape?.radiusTopLeft, 24)
+      assert.equal(parsed.shape?.radiusTopRight, 12)
+      assert.equal(parsed.shape?.radiusBottomRight, 4)
+      assert.equal(parsed.shape?.radiusBottomLeft, 16)
       assert.equal(parsed.shape?.borderWidth, 2)
       assert.equal(parsed.shape?.borderColor, '#aabbcc')
       assert.equal(parsed.shape?.borderOpacity, 0.45)
@@ -200,6 +208,30 @@ describe('tree schema', () => {
         editKind: 'structure',
         color: {
           backgroundColor: 'white',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          radiusTopLeft: -1,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          radiusBottomRight: 121,
         },
         children: [],
       }),
