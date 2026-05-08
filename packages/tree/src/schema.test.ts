@@ -966,6 +966,13 @@ describe('tree schema', () => {
         fit: 'contain',
         overlayColor: '#123456',
         overlayOpacity: 0.42,
+        filter: {
+          blur: 12,
+          grayscale: 80,
+          sepia: 35,
+          brightness: 120,
+          contrast: 140,
+        },
         overlayGradient: {
           type: 'radial',
           from: '#123456',
@@ -984,6 +991,13 @@ describe('tree schema', () => {
         fit: 'contain',
         overlayColor: '#123456',
         overlayOpacity: 0.42,
+        filter: {
+          blur: 12,
+          grayscale: 80,
+          sepia: 35,
+          brightness: 120,
+          contrast: 140,
+        },
         overlayGradient: {
           type: 'radial',
           from: '#123456',
@@ -1042,6 +1056,28 @@ describe('tree schema', () => {
             direction: 'around',
           },
         },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-blur',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { filter: { blur: 21 } },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-brightness',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { filter: { brightness: 49 } },
       }),
     )
   })

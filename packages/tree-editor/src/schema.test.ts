@@ -210,6 +210,13 @@ describe('edit-operation schema', () => {
         fit: 'contain',
         overlayColor: '#123456',
         overlayOpacity: 0.4,
+        filter: {
+          blur: 6,
+          grayscale: 100,
+          sepia: 20,
+          brightness: 125,
+          contrast: 90,
+        },
       },
     })
 
@@ -224,6 +231,13 @@ describe('edit-operation schema', () => {
         fit: 'contain',
         overlayColor: '#123456',
         overlayOpacity: 0.4,
+        filter: {
+          blur: 6,
+          grayscale: 100,
+          sepia: 20,
+          brightness: 125,
+          contrast: 90,
+        },
       })
     }
   })
@@ -333,6 +347,22 @@ describe('edit-operation schema', () => {
         type: 'updateImage',
         nodeId: 'hero.visual',
         presentation: { overlayOpacity: -0.01 },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { filter: { grayscale: 101 } },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { filter: { contrast: 151 } },
       }),
     )
   })

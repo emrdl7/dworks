@@ -452,6 +452,7 @@ const imagePresentationFields = [
   'overlayColor',
   'overlayOpacity',
   'overlayGradient',
+  'filter',
 ] as const
 type SpacingField = (typeof spacingFields)[number]
 type ColorField = Extract<

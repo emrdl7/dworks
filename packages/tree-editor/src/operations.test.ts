@@ -132,11 +132,22 @@ describe('tree editor operations', () => {
         fit: 'contain',
         overlayColor: '#123456',
         overlayOpacity: 0.4,
+        filter: {
+          blur: 8,
+          grayscale: 70,
+          brightness: 115,
+        },
       },
     })
     const retinted = updateImage(composed, 'landing.visual', {
       presentation: {
         overlayOpacity: 0.65,
+        filter: {
+          blur: 4,
+          grayscale: 70,
+          brightness: 115,
+          contrast: 130,
+        },
       },
     })
     const reset = updateImage(retinted, 'landing.visual', {
@@ -146,6 +157,7 @@ describe('tree editor operations', () => {
         fit: undefined,
         overlayColor: undefined,
         overlayOpacity: undefined,
+        filter: undefined,
       },
     })
 
@@ -174,11 +186,22 @@ describe('tree editor operations', () => {
           fit: 'contain',
           overlayColor: '#123456',
           overlayOpacity: 0.4,
+          filter: {
+            blur: 8,
+            grayscale: 70,
+            brightness: 115,
+          },
         })
         assert.deepEqual(retintedVisual.presentation, {
           fit: 'contain',
           overlayColor: '#123456',
           overlayOpacity: 0.65,
+          filter: {
+            blur: 4,
+            grayscale: 70,
+            brightness: 115,
+            contrast: 130,
+          },
         })
         assert.equal(resetVisual.aspectRatio, undefined)
         assert.equal(resetVisual.focalPoint, undefined)
