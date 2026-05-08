@@ -426,3 +426,7 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-style-layout` | r1 (Codex) → r2 (Claude) → 코드 (`57cb809`) → r3 (Claude) | flex direction/align/justify (5종 evenly 포함)/wrap + spacing.gap 단일 source |
 | `m2-image-crop` | r1 (Codex) → r2 (Claude) → 코드 (`ee16d93`) + hex fix (`ec3d309`) → r3 (Claude) | 이미지 비율/맞춤/초점 드래그/오버레이 + 4 색상 컨트롤 hex 우선 |
 | `m2-style-font-grouping` | Claude r1 사후 → Codex r2 (다중 업로드) → Claude r3 → 코드 (`e6563bb`) → r4 (Claude) → Codex r5 (9 weight 버그) → r6 ALERT (Claude) → 사용자 직접 지시 → 코드 (`b2dce7b`) → r7 (Claude) | 다중 업로드 + family/weight 자동 grouping + FontWeight 9단계 + collapsible 그룹 + 그룹 삭제 + 속성 패널 스크롤/접기 |
+| `m2-font-upload-relocation` | Codex 5차 위반 (사용자 _협의 후 진행_ 무시) → 코드 (`8f12f8c`) → Claude r1 사후 → Codex r2 (사과+약속 강화 5/6/7) → Claude r3 종료 | 글꼴 업로드 진입점을 관리 섹션으로 이동 + 컨벤션 신뢰도 회복 |
+| `m2-style-color-polish` | Claude r1 (사용자 _협의 후 진행_ 지시) → Codex r2 → Claude r3 → 코드 (`fea7e19`) → r4 (Claude) | color drag 600ms mergeKey history 압축 + 4 컨트롤 opacity (background/text/border/overlay) |
+| `m2-responsive-preview` | r1 (Claude) → r2 (Codex) → r3 (Claude ack) → 코드 (`73f747e`) → r4 (Claude) | viewport switcher (모바일 375 / 태블릿 768 / 데스크톱 1200) + 캔버스 폭 chip |
+| `m2-text-inline` | r1 (Claude) → r2 (Codex) → r3 (Claude ack) → 코드 (`9e6fc92`) → r4 (Claude) | markdown subset (bold/italic/link) + scheme allowlist (http/https/mailto/#) — **mandate 8영역 100% 충족** |
