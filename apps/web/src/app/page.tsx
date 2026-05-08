@@ -11,7 +11,9 @@ import {
 import {
   COLOR_PRESETS,
   COLOR_PRESET_IDS,
+  BUILT_IN_FONT_FAMILY_IDS,
   type ButtonNode,
+  type BuiltInFontFamily,
   type ColorPreset,
   type FontFamily,
   type FontWeight,
@@ -127,14 +129,15 @@ const textAlignLabels: Record<TextAlign, string> = {
   right: '우',
 }
 
-const fontFamilyLabels: Record<FontFamily, string> = {
+const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
   sans: '산세리프',
   serif: '세리프',
+  mono: '고정폭',
 }
 
 const fontWeightOptions: FontWeight[] = ['400', '500', '600', '700']
 const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
-const fontFamilyOptions: FontFamily[] = ['sans', 'serif']
+const builtInFontFamilyOptions = [...BUILT_IN_FONT_FAMILY_IDS]
 const typographyFields = [
   'fontSize',
   'fontWeight',
@@ -730,6 +733,14 @@ function getFontFamilyStack(fontFamily: FontFamily): string {
     return 'ui-serif, "Noto Serif KR", Georgia, serif'
   }
 
+  if (fontFamily === 'mono') {
+    return 'ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace'
+  }
+
+  if (fontFamily !== 'sans') {
+    return `"${fontFamily.replaceAll('"', '\\"')}", ui-sans-serif, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif`
+  }
+
   return 'ui-sans-serif, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif'
 }
 
@@ -1114,21 +1125,30 @@ function TypographyControls({
           </div>
         </div>
 
-        <div>
+        <label className="block">
           <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
-          <div className="mt-2 grid grid-cols-2 gap-1">
-            {fontFamilyOptions.map((family) => (
-              <TypographyToggleButton
-                key={family}
-                isSelected={effectiveFontFamily === family}
-                onClick={() => onTypographyChange(node, { fontFamily: family })}
-              >
-                {fontFamilyLabels[family]}
-              </TypographyToggleButton>
+          <select
+            className="mt-2 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-xs font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            value={effectiveFontFamily}
+            onChange={(event) =>
+              onTypographyChange(node, { fontFamily: event.target.value })
+            }
+          >
+            {builtInFontFamilyOptions.map((family) => (
+              <option key={family} value={family}>
+                {builtInFontFamilyLabels[family]}
+              </option>
             ))}
-          </div>
-        </div>
+          </select>
+        </label>
       </div>
+      <button
+        type="button"
+        className="mt-3 h-9 w-full cursor-not-allowed rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#8a958d]"
+        disabled
+      >
+        TTF 업로드 준비 중
+      </button>
     </div>
   )
 }

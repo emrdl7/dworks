@@ -8,6 +8,7 @@ import {
   COLOR_PRESET_IDS,
   COLOR_PRESETS,
   CONTENT_ROLES,
+  BUILT_IN_FONT_FAMILY_IDS,
   FONT_FAMILY_IDS,
   FONT_WEIGHT_IDS,
   IMAGE_ASPECT_RATIOS,
@@ -61,6 +62,23 @@ describe('tree schema', () => {
       assert.equal(parsed.typography?.letterSpacing, -0.02)
       assert.equal(parsed.typography?.textAlign, 'center')
       assert.equal(parsed.typography?.fontFamily, 'serif')
+    }
+  })
+
+  it('accepts custom font-family ids for future TTF registration', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'hero.title',
+      type: 'text',
+      editKind: 'text',
+      content: 'Dworks',
+      typography: {
+        fontFamily: 'brand-title-ttf',
+      },
+    })
+
+    assert.equal(parsed.type, 'text')
+    if (parsed.type === 'text') {
+      assert.equal(parsed.typography?.fontFamily, 'brand-title-ttf')
     }
   })
 
@@ -283,6 +301,16 @@ describe('tree schema', () => {
 
     assert.throws(() =>
       treeNodeSchema.parse({
+        id: 'bad-typography-font',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad font',
+        typography: { fontFamily: '' },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
         id: 'bad-aspect',
         type: 'image',
         editKind: 'media',
@@ -328,7 +356,8 @@ describe('tree schema', () => {
     ])
     assert.deepEqual(FONT_WEIGHT_IDS, ['400', '500', '600', '700'])
     assert.deepEqual(TEXT_ALIGN_IDS, ['left', 'center', 'right'])
-    assert.deepEqual(FONT_FAMILY_IDS, ['sans', 'serif'])
+    assert.deepEqual(BUILT_IN_FONT_FAMILY_IDS, ['sans', 'serif', 'mono'])
+    assert.deepEqual(FONT_FAMILY_IDS, ['sans', 'serif', 'mono'])
     assert.deepEqual(COLOR_PRESET_IDS, [
       'mint',
       'navy',

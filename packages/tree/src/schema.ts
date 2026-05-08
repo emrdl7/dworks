@@ -56,8 +56,10 @@ export const TEXT_ALIGN_IDS = ['left', 'center', 'right'] as const
 export const textAlignSchema = z.enum(TEXT_ALIGN_IDS)
 export type TextAlign = z.infer<typeof textAlignSchema>
 
-export const FONT_FAMILY_IDS = ['sans', 'serif'] as const
-export const fontFamilySchema = z.enum(FONT_FAMILY_IDS)
+export const BUILT_IN_FONT_FAMILY_IDS = ['sans', 'serif', 'mono'] as const
+export const FONT_FAMILY_IDS = BUILT_IN_FONT_FAMILY_IDS
+export type BuiltInFontFamily = (typeof BUILT_IN_FONT_FAMILY_IDS)[number]
+export const fontFamilySchema = z.string().min(1)
 export type FontFamily = z.infer<typeof fontFamilySchema>
 
 export const typographySchema = z.object({
