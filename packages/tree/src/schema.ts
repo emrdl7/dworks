@@ -137,6 +137,15 @@ export const hexColorSchema = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
 export const opacitySchema = z.number().min(0).max(1)
+export const customShadowSchema = z.object({
+  offsetX: z.number().min(-100).max(100),
+  offsetY: z.number().min(-100).max(100),
+  blur: z.number().min(0).max(200),
+  spread: z.number().min(-100).max(100).optional(),
+  color: hexColorSchema,
+  opacity: opacitySchema.optional(),
+})
+export type CustomShadow = z.infer<typeof customShadowSchema>
 export const GRADIENT_DIRECTION_IDS = [
   'to-top',
   'to-top-right',
@@ -164,6 +173,7 @@ export const shapeSchema = z.object({
   borderOpacity: opacitySchema.optional(),
   borderStyle: borderStyleSchema.optional(),
   shadow: shadowPresetSchema.optional(),
+  customShadow: customShadowSchema.optional(),
 })
 export type Shape = z.infer<typeof shapeSchema>
 

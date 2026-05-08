@@ -19,6 +19,7 @@ import {
   type ButtonNode,
   type BuiltInFontFamily,
   type ColorPreset,
+  type CustomShadow,
   type FocalPoint,
   type FontFamily,
   type FontWeight,
@@ -295,6 +296,7 @@ const shapeFields = [
   'borderOpacity',
   'borderStyle',
   'shadow',
+  'customShadow',
 ] as const
 const colorFields = [
   'backgroundColor',
@@ -319,6 +321,7 @@ type ColorOpacityField = Extract<
   (typeof colorFields)[number],
   'backgroundOpacity' | 'textOpacity'
 >
+type CustomShadowNumberField = 'offsetX' | 'offsetY' | 'blur' | 'spread'
 type ImagePresentationField = (typeof imagePresentationFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
 type GradientColorStopField = 'from' | 'to'
@@ -377,6 +380,14 @@ const DEFAULT_TEXT_PICKER_COLOR = '#18211d'
 const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
 const DEFAULT_GRADIENT_TO_COLOR = '#000000'
 const DEFAULT_GRADIENT_DIRECTION: GradientDirection = 'to-bottom-right'
+const DEFAULT_CUSTOM_SHADOW: CustomShadow = {
+  offsetX: 0,
+  offsetY: 4,
+  blur: 12,
+  spread: 0,
+  color: '#000000',
+  opacity: 0.25,
+}
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const HISTORY_MERGE_WINDOW_MS = 600
 const SHADOW_VALUES: Record<ShadowPreset, string> = {
@@ -1746,7 +1757,11 @@ function getShapeStyle(shape?: Shape): CSSProperties | undefined {
     ...(effectiveBorderColor !== undefined
       ? { borderColor: effectiveBorderColor }
       : {}),
-    ...(shape.shadow !== undefined ? { boxShadow: SHADOW_VALUES[shape.shadow] } : {}),
+    ...(shape.customShadow !== undefined
+      ? { boxShadow: customShadowToCss(shape.customShadow) }
+      : shape.shadow !== undefined
+        ? { boxShadow: SHADOW_VALUES[shape.shadow] }
+        : {}),
   }
 
   return Object.keys(style).length > 0 ? style : undefined
@@ -3714,12 +3729,23 @@ function ShapeControls({
   const shape = node.shape ?? {}
   const [borderColorInput, setBorderColorInput] = useState(shape.borderColor ?? '')
   const [borderColorError, setBorderColorError] = useState(false)
+  const effectiveCustomShadow = getResolvedCustomShadow(shape.customShadow)
+  const shadowMode = shape.customShadow === undefined ? 'preset' : 'custom'
+  const [customShadowColorInput, setCustomShadowColorInput] = useState(
+    effectiveCustomShadow.color,
+  )
+  const [customShadowColorError, setCustomShadowColorError] = useState(false)
   const isBorderDisabled = shape.borderStyle === 'none'
 
   useEffect(() => {
     setBorderColorInput(shape.borderColor ?? '')
     setBorderColorError(false)
   }, [node.id, shape.borderColor])
+
+  useEffect(() => {
+    setCustomShadowColorInput(effectiveCustomShadow.color)
+    setCustomShadowColorError(false)
+  }, [node.id, effectiveCustomShadow.color])
 
   function updateRadius(value: string) {
     onShapeChange(node, {
@@ -3839,6 +3865,91 @@ function ShapeControls({
     })
   }
 
+  function updateShadowMode(mode: 'preset' | 'custom') {
+    if (mode === shadowMode) {
+      return
+    }
+
+    onShapeChange(node, {
+      customShadow:
+        mode === 'custom'
+          ? (shape.customShadow ?? DEFAULT_CUSTOM_SHADOW)
+          : undefined,
+    })
+  }
+
+  function updateCustomShadowNumber(
+    field: CustomShadowNumberField,
+    value: string,
+    min: number,
+    max: number,
+  ) {
+    const nextValue = parseOptionalNumber(value, min, max)
+    if (nextValue === undefined) {
+      return
+    }
+
+    onShapeChange(
+      node,
+      {
+        customShadow: getCustomShadowWithPatch(effectiveCustomShadow, {
+          [field]: nextValue,
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `customShadow.${field}`) },
+    )
+  }
+
+  function updateCustomShadowColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setCustomShadowColorInput(value)
+
+    if (trimmedValue === '') {
+      setCustomShadowColorError(false)
+      return
+    }
+
+    if (!isValidHexColor(trimmedValue)) {
+      setCustomShadowColorError(true)
+      return
+    }
+
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setCustomShadowColorError(false)
+    onShapeChange(node, {
+      customShadow: getCustomShadowWithPatch(effectiveCustomShadow, {
+        color: normalizedValue,
+      }),
+    })
+  }
+
+  function updateCustomShadowColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setCustomShadowColorInput(normalizedValue)
+    setCustomShadowColorError(false)
+    onShapeChange(
+      node,
+      {
+        customShadow: getCustomShadowWithPatch(effectiveCustomShadow, {
+          color: normalizedValue,
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'customShadow.color') },
+    )
+  }
+
+  function updateCustomShadowOpacity(value: string) {
+    onShapeChange(
+      node,
+      {
+        customShadow: getCustomShadowWithPatch(effectiveCustomShadow, {
+          opacity: parseOptionalOpacity(value),
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'customShadow.opacity') },
+    )
+  }
+
   return (
     <InspectorDisclosure
       title="모양"
@@ -3925,21 +4036,135 @@ function ShapeControls({
           />
         </div>
 
-        <label className="col-span-2 block">
-          <span className="text-xs font-semibold text-[#4f5e56]">그림자</span>
-          <select
-            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-            value={shape.shadow ?? ''}
-            onChange={(event) => updateShadow(event.target.value)}
-          >
-            <option value="">기본</option>
-            {shadowPresetOptions.map((shadow) => (
-              <option key={shadow} value={shadow}>
-                {shadowPresetLabels[shadow]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="col-span-2 space-y-3 rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-3">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-[#4f5e56]">그림자</span>
+            <div className="grid grid-cols-2 gap-1 rounded-md border border-[#cbd6cf] bg-white p-1">
+              <TypographyToggleButton
+                isSelected={shadowMode === 'preset'}
+                onClick={() => updateShadowMode('preset')}
+              >
+                기본
+              </TypographyToggleButton>
+              <TypographyToggleButton
+                isSelected={shadowMode === 'custom'}
+                onClick={() => updateShadowMode('custom')}
+              >
+                커스텀
+              </TypographyToggleButton>
+            </div>
+          </div>
+
+          {shadowMode === 'preset' ? (
+            <label className="block">
+              <span className="text-xs font-semibold text-[#4f5e56]">
+                그림자 종류
+              </span>
+              <select
+                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                value={shape.shadow ?? ''}
+                onChange={(event) => updateShadow(event.target.value)}
+              >
+                <option value="">기본</option>
+                {shadowPresetOptions.map((shadow) => (
+                  <option key={shadow} value={shadow}>
+                    {shadowPresetLabels[shadow]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <TypographyNumberField
+                label="가로 위치"
+                unit="px"
+                min={-100}
+                max={100}
+                step={1}
+                value={effectiveCustomShadow.offsetX}
+                placeholder="0"
+                onChange={(value) =>
+                  updateCustomShadowNumber('offsetX', value, -100, 100)
+                }
+              />
+              <TypographyNumberField
+                label="세로 위치"
+                unit="px"
+                min={-100}
+                max={100}
+                step={1}
+                value={effectiveCustomShadow.offsetY}
+                placeholder="4"
+                onChange={(value) =>
+                  updateCustomShadowNumber('offsetY', value, -100, 100)
+                }
+              />
+              <TypographyNumberField
+                label="흐림"
+                unit="px"
+                min={0}
+                max={200}
+                step={1}
+                value={effectiveCustomShadow.blur}
+                placeholder="12"
+                onChange={(value) =>
+                  updateCustomShadowNumber('blur', value, 0, 200)
+                }
+              />
+              <TypographyNumberField
+                label="확장"
+                unit="px"
+                min={-100}
+                max={100}
+                step={1}
+                value={effectiveCustomShadow.spread ?? 0}
+                placeholder="0"
+                onChange={(value) =>
+                  updateCustomShadowNumber('spread', value, -100, 100)
+                }
+              />
+              <label className="block">
+                <span className="text-xs font-semibold text-[#4f5e56]">
+                  색상
+                </span>
+                <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+                  <input
+                    className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                    value={customShadowColorInput}
+                    placeholder="#RRGGBB"
+                    aria-invalid={customShadowColorError}
+                    spellCheck={false}
+                    onChange={(event) =>
+                      updateCustomShadowColorFromText(event.target.value)
+                    }
+                  />
+                  <input
+                    type="color"
+                    aria-label="그림자 색상 선택"
+                    className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                    value={toColorInputValue(
+                      customShadowColorInput,
+                      DEFAULT_CUSTOM_SHADOW.color,
+                    )}
+                    onChange={(event) =>
+                      updateCustomShadowColorFromPicker(event.target.value)
+                    }
+                  />
+                </span>
+                {customShadowColorError ? (
+                  <span className="mt-2 block text-xs text-[#b42318]">
+                    HEX 형식 (#RRGGBB)으로 입력해주세요.
+                  </span>
+                ) : null}
+              </label>
+              <OpacityControl
+                label="투명도"
+                value={effectiveCustomShadow.opacity}
+                onChange={updateCustomShadowOpacity}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </InspectorDisclosure>
   )
@@ -4947,6 +5172,16 @@ function getGradientDirectionRotation(direction: GradientDirection): number {
   return GRADIENT_DIRECTION_ROTATION[direction]
 }
 
+function customShadowToCss(shadow: CustomShadow): string {
+  return [
+    `${shadow.offsetX}px`,
+    `${shadow.offsetY}px`,
+    `${shadow.blur}px`,
+    `${shadow.spread ?? 0}px`,
+    getCssColorWithOpacity(shadow.color, shadow.opacity),
+  ].join(' ')
+}
+
 function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
   return field === 'backgroundColor' ? 'backgroundOpacity' : 'textOpacity'
 }
@@ -4980,6 +5215,30 @@ function getVisibleBorderPatch(shape: Partial<Shape>): Partial<Shape> {
       shape.borderWidth === undefined || shape.borderWidth === 0
         ? 1
         : shape.borderWidth,
+  }
+}
+
+function getResolvedCustomShadow(shadow: CustomShadow | undefined): CustomShadow {
+  return shadow ?? DEFAULT_CUSTOM_SHADOW
+}
+
+function getCustomShadowWithPatch(
+  shadow: CustomShadow,
+  patch: Partial<CustomShadow>,
+): CustomShadow {
+  const hasOpacityPatch = Object.prototype.hasOwnProperty.call(patch, 'opacity')
+
+  return {
+    offsetX: patch.offsetX ?? shadow.offsetX,
+    offsetY: patch.offsetY ?? shadow.offsetY,
+    blur: patch.blur ?? shadow.blur,
+    spread: patch.spread ?? shadow.spread ?? 0,
+    color: patch.color ?? shadow.color,
+    ...(!hasOpacityPatch && shadow.opacity !== undefined
+      ? { opacity: shadow.opacity }
+      : patch.opacity !== undefined
+        ? { opacity: patch.opacity }
+        : {}),
   }
 }
 

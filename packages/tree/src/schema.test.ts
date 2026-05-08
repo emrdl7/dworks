@@ -110,6 +110,14 @@ describe('tree schema', () => {
         borderOpacity: 0.45,
         borderStyle: 'dashed',
         shadow: 'lg',
+        customShadow: {
+          offsetX: 2,
+          offsetY: 8,
+          blur: 24,
+          spread: 1,
+          color: '#112233',
+          opacity: 0.32,
+        },
       },
       children: [],
     })
@@ -122,6 +130,12 @@ describe('tree schema', () => {
       assert.equal(parsed.shape?.borderOpacity, 0.45)
       assert.equal(parsed.shape?.borderStyle, 'dashed')
       assert.equal(parsed.shape?.shadow, 'lg')
+      assert.equal(parsed.shape?.customShadow?.offsetX, 2)
+      assert.equal(parsed.shape?.customShadow?.offsetY, 8)
+      assert.equal(parsed.shape?.customShadow?.blur, 24)
+      assert.equal(parsed.shape?.customShadow?.spread, 1)
+      assert.equal(parsed.shape?.customShadow?.color, '#112233')
+      assert.equal(parsed.shape?.customShadow?.opacity, 0.32)
     }
   })
 
@@ -225,6 +239,82 @@ describe('tree schema', () => {
             from: 'white',
             to: '#000000',
             direction: 'to-bottom',
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          customShadow: {
+            offsetX: 101,
+            offsetY: 0,
+            blur: 12,
+            spread: 0,
+            color: '#000000',
+            opacity: 0.25,
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          customShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 201,
+            spread: 0,
+            color: '#000000',
+            opacity: 0.25,
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          customShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 12,
+            spread: 0,
+            color: 'black',
+            opacity: 0.25,
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          customShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 12,
+            spread: 0,
+            color: '#000000',
+            opacity: 1.2,
           },
         },
         children: [],
