@@ -190,6 +190,7 @@ describe('tree schema', () => {
           spread: 1,
           color: '#112233',
           opacity: 0.32,
+          inset: true,
         },
         customShadows: [
           {
@@ -207,6 +208,7 @@ describe('tree schema', () => {
             spread: 4,
             color: '#ffffff',
             opacity: 0.4,
+            inset: true,
           },
         ],
       },
@@ -231,9 +233,11 @@ describe('tree schema', () => {
       assert.equal(parsed.shape?.customShadow?.spread, 1)
       assert.equal(parsed.shape?.customShadow?.color, '#112233')
       assert.equal(parsed.shape?.customShadow?.opacity, 0.32)
+      assert.equal(parsed.shape?.customShadow?.inset, true)
       assert.equal(parsed.shape?.customShadows?.length, 2)
       assert.equal(parsed.shape?.customShadows?.[0]?.offsetY, 8)
       assert.equal(parsed.shape?.customShadows?.[1]?.spread, 4)
+      assert.equal(parsed.shape?.customShadows?.[1]?.inset, true)
     }
   })
 
@@ -339,6 +343,25 @@ describe('tree schema', () => {
         editKind: 'structure',
         color: {
           backgroundColor: 'white',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          customShadow: {
+            offsetX: 0,
+            offsetY: 4,
+            blur: 12,
+            spread: 0,
+            color: '#000000',
+            inset: 'yes',
+          },
         },
         children: [],
       }),

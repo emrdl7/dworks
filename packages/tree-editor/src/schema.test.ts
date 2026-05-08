@@ -72,6 +72,25 @@ describe('edit-operation schema', () => {
         borderColor: '#aabbcc',
         borderStyle: 'dashed',
         shadow: 'lg',
+        customShadows: [
+          {
+            offsetX: 0,
+            offsetY: 8,
+            blur: 24,
+            spread: 0,
+            color: '#000000',
+            opacity: 0.2,
+          },
+          {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 16,
+            spread: 4,
+            color: '#ffffff',
+            opacity: 0.4,
+            inset: true,
+          },
+        ],
       },
     })
 
@@ -81,6 +100,7 @@ describe('edit-operation schema', () => {
       assert.equal(op.patch.radius, 18)
       assert.equal(op.patch.borderColor, '#aabbcc')
       assert.equal(op.patch.shadow, 'lg')
+      assert.equal(op.patch.customShadows?.[1]?.inset, true)
     }
   })
 
@@ -401,6 +421,23 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           borderStyle: 'double',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateShape',
+        nodeId: 'hero.card',
+        patch: {
+          customShadow: {
+            offsetX: 0,
+            offsetY: 4,
+            blur: 12,
+            spread: 0,
+            color: '#000000',
+            inset: 'yes',
+          },
         },
       }),
     )

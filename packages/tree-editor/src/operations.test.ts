@@ -552,6 +552,25 @@ describe('tree editor operations', () => {
       borderColor: '#112233',
       borderStyle: 'solid',
       shadow: 'md',
+      customShadows: [
+        {
+          offsetX: 0,
+          offsetY: 8,
+          blur: 24,
+          spread: 0,
+          color: '#000000',
+          opacity: 0.2,
+        },
+        {
+          offsetX: 0,
+          offsetY: 0,
+          blur: 16,
+          spread: 4,
+          color: '#ffffff',
+          opacity: 0.4,
+          inset: true,
+        },
+      ],
     })
 
     assert.equal(updated.root.type, 'section')
@@ -566,6 +585,25 @@ describe('tree editor operations', () => {
           borderColor: '#112233',
           borderStyle: 'solid',
           shadow: 'md',
+          customShadows: [
+            {
+              offsetX: 0,
+              offsetY: 8,
+              blur: 24,
+              spread: 0,
+              color: '#000000',
+              opacity: 0.2,
+            },
+            {
+              offsetX: 0,
+              offsetY: 0,
+              blur: 16,
+              spread: 4,
+              color: '#ffffff',
+              opacity: 0.4,
+              inset: true,
+            },
+          ],
         })
       }
     }

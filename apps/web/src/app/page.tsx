@@ -8136,6 +8136,7 @@ function getCustomShadowWithPatch(
   patch: Partial<CustomShadow>,
 ): CustomShadow {
   const hasOpacityPatch = Object.prototype.hasOwnProperty.call(patch, 'opacity')
+  const hasInsetPatch = Object.prototype.hasOwnProperty.call(patch, 'inset')
 
   return {
     offsetX: patch.offsetX ?? shadow.offsetX,
@@ -8147,6 +8148,11 @@ function getCustomShadowWithPatch(
       ? { opacity: shadow.opacity }
       : patch.opacity !== undefined
         ? { opacity: patch.opacity }
+        : {}),
+    ...(!hasInsetPatch && shadow.inset !== undefined
+      ? { inset: shadow.inset }
+      : patch.inset !== undefined
+        ? { inset: patch.inset }
         : {}),
   }
 }
