@@ -597,6 +597,8 @@ describe('tree editor operations', () => {
       backgroundColor: '#f8fafc',
       hoverBackgroundColor: '#0f766e',
       hoverTextColor: '#ffffff',
+      activeBackgroundColor: '#0b5f57',
+      activeTextColor: '#f8fafc',
       textColor: '#123456',
     })
 
@@ -610,6 +612,8 @@ describe('tree editor operations', () => {
           backgroundColor: '#f8fafc',
           hoverBackgroundColor: '#0f766e',
           hoverTextColor: '#ffffff',
+          activeBackgroundColor: '#0b5f57',
+          activeTextColor: '#f8fafc',
           textColor: '#123456',
         })
       }
