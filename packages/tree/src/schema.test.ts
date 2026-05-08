@@ -261,6 +261,8 @@ describe('tree schema', () => {
         hoverTextColor: '#ffffff',
         activeBackgroundColor: '#0b5f57',
         activeTextColor: '#f8fafc',
+        focusBackgroundColor: '#114b5f',
+        focusTextColor: '#f0fdfa',
       },
       children: [],
     })
@@ -285,6 +287,8 @@ describe('tree schema', () => {
       assert.equal(parsed.color?.hoverTextColor, '#ffffff')
       assert.equal(parsed.color?.activeBackgroundColor, '#0b5f57')
       assert.equal(parsed.color?.activeTextColor, '#f8fafc')
+      assert.equal(parsed.color?.focusBackgroundColor, '#114b5f')
+      assert.equal(parsed.color?.focusTextColor, '#f0fdfa')
     }
   })
 
@@ -329,6 +333,30 @@ describe('tree schema', () => {
         editKind: 'structure',
         color: {
           backgroundColor: 'white',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          focusBackgroundColor: 'navy',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          focusTextColor: 'white',
         },
         children: [],
       }),
