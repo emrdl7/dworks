@@ -4211,28 +4211,45 @@ function ConicGeometryInput({
   value: number | undefined
   onChange: (value: number | undefined) => void
 }) {
+  const fallbackValue = Math.max(min, Math.min(max, Number(placeholder)))
+  const sliderValue = value ?? fallbackValue
+
+  function updateValue(raw: string, allowEmpty: boolean) {
+    if (raw === '') {
+      if (allowEmpty) {
+        onChange(undefined)
+      }
+      return
+    }
+    const next = Number(raw)
+    if (Number.isNaN(next)) {
+      return
+    }
+    onChange(Math.max(min, Math.min(max, next)))
+  }
+
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="text-[11px] text-[#647067]">{label}</span>
       <input
         type="number"
         className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
         min={min}
         max={max}
+        step={1}
         placeholder={placeholder}
         value={value === undefined ? '' : value}
-        onChange={(event) => {
-          const raw = event.target.value
-          if (raw === '') {
-            onChange(undefined)
-            return
-          }
-          const next = Number(raw)
-          if (Number.isNaN(next)) {
-            return
-          }
-          onChange(Math.max(min, Math.min(max, next)))
-        }}
+        onChange={(event) => updateValue(event.target.value, true)}
+      />
+      <input
+        type="range"
+        className="mt-2 w-full accent-[#1b7f72]"
+        min={min}
+        max={max}
+        step={1}
+        value={sliderValue}
+        aria-label={`${label} 슬라이더`}
+        onChange={(event) => updateValue(event.target.value, false)}
       />
     </label>
   )

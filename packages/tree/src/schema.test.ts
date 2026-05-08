@@ -259,6 +259,39 @@ describe('tree schema', () => {
     }
   })
 
+  it('parses conic gradient geometry overrides', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'landing.card',
+      type: 'card',
+      editKind: 'structure',
+      color: {
+        backgroundGradient: {
+          type: 'conic',
+          from: '#ff6b6b',
+          to: '#4ecdc4',
+          direction: 'to-bottom-right',
+          conicFromAngle: 135,
+          conicCenterX: 20,
+          conicCenterY: 80,
+        },
+      },
+      children: [],
+    })
+
+    assert.equal(parsed.type, 'card')
+    if (parsed.type === 'card') {
+      assert.deepEqual(parsed.color?.backgroundGradient, {
+        type: 'conic',
+        from: '#ff6b6b',
+        to: '#4ecdc4',
+        direction: 'to-bottom-right',
+        conicFromAngle: 135,
+        conicCenterX: 20,
+        conicCenterY: 80,
+      })
+    }
+  })
+
   it('rejects invalid node color values', () => {
     assert.throws(() =>
       treeNodeSchema.parse({
@@ -446,6 +479,62 @@ describe('tree schema', () => {
             spread: 0,
             color: '#000000',
             opacity: 1.2,
+          },
+        },
+        children: [],
+      }),
+    )
+  })
+
+  it('rejects invalid conic gradient geometry values', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          backgroundGradient: {
+            type: 'conic',
+            from: '#ffffff',
+            to: '#000000',
+            direction: 'to-bottom',
+            conicFromAngle: 361,
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          backgroundGradient: {
+            type: 'conic',
+            from: '#ffffff',
+            to: '#000000',
+            direction: 'to-bottom',
+            conicCenterX: -1,
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          backgroundGradient: {
+            type: 'conic',
+            from: '#ffffff',
+            to: '#000000',
+            direction: 'to-bottom',
+            conicCenterY: 101,
           },
         },
         children: [],
