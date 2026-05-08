@@ -57,6 +57,13 @@ describe('tree schema', () => {
         letterSpacing: -0.02,
         textAlign: 'center',
         fontFamily: 'serif',
+        textShadow: {
+          offsetX: 1,
+          offsetY: 2,
+          blur: 6,
+          color: '#112233',
+          opacity: 0.25,
+        },
       },
     })
 
@@ -68,6 +75,11 @@ describe('tree schema', () => {
       assert.equal(parsed.typography?.letterSpacing, -0.02)
       assert.equal(parsed.typography?.textAlign, 'center')
       assert.equal(parsed.typography?.fontFamily, 'serif')
+      assert.equal(parsed.typography?.textShadow?.offsetX, 1)
+      assert.equal(parsed.typography?.textShadow?.offsetY, 2)
+      assert.equal(parsed.typography?.textShadow?.blur, 6)
+      assert.equal(parsed.typography?.textShadow?.color, '#112233')
+      assert.equal(parsed.typography?.textShadow?.opacity, 0.25)
     }
   })
 
@@ -772,6 +784,78 @@ describe('tree schema', () => {
         editKind: 'text',
         content: 'Bad font',
         typography: { fontFamily: '' },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-text-shadow-offset',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad shadow',
+        typography: {
+          textShadow: {
+            offsetX: 51,
+            offsetY: 0,
+            blur: 4,
+            color: '#000000',
+            opacity: 0.25,
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-text-shadow-blur',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad shadow',
+        typography: {
+          textShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 101,
+            color: '#000000',
+            opacity: 0.25,
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-text-shadow-color',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad shadow',
+        typography: {
+          textShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 4,
+            color: 'black',
+            opacity: 0.25,
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-text-shadow-opacity',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad shadow',
+        typography: {
+          textShadow: {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 4,
+            color: '#000000',
+            opacity: -0.1,
+          },
+        },
       }),
     )
 

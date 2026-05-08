@@ -40,6 +40,7 @@ import {
   type Spacing,
   type TextNode,
   type TextAlign,
+  type TextShadow,
   type Tree,
   type TreeNode,
   type Typography,
@@ -277,6 +278,7 @@ const typographyFields = [
   'letterSpacing',
   'textAlign',
   'fontFamily',
+  'textShadow',
 ] as const
 const spacingFields = [
   'paddingTop',
@@ -327,6 +329,7 @@ type SpacingMode = 'all' | 'axis' | 'sides'
 type GradientColorStopField = 'from' | 'to'
 type GradientOpacityStopField = 'fromOpacity' | 'toOpacity'
 type ColorMode = 'solid' | 'gradient'
+type TextShadowNumberField = 'offsetX' | 'offsetY' | 'blur'
 
 const spacingModes: SpacingMode[] = ['all', 'axis', 'sides']
 const spacingModeLabels: Record<SpacingMode, string> = {
@@ -385,6 +388,13 @@ const DEFAULT_CUSTOM_SHADOW: CustomShadow = {
   offsetY: 4,
   blur: 12,
   spread: 0,
+  color: '#000000',
+  opacity: 0.25,
+}
+const DEFAULT_TEXT_SHADOW: TextShadow = {
+  offsetX: 0,
+  offsetY: 2,
+  blur: 4,
   color: '#000000',
   opacity: 0.25,
 }
@@ -566,8 +576,9 @@ export default function HomePage() {
   function handleTextTypographyChange(
     node: TextNode,
     patch: Partial<Typography>,
+    options?: CommitTreeEditOptions,
   ) {
-    commitTreeEdit(updateTextTypography(tree, node.id, patch))
+    commitTreeEdit(updateTextTypography(tree, node.id, patch), undefined, options)
   }
 
   function handleTextTypographyReset(node: TextNode) {
@@ -1628,6 +1639,9 @@ function getTypographyStyle(typography?: Typography): CSSProperties | undefined 
       : {}),
     ...(typography.fontFamily !== undefined
       ? { fontFamily: getFontFamilyStack(typography.fontFamily) }
+      : {}),
+    ...(typography.textShadow !== undefined
+      ? { textShadow: textShadowToCss(typography.textShadow) }
       : {}),
   }
 }
@@ -3046,7 +3060,11 @@ function GradientDirectionIcon({
 
 interface TypographyControlsProps {
   node: TextNode
-  onTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
+  onTypographyChange: (
+    node: TextNode,
+    patch: Partial<Typography>,
+    options?: CommitTreeEditOptions,
+  ) => void
   onTypographyReset: (node: TextNode) => void
   registeredFonts: RegisteredFontSummary[]
   fontUsageCounts: Map<string, number>
@@ -3078,6 +3096,12 @@ function TypographyControls({
   const effectiveTextAlign = typography.textAlign ?? defaults.textAlign
   const effectiveFontFamily = typography.fontFamily ?? defaults.fontFamily
   const sliderFontSize = typography.fontSize ?? defaults.fontSize
+  const textShadowMode = typography.textShadow === undefined ? 'none' : 'custom'
+  const effectiveTextShadow = getResolvedTextShadow(typography.textShadow)
+  const [textShadowColorInput, setTextShadowColorInput] = useState(
+    effectiveTextShadow.color,
+  )
+  const [textShadowColorError, setTextShadowColorError] = useState(false)
   const registeredFontGroups = groupRegisteredFonts(registeredFonts)
   const selectedFontValue = getSelectedFontSelectValue(
     effectiveFontFamily,
@@ -3090,6 +3114,11 @@ function TypographyControls({
     !builtInFontFamilyOptions.includes(effectiveFontFamily as BuiltInFontFamily) &&
     !hasRegisteredFamily
 
+  useEffect(() => {
+    setTextShadowColorInput(effectiveTextShadow.color)
+    setTextShadowColorError(false)
+  }, [node.id, effectiveTextShadow.color])
+
   function updateNumberField(
     field: 'fontSize' | 'lineHeight' | 'letterSpacing',
     value: string,
@@ -3099,6 +3128,95 @@ function TypographyControls({
     onTypographyChange(node, {
       [field]: parseOptionalNumber(value, min, max),
     })
+  }
+
+  function updateTextShadowMode(mode: 'none' | 'custom') {
+    if (mode === textShadowMode) {
+      return
+    }
+
+    onTypographyChange(node, {
+      textShadow:
+        mode === 'custom'
+          ? (typography.textShadow ?? DEFAULT_TEXT_SHADOW)
+          : undefined,
+    })
+  }
+
+  function updateTextShadowNumber(
+    field: TextShadowNumberField,
+    value: string,
+    min: number,
+    max: number,
+  ) {
+    const nextValue = parseOptionalNumber(value, min, max)
+    if (nextValue === undefined) {
+      return
+    }
+
+    onTypographyChange(
+      node,
+      {
+        textShadow: getTextShadowWithPatch(effectiveTextShadow, {
+          [field]: nextValue,
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `typography.textShadow.${field}`) },
+    )
+  }
+
+  function updateTextShadowColorFromText(value: string) {
+    const trimmedValue = value.trim()
+    setTextShadowColorInput(value)
+
+    if (trimmedValue === '') {
+      setTextShadowColorError(false)
+      return
+    }
+
+    if (!isValidHexColor(trimmedValue)) {
+      setTextShadowColorError(true)
+      return
+    }
+
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setTextShadowColorError(false)
+    onTypographyChange(
+      node,
+      {
+        textShadow: getTextShadowWithPatch(effectiveTextShadow, {
+          color: normalizedValue,
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'typography.textShadow.color') },
+    )
+  }
+
+  function updateTextShadowColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setTextShadowColorInput(normalizedValue)
+    setTextShadowColorError(false)
+    onTypographyChange(
+      node,
+      {
+        textShadow: getTextShadowWithPatch(effectiveTextShadow, {
+          color: normalizedValue,
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'typography.textShadow.color') },
+    )
+  }
+
+  function updateTextShadowOpacity(value: string) {
+    onTypographyChange(
+      node,
+      {
+        textShadow: getTextShadowWithPatch(effectiveTextShadow, {
+          opacity: parseOptionalOpacity(value),
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'typography.textShadow.opacity') },
+    )
   }
 
   async function handleFontFileChange(fileList: FileList | null) {
@@ -3344,6 +3462,104 @@ function TypographyControls({
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="mt-4 space-y-3 rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs font-semibold text-[#4f5e56]">
+            텍스트 그림자
+          </span>
+          <div className="grid grid-cols-2 gap-1 rounded-md border border-[#cbd6cf] bg-white p-1">
+            <TypographyToggleButton
+              isSelected={textShadowMode === 'none'}
+              onClick={() => updateTextShadowMode('none')}
+            >
+              없음
+            </TypographyToggleButton>
+            <TypographyToggleButton
+              isSelected={textShadowMode === 'custom'}
+              onClick={() => updateTextShadowMode('custom')}
+            >
+              커스텀
+            </TypographyToggleButton>
+          </div>
+        </div>
+
+        {textShadowMode === 'custom' ? (
+          <div className="grid grid-cols-2 gap-3">
+            <TypographyNumberField
+              label="가로 위치"
+              unit="px"
+              min={-50}
+              max={50}
+              step={1}
+              value={effectiveTextShadow.offsetX}
+              placeholder="0"
+              onChange={(value) =>
+                updateTextShadowNumber('offsetX', value, -50, 50)
+              }
+            />
+            <TypographyNumberField
+              label="세로 위치"
+              unit="px"
+              min={-50}
+              max={50}
+              step={1}
+              value={effectiveTextShadow.offsetY}
+              placeholder="2"
+              onChange={(value) =>
+                updateTextShadowNumber('offsetY', value, -50, 50)
+              }
+            />
+            <TypographyNumberField
+              label="흐림"
+              unit="px"
+              min={0}
+              max={100}
+              step={1}
+              value={effectiveTextShadow.blur}
+              placeholder="4"
+              onChange={(value) => updateTextShadowNumber('blur', value, 0, 100)}
+            />
+            <OpacityControl
+              label="투명도"
+              value={effectiveTextShadow.opacity}
+              onChange={updateTextShadowOpacity}
+            />
+            <label className="col-span-2 block">
+              <span className="text-xs font-semibold text-[#4f5e56]">색상</span>
+              <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+                <input
+                  className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                  value={textShadowColorInput}
+                  placeholder="#RRGGBB"
+                  aria-invalid={textShadowColorError}
+                  spellCheck={false}
+                  onChange={(event) =>
+                    updateTextShadowColorFromText(event.target.value)
+                  }
+                />
+                <input
+                  type="color"
+                  aria-label="텍스트 그림자 색상 선택"
+                  className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                  value={toColorInputValue(
+                    textShadowColorInput,
+                    DEFAULT_TEXT_SHADOW.color,
+                  )}
+                  onChange={(event) =>
+                    updateTextShadowColorFromPicker(event.target.value)
+                  }
+                />
+              </span>
+              {textShadowColorError ? (
+                <span className="mt-2 block text-xs text-[#b42318]">
+                  HEX 형식 (#RRGGBB)으로 입력해주세요.
+                </span>
+              ) : null}
+            </label>
+          </div>
+        ) : null}
       </div>
     </InspectorDisclosure>
   )
@@ -5182,6 +5398,15 @@ function customShadowToCss(shadow: CustomShadow): string {
   ].join(' ')
 }
 
+function textShadowToCss(shadow: TextShadow): string {
+  return [
+    `${shadow.offsetX}px`,
+    `${shadow.offsetY}px`,
+    `${shadow.blur}px`,
+    getCssColorWithOpacity(shadow.color, shadow.opacity),
+  ].join(' ')
+}
+
 function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
   return field === 'backgroundColor' ? 'backgroundOpacity' : 'textOpacity'
 }
@@ -5242,6 +5467,29 @@ function getCustomShadowWithPatch(
   }
 }
 
+function getResolvedTextShadow(shadow: TextShadow | undefined): TextShadow {
+  return shadow ?? DEFAULT_TEXT_SHADOW
+}
+
+function getTextShadowWithPatch(
+  shadow: TextShadow,
+  patch: Partial<TextShadow>,
+): TextShadow {
+  const hasOpacityPatch = Object.prototype.hasOwnProperty.call(patch, 'opacity')
+
+  return {
+    offsetX: patch.offsetX ?? shadow.offsetX,
+    offsetY: patch.offsetY ?? shadow.offsetY,
+    blur: patch.blur ?? shadow.blur,
+    color: patch.color ?? shadow.color,
+    ...(!hasOpacityPatch && shadow.opacity !== undefined
+      ? { opacity: shadow.opacity }
+      : patch.opacity !== undefined
+        ? { opacity: patch.opacity }
+        : {}),
+  }
+}
+
 function getSpacingGroupValue(
   spacing: Partial<Spacing>,
   fields: readonly SpacingField[],
@@ -5279,7 +5527,9 @@ function getFontRegistryErrorMessage(error: unknown): string {
   return '글꼴 작업에 실패했습니다.'
 }
 
-type TypographyDefaults = Required<Typography>
+type TypographyDefaults = Required<Omit<Typography, 'textShadow'>> & {
+  textShadow?: TextShadow
+}
 
 function getTypographyDefaults(node: TextNode): TypographyDefaults {
   switch (node.emphasis) {

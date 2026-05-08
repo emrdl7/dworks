@@ -102,6 +102,19 @@ export type BuiltInFontFamily = (typeof BUILT_IN_FONT_FAMILY_IDS)[number]
 export const fontFamilySchema = z.string().min(1)
 export type FontFamily = z.infer<typeof fontFamilySchema>
 
+export const hexColorSchema = z
+  .string()
+  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+export const opacitySchema = z.number().min(0).max(1)
+export const textShadowSchema = z.object({
+  offsetX: z.number().min(-50).max(50),
+  offsetY: z.number().min(-50).max(50),
+  blur: z.number().min(0).max(100),
+  color: hexColorSchema,
+  opacity: opacitySchema.optional(),
+})
+export type TextShadow = z.infer<typeof textShadowSchema>
+
 export const typographySchema = z.object({
   fontSize: z.number().min(8).max(120).optional(),
   fontWeight: fontWeightSchema.optional(),
@@ -109,6 +122,7 @@ export const typographySchema = z.object({
   letterSpacing: z.number().min(-0.1).max(0.2).optional(),
   textAlign: textAlignSchema.optional(),
   fontFamily: fontFamilySchema.optional(),
+  textShadow: textShadowSchema.optional(),
 })
 export type Typography = z.infer<typeof typographySchema>
 
@@ -133,10 +147,6 @@ export const SHADOW_PRESET_IDS = ['none', 'sm', 'md', 'lg', 'xl'] as const
 export const shadowPresetSchema = z.enum(SHADOW_PRESET_IDS)
 export type ShadowPreset = z.infer<typeof shadowPresetSchema>
 
-export const hexColorSchema = z
-  .string()
-  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
-export const opacitySchema = z.number().min(0).max(1)
 export const customShadowSchema = z.object({
   offsetX: z.number().min(-100).max(100),
   offsetY: z.number().min(-100).max(100),
