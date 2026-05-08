@@ -252,7 +252,6 @@ const layoutJustifyOptions: LayoutJustify[] = [
   'evenly',
 ]
 const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
-const UPLOAD_FONT_OPTION = '__upload-font__'
 const REGISTERED_FONT_FAMILY_OPTION_PREFIX = 'registered-family:'
 const MAX_FONT_UPLOAD_FILES = 20
 const typographyFields = [
@@ -2377,11 +2376,6 @@ function TypographyControls({
   }
 
   function handleFontSelect(value: string) {
-    if (value === UPLOAD_FONT_OPTION) {
-      fileInputRef.current?.click()
-      return
-    }
-
     if (value.startsWith(REGISTERED_FONT_FAMILY_OPTION_PREFIX)) {
       const familyId = value.slice(REGISTERED_FONT_FAMILY_OPTION_PREFIX.length)
 
@@ -2424,100 +2418,103 @@ function TypographyControls({
               누락된 글꼴 ({effectiveFontFamily})
             </option>
           ) : null}
-          <option value={UPLOAD_FONT_OPTION}>+ TTF/OTF 업로드...</option>
         </select>
       </label>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".ttf,.otf"
-        multiple
-        className="sr-only"
-        onChange={(event) => handleFontFileChange(event.target.files)}
-      />
-      <button
-        type="button"
-        className="mt-3 h-9 w-full rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#1b7f72] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:bg-white"
-        disabled={isFontRegistryBusy}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 여러 개 업로드'}
-      </button>
-      <p className="mt-2 text-xs leading-5 text-[#647067]">
-        등록한 글꼴은 이 브라우저의 모든 프로젝트에서 함께 사용됩니다. 같은 패밀리의 굵기 파일은 자동으로 묶습니다.
-      </p>
-      <p className="mt-1 text-xs leading-5 text-[#647067]" aria-live="polite">
-        {fontRegistryMessage}
-      </p>
-      {registeredFonts.length > 0 ? (
-        <details className="mt-3 rounded-md border border-[#e0e5de] bg-white [&[open]>summary_.dw-chevron]:rotate-180">
-          <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
-            <span className="text-xs font-semibold text-[#4f5e56]">
-              글꼴 관리
-            </span>
-            <span className="flex items-center gap-2 text-[11px] text-[#647067]">
-              {registeredFontGroups.length}개 그룹 · {registeredFonts.length}개 파일
-              <DisclosureChevron />
-            </span>
-          </summary>
-          <div className="max-h-64 space-y-2 overflow-y-auto border-t border-[#eef1ec] p-2">
-            {registeredFontGroups.map((group) => (
-              <details
-                key={group.familyId}
-                className="rounded-md border border-[#eef1ec] bg-[#fbfcfa] [&[open]>summary_.dw-chevron]:rotate-180"
-              >
-                <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
-                  <span className="min-w-0">
-                    <span className="block truncate text-xs font-semibold text-[#26312b]">
-                      {group.familyName}
-                    </span>
-                    <span className="block truncate text-[11px] text-[#647067]">
-                      {group.fonts.length}개 굵기 · 사용{' '}
-                      {fontUsageCounts.get(group.familyId) ?? 0}개
-                    </span>
-                  </span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    <button
-                      type="button"
-                      className="rounded border border-[#d7ddd2] px-2 py-1 text-[11px] font-semibold text-[#7f1d1d] transition hover:bg-[#fff1f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={isFontRegistryBusy}
-                      onClick={(event) => {
-                        event.preventDefault()
-                        event.stopPropagation()
-                        onFontFamilyDelete(group.familyId)
-                      }}
-                    >
-                      그룹 삭제
-                    </button>
-                    <DisclosureChevron />
-                  </span>
-                </summary>
-                <div className="space-y-1 border-t border-[#eef1ec] p-2">
-                  {group.fonts.map((font) => (
-                    <div
-                      key={font.id}
-                      className="flex min-h-8 items-center justify-between gap-2 rounded border border-[#f2f4f1] bg-white px-2"
-                    >
-                      <span className="min-w-0 truncate text-[11px] text-[#647067]">
-                        {getFontWeightLabel(font)} · {font.displayName}
-                        {font.status === 'missing' ? ' (누락)' : ''}
+      <details className="mt-3 rounded-md border border-[#e0e5de] bg-white [&[open]>summary_.dw-chevron]:rotate-180">
+        <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+          <span className="text-xs font-semibold text-[#4f5e56]">
+            글꼴 관리
+          </span>
+          <span className="flex items-center gap-2 text-[11px] text-[#647067]">
+            {registeredFonts.length > 0
+              ? `${registeredFontGroups.length}개 그룹 · ${registeredFonts.length}개 파일`
+              : '등록 없음'}
+            <DisclosureChevron />
+          </span>
+        </summary>
+        <div className="border-t border-[#eef1ec] p-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".ttf,.otf"
+            multiple
+            className="sr-only"
+            onChange={(event) => handleFontFileChange(event.target.files)}
+          />
+          <button
+            type="button"
+            className="h-9 w-full rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#1b7f72] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:bg-white"
+            disabled={isFontRegistryBusy}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 여러 개 업로드'}
+          </button>
+          <p className="mt-2 text-xs leading-5 text-[#647067]">
+            등록한 글꼴은 이 브라우저의 모든 프로젝트에서 함께 사용됩니다. 같은 패밀리의 굵기 파일은 자동으로 묶습니다.
+          </p>
+          <p className="mt-1 text-xs leading-5 text-[#647067]" aria-live="polite">
+            {fontRegistryMessage}
+          </p>
+          {registeredFonts.length > 0 ? (
+            <div className="mt-2 max-h-64 space-y-2 overflow-y-auto">
+              {registeredFontGroups.map((group) => (
+                <details
+                  key={group.familyId}
+                  className="rounded-md border border-[#eef1ec] bg-[#fbfcfa] [&[open]>summary_.dw-chevron]:rotate-180"
+                >
+                  <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+                    <span className="min-w-0">
+                      <span className="block truncate text-xs font-semibold text-[#26312b]">
+                        {group.familyName}
                       </span>
+                      <span className="block truncate text-[11px] text-[#647067]">
+                        {group.fonts.length}개 굵기 · 사용{' '}
+                        {fontUsageCounts.get(group.familyId) ?? 0}개
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2">
                       <button
                         type="button"
-                        className="shrink-0 text-[11px] font-semibold text-[#7f1d1d] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded border border-[#d7ddd2] px-2 py-1 text-[11px] font-semibold text-[#7f1d1d] transition hover:bg-[#fff1f1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={isFontRegistryBusy}
-                        onClick={() => onFontDelete(font.id)}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                          onFontFamilyDelete(group.familyId)
+                        }}
                       >
-                        파일 삭제
+                        그룹 삭제
                       </button>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            ))}
-          </div>
-        </details>
-      ) : null}
+                      <DisclosureChevron />
+                    </span>
+                  </summary>
+                  <div className="space-y-1 border-t border-[#eef1ec] p-2">
+                    {group.fonts.map((font) => (
+                      <div
+                        key={font.id}
+                        className="flex min-h-8 items-center justify-between gap-2 rounded border border-[#f2f4f1] bg-white px-2"
+                      >
+                        <span className="min-w-0 truncate text-[11px] text-[#647067]">
+                          {getFontWeightLabel(font)} · {font.displayName}
+                          {font.status === 'missing' ? ' (누락)' : ''}
+                        </span>
+                        <button
+                          type="button"
+                          className="shrink-0 text-[11px] font-semibold text-[#7f1d1d] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={isFontRegistryBusy}
+                          onClick={() => onFontDelete(font.id)}
+                        >
+                          파일 삭제
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </details>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <TypographyNumberField
