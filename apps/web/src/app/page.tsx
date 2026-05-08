@@ -277,10 +277,16 @@ const shapeFields = [
   'radius',
   'borderWidth',
   'borderColor',
+  'borderOpacity',
   'borderStyle',
   'shadow',
 ] as const
-const colorFields = ['backgroundColor', 'textColor'] as const
+const colorFields = [
+  'backgroundColor',
+  'backgroundOpacity',
+  'textColor',
+  'textOpacity',
+] as const
 const layoutFields = ['direction', 'align', 'justify', 'wrap'] as const
 const imagePresentationFields = [
   'fit',
@@ -288,7 +294,14 @@ const imagePresentationFields = [
   'overlayOpacity',
 ] as const
 type SpacingField = (typeof spacingFields)[number]
-type ColorField = (typeof colorFields)[number]
+type ColorField = Extract<
+  (typeof colorFields)[number],
+  'backgroundColor' | 'textColor'
+>
+type ColorOpacityField = Extract<
+  (typeof colorFields)[number],
+  'backgroundOpacity' | 'textOpacity'
+>
 type ImagePresentationField = (typeof imagePresentationFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
 
@@ -329,8 +342,10 @@ const marginVerticalFields: readonly SpacingField[] = [
 
 const DEFAULT_SHAPE_COLOR = '#d7ddd2'
 const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
+const DEFAULT_TEXT_PICKER_COLOR = '#18211d'
 const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
+const HISTORY_MERGE_WINDOW_MS = 600
 const SHADOW_VALUES: Record<ShadowPreset, string> = {
   none: 'none',
   sm: '0 1px 2px rgba(0, 0, 0, 0.06)',
@@ -340,6 +355,15 @@ const SHADOW_VALUES: Record<ShadowPreset, string> = {
 }
 
 const MAX_HISTORY = 100
+
+interface CommitTreeEditOptions {
+  mergeKey?: string
+}
+
+interface HistoryMergeState {
+  key: string
+  time: number
+}
 
 type ImageEditPatch = Pick<
   Partial<ImageNode>,
@@ -362,6 +386,7 @@ export default function HomePage() {
     '등록한 글꼴을 불러오는 중입니다.',
   )
   const [isFontRegistryBusy, setIsFontRegistryBusy] = useState(false)
+  const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
 
   const selectedNode = useMemo(
     () => findNode(tree.root, selectedNodeId) ?? tree.root,
@@ -437,18 +462,34 @@ export default function HomePage() {
     setTree(nextFixture.tree)
     setHistoryPast([])
     setHistoryFuture([])
+    lastHistoryMergeRef.current = null
     setSelectedNodeId(
       findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
     )
   }
 
-  function commitTreeEdit(nextTree: Tree, nextSelectedNodeId?: string) {
-    setHistoryPast((past) => [...past, tree].slice(-MAX_HISTORY))
+  function commitTreeEdit(
+    nextTree: Tree,
+    nextSelectedNodeId?: string,
+    options: CommitTreeEditOptions = {},
+  ) {
+    const now = Date.now()
+    const previousMerge = lastHistoryMergeRef.current
+    const shouldMergeHistory =
+      options.mergeKey !== undefined &&
+      previousMerge?.key === options.mergeKey &&
+      now - previousMerge.time <= HISTORY_MERGE_WINDOW_MS
+
+    setHistoryPast((past) =>
+      shouldMergeHistory ? past : [...past, tree].slice(-MAX_HISTORY),
+    )
     setHistoryFuture([])
     setTree(nextTree)
     setSelectedNodeId((currentNodeId) =>
       getSafeSelectedNodeId(nextTree, nextSelectedNodeId ?? currentNodeId),
     )
+    lastHistoryMergeRef.current =
+      options.mergeKey === undefined ? null : { key: options.mergeKey, time: now }
   }
 
   function handleTextChange(node: TextNode, content: string) {
@@ -490,8 +531,12 @@ export default function HomePage() {
     )
   }
 
-  function handleShapeChange(node: TreeNode, patch: Partial<Shape>) {
-    commitTreeEdit(updateShape(tree, node.id, patch))
+  function handleShapeChange(
+    node: TreeNode,
+    patch: Partial<Shape>,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateShape(tree, node.id, patch), undefined, options)
   }
 
   function handleShapeReset(node: TreeNode) {
@@ -506,8 +551,12 @@ export default function HomePage() {
     )
   }
 
-  function handleNodeColorChange(node: TreeNode, patch: Partial<NodeColor>) {
-    commitTreeEdit(updateColor(tree, node.id, patch))
+  function handleNodeColorChange(
+    node: TreeNode,
+    patch: Partial<NodeColor>,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateColor(tree, node.id, patch), undefined, options)
   }
 
   function handleNodeColorReset(node: TreeNode) {
@@ -750,8 +799,9 @@ export default function HomePage() {
   function handleImageChange(
     node: ImageNode,
     patch: ImageEditPatch,
+    options?: CommitTreeEditOptions,
   ) {
-    commitTreeEdit(updateImage(tree, node.id, patch))
+    commitTreeEdit(updateImage(tree, node.id, patch), undefined, options)
   }
 
   function handleMoveSelected(direction: 'up' | 'down') {
@@ -782,6 +832,7 @@ export default function HomePage() {
       return
     }
 
+    lastHistoryMergeRef.current = null
     setHistoryPast((past) => past.slice(0, -1))
     setHistoryFuture((future) => [...future, tree].slice(-MAX_HISTORY))
     setTree(previousTree)
@@ -796,6 +847,7 @@ export default function HomePage() {
       return
     }
 
+    lastHistoryMergeRef.current = null
     setHistoryFuture((future) => future.slice(0, -1))
     setHistoryPast((past) => [...past, tree].slice(-MAX_HISTORY))
     setTree(nextTree)
@@ -984,7 +1036,13 @@ function CanvasNode({
   const shapeStyle = getShapeStyle(node.shape)
   const colorStyle = getColorStyle(node.color, inheritedTextColor)
   const layoutStyle = getLayoutStyle(node.layout)
-  const effectiveTextColor = node.color?.textColor ?? inheritedTextColor
+  const effectiveTextColor =
+    node.color?.textColor !== undefined || inheritedTextColor !== undefined
+      ? getCssColorWithOpacity(
+          node.color?.textColor ?? inheritedTextColor ?? '',
+          node.color?.textOpacity,
+        )
+      : undefined
   const textColorStyle = getTextColorStyle(effectiveTextColor)
   const boxStyle = mergeStyles(boxSpacingStyle, shapeStyle, colorStyle)
   const containerStyle = mergeStyles(containerSpacingStyle, shapeStyle, colorStyle)
@@ -1473,7 +1531,10 @@ function getShapeStyle(shape?: Shape): CSSProperties | undefined {
       ? undefined
       : effectiveBorderStyle === 'none'
         ? 'transparent'
-        : (shape.borderColor ?? 'var(--dw-border)')
+        : getCssColorWithOpacity(
+            shape.borderColor ?? 'var(--dw-border)',
+            shape.borderOpacity,
+          )
 
   const style: CSSProperties = {
     ...(shape.radius !== undefined ? { borderRadius: `${shape.radius}px` } : {}),
@@ -1496,13 +1557,23 @@ function getColorStyle(
   color?: NodeColor,
   inheritedTextColor?: string,
 ): CSSProperties | undefined {
+  const effectiveTextColor =
+    color?.textColor !== undefined || inheritedTextColor !== undefined
+      ? getCssColorWithOpacity(
+          color?.textColor ?? inheritedTextColor ?? '',
+          color?.textOpacity,
+        )
+      : undefined
   const style: CSSProperties = {
     ...(color?.backgroundColor !== undefined
-      ? { backgroundColor: color.backgroundColor }
+      ? {
+          backgroundColor: getCssColorWithOpacity(
+            color.backgroundColor,
+            color.backgroundOpacity,
+          ),
+        }
       : {}),
-    ...(color?.textColor !== undefined || inheritedTextColor !== undefined
-      ? { color: color?.textColor ?? inheritedTextColor }
-      : {}),
+    ...(effectiveTextColor !== undefined ? { color: effectiveTextColor } : {}),
   }
 
   return Object.keys(style).length > 0 ? style : undefined
@@ -1743,7 +1814,7 @@ function ImagePreview({
   const canRenderImage = node.src.trim().length > 0 && !hasError
   const presentation = node.presentation ?? {}
   const imageFit = presentation.fit ?? 'cover'
-  const overlayOpacity = presentation.overlayOpacity ?? 0
+  const overlayOpacity = presentation.overlayOpacity ?? 1
   const shouldRenderOverlay =
     canRenderImage &&
     presentation.overlayColor !== undefined &&
@@ -2176,7 +2247,11 @@ function StyleControls({
 
 interface NodeColorControlsProps {
   node: TreeNode
-  onNodeColorChange: (node: TreeNode, patch: Partial<NodeColor>) => void
+  onNodeColorChange: (
+    node: TreeNode,
+    patch: Partial<NodeColor>,
+    options?: CommitTreeEditOptions,
+  ) => void
   onNodeColorReset: (node: TreeNode) => void
 }
 
@@ -2214,7 +2289,13 @@ function NodeColorControls({
 
     if (trimmedValue === '') {
       setError(false)
-      onNodeColorChange(node, { [field]: undefined })
+      onNodeColorChange(
+        node,
+        {
+          [field]: undefined,
+          [getPairedColorOpacityField(field)]: undefined,
+        } as Partial<NodeColor>,
+      )
       return
     }
 
@@ -2224,7 +2305,10 @@ function NodeColorControls({
     }
 
     setError(false)
-    onNodeColorChange(node, { [field]: normalizeHexColor(trimmedValue) })
+    onNodeColorChange(
+      node,
+      { [field]: normalizeHexColor(trimmedValue) } as Partial<NodeColor>,
+    )
   }
 
   function updateColorFromPicker(field: ColorField, value: string) {
@@ -2237,46 +2321,94 @@ function NodeColorControls({
       setTextColorError(false)
     }
 
-    onNodeColorChange(node, { [field]: normalizedValue })
+    onNodeColorChange(
+      node,
+      { [field]: normalizedValue } as Partial<NodeColor>,
+      { mergeKey: getNodeColorMergeKey(node.id, field) },
+    )
+  }
+
+  function updateOpacity(
+    field: ColorOpacityField,
+    colorField: ColorField,
+    defaultColor: string,
+    value: string,
+  ) {
+    const nextOpacity = parseOptionalOpacity(value)
+    const patch: Partial<NodeColor> = { [field]: nextOpacity }
+
+    if (nextOpacity !== undefined && color[colorField] === undefined) {
+      Object.assign(patch, { [colorField]: defaultColor })
+      if (colorField === 'backgroundColor') {
+        setBackgroundColorInput(defaultColor)
+      } else {
+        setTextColorInput(defaultColor)
+      }
+    }
+
+    onNodeColorChange(node, patch, {
+      mergeKey: getNodeColorMergeKey(node.id, field),
+    })
   }
 
   function renderColorField({
+    colorField,
+    defaultColor,
     error,
-    field,
     inputValue,
     label,
+    opacityField,
+    opacityLabel,
+    opacityValue,
   }: {
+    colorField: ColorField
+    defaultColor: string
     error: boolean
-    field: ColorField
     inputValue: string
     label: string
+    opacityField: ColorOpacityField
+    opacityLabel: string
+    opacityValue?: number
   }) {
     return (
-      <label className="block">
-        <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
-        <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
-          <input
-            className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
-            value={inputValue}
-            placeholder="#RRGGBB"
-            aria-invalid={error}
-            spellCheck={false}
-            onChange={(event) => updateColorFromText(field, event.target.value)}
-          />
-          <input
-            type="color"
-            aria-label={`${label} 선택`}
-            className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
-            value={toColorInputValue(inputValue, DEFAULT_COLOR_PICKER_COLOR)}
-            onChange={(event) => updateColorFromPicker(field, event.target.value)}
-          />
-        </span>
-        {error ? (
-          <span className="mt-2 block text-xs text-[#b42318]">
-            HEX 형식 (#RRGGBB)으로 입력해주세요.
+      <div className="space-y-3">
+        <label className="block">
+          <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
+          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <input
+              className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+              value={inputValue}
+              placeholder="#RRGGBB"
+              aria-invalid={error}
+              spellCheck={false}
+              onChange={(event) =>
+                updateColorFromText(colorField, event.target.value)
+              }
+            />
+            <input
+              type="color"
+              aria-label={`${label} 선택`}
+              className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+              value={toColorInputValue(inputValue, defaultColor)}
+              onChange={(event) =>
+                updateColorFromPicker(colorField, event.target.value)
+              }
+            />
           </span>
-        ) : null}
-      </label>
+          {error ? (
+            <span className="mt-2 block text-xs text-[#b42318]">
+              HEX 형식 (#RRGGBB)으로 입력해주세요.
+            </span>
+          ) : null}
+        </label>
+        <OpacityControl
+          label={opacityLabel}
+          value={opacityValue}
+          onChange={(value) =>
+            updateOpacity(opacityField, colorField, defaultColor, value)
+          }
+        />
+      </div>
     )
   }
 
@@ -2288,16 +2420,24 @@ function NodeColorControls({
     >
       <div className="grid grid-cols-2 gap-3">
         {renderColorField({
+          colorField: 'backgroundColor',
+          defaultColor: DEFAULT_COLOR_PICKER_COLOR,
           error: backgroundColorError,
-          field: 'backgroundColor',
           inputValue: backgroundColorInput,
           label: '배경 색상',
+          opacityField: 'backgroundOpacity',
+          opacityLabel: '배경 투명도',
+          opacityValue: color.backgroundOpacity,
         })}
         {renderColorField({
+          colorField: 'textColor',
+          defaultColor: DEFAULT_TEXT_PICKER_COLOR,
           error: textColorError,
-          field: 'textColor',
           inputValue: textColorInput,
           label: '글자 색상',
+          opacityField: 'textOpacity',
+          opacityLabel: '글자 투명도',
+          opacityValue: color.textOpacity,
         })}
       </div>
     </InspectorDisclosure>
@@ -2973,7 +3113,11 @@ function SpacingControls({
 
 interface ShapeControlsProps {
   node: TreeNode
-  onShapeChange: (node: TreeNode, patch: Partial<Shape>) => void
+  onShapeChange: (
+    node: TreeNode,
+    patch: Partial<Shape>,
+    options?: CommitTreeEditOptions,
+  ) => void
   onShapeReset: (node: TreeNode) => void
 }
 
@@ -3053,7 +3197,7 @@ function ShapeControls({
 
     if (trimmedValue === '') {
       setBorderColorError(false)
-      onShapeChange(node, { borderColor: undefined })
+      onShapeChange(node, { borderColor: undefined, borderOpacity: undefined })
       return
     }
 
@@ -3070,12 +3214,38 @@ function ShapeControls({
   }
 
   function updateBorderColorFromPicker(value: string) {
-    setBorderColorInput(value)
+    const normalizedValue = normalizeHexColor(value)
+    setBorderColorInput(normalizedValue)
     setBorderColorError(false)
-    onShapeChange(node, {
-      borderColor: normalizeHexColor(value),
-      ...getVisibleBorderPatch(shape),
-    })
+    onShapeChange(
+      node,
+      {
+        borderColor: normalizedValue,
+        ...getVisibleBorderPatch(shape),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'borderColor') },
+    )
+  }
+
+  function updateBorderOpacity(value: string) {
+    const nextOpacity = parseOptionalOpacity(value)
+    const shouldEnsureBorder =
+      nextOpacity !== undefined ||
+      shape.borderOpacity !== undefined ||
+      shape.borderColor !== undefined ||
+      shape.borderWidth !== undefined ||
+      shape.borderStyle !== undefined
+    onShapeChange(
+      node,
+      {
+        borderOpacity: nextOpacity,
+        ...(nextOpacity !== undefined && shape.borderColor === undefined
+          ? { borderColor: DEFAULT_SHAPE_COLOR }
+          : {}),
+        ...(shouldEnsureBorder ? getVisibleBorderPatch(shape) : {}),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'borderOpacity') },
+    )
   }
 
   function updateShadow(value: string) {
@@ -3161,6 +3331,15 @@ function ShapeControls({
           ) : null}
         </label>
 
+        <div className={isBorderDisabled ? 'opacity-50' : ''}>
+          <OpacityControl
+            label="테두리 투명도"
+            value={shape.borderOpacity}
+            disabled={isBorderDisabled}
+            onChange={updateBorderOpacity}
+          />
+        </div>
+
         <label className="col-span-2 block">
           <span className="text-xs font-semibold text-[#4f5e56]">그림자</span>
           <select
@@ -3183,7 +3362,11 @@ function ShapeControls({
 
 interface ImageCompositionControlsProps {
   node: ImageNode
-  onImageChange: (node: ImageNode, patch: ImageEditPatch) => void
+  onImageChange: (
+    node: ImageNode,
+    patch: ImageEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
 }
 
 function ImageCompositionControls({
@@ -3195,7 +3378,7 @@ function ImageCompositionControls({
   const effectiveFocalPoint = node.focalPoint ?? { x: 0.5, y: 0.5 }
   const focalXPercent = Math.round(effectiveFocalPoint.x * 100)
   const focalYPercent = Math.round(effectiveFocalPoint.y * 100)
-  const overlayOpacityPercent = Math.round((presentation.overlayOpacity ?? 0) * 100)
+  const overlayOpacityPercent = getOpacityPercent(presentation.overlayOpacity)
   const [overlayColorInput, setOverlayColorInput] = useState(
     presentation.overlayColor ?? '',
   )
@@ -3255,7 +3438,12 @@ function ImageCompositionControls({
 
     if (trimmedValue === '') {
       setOverlayColorError(false)
-      onImageChange(node, { presentation: { overlayColor: undefined } })
+      onImageChange(node, {
+        presentation: {
+          overlayColor: undefined,
+          overlayOpacity: undefined,
+        },
+      })
       return
     }
 
@@ -3273,17 +3461,23 @@ function ImageCompositionControls({
     const normalizedValue = normalizeHexColor(value)
     setOverlayColorInput(normalizedValue)
     setOverlayColorError(false)
-    onImageChange(node, { presentation: { overlayColor: normalizedValue } })
+    onImageChange(
+      node,
+      { presentation: { overlayColor: normalizedValue } },
+      { mergeKey: getNodeColorMergeKey(node.id, 'overlayColor') },
+    )
   }
 
   function updateOverlayOpacity(value: string) {
-    const nextValue = parseOptionalNumber(value, 0, 100)
-    onImageChange(node, {
-      presentation: {
-        overlayOpacity:
-          nextValue === undefined ? undefined : roundFocalCoordinate(nextValue / 100),
+    onImageChange(
+      node,
+      {
+        presentation: {
+          overlayOpacity: parseOptionalOpacity(value),
+        },
       },
-    })
+      { mergeKey: getNodeColorMergeKey(node.id, 'overlayOpacity') },
+    )
   }
 
   function resetImageComposition() {
@@ -3371,12 +3565,12 @@ function ImageCompositionControls({
               이미지 슬롯
             </span>
           )}
-          {presentation.overlayColor && presentation.overlayOpacity ? (
+          {presentation.overlayColor && overlayOpacityPercent > 0 ? (
             <span
               className="pointer-events-none absolute inset-0"
               style={{
                 backgroundColor: presentation.overlayColor,
-                opacity: presentation.overlayOpacity,
+                opacity: overlayOpacityPercent / 100,
               }}
             />
           ) : null}
@@ -3445,37 +3639,59 @@ function ImageCompositionControls({
           ) : null}
         </label>
 
-        <TypographyNumberField
-          label="오버레이 불투명도"
-          unit="%"
-          min={0}
-          max={100}
-          step={1}
-          value={
-            presentation.overlayOpacity === undefined
-              ? undefined
-              : overlayOpacityPercent
-          }
-          placeholder="0"
+        <OpacityControl
+          label="오버레이 투명도"
+          value={presentation.overlayOpacity}
           onChange={updateOverlayOpacity}
         />
       </div>
-      <label className="mt-3 block">
-        <span className="text-xs font-semibold text-[#4f5e56]">
-          오버레이 슬라이더
-        </span>
+    </InspectorDisclosure>
+  )
+}
+
+interface OpacityControlProps {
+  disabled?: boolean
+  label: string
+  onChange: (value: string) => void
+  value?: number
+}
+
+function OpacityControl({
+  disabled = false,
+  label,
+  onChange,
+  value,
+}: OpacityControlProps) {
+  const percent = getOpacityPercent(value)
+
+  return (
+    <div>
+      <TypographyNumberField
+        disabled={disabled}
+        label={label}
+        unit="%"
+        min={0}
+        max={100}
+        step={1}
+        value={value === undefined ? undefined : percent}
+        placeholder="100"
+        onChange={onChange}
+      />
+      <label className="mt-2 block">
+        <span className="sr-only">{label} 슬라이더</span>
         <input
-          className="mt-2 w-full accent-[#1b7f72]"
+          className="w-full accent-[#1b7f72] disabled:cursor-not-allowed"
           type="range"
           min={0}
           max={100}
           step={1}
-          value={overlayOpacityPercent}
-          aria-label="오버레이 불투명도 슬라이더"
-          onChange={(event) => updateOverlayOpacity(event.target.value)}
+          value={percent}
+          aria-label={`${label} 슬라이더`}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
         />
       </label>
-    </InspectorDisclosure>
+    </div>
   )
 }
 
@@ -3854,6 +4070,19 @@ function parseOptionalNumber(
   return Math.min(max, Math.max(min, parsed))
 }
 
+function parseOptionalOpacity(value: string): number | undefined {
+  const percent = parseOptionalNumber(value, 0, 100)
+  if (percent === undefined || percent === 100) {
+    return undefined
+  }
+
+  return Math.round((percent / 100) * 100) / 100
+}
+
+function getOpacityPercent(value: number | undefined): number {
+  return Math.round((value ?? 1) * 100)
+}
+
 function roundFocalCoordinate(value: number): number {
   const clampedValue = Math.min(1, Math.max(0, value))
   return Math.round(clampedValue * 1000) / 1000
@@ -3874,6 +4103,14 @@ function isValidHexColor(value: string): boolean {
 
 function normalizeHexColor(value: string): string {
   return value.trim().toLowerCase()
+}
+
+function getNodeColorMergeKey(nodeId: string, field: string): string {
+  return `node:${nodeId}:${field}`
+}
+
+function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
+  return field === 'backgroundColor' ? 'backgroundOpacity' : 'textOpacity'
 }
 
 function toColorInputValue(
@@ -4048,9 +4285,36 @@ function getCanvasStyle(colorPreset: ColorPreset): CSSProperties {
   } as CSSProperties
 }
 
+function getCssColorWithOpacity(color: string, opacity?: number): string {
+  if (opacity === undefined || opacity >= 1) {
+    return color
+  }
+
+  if (opacity <= 0) {
+    return hexToRgba(color, 0)
+  }
+
+  return hexToRgba(color, opacity)
+}
+
 function hexToRgba(hex: string, alpha: number): string {
   const normalized = hex.replace('#', '')
-  const value = Number.parseInt(normalized, 16)
+  if (normalized.length !== 3 && normalized.length !== 6) {
+    return hex
+  }
+
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((digit) => `${digit}${digit}`)
+          .join('')
+      : normalized
+  const value = Number.parseInt(expanded, 16)
+  if (!Number.isFinite(value)) {
+    return hex
+  }
+
   const red = (value >> 16) & 255
   const green = (value >> 8) & 255
   const blue = value & 255

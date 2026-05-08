@@ -106,6 +106,7 @@ describe('tree schema', () => {
         radius: 18,
         borderWidth: 2,
         borderColor: '#aabbcc',
+        borderOpacity: 0.45,
         borderStyle: 'dashed',
         shadow: 'lg',
       },
@@ -117,6 +118,7 @@ describe('tree schema', () => {
       assert.equal(parsed.shape?.radius, 18)
       assert.equal(parsed.shape?.borderWidth, 2)
       assert.equal(parsed.shape?.borderColor, '#aabbcc')
+      assert.equal(parsed.shape?.borderOpacity, 0.45)
       assert.equal(parsed.shape?.borderStyle, 'dashed')
       assert.equal(parsed.shape?.shadow, 'lg')
     }
@@ -129,7 +131,9 @@ describe('tree schema', () => {
       editKind: 'structure',
       color: {
         backgroundColor: '#f8fafc',
+        backgroundOpacity: 0.72,
         textColor: '#123',
+        textOpacity: 0.64,
       },
       children: [],
     })
@@ -137,7 +141,9 @@ describe('tree schema', () => {
     assert.equal(parsed.type, 'card')
     if (parsed.type === 'card') {
       assert.equal(parsed.color?.backgroundColor, '#f8fafc')
+      assert.equal(parsed.color?.backgroundOpacity, 0.72)
       assert.equal(parsed.color?.textColor, '#123')
+      assert.equal(parsed.color?.textOpacity, 0.64)
     }
   })
 
@@ -161,6 +167,18 @@ describe('tree schema', () => {
         editKind: 'structure',
         color: {
           textColor: '#abcd',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          backgroundOpacity: 1.2,
         },
         children: [],
       }),
@@ -236,6 +254,18 @@ describe('tree schema', () => {
         editKind: 'structure',
         shape: {
           borderColor: 'red',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          borderOpacity: -0.1,
         },
         children: [],
       }),

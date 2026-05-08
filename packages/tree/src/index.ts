@@ -23,6 +23,7 @@ export {
   borderStyleSchema,
   shadowPresetSchema,
   hexColorSchema,
+  opacitySchema,
   shapeSchema,
   nodeColorSchema,
   imageFitSchema,

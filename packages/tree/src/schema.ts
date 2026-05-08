@@ -136,10 +136,12 @@ export type ShadowPreset = z.infer<typeof shadowPresetSchema>
 export const hexColorSchema = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+export const opacitySchema = z.number().min(0).max(1)
 export const shapeSchema = z.object({
   radius: z.number().min(0).max(120).optional(),
   borderWidth: z.number().min(0).max(20).optional(),
   borderColor: hexColorSchema.optional(),
+  borderOpacity: opacitySchema.optional(),
   borderStyle: borderStyleSchema.optional(),
   shadow: shadowPresetSchema.optional(),
 })
@@ -147,7 +149,9 @@ export type Shape = z.infer<typeof shapeSchema>
 
 export const nodeColorSchema = z.object({
   backgroundColor: hexColorSchema.optional(),
+  backgroundOpacity: opacitySchema.optional(),
   textColor: hexColorSchema.optional(),
+  textOpacity: opacitySchema.optional(),
 })
 export type NodeColor = z.infer<typeof nodeColorSchema>
 
@@ -172,7 +176,7 @@ export type FocalPoint = z.infer<typeof focalPointSchema>
 export const imagePresentationSchema = z.object({
   fit: imageFitSchema.optional(),
   overlayColor: hexColorSchema.optional(),
-  overlayOpacity: z.number().min(0).max(1).optional(),
+  overlayOpacity: opacitySchema.optional(),
 })
 export type ImagePresentation = z.infer<typeof imagePresentationSchema>
 
