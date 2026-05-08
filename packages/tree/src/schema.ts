@@ -258,11 +258,21 @@ export const focalPointSchema = z.object({
 })
 export type FocalPoint = z.infer<typeof focalPointSchema>
 
+export const imageFilterSchema = z.object({
+  blur: z.number().min(0).max(20).optional(),
+  grayscale: z.number().min(0).max(100).optional(),
+  sepia: z.number().min(0).max(100).optional(),
+  brightness: z.number().min(50).max(150).optional(),
+  contrast: z.number().min(50).max(150).optional(),
+})
+export type ImageFilter = z.infer<typeof imageFilterSchema>
+
 export const imagePresentationSchema = z.object({
   fit: imageFitSchema.optional(),
   overlayColor: hexColorSchema.optional(),
   overlayOpacity: opacitySchema.optional(),
   overlayGradient: gradientSchema.optional(),
+  filter: imageFilterSchema.optional(),
 })
 export type ImagePresentation = z.infer<typeof imagePresentationSchema>
 

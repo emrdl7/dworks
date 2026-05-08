@@ -78,6 +78,7 @@ import {
   type LayoutDirection,
   type LayoutJustify,
   type LayoutWrap,
+  type ImageFilter,
   type NodeColor,
   type NodeCursor,
   type NodeTransition,
@@ -3103,11 +3104,13 @@ function ImagePreview({
     (presentation.overlayGradient !== undefined ||
       presentation.overlayColor !== undefined) &&
     overlayOpacity > 0
+  const filterCss = getImageFilterCss(presentation.filter)
   const imageStyle: CSSProperties = {
     objectFit: imageFit,
     ...(node.focalPoint
       ? { objectPosition: getImageObjectPosition(node.focalPoint) }
       : {}),
+    ...(filterCss !== undefined ? { filter: filterCss } : {}),
   }
 
   useEffect(() => {
@@ -3168,6 +3171,29 @@ function ImagePreview({
 
 function getImageObjectPosition(focalPoint: FocalPoint): string {
   return `${Math.round(focalPoint.x * 100)}% ${Math.round(focalPoint.y * 100)}%`
+}
+
+function getImageFilterCss(filter?: ImageFilter): string | undefined {
+  if (filter === undefined) {
+    return undefined
+  }
+  const parts: string[] = []
+  if (filter.blur !== undefined) {
+    parts.push(`blur(${filter.blur}px)`)
+  }
+  if (filter.grayscale !== undefined) {
+    parts.push(`grayscale(${filter.grayscale}%)`)
+  }
+  if (filter.sepia !== undefined) {
+    parts.push(`sepia(${filter.sepia}%)`)
+  }
+  if (filter.brightness !== undefined) {
+    parts.push(`brightness(${filter.brightness}%)`)
+  }
+  if (filter.contrast !== undefined) {
+    parts.push(`contrast(${filter.contrast}%)`)
+  }
+  return parts.length === 0 ? undefined : parts.join(' ')
 }
 
 const aspectRatioClasses: Record<NonNullable<ImageNode['aspectRatio']>, string> = {
@@ -7293,6 +7319,29 @@ function ImageCompositionControls({
     })
   }
 
+  function updateImageFilterField(
+    field: keyof ImageFilter,
+    value: number | undefined,
+  ) {
+    const currentFilter = presentation.filter ?? {}
+    const nextFilter: ImageFilter = { ...currentFilter }
+    if (value === undefined) {
+      delete nextFilter[field]
+    } else {
+      nextFilter[field] = value
+    }
+    const isEmpty = Object.keys(nextFilter).length === 0
+    onImageChange(
+      node,
+      {
+        presentation: {
+          filter: isEmpty ? undefined : nextFilter,
+        },
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `imageFilter.${field}`) },
+    )
+  }
+
   return (
     <InspectorDisclosure
       title="이미지 구도"
@@ -7502,7 +7551,95 @@ function ImageCompositionControls({
           </div>
         )}
       </div>
+
+      <div className="mt-4 rounded-md border border-[#e0e5de] bg-white p-3">
+        <span className="text-xs font-semibold text-[#4f5e56]">필터</span>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <ImageFilterInput
+            label="블러 (px)"
+            min={0}
+            max={20}
+            placeholder="0"
+            value={presentation.filter?.blur}
+            onChange={(value) => updateImageFilterField('blur', value)}
+          />
+          <ImageFilterInput
+            label="흑백 (%)"
+            min={0}
+            max={100}
+            placeholder="0"
+            value={presentation.filter?.grayscale}
+            onChange={(value) => updateImageFilterField('grayscale', value)}
+          />
+          <ImageFilterInput
+            label="세피아 (%)"
+            min={0}
+            max={100}
+            placeholder="0"
+            value={presentation.filter?.sepia}
+            onChange={(value) => updateImageFilterField('sepia', value)}
+          />
+          <ImageFilterInput
+            label="밝기 (%)"
+            min={50}
+            max={150}
+            placeholder="100"
+            value={presentation.filter?.brightness}
+            onChange={(value) => updateImageFilterField('brightness', value)}
+          />
+          <ImageFilterInput
+            label="대비 (%)"
+            min={50}
+            max={150}
+            placeholder="100"
+            value={presentation.filter?.contrast}
+            onChange={(value) => updateImageFilterField('contrast', value)}
+          />
+        </div>
+      </div>
     </InspectorDisclosure>
+  )
+}
+
+function ImageFilterInput({
+  label,
+  max,
+  min,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string
+  max: number
+  min: number
+  placeholder: string
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+}) {
+  return (
+    <label className="block">
+      <span className="text-[11px] text-[#647067]">{label}</span>
+      <input
+        type="number"
+        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+        min={min}
+        max={max}
+        placeholder={placeholder}
+        value={value === undefined ? '' : value}
+        onChange={(event) => {
+          const raw = event.target.value
+          if (raw === '') {
+            onChange(undefined)
+            return
+          }
+          const next = Number(raw)
+          if (Number.isNaN(next)) {
+            return
+          }
+          onChange(Math.max(min, Math.min(max, next)))
+        }}
+      />
+    </label>
   )
 }
 

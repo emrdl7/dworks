@@ -97,6 +97,7 @@ export type {
   NodeColor,
   NodeTransition,
   NodeCursor,
+  ImageFilter,
   ImageFit,
   ImagePresentation,
   ResponsiveIntent,
