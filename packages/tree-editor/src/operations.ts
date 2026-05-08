@@ -1,4 +1,10 @@
-import type { FocalPoint, ImageAspectRatio, Tree, TreeNode } from '@dworks/tree'
+import type {
+  FocalPoint,
+  ImageAspectRatio,
+  StyleTokens,
+  Tree,
+  TreeNode,
+} from '@dworks/tree'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -40,6 +46,11 @@ export interface DeleteNodeOperation {
   nodeId: string
 }
 
+export interface UpdateStyleTokensOperation {
+  type: 'updateStyleTokens'
+  patch: Partial<StyleTokens>
+}
+
 type ContentEditOperation =
   | UpdateTextOperation
   | UpdateButtonLabelOperation
@@ -50,9 +61,12 @@ type StructureEditOperation =
   | DuplicateNodeOperation
   | DeleteNodeOperation
 
+type StyleEditOperation = UpdateStyleTokensOperation
+
 export type EditOperation =
   | ContentEditOperation
   | StructureEditOperation
+  | StyleEditOperation
 
 interface EditState {
   matched: boolean
@@ -110,6 +124,13 @@ export function deleteNode(tree: Tree, nodeId: string): Tree {
   return applyEditOperation(tree, { type: 'deleteNode', nodeId })
 }
 
+export function updateStyleTokens(
+  tree: Tree,
+  patch: Partial<StyleTokens>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateStyleTokens', patch })
+}
+
 export function applyEditSequence(
   tree: Tree,
   operations: EditOperation[],
@@ -121,6 +142,10 @@ export function applyEditSequence(
 }
 
 export function applyEditOperation(tree: Tree, operation: EditOperation): Tree {
+  if (operation.type === 'updateStyleTokens') {
+    return applyStyleOperation(tree, operation)
+  }
+
   if (isStructureOperation(operation)) {
     return applyStructureOperation(tree, operation)
   }
@@ -131,6 +156,19 @@ export function applyEditOperation(tree: Tree, operation: EditOperation): Tree {
     throw new Error(`tree edit failed: node not found: ${operation.nodeId}`)
   }
   return { ...tree, root }
+}
+
+function applyStyleOperation(
+  tree: Tree,
+  operation: StyleEditOperation,
+): Tree {
+  return {
+    ...tree,
+    styleTokens: {
+      ...(tree.styleTokens ?? {}),
+      ...operation.patch,
+    },
+  }
 }
 
 function editNode(

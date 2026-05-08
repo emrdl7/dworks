@@ -10,6 +10,8 @@ export {
   buttonNodeSchema,
   imageAspectRatioSchema,
   focalPointSchema,
+  colorPresetSchema,
+  styleTokensSchema,
   imageNodeSchema,
   sectionNodeSchema,
   heroNodeSchema,
@@ -22,6 +24,8 @@ export {
   LAYOUT_INTENTS,
   CONTENT_ROLES,
   IMAGE_ASPECT_RATIOS,
+  COLOR_PRESET_IDS,
+  COLOR_PRESETS,
 } from './schema.js'
 export type {
   EditKind,
@@ -31,6 +35,9 @@ export type {
   ImageAspectRatio,
   FocalPoint,
   ResponsiveIntent,
+  ColorPreset,
+  ColorPresetTokens,
+  StyleTokens,
   TextNode,
   ButtonNode,
   ImageNode,

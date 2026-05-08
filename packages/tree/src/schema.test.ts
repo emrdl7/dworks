@@ -5,6 +5,8 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
+  COLOR_PRESET_IDS,
+  COLOR_PRESETS,
   CONTENT_ROLES,
   IMAGE_ASPECT_RATIOS,
   LAYOUT_INTENTS,
@@ -103,6 +105,41 @@ describe('tree schema', () => {
     const parsed = treeSchema.parse(tree)
     assert.equal(parsed.version, '1')
     assert.equal(parsed.root.type, 'section')
+  })
+
+  it('parses root style tokens with a color preset', () => {
+    const tree = {
+      version: '1',
+      styleTokens: {
+        colorPreset: 'plum',
+      },
+      root: {
+        id: 'r',
+        type: 'section',
+        editKind: 'structure',
+        children: [],
+      },
+    }
+
+    const parsed = treeSchema.parse(tree)
+    assert.equal(parsed.styleTokens?.colorPreset, 'plum')
+  })
+
+  it('rejects invalid root color presets', () => {
+    assert.throws(() =>
+      treeSchema.parse({
+        version: '1',
+        styleTokens: {
+          colorPreset: 'neon',
+        },
+        root: {
+          id: 'r',
+          type: 'section',
+          editKind: 'structure',
+          children: [],
+        },
+      }),
+    )
   })
 
   it('keeps M0.5 fixtures backward compatible without semantic fields', () => {
@@ -238,5 +275,14 @@ describe('tree schema', () => {
       'portrait',
       'wide',
     ])
+    assert.deepEqual(COLOR_PRESET_IDS, [
+      'mint',
+      'navy',
+      'sand',
+      'plum',
+      'graphite',
+    ])
+    assert.equal(COLOR_PRESETS.mint.accent, '#1b7f72')
+    assert.equal(COLOR_PRESETS.graphite.accentText, '#0f1b1d')
   })
 })

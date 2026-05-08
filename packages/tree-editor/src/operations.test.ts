@@ -11,6 +11,7 @@ import {
   replaceTextById,
   updateButtonLabel,
   updateImage,
+  updateStyleTokens,
   updateText,
 } from './operations.js'
 
@@ -151,8 +152,13 @@ describe('tree editor operations', () => {
         nodeId: 'landing.visual',
         direction: 'up',
       },
+      {
+        type: 'updateStyleTokens',
+        patch: { colorPreset: 'navy' },
+      },
     ])
 
+    assert.equal(updated.styleTokens?.colorPreset, 'navy')
     assert.equal(updated.root.type, 'section')
     if (updated.root.type === 'section') {
       const title = updated.root.children[0]
@@ -239,6 +245,27 @@ describe('tree editor operations', () => {
         ['landing.title', 'landing.visual', 'landing.card'],
       )
     }
+  })
+
+  it('updates root style tokens without mutating the original tree', () => {
+    const tree = fixtureTree()
+    const updated = updateStyleTokens(tree, { colorPreset: 'plum' })
+
+    assert.notEqual(updated, tree)
+    assert.equal(tree.styleTokens, undefined)
+    assert.equal(updated.styleTokens?.colorPreset, 'plum')
+    assert.equal(updated.root, tree.root)
+  })
+
+  it('merges root style token patches', () => {
+    const tree: Tree = {
+      ...fixtureTree(),
+      styleTokens: { colorPreset: 'mint' },
+    }
+
+    const updated = updateStyleTokens(tree, { colorPreset: 'graphite' })
+
+    assert.equal(updated.styleTokens?.colorPreset, 'graphite')
   })
 
   it('throws when structure operations target the root', () => {

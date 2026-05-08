@@ -62,6 +62,103 @@ export const focalPointSchema = z.object({
 })
 export type FocalPoint = z.infer<typeof focalPointSchema>
 
+export const COLOR_PRESET_IDS = [
+  'mint',
+  'navy',
+  'sand',
+  'plum',
+  'graphite',
+] as const
+export const colorPresetSchema = z.enum(COLOR_PRESET_IDS)
+export type ColorPreset = z.infer<typeof colorPresetSchema>
+
+export interface ColorPresetTokens {
+  surface: string
+  surfaceMuted: string
+  textPrimary: string
+  textMuted: string
+  accent: string
+  accentText: string
+  heroSurface: string
+  heroText: string
+  border: string
+  imageSurface: string
+  imageAccent: string
+}
+
+export const COLOR_PRESETS: Record<ColorPreset, ColorPresetTokens> = {
+  mint: {
+    surface: '#f5f7f4',
+    surfaceMuted: '#fbfcfa',
+    textPrimary: '#18211d',
+    textMuted: '#5d6962',
+    accent: '#1b7f72',
+    accentText: '#ffffff',
+    heroSurface: '#102822',
+    heroText: '#ffffff',
+    border: '#d7ddd2',
+    imageSurface: '#d9e4df',
+    imageAccent: '#86b4aa',
+  },
+  navy: {
+    surface: '#eef2f7',
+    surfaceMuted: '#fbfcfd',
+    textPrimary: '#0e1a2e',
+    textMuted: '#53627a',
+    accent: '#2a5fa0',
+    accentText: '#ffffff',
+    heroSurface: '#0e1a2e',
+    heroText: '#ffffff',
+    border: '#d2dae6',
+    imageSurface: '#dbe5f2',
+    imageAccent: '#8aa8c8',
+  },
+  sand: {
+    surface: '#f6f1ea',
+    surfaceMuted: '#fcf9f4',
+    textPrimary: '#2a221a',
+    textMuted: '#6d5b48',
+    accent: '#96672f',
+    accentText: '#ffffff',
+    heroSurface: '#3c2b1d',
+    heroText: '#ffffff',
+    border: '#e0d5c6',
+    imageSurface: '#eadfce',
+    imageAccent: '#c49a68',
+  },
+  plum: {
+    surface: '#f4eef5',
+    surfaceMuted: '#fbf9fb',
+    textPrimary: '#22112a',
+    textMuted: '#68556f',
+    accent: '#7d3aa0',
+    accentText: '#ffffff',
+    heroSurface: '#25112c',
+    heroText: '#ffffff',
+    border: '#ded1e2',
+    imageSurface: '#eaddea',
+    imageAccent: '#b289c1',
+  },
+  graphite: {
+    surface: '#1a1d1f',
+    surfaceMuted: '#26292c',
+    textPrimary: '#f5f6f7',
+    textMuted: '#b9c0c4',
+    accent: '#82c2c5',
+    accentText: '#0f1b1d',
+    heroSurface: '#0f1113',
+    heroText: '#ffffff',
+    border: '#383d40',
+    imageSurface: '#2d3336',
+    imageAccent: '#5f777b',
+  },
+}
+
+export const styleTokensSchema = z.object({
+  colorPreset: colorPresetSchema.optional(),
+})
+export type StyleTokens = z.infer<typeof styleTokensSchema>
+
 // ---- 명시적 타입 선언 (재귀 union의 안정 추론 위해 먼저 선언) ----
 
 interface BaseNodeMeta {
@@ -238,6 +335,7 @@ export const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
 export const treeSchema = z.object({
   version: z.literal('1'),
   root: treeNodeSchema,
+  styleTokens: styleTokensSchema.optional(),
 })
 export type Tree = z.infer<typeof treeSchema>
 

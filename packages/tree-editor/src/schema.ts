@@ -3,7 +3,11 @@
 // operations.ts는 실행 로직. 관심사 분리.
 
 import { z } from 'zod'
-import { focalPointSchema, imageAspectRatioSchema } from '@dworks/tree'
+import {
+  focalPointSchema,
+  imageAspectRatioSchema,
+  styleTokensSchema,
+} from '@dworks/tree'
 
 import type {
   DeleteNodeOperation,
@@ -12,6 +16,7 @@ import type {
   MoveNodeOperation,
   UpdateButtonLabelOperation,
   UpdateImageOperation,
+  UpdateStyleTokensOperation,
   UpdateTextOperation,
 } from './operations.js'
 
@@ -56,6 +61,12 @@ export const deleteNodeOperationSchema: z.ZodType<DeleteNodeOperation> = z.objec
   nodeId: z.string().min(1),
 })
 
+export const updateStyleTokensOperationSchema: z.ZodType<UpdateStyleTokensOperation> =
+  z.object({
+    type: z.literal('updateStyleTokens'),
+    patch: styleTokensSchema,
+  })
+
 // discriminatedUnion으로 type 리터럴 분기 — exhaustiveness check 강제.
 export const editOperationSchema = z.discriminatedUnion('type', [
   updateTextOperationSchema as z.ZodObject<{
@@ -89,6 +100,10 @@ export const editOperationSchema = z.discriminatedUnion('type', [
   deleteNodeOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'deleteNode'>
     nodeId: z.ZodString
+  }>,
+  updateStyleTokensOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateStyleTokens'>
+    patch: typeof styleTokensSchema
   }>,
 ]) satisfies z.ZodType<EditOperation>
 

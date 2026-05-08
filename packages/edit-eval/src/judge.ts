@@ -76,15 +76,44 @@ export function summarizeEditOperations(operations: EditOperation[]): string {
   if (operations.length === 0) return 'no edit operations'
   return operations
     .map((operation, index) => {
-      const prefix = `${index + 1}. ${operation.type} ${operation.nodeId}`
       switch (operation.type) {
         case 'updateText':
-          return `${prefix} content="${truncate(operation.content)}"`
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} content="${truncate(operation.content)}"`
         case 'updateButtonLabel':
-          return `${prefix} label="${truncate(operation.label)}"`
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} label="${truncate(operation.label)}"`
+        case 'updateImage':
+          return `${operationPrefix(index, operation.type, operation.nodeId)} media`
+        case 'moveNode':
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} direction="${operation.direction}"`
+        case 'duplicateNode':
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} newNodeId="${operation.newNodeId ?? '(auto)'}"`
+        case 'deleteNode':
+          return operationPrefix(index, operation.type, operation.nodeId)
+        case 'updateStyleTokens':
+          return `${index + 1}. updateStyleTokens colorPreset="${operation.patch.colorPreset ?? '(unchanged)'}"`
       }
     })
     .join('\n')
+}
+
+function operationPrefix(index: number, type: string, nodeId: string): string {
+  return `${index + 1}. ${type} ${nodeId}`
 }
 
 function stubEditJudge(input: EditJudgeInput): EditAxisScore {

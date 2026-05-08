@@ -60,10 +60,11 @@ describe('edit-eval schema', () => {
       editSequence: [
         { type: 'updateText', nodeId: 'hero.title', content: '새 제목' },
         { type: 'updateButtonLabel', nodeId: 'hero.cta', label: '바로 시작' },
+        { type: 'updateStyleTokens', patch: { colorPreset: 'plum' } },
       ],
     })
 
-    assert.equal(parsed.editSequence?.length, 2)
+    assert.equal(parsed.editSequence?.length, 3)
   })
 
   it('rejects invalid edit axis scores', () => {
@@ -143,10 +144,14 @@ describe('edit-eval dry-run judge', () => {
 
   it('summarizes edit operations for judge input', () => {
     assert.equal(
-      summarizeEditOperations(input.editSequence),
+      summarizeEditOperations([
+        ...input.editSequence,
+        { type: 'updateStyleTokens' as const, patch: { colorPreset: 'navy' } },
+      ]),
       [
         '1. updateText hero.title content="새 제목"',
         '2. updateButtonLabel hero.cta label="바로 시작"',
+        '3. updateStyleTokens colorPreset="navy"',
       ].join('\n'),
     )
   })

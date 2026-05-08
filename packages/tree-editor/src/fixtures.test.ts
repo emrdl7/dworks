@@ -77,6 +77,10 @@ describe('edit-sequence fixtures', () => {
       const tree = readJson<Tree>(treePath)
       const parsedTree = treeSchema.parse(tree)
       for (const op of seq.operations) {
+        if (!('nodeId' in op)) {
+          continue
+        }
+
         const node = findNode(parsedTree.root, op.nodeId)
         assert.ok(
           node,

@@ -1,13 +1,30 @@
 'use client'
 
-import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
-import type { ButtonNode, ImageNode, TextNode, Tree, TreeNode } from '@dworks/tree'
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
+import {
+  COLOR_PRESETS,
+  COLOR_PRESET_IDS,
+  type ButtonNode,
+  type ColorPreset,
+  type ImageNode,
+  type TextNode,
+  type Tree,
+  type TreeNode,
+} from '@dworks/tree'
 import {
   deleteNode,
   duplicateNode,
   moveNode,
   updateButtonLabel,
   updateImage,
+  updateStyleTokens,
   updateText,
 } from '@dworks/tree-editor'
 import {
@@ -84,6 +101,14 @@ const layoutIntentLabels = {
   'dashboard-grid': '대시보드 그리드',
 } as const
 
+const colorPresetLabels: Record<ColorPreset, string> = {
+  mint: '민트',
+  navy: '네이비',
+  sand: '샌드',
+  plum: '플럼',
+  graphite: '그래파이트',
+}
+
 const MAX_HISTORY = 100
 
 export default function HomePage() {
@@ -110,6 +135,11 @@ export default function HomePage() {
   )
   const layerItems = useMemo(() => flattenTree(tree.root), [tree])
   const editableCount = useMemo(() => countEditableNodes(tree.root), [tree])
+  const colorPreset = tree.styleTokens?.colorPreset ?? 'mint'
+  const canvasStyle = useMemo(
+    () => getCanvasStyle(colorPreset),
+    [colorPreset],
+  )
 
   function handleFixtureChange(fixtureId: string) {
     const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
@@ -164,6 +194,10 @@ export default function HomePage() {
     commitTreeEdit(nextTree, parentId)
   }
 
+  function handleColorPresetChange(nextColorPreset: ColorPreset) {
+    commitTreeEdit(updateStyleTokens(tree, { colorPreset: nextColorPreset }))
+  }
+
   function handleUndo() {
     const previousTree = historyPast.at(-1)
     if (!previousTree) {
@@ -196,7 +230,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-base font-semibold">Dworks 편집기</h1>
-            <p className="text-xs text-[#647067]">m2-structure-ops</p>
+            <p className="text-xs text-[#647067]">색상 스타일 편집</p>
           </div>
           <label className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#4f5e56]">예제</span>
@@ -241,6 +275,9 @@ export default function HomePage() {
             <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
               선택 {selectedNode.id}
             </span>
+            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
+              색상 {colorPresetLabels[colorPreset]}
+            </span>
           </div>
         </div>
       </header>
@@ -274,7 +311,10 @@ export default function HomePage() {
 
         <section className="min-w-0 overflow-auto bg-[#eef2ec]">
           <div className="min-w-[1040px] px-8 py-8">
-            <div className="mx-auto w-full max-w-[1200px] border border-[#cbd6cf] bg-white">
+            <div
+              className="mx-auto w-full max-w-[1200px] border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
+              style={canvasStyle}
+            >
               <CanvasNode
                 node={tree.root}
                 selectedNodeId={selectedNodeId}
@@ -295,6 +335,8 @@ export default function HomePage() {
             onMoveDown={() => handleMoveSelected('down')}
             onDuplicate={handleDuplicateSelected}
             onDelete={handleDeleteSelected}
+            colorPreset={colorPreset}
+            onColorPresetChange={handleColorPresetChange}
           />
         </aside>
       </div>
@@ -385,7 +427,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <section
-            className={`grid min-h-[420px] gap-10 bg-[#102822] p-12 text-white ${
+            className={`grid min-h-[420px] gap-10 bg-[var(--dw-hero-surface)] p-12 text-[var(--dw-hero-text)] ${
               hasImage ? 'grid-cols-[1.05fr_0.95fr]' : 'grid-cols-1'
             }`}
           >
@@ -419,7 +461,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'card':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <article className="h-full rounded-lg border border-[#d7ddd2] bg-[#fbfcfa] p-5 shadow-sm">
+          <article className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-5 shadow-sm">
             <div className="space-y-3">
               {node.children.map((child) => (
                 <CanvasNode
@@ -453,7 +495,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'form':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <form className="mx-auto max-w-[520px] space-y-5 rounded-lg border border-[#d7ddd2] bg-[#fbfcfa] p-8 shadow-sm">
+          <form className="mx-auto max-w-[520px] space-y-5 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-8 shadow-sm">
             {node.children.map((child) => (
               <CanvasNode
                 key={child.id}
@@ -479,8 +521,8 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
           <span
             className={`inline-flex min-h-11 items-center rounded-md px-5 text-sm font-semibold ${
               node.variant === 'secondary'
-                ? 'border border-current bg-white text-[#102822]'
-                : 'bg-[#f3b84d] text-[#16231f]'
+                ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
+                : 'bg-[var(--dw-accent)] text-[var(--dw-accent-text)]'
             }`}
           >
             {node.label}
@@ -529,10 +571,10 @@ function SelectableNode({
     <div
       role="button"
       tabIndex={0}
-      className={`relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+      className={`relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
         isSelected
-          ? 'border-[#1b7f72] shadow-[0_0_0_3px_rgba(27,127,114,0.18)]'
-          : 'border-transparent hover:border-[#8c9a91]'
+          ? 'border-[var(--dw-accent)] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
+          : 'border-transparent hover:border-[var(--dw-border)]'
       }`}
       onClick={(event) => {
         event.stopPropagation()
@@ -541,7 +583,7 @@ function SelectableNode({
       onKeyDown={handleKeyDown}
     >
       {isSelected ? (
-        <span className="pointer-events-none absolute -top-3 left-2 z-10 rounded bg-[#1b7f72] px-2 py-1 text-[11px] font-semibold text-white">
+        <span className="pointer-events-none absolute -top-3 left-2 z-10 rounded bg-[var(--dw-accent)] px-2 py-1 text-[11px] font-semibold text-[var(--dw-accent-text)]">
           {nodeTypeLabels[node.type]}
         </span>
       ) : null}
@@ -560,15 +602,21 @@ function TextPreview({ node }: { node: TextNode }) {
       )
     case 'heading-2':
       return (
-        <h3 className="text-2xl font-semibold text-[#16231f]">{node.content}</h3>
+        <h3 className="text-2xl font-semibold text-[var(--dw-text-primary)]">
+          {node.content}
+        </h3>
       )
     case 'heading-3':
       return (
-        <h4 className="text-lg font-semibold text-[#16231f]">{node.content}</h4>
+        <h4 className="text-lg font-semibold text-[var(--dw-text-primary)]">
+          {node.content}
+        </h4>
       )
     case 'caption':
       return (
-        <p className="text-xs font-semibold uppercase text-[#f3b84d]">{node.content}</p>
+        <p className="text-xs font-semibold uppercase text-[var(--dw-accent)]">
+          {node.content}
+        </p>
       )
     case 'body':
     default:
@@ -586,7 +634,7 @@ function ImagePreview({ node }: { node: ImageNode }) {
 
   return (
     <figure
-      className={`relative flex min-h-[320px] overflow-hidden border border-white/25 bg-[#d9e4df] ${
+      className={`relative flex min-h-[320px] overflow-hidden border border-white/25 bg-[var(--dw-image-surface)] ${
         aspectRatioClasses[node.aspectRatio ?? 'wide']
       }`}
     >
@@ -600,7 +648,7 @@ function ImagePreview({ node }: { node: ImageNode }) {
           onError={() => setHasError(true)}
         />
       ) : (
-        <div className="flex h-full w-full flex-col justify-end bg-[#86b4aa] p-6 text-[#102822]">
+        <div className="flex h-full w-full flex-col justify-end bg-[var(--dw-image-accent)] p-6 text-[var(--dw-text-primary)]">
           <span className="text-xs font-semibold uppercase tracking-wide">
             이미지 슬롯
           </span>
@@ -608,7 +656,9 @@ function ImagePreview({ node }: { node: ImageNode }) {
             {node.alt || '이미지 주소를 입력하세요'}
           </span>
           {node.src ? (
-            <span className="mt-3 break-all text-xs text-[#27433b]">{node.src}</span>
+            <span className="mt-3 break-all text-xs text-[var(--dw-text-muted)]">
+              {node.src}
+            </span>
           ) : null}
         </div>
       )}
@@ -626,6 +676,7 @@ const aspectRatioClasses: Record<NonNullable<ImageNode['aspectRatio']>, string> 
 interface NodeInspectorProps {
   node: TreeNode
   structureInfo: StructureInfo
+  colorPreset: ColorPreset
   onTextChange: (node: TextNode, content: string) => void
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: Pick<Partial<ImageNode>, 'src' | 'alt'>) => void
@@ -633,11 +684,13 @@ interface NodeInspectorProps {
   onMoveDown: () => void
   onDuplicate: () => void
   onDelete: () => void
+  onColorPresetChange: (colorPreset: ColorPreset) => void
 }
 
 function NodeInspector({
   node,
   structureInfo,
+  colorPreset,
   onTextChange,
   onButtonLabelChange,
   onImageChange,
@@ -645,6 +698,7 @@ function NodeInspector({
   onMoveDown,
   onDuplicate,
   onDelete,
+  onColorPresetChange,
 }: NodeInspectorProps) {
   return (
     <section className="flex h-full flex-col">
@@ -655,6 +709,11 @@ function NodeInspector({
 
       <div className="space-y-5 overflow-auto p-5">
         <MetadataGrid node={node} />
+
+        <StyleControls
+          colorPreset={colorPreset}
+          onColorPresetChange={onColorPresetChange}
+        />
 
         <StructureControls
           info={structureInfo}
@@ -740,6 +799,63 @@ function NodeInspector({
         ) : null}
       </div>
     </section>
+  )
+}
+
+interface StyleControlsProps {
+  colorPreset: ColorPreset
+  onColorPresetChange: (colorPreset: ColorPreset) => void
+}
+
+function StyleControls({
+  colorPreset,
+  onColorPresetChange,
+}: StyleControlsProps) {
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">문서 스타일</h3>
+          <p className="mt-1 text-xs text-[#647067]">캔버스 전체 색상</p>
+        </div>
+        <span className="rounded-full border border-[#c9d4cd] bg-white px-2 py-1 text-[11px] font-semibold text-[#4f5e56]">
+          {colorPresetLabels[colorPreset]}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-5 gap-2">
+        {COLOR_PRESET_IDS.map((presetId) => {
+          const colors = COLOR_PRESETS[presetId]
+          const isSelected = presetId === colorPreset
+
+          return (
+            <button
+              key={presetId}
+              type="button"
+              aria-label={`${colorPresetLabels[presetId]} 색상 프리셋`}
+              aria-pressed={isSelected}
+              className={`h-11 rounded-md border bg-white p-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+                isSelected
+                  ? 'border-[#1b7f72] shadow-[0_0_0_2px_rgba(27,127,114,0.18)]'
+                  : 'border-[#c9d4cd] hover:border-[#8c9a91]'
+              }`}
+              title={colorPresetLabels[presetId]}
+              onClick={() => onColorPresetChange(presetId)}
+            >
+              <span className="flex h-full overflow-hidden rounded">
+                <span
+                  className="w-2/3"
+                  style={{ backgroundColor: colors.surface }}
+                />
+                <span
+                  className="w-1/3"
+                  style={{ backgroundColor: colors.accent }}
+                />
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -1028,4 +1144,33 @@ function collectNodeIds(node: TreeNode, ids = new Set<string>()): Set<string> {
 
 function isContainerNode(node: TreeNode): node is ContainerNode {
   return 'children' in node
+}
+
+function getCanvasStyle(colorPreset: ColorPreset): CSSProperties {
+  const colors = COLOR_PRESETS[colorPreset]
+
+  return {
+    '--dw-surface': colors.surface,
+    '--dw-surface-muted': colors.surfaceMuted,
+    '--dw-text-primary': colors.textPrimary,
+    '--dw-text-muted': colors.textMuted,
+    '--dw-accent': colors.accent,
+    '--dw-accent-text': colors.accentText,
+    '--dw-hero-surface': colors.heroSurface,
+    '--dw-hero-text': colors.heroText,
+    '--dw-border': colors.border,
+    '--dw-image-surface': colors.imageSurface,
+    '--dw-image-accent': colors.imageAccent,
+    '--dw-selection-ring': hexToRgba(colors.accent, 0.22),
+  } as CSSProperties
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const normalized = hex.replace('#', '')
+  const value = Number.parseInt(normalized, 16)
+  const red = (value >> 16) & 255
+  const green = (value >> 8) & 255
+  const blue = value & 255
+
+  return `rgba(${red},${green},${blue},${alpha})`
 }
