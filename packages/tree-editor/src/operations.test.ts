@@ -191,11 +191,13 @@ describe('tree editor operations', () => {
     const tree = fixtureTree()
     const edited = updateNodeMeta(tree, 'landing.card', {
       hidden: true,
+      disabled: true,
       opacity: 0.42,
       pointerEvents: 'none',
     })
     const reset = updateNodeMeta(edited, 'landing.card', {
       hidden: undefined,
+      disabled: undefined,
       opacity: undefined,
       pointerEvents: undefined,
     })
@@ -220,12 +222,15 @@ describe('tree editor operations', () => {
         resetCard?.type === 'card'
       ) {
         assert.equal(originalCard.hidden, undefined)
+        assert.equal(originalCard.disabled, undefined)
         assert.equal(originalCard.opacity, undefined)
         assert.equal(originalCard.pointerEvents, undefined)
         assert.equal(editedCard.hidden, true)
+        assert.equal(editedCard.disabled, true)
         assert.equal(editedCard.opacity, 0.42)
         assert.equal(editedCard.pointerEvents, 'none')
         assert.equal(resetCard.hidden, undefined)
+        assert.equal(resetCard.disabled, undefined)
         assert.equal(resetCard.opacity, undefined)
         assert.equal(resetCard.pointerEvents, undefined)
       }

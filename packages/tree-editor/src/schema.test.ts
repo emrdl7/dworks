@@ -164,6 +164,7 @@ describe('edit-operation schema', () => {
       nodeId: 'hero.card',
       patch: {
         hidden: true,
+        disabled: true,
         opacity: 0.64,
         pointerEvents: 'none',
       },
@@ -173,6 +174,7 @@ describe('edit-operation schema', () => {
     if (op.type === 'updateNodeMeta') {
       assert.equal(op.nodeId, 'hero.card')
       assert.equal(op.patch.hidden, true)
+      assert.equal(op.patch.disabled, true)
       assert.equal(op.patch.opacity, 0.64)
       assert.equal(op.patch.pointerEvents, 'none')
     }
@@ -562,6 +564,18 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           justify: 'around',
+        },
+      }),
+    )
+  })
+
+  it('rejects invalid node meta updates', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          disabled: 'true',
         },
       }),
     )
