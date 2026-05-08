@@ -4110,7 +4110,7 @@ function TextContrastReadout({ contrast }: { contrast: TextContrastResult }) {
     <div className="mb-4 rounded-md border border-[#d7ddd2] bg-white p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-semibold text-[#4f5e56]">
-          대비 (본문 기준)
+          대비 ({contrast.isLargeText ? '큰 텍스트 기준' : '본문 기준'})
         </span>
         <span className="text-sm font-semibold tabular-nums text-[#26312b]">
           {contrast.ratio.toFixed(1)} : 1
@@ -7295,6 +7295,25 @@ interface TextContrastResult {
   passesAA: boolean
   passesAAA: boolean
   viaGradient: boolean
+  isLargeText: boolean
+  aaThreshold: number
+  aaaThreshold: number
+}
+
+function isLargeTextTypography(
+  typography: Partial<Typography> | undefined,
+  defaults: Typography,
+): boolean {
+  const fontSize = typography?.fontSize ?? defaults.fontSize ?? 16
+  const rawWeight = typography?.fontWeight ?? defaults.fontWeight
+  const weight = rawWeight !== undefined ? Number(rawWeight) : NaN
+  if (fontSize >= 24) {
+    return true
+  }
+  if (Number.isFinite(weight) && weight >= 700 && fontSize >= 19) {
+    return true
+  }
+  return false
 }
 
 function computeTextContrast(
@@ -7313,11 +7332,17 @@ function computeTextContrast(
   const finalText =
     nodeAlpha < 1 ? blendOver(textOnBg, nodeAlpha, bg.color) : textOnBg
   const ratio = contrastRatio(finalText, bg.color)
+  const isLargeText = isLargeTextTypography(node.typography, getTypographyDefaults(node))
+  const aaThreshold = isLargeText ? 3.0 : 4.5
+  const aaaThreshold = isLargeText ? 4.5 : 7.0
   return {
     ratio,
-    passesAA: ratio >= 4.5,
-    passesAAA: ratio >= 7,
+    passesAA: ratio >= aaThreshold,
+    passesAAA: ratio >= aaaThreshold,
     viaGradient: bg.viaGradient,
+    isLargeText,
+    aaThreshold,
+    aaaThreshold,
   }
 }
 
