@@ -127,14 +127,18 @@ describe('edit-operation schema', () => {
       type: 'updateNodeMeta',
       nodeId: 'hero.card',
       patch: {
+        hidden: true,
         opacity: 0.64,
+        pointerEvents: 'none',
       },
     })
 
     assert.equal(op.type, 'updateNodeMeta')
     if (op.type === 'updateNodeMeta') {
       assert.equal(op.nodeId, 'hero.card')
+      assert.equal(op.patch.hidden, true)
       assert.equal(op.patch.opacity, 0.64)
+      assert.equal(op.patch.pointerEvents, 'none')
     }
   })
 

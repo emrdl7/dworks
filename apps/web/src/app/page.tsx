@@ -88,6 +88,7 @@ import {
   deleteNode,
   duplicateNode,
   moveNode,
+  type NodeMetaPatch,
   updateColor,
   updateButtonLabel,
   updateImage,
@@ -740,7 +741,7 @@ export default function HomePage() {
 
   function handleNodeMetaChange(
     node: TreeNode,
-    patch: Pick<TreeNode, 'opacity'>,
+    patch: NodeMetaPatch,
     options?: CommitTreeEditOptions,
   ) {
     commitTreeEdit(updateNodeMeta(tree, node.id, patch), undefined, options)
@@ -1121,8 +1122,18 @@ export default function HomePage() {
                 onClick={() => setSelectedNodeId(node.id)}
               >
                 <span className="min-w-0 truncate">{node.id}</span>
-                <span className="shrink-0 rounded border border-[#cfd8d2] bg-white px-1.5 py-0.5 text-[11px] text-[#647067]">
-                  {nodeTypeLabels[node.type]}
+                <span className="flex shrink-0 items-center gap-1">
+                  {getNodeLayerStateChips(node).map((chip) => (
+                    <span
+                      key={chip}
+                      className="rounded border border-[#d5b56c] bg-[#fff8df] px-1.5 py-0.5 text-[11px] font-semibold text-[#6b4b00]"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                  <span className="rounded border border-[#cfd8d2] bg-white px-1.5 py-0.5 text-[11px] text-[#647067]">
+                    {nodeTypeLabels[node.type]}
+                  </span>
                 </span>
               </button>
             ))}
@@ -1291,6 +1302,10 @@ function CanvasNode({
   selectedNodeId,
   onSelect,
 }: CanvasNodeProps) {
+  if (node.hidden === true) {
+    return null
+  }
+
   const boxSpacingStyle = getBoxSpacingStyle(node.spacing)
   const gapSpacingStyle = getGapSpacingStyle(node.spacing)
   const containerSpacingStyle = getContainerSpacingStyle(node.spacing)
@@ -1570,14 +1585,25 @@ function SelectableNode({
   children,
 }: SelectableNodeProps) {
   const isSelected = node.id === selectedNodeId
-  const nodeOpacityStyle: CSSProperties | undefined =
-    node.opacity === undefined ? undefined : { opacity: node.opacity }
+  const isCanvasSelectable = node.pointerEvents !== 'none'
+  const nodeMetaStyle: CSSProperties = {
+    pointerEvents: isCanvasSelectable ? 'auto' : 'none',
+    ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
+  }
 
   function selectNode() {
+    if (!isCanvasSelectable) {
+      return
+    }
+
     onSelect(node.id)
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!isCanvasSelectable) {
+      return
+    }
+
     if (event.key !== 'Enter' && event.key !== ' ') {
       return
     }
@@ -1589,13 +1615,13 @@ function SelectableNode({
   return (
     <div
       role="button"
-      tabIndex={0}
+      tabIndex={isCanvasSelectable ? 0 : -1}
       className={`relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
         isSelected
           ? 'border-[var(--dw-accent)] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
           : 'border-transparent hover:border-[var(--dw-border)]'
       }`}
-      style={nodeOpacityStyle}
+      style={nodeMetaStyle}
       onClick={(event) => {
         event.stopPropagation()
         selectNode()
@@ -1610,6 +1636,20 @@ function SelectableNode({
       {children}
     </div>
   )
+}
+
+function getNodeLayerStateChips(node: TreeNode): string[] {
+  const chips: string[] = []
+
+  if (node.hidden === true) {
+    chips.push('숨김')
+  }
+
+  if (node.pointerEvents === 'none') {
+    chips.push('선택 제외')
+  }
+
+  return chips
 }
 
 function TextPreview({
@@ -2321,7 +2361,7 @@ interface NodeInspectorProps {
   onNodeColorReset: (node: TreeNode) => void
   onNodeMetaChange: (
     node: TreeNode,
-    patch: Pick<TreeNode, 'opacity'>,
+    patch: NodeMetaPatch,
     options?: CommitTreeEditOptions,
   ) => void
   onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
@@ -2387,6 +2427,11 @@ function NodeInspector({
         <InspectorDisclosure title="기본 정보" defaultOpen={false}>
           <MetadataGrid node={node} />
         </InspectorDisclosure>
+
+        <NodeVisibilityControls
+          node={node}
+          onNodeMetaChange={onNodeMetaChange}
+        />
 
         <StyleControls
           colorPreset={colorPreset}
@@ -2675,6 +2720,121 @@ function StyleControls({
   )
 }
 
+interface NodeVisibilityControlsProps {
+  node: TreeNode
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: NodeMetaPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+function NodeVisibilityControls({
+  node,
+  onNodeMetaChange,
+}: NodeVisibilityControlsProps) {
+  const isVisible = node.hidden !== true
+  const isCanvasSelectable = node.pointerEvents !== 'none'
+  const isResetDisabled = node.hidden === undefined && node.pointerEvents === undefined
+
+  function updateVisibility(nextVisible: boolean) {
+    onNodeMetaChange(
+      node,
+      {
+        hidden: nextVisible ? undefined : true,
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'meta.hidden') },
+    )
+  }
+
+  function updateCanvasSelection(nextSelectable: boolean) {
+    onNodeMetaChange(
+      node,
+      {
+        pointerEvents: nextSelectable ? undefined : 'none',
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'meta.pointerEvents') },
+    )
+  }
+
+  function resetVisibility() {
+    onNodeMetaChange(node, {
+      hidden: undefined,
+      pointerEvents: undefined,
+    })
+  }
+
+  return (
+    <InspectorDisclosure
+      title="표시"
+      description={
+        isVisible
+          ? isCanvasSelectable
+            ? '표시 · 선택 가능'
+            : '표시 · 선택 제외'
+          : '숨김'
+      }
+      onAction={resetVisibility}
+      isActionDisabled={isResetDisabled}
+    >
+      <div className="space-y-3">
+        <VisibilitySwitch
+          checked={isVisible}
+          label="캔버스에 표시"
+          onChange={updateVisibility}
+        />
+        <VisibilitySwitch
+          checked={isCanvasSelectable}
+          disabled={!isVisible}
+          label="캔버스에서 선택"
+          onChange={updateCanvasSelection}
+        />
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface VisibilitySwitchProps {
+  checked: boolean
+  disabled?: boolean
+  label: string
+  onChange: (checked: boolean) => void
+}
+
+function VisibilitySwitch({
+  checked,
+  disabled = false,
+  label,
+  onChange,
+}: VisibilitySwitchProps) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md border border-[#d7ddd2] bg-white px-3 text-left transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="text-sm font-semibold text-[#26312b]">{label}</span>
+      <span className="flex items-center gap-2 text-xs font-semibold text-[#4f5e56]">
+        {checked ? '켬' : '끔'}
+        <span
+          className={`flex h-6 w-11 items-center rounded-full p-0.5 transition ${
+            checked ? 'bg-[#1b7f72]' : 'bg-[#c9d4cd]'
+          }`}
+        >
+          <span
+            className={`h-5 w-5 rounded-full bg-white shadow-sm transition ${
+              checked ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </span>
+      </span>
+    </button>
+  )
+}
+
 interface NodeColorControlsProps {
   node: TreeNode
   onNodeColorChange: (
@@ -2684,7 +2844,7 @@ interface NodeColorControlsProps {
   ) => void
   onNodeMetaChange: (
     node: TreeNode,
-    patch: Pick<TreeNode, 'opacity'>,
+    patch: NodeMetaPatch,
     options?: CommitTreeEditOptions,
   ) => void
   onNodeColorReset: (node: TreeNode) => void

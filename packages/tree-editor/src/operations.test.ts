@@ -187,33 +187,47 @@ describe('tree editor operations', () => {
     }
   })
 
-  it('updates and clears common node opacity metadata', () => {
+  it('updates and clears common node metadata', () => {
     const tree = fixtureTree()
-    const dimmed = updateNodeMeta(tree, 'landing.card', { opacity: 0.42 })
-    const reset = updateNodeMeta(dimmed, 'landing.card', { opacity: undefined })
+    const edited = updateNodeMeta(tree, 'landing.card', {
+      hidden: true,
+      opacity: 0.42,
+      pointerEvents: 'none',
+    })
+    const reset = updateNodeMeta(edited, 'landing.card', {
+      hidden: undefined,
+      opacity: undefined,
+      pointerEvents: undefined,
+    })
 
     assert.equal(tree.root.type, 'section')
-    assert.equal(dimmed.root.type, 'section')
+    assert.equal(edited.root.type, 'section')
     assert.equal(reset.root.type, 'section')
     if (
       tree.root.type === 'section' &&
-      dimmed.root.type === 'section' &&
+      edited.root.type === 'section' &&
       reset.root.type === 'section'
     ) {
       const originalCard = tree.root.children[3]
-      const dimmedCard = dimmed.root.children[3]
+      const editedCard = edited.root.children[3]
       const resetCard = reset.root.children[3]
       assert.equal(originalCard?.type, 'card')
-      assert.equal(dimmedCard?.type, 'card')
+      assert.equal(editedCard?.type, 'card')
       assert.equal(resetCard?.type, 'card')
       if (
         originalCard?.type === 'card' &&
-        dimmedCard?.type === 'card' &&
+        editedCard?.type === 'card' &&
         resetCard?.type === 'card'
       ) {
+        assert.equal(originalCard.hidden, undefined)
         assert.equal(originalCard.opacity, undefined)
-        assert.equal(dimmedCard.opacity, 0.42)
+        assert.equal(originalCard.pointerEvents, undefined)
+        assert.equal(editedCard.hidden, true)
+        assert.equal(editedCard.opacity, 0.42)
+        assert.equal(editedCard.pointerEvents, 'none')
+        assert.equal(resetCard.hidden, undefined)
         assert.equal(resetCard.opacity, undefined)
+        assert.equal(resetCard.pointerEvents, undefined)
       }
     }
   })

@@ -26,6 +26,7 @@ export {
   customShadowSchema,
   hexColorSchema,
   opacitySchema,
+  nodePointerEventsSchema,
   gradientDirectionSchema,
   gradientTypeSchema,
   gradientSchema,
@@ -62,6 +63,7 @@ export {
   GRADIENT_TYPE_IDS,
   COLOR_PRESET_IDS,
   COLOR_PRESETS,
+  NODE_POINTER_EVENTS_IDS,
 } from './schema.js'
 export type {
   EditKind,
@@ -95,6 +97,7 @@ export type {
   ResponsiveIntent,
   ColorPreset,
   ColorPresetTokens,
+  NodePointerEvents,
   StyleTokens,
   TextNode,
   ButtonNode,

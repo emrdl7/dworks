@@ -71,6 +71,35 @@ describe('tree schema', () => {
     )
   })
 
+  it('parses common node visibility metadata', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'landing.card',
+      type: 'card',
+      editKind: 'structure',
+      hidden: true,
+      pointerEvents: 'none',
+      children: [],
+    })
+
+    assert.equal(parsed.type, 'card')
+    if (parsed.type === 'card') {
+      assert.equal(parsed.hidden, true)
+      assert.equal(parsed.pointerEvents, 'none')
+    }
+  })
+
+  it('rejects invalid common node pointer event metadata', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        pointerEvents: 'visible',
+        children: [],
+      }),
+    )
+  })
+
   it('parses text-node typography overrides', () => {
     const parsed = treeNodeSchema.parse({
       id: 'hero.title',

@@ -9,6 +9,7 @@ import {
   imagePresentationSchema,
   nodeColorSchema,
   nodeLayoutSchema,
+  nodePointerEventsSchema,
   opacitySchema,
   shapeSchema,
   spacingSchema,
@@ -79,7 +80,9 @@ export const updateNodeMetaOperationSchema: z.ZodType<UpdateNodeMetaOperation> =
     type: z.literal('updateNodeMeta'),
     nodeId: z.string().min(1),
     patch: z.object({
+      hidden: z.boolean().optional(),
       opacity: opacitySchema.optional(),
+      pointerEvents: nodePointerEventsSchema.optional(),
     }),
   })
 
@@ -161,7 +164,9 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     type: z.ZodLiteral<'updateNodeMeta'>
     nodeId: z.ZodString
     patch: z.ZodObject<{
+      hidden: z.ZodOptional<z.ZodBoolean>
       opacity: z.ZodOptional<typeof opacitySchema>
+      pointerEvents: z.ZodOptional<typeof nodePointerEventsSchema>
     }>
   }>,
   updateButtonLabelOperationSchema as z.ZodObject<{

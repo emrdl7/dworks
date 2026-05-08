@@ -106,6 +106,9 @@ export const hexColorSchema = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
 export const opacitySchema = z.number().min(0).max(1)
+export const NODE_POINTER_EVENTS_IDS = ['auto', 'none'] as const
+export const nodePointerEventsSchema = z.enum(NODE_POINTER_EVENTS_IDS)
+export type NodePointerEvents = z.infer<typeof nodePointerEventsSchema>
 export const textShadowSchema = z.object({
   offsetX: z.number().min(-50).max(50),
   offsetY: z.number().min(-50).max(50),
@@ -334,7 +337,9 @@ export type StyleTokens = z.infer<typeof styleTokensSchema>
 interface BaseNodeMeta {
   id: string
   editKind: EditKind
+  hidden?: boolean
   opacity?: number
+  pointerEvents?: NodePointerEvents
   responsive?: ResponsiveIntent
   styleTokens?: string[]
   spacing?: Spacing
@@ -417,7 +422,9 @@ export type TreeNode =
 const baseShape = {
   id: z.string().min(1),
   editKind: editKindSchema,
+  hidden: z.boolean().optional(),
   opacity: opacitySchema.optional(),
+  pointerEvents: nodePointerEventsSchema.optional(),
   responsive: responsiveIntentSchema,
   styleTokens: z.array(z.string()).optional(),
   spacing: spacingSchema.optional(),
