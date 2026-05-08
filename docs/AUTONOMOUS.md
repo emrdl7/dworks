@@ -88,10 +88,14 @@
 - ✓ `m2-style-transition` — transition duration (`87ac637`)
 - `m2-responsive-override` — viewport별 속성 override
 - `m2-style-gradient-stops` — 모든 gradient 다중 stop
-- `m2-style-cursor` — 노드별 cursor (pointer/help/text/not-allowed)
-- `m2-style-image-filter` — 이미지 노드 CSS filter (blur/grayscale/sepia/brightness/contrast)
-- `m2-style-transition-timing` — transition timing function 선택 (linear/ease-in/out/cubic-bezier)
-- `m2-color-state-disabled-pointerevents` — disabled=true 시 pointerEvents='none' 자동
+- ✓ `m2-style-cursor` — 노드별 cursor (`ece55cd`)
+- ✓ `m2-style-image-filter` — 이미지 CSS filter 5종 (`f2458b1`)
+- ✓ `m2-style-transition-timing` — timing function 5종 (`7458c6e`)
+- ✓ `m2-color-state-disabled-pointerevents` — disabled button pointer 차단 (`a6a7e1b`)
+- `m2-style-transition-cubic-bezier` — cubic-bezier 자유 입력 (transition-timing 후속)
+- `m2-style-image-filter-extra` — hue-rotate/saturate/invert/drop-shadow (image-filter 후속)
+- `m2-style-color-state-aria` — aria-disabled 명시 (disabled-pointerevents 후속)
+- `m2-style-transform` — translate/rotate/scale 노드별 변환
 
 ## 코드 변경 정책
 
