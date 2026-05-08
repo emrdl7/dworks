@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type DragEvent as ReactDragEvent,
   type KeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent,
@@ -36,6 +37,7 @@ import {
   ChevronUp,
   Columns2,
   Copy,
+  GripVertical,
   Move,
   PanelTop,
   Redo2,
@@ -141,6 +143,22 @@ interface ContextMenuState {
   nodeId: string
   x: number
   y: number
+}
+
+type LayerDropPosition = 'before' | 'after'
+
+interface LayerDragState {
+  nodeId: string
+}
+
+interface LayerDropTarget {
+  nodeId: string
+  position: LayerDropPosition
+}
+
+interface LayerReorderPlan {
+  finalIndex: number
+  sourceIndex: number
 }
 
 const nodeTypeLabels: Record<TreeNode['type'], string> = {
@@ -572,6 +590,10 @@ export default function HomePage() {
   const [responsiveViewport, setResponsiveViewport] =
     useState<ResponsiveViewport>('desktop')
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [layerDrag, setLayerDrag] = useState<LayerDragState | null>(null)
+  const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
+    null,
+  )
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
 
   const selectedNode = useMemo(
@@ -1068,6 +1090,93 @@ export default function HomePage() {
     closeContextMenu()
   }
 
+  function clearLayerDragState() {
+    setLayerDrag(null)
+    setLayerDropTarget(null)
+  }
+
+  function handleLayerDragStart(
+    nodeId: string,
+    event: ReactDragEvent<HTMLButtonElement>,
+  ) {
+    const structureInfo = getStructureInfo(tree, nodeId)
+    if (structureInfo.isRoot) {
+      event.preventDefault()
+      return
+    }
+
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', nodeId)
+    setSelectedNodeId(nodeId)
+    setLayerDrag({ nodeId })
+    setLayerDropTarget(null)
+    closeContextMenu()
+  }
+
+  function handleLayerDragOver(
+    targetNodeId: string,
+    event: ReactDragEvent<HTMLDivElement>,
+  ) {
+    const sourceNodeId = layerDrag?.nodeId ?? event.dataTransfer.getData('text/plain')
+    if (sourceNodeId) {
+      event.preventDefault()
+    }
+
+    const position = getLayerDropPosition(event)
+    const plan = sourceNodeId
+      ? getLayerReorderPlan(tree, sourceNodeId, targetNodeId, position)
+      : null
+
+    if (!plan) {
+      if (layerDropTarget?.nodeId === targetNodeId) {
+        setLayerDropTarget(null)
+      }
+      return
+    }
+
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+    setLayerDropTarget((current) =>
+      current?.nodeId === targetNodeId && current.position === position
+        ? current
+        : { nodeId: targetNodeId, position },
+    )
+  }
+
+  function handleLayerDragLeave(event: ReactDragEvent<HTMLDivElement>) {
+    const relatedTarget = event.relatedTarget
+    if (
+      relatedTarget instanceof Node &&
+      event.currentTarget.contains(relatedTarget)
+    ) {
+      return
+    }
+
+    setLayerDropTarget((current) =>
+      current?.nodeId === event.currentTarget.dataset.layerNodeId ? null : current,
+    )
+  }
+
+  function handleLayerDrop(
+    targetNodeId: string,
+    event: ReactDragEvent<HTMLDivElement>,
+  ) {
+    const sourceNodeId = layerDrag?.nodeId ?? event.dataTransfer.getData('text/plain')
+    const position = getLayerDropPosition(event)
+    const plan = sourceNodeId
+      ? getLayerReorderPlan(tree, sourceNodeId, targetNodeId, position)
+      : null
+
+    if (!sourceNodeId || !plan) {
+      clearLayerDragState()
+      return
+    }
+
+    const nextTree = reorderLayerNode(tree, sourceNodeId, plan)
+    commitTreeEdit(nextTree, sourceNodeId)
+    clearLayerDragState()
+  }
+
   function handleMoveSelected(direction: 'up' | 'down') {
     handleMoveNode(selectedNodeId, direction)
   }
@@ -1206,36 +1315,87 @@ export default function HomePage() {
             <h2 className="text-sm font-semibold">레이어</h2>
           </div>
           <nav className="max-h-[calc(100vh-105px)] overflow-auto p-2">
-            {layerItems.map(({ node, depth }) => (
-              <button
-                key={node.id}
-                type="button"
-                className={`flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
-                  node.id === selectedNodeId
-                    ? 'bg-[#dff1ee] text-[#073d37]'
-                    : 'text-[#26312b] hover:bg-[#eef3ed]'
-                }`}
-                style={{ paddingLeft: 12 + depth * 14 }}
-                onClick={() => setSelectedNodeId(node.id)}
-                onContextMenu={(event) => openPointerContextMenu(node.id, event)}
-                onKeyDown={(event) => openKeyboardContextMenu(node.id, event)}
-              >
-                <span className="min-w-0 truncate">{node.id}</span>
-                <span className="flex shrink-0 items-center gap-1">
-                  {getNodeLayerStateChips(node).map((chip) => (
+            {layerItems.map(({ node, depth }) => {
+              const structureInfo = getStructureInfo(tree, node.id)
+              const isRoot = structureInfo.isRoot
+              const dropPosition =
+                layerDropTarget?.nodeId === node.id
+                  ? layerDropTarget.position
+                  : null
+              const isDragging = layerDrag?.nodeId === node.id
+
+              return (
+                <div
+                  key={node.id}
+                  data-layer-node-id={node.id}
+                  className="relative py-0.5"
+                  onDragLeave={handleLayerDragLeave}
+                  onDragOver={(event) => handleLayerDragOver(node.id, event)}
+                  onDrop={(event) => handleLayerDrop(node.id, event)}
+                  onContextMenu={(event) => openPointerContextMenu(node.id, event)}
+                >
+                  {dropPosition ? (
                     <span
-                      key={chip}
-                      className="rounded border border-[#d5b56c] bg-[#fff8df] px-1.5 py-0.5 text-[11px] font-semibold text-[#6b4b00]"
+                      aria-hidden="true"
+                      className={`pointer-events-none absolute left-2 right-2 z-10 flex items-center ${
+                        dropPosition === 'before' ? '-top-1' : '-bottom-1'
+                      }`}
                     >
-                      {chip}
+                      <span className="h-0.5 flex-1 rounded bg-[#1b7f72]" />
+                      <span className="ml-2 rounded-full bg-[#1b7f72] px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                        여기에 놓기
+                      </span>
                     </span>
-                  ))}
-                  <span className="rounded border border-[#cfd8d2] bg-white px-1.5 py-0.5 text-[11px] text-[#647067]">
-                    {nodeTypeLabels[node.type]}
-                  </span>
-                </span>
-              </button>
-            ))}
+                  ) : null}
+                  <div
+                    className={`flex items-center gap-1 rounded-md pr-2 text-sm transition ${
+                      node.id === selectedNodeId
+                        ? 'bg-[#dff1ee] text-[#073d37]'
+                        : 'text-[#26312b] hover:bg-[#eef3ed]'
+                    } ${isDragging ? 'opacity-50' : ''}`}
+                    style={{ paddingLeft: 8 + depth * 14 }}
+                  >
+                    <button
+                      type="button"
+                      aria-label={
+                        isRoot
+                          ? `${node.id} 루트는 이동할 수 없습니다`
+                          : `${node.id} 순서 이동`
+                      }
+                      className="flex h-8 w-7 shrink-0 items-center justify-center rounded text-[#6d7a72] outline-none transition hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#b5beb8] disabled:hover:bg-transparent"
+                      disabled={isRoot}
+                      draggable={!isRoot}
+                      title={isRoot ? '루트는 이동할 수 없습니다' : '순서 이동'}
+                      onDragEnd={clearLayerDragState}
+                      onDragStart={(event) => handleLayerDragStart(node.id, event)}
+                    >
+                      <GripVertical aria-hidden="true" size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#1b7f72]"
+                      onClick={() => setSelectedNodeId(node.id)}
+                      onKeyDown={(event) => openKeyboardContextMenu(node.id, event)}
+                    >
+                      <span className="min-w-0 truncate">{node.id}</span>
+                      <span className="flex shrink-0 items-center gap-1">
+                        {getNodeLayerStateChips(node).map((chip) => (
+                          <span
+                            key={chip}
+                            className="rounded border border-[#d5b56c] bg-[#fff8df] px-1.5 py-0.5 text-[11px] font-semibold text-[#6b4b00]"
+                          >
+                            {chip}
+                          </span>
+                        ))}
+                        <span className="rounded border border-[#cfd8d2] bg-white px-1.5 py-0.5 text-[11px] text-[#647067]">
+                          {nodeTypeLabels[node.type]}
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </nav>
         </aside>
 
@@ -6185,6 +6345,71 @@ function findStructureInfo(node: TreeNode, nodeId: string): StructureInfo | null
   }
 
   return null
+}
+
+function getLayerDropPosition(
+  event: ReactDragEvent<HTMLElement>,
+): LayerDropPosition {
+  const bounds = event.currentTarget.getBoundingClientRect()
+  return event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after'
+}
+
+function getLayerReorderPlan(
+  tree: Tree,
+  sourceNodeId: string,
+  targetNodeId: string,
+  position: LayerDropPosition,
+): LayerReorderPlan | null {
+  if (sourceNodeId === targetNodeId) {
+    return null
+  }
+
+  const sourceInfo = getStructureInfo(tree, sourceNodeId)
+  const targetInfo = getStructureInfo(tree, targetNodeId)
+  if (
+    sourceInfo.isRoot ||
+    targetInfo.isRoot ||
+    sourceInfo.parentId === undefined ||
+    targetInfo.parentId === undefined ||
+    sourceInfo.parentId !== targetInfo.parentId ||
+    sourceInfo.index === undefined ||
+    targetInfo.index === undefined
+  ) {
+    return null
+  }
+
+  let finalIndex = targetInfo.index + (position === 'after' ? 1 : 0)
+  if (sourceInfo.index < finalIndex) {
+    finalIndex -= 1
+  }
+
+  if (finalIndex === sourceInfo.index) {
+    return null
+  }
+
+  return {
+    finalIndex,
+    sourceIndex: sourceInfo.index,
+  }
+}
+
+function reorderLayerNode(
+  tree: Tree,
+  sourceNodeId: string,
+  plan: LayerReorderPlan,
+): Tree {
+  const direction = plan.finalIndex > plan.sourceIndex ? 'down' : 'up'
+  let nextTree = tree
+
+  for (
+    let index = plan.sourceIndex;
+    index !== plan.finalIndex;
+    index += direction === 'down' ? 1 : -1
+  ) {
+    nextTree = moveNode(nextTree, sourceNodeId, direction)
+  }
+
+  return nextTree
 }
 
 function parseOptionalNumber(
