@@ -419,6 +419,7 @@ const colorFields = [
   'backgroundColor',
   'backgroundOpacity',
   'backgroundGradient',
+  'hoverBackgroundColor',
   'textColor',
   'textOpacity',
   'accentColor',
@@ -1852,6 +1853,7 @@ function CanvasNode({
   const colorStyle = getColorStyle(node.color, inheritedTextColor)
   const accentBackgroundStyle = getAccentBackgroundStyle(node.color)
   const accentTextColorStyle = getAccentTextColorStyle(node.color)
+  const hoverBackgroundStyle = getHoverBackgroundStyle(node.color)
   const layoutStyle = getLayoutStyle(node.layout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
@@ -2080,15 +2082,19 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <span
-            className={`inline-flex min-h-11 items-center rounded-md px-5 text-sm font-semibold ${
+            className={`inline-flex min-h-11 items-center rounded-md px-5 text-sm font-semibold transition ${
               node.variant === 'secondary'
                 ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
                 : 'bg-[var(--dw-accent)] text-[var(--dw-accent-text)]'
+            } ${
+              node.color?.hoverBackgroundColor !== undefined
+                ? 'hover:!bg-[var(--dw-hover-bg)] hover:!bg-none'
+                : ''
             }`}
             style={
               node.variant === 'secondary'
-                ? boxStyle
-                : mergeStyles(boxStyle, accentBackgroundStyle)
+                ? mergeStyles(boxStyle, hoverBackgroundStyle)
+                : mergeStyles(boxStyle, accentBackgroundStyle, hoverBackgroundStyle)
             }
           >
             {node.label}
@@ -2682,6 +2688,14 @@ function getAccentBackgroundStyle(color?: NodeColor): CSSProperties | undefined 
           color.accentOpacity,
         ),
       }
+}
+
+function getHoverBackgroundStyle(color?: NodeColor): CSSProperties | undefined {
+  return color?.hoverBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-hover-bg': getCssColorWithOpacity(color.hoverBackgroundColor),
+      } as CSSProperties)
 }
 
 function getAccentTextColorStyle(color?: NodeColor): CSSProperties | undefined {
@@ -3641,6 +3655,7 @@ function NodeColorControls({
     node.type === 'text' ? computeTextContrast(tree, node, colorPreset) : null
   const color = node.color ?? {}
   const supportsAccentColor = canUseAccentColor(node)
+  const supportsHoverBackgroundColor = node.type === 'button'
   const backgroundMode: ColorMode =
     color.backgroundGradient === undefined ? 'solid' : 'gradient'
   const backgroundGradient = getResolvedGradient(
@@ -3661,6 +3676,9 @@ function NodeColorControls({
   const [accentColorInput, setAccentColorInput] = useState(
     color.accentColor ?? '',
   )
+  const [hoverBackgroundColorInput, setHoverBackgroundColorInput] = useState(
+    color.hoverBackgroundColor ?? '',
+  )
   const [backgroundColorError, setBackgroundColorError] = useState(false)
   const [backgroundGradientFromError, setBackgroundGradientFromError] =
     useState(false)
@@ -3668,6 +3686,8 @@ function NodeColorControls({
     useState(false)
   const [textColorError, setTextColorError] = useState(false)
   const [accentColorError, setAccentColorError] = useState(false)
+  const [hoverBackgroundColorError, setHoverBackgroundColorError] =
+    useState(false)
 
   useEffect(() => {
     setBackgroundColorInput(color.backgroundColor ?? '')
@@ -3683,6 +3703,11 @@ function NodeColorControls({
     setAccentColorInput(color.accentColor ?? '')
     setAccentColorError(false)
   }, [node.id, color.accentColor])
+
+  useEffect(() => {
+    setHoverBackgroundColorInput(color.hoverBackgroundColor ?? '')
+    setHoverBackgroundColorError(false)
+  }, [node.id, color.hoverBackgroundColor])
 
   useEffect(() => {
     setBackgroundGradientFromInput(backgroundGradient.from)
@@ -3735,6 +3760,40 @@ function NodeColorControls({
       node,
       { [field]: normalizedValue } as Partial<NodeColor>,
       { mergeKey: getNodeColorMergeKey(node.id, field) },
+    )
+  }
+
+  function updateHoverBackgroundColorFromText(value: string) {
+    const trimmedValue = value.trim()
+
+    setHoverBackgroundColorInput(value)
+
+    if (trimmedValue === '') {
+      setHoverBackgroundColorError(false)
+      onNodeColorChange(node, { hoverBackgroundColor: undefined })
+      return
+    }
+
+    if (!isValidHexColor(trimmedValue)) {
+      setHoverBackgroundColorError(true)
+      return
+    }
+
+    const normalizedValue = normalizeHexColor(trimmedValue)
+    setHoverBackgroundColorInput(normalizedValue)
+    setHoverBackgroundColorError(false)
+    onNodeColorChange(node, { hoverBackgroundColor: normalizedValue })
+  }
+
+  function updateHoverBackgroundColorFromPicker(value: string) {
+    const normalizedValue = normalizeHexColor(value)
+    setHoverBackgroundColorInput(normalizedValue)
+    setHoverBackgroundColorError(false)
+
+    onNodeColorChange(
+      node,
+      { hoverBackgroundColor: normalizedValue },
+      { mergeKey: getNodeColorMergeKey(node.id, 'hoverBackgroundColor') },
     )
   }
 
@@ -4105,6 +4164,43 @@ function NodeColorControls({
               })
             : null}
         </div>
+
+        {supportsHoverBackgroundColor ? (
+          <label className="block">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              호버 배경
+            </span>
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <input
+                className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                value={hoverBackgroundColorInput}
+                placeholder="#RRGGBB"
+                aria-invalid={hoverBackgroundColorError}
+                spellCheck={false}
+                onChange={(event) =>
+                  updateHoverBackgroundColorFromText(event.target.value)
+                }
+              />
+              <input
+                type="color"
+                aria-label="호버 배경 선택"
+                className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                value={toColorInputValue(
+                  hoverBackgroundColorInput,
+                  color.backgroundColor ?? DEFAULT_COLOR_PICKER_COLOR,
+                )}
+                onChange={(event) =>
+                  updateHoverBackgroundColorFromPicker(event.target.value)
+                }
+              />
+            </span>
+            {hoverBackgroundColorError ? (
+              <span className="mt-2 block text-xs text-[#b42318]">
+                HEX 형식 (#RRGGBB)으로 입력해주세요.
+              </span>
+            ) : null}
+          </label>
+        ) : null}
 
         <OpacityControl
           label="노드 투명도"

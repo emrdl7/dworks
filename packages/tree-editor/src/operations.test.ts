@@ -595,6 +595,7 @@ describe('tree editor operations', () => {
     const tree = fixtureTree()
     const updated = updateColor(tree, 'landing.cta', {
       backgroundColor: '#f8fafc',
+      hoverBackgroundColor: '#0f766e',
       textColor: '#123456',
     })
 
@@ -606,6 +607,7 @@ describe('tree editor operations', () => {
         assert.equal(cta.label, '시작하기')
         assert.deepEqual(cta.color, {
           backgroundColor: '#f8fafc',
+          hoverBackgroundColor: '#0f766e',
           textColor: '#123456',
         })
       }

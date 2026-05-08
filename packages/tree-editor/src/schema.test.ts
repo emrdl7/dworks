@@ -90,6 +90,7 @@ describe('edit-operation schema', () => {
       nodeId: 'hero.card',
       patch: {
         backgroundColor: '#f8fafc',
+        hoverBackgroundColor: '#0f766e',
         textColor: '#123',
       },
     })
@@ -98,6 +99,7 @@ describe('edit-operation schema', () => {
     if (op.type === 'updateColor') {
       assert.equal(op.nodeId, 'hero.card')
       assert.equal(op.patch.backgroundColor, '#f8fafc')
+      assert.equal(op.patch.hoverBackgroundColor, '#0f766e')
       assert.equal(op.patch.textColor, '#123')
     }
   })
@@ -407,6 +409,16 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           textColor: '#abcd',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateColor',
+        nodeId: 'hero.card',
+        patch: {
+          hoverBackgroundColor: 'teal',
         },
       }),
     )
