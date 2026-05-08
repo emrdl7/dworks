@@ -430,3 +430,13 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-style-color-polish` | Claude r1 (사용자 _협의 후 진행_ 지시) → Codex r2 → Claude r3 → 코드 (`fea7e19`) → r4 (Claude) | color drag 600ms mergeKey history 압축 + 4 컨트롤 opacity (background/text/border/overlay) |
 | `m2-responsive-preview` | r1 (Claude) → r2 (Codex) → r3 (Claude ack) → 코드 (`73f747e`) → r4 (Claude) | viewport switcher (모바일 375 / 태블릿 768 / 데스크톱 1200) + 캔버스 폭 chip |
 | `m2-text-inline` | r1 (Claude) → r2 (Codex) → r3 (Claude ack) → 코드 (`9e6fc92`) → r4 (Claude) | markdown subset (bold/italic/link) + scheme allowlist (http/https/mailto/#) — **mandate 8영역 100% 충족** |
+| 사용자 결정 | (2026-05-08) | "m2 디테일 추가" + 디자인 우선 (D1/D9 재인용) — m2 디테일 mandate 시작 |
+| `m2-style-gradient` | r1~r3 → 코드 (`d494430`) → r4 (Claude) | 배경/오버레이 linear gradient 8 방향 + mode toggle |
+| `m2-style-shadow-custom` | r1~r3 amend → 코드 (`a48debe`) → r4 (Claude) | 그림자 자유 6 값 (offsetX/Y/blur/spread/color/opacity) + 기본/커스텀 mode |
+| `m2-style-text-shadow` | r1~r3 ack → 코드 (`0d91710`) → r4 (Claude) | 텍스트 그림자 자유 5 값 + 없음/커스텀 mode |
+| `m2-icons-uplift` | r1~r3 ack → 코드 (`8242a85`) → r4 (Claude) | lucide-react + IconButton/IconToggleGroup + 6 영역 아이콘화 + 한글 툴팁 |
+| `m2-brand-logo` | r1~r3 ack → 코드 (`57e1fb1`) → r4 (Claude) | header Dworks 로고 + App Router favicon |
+| `m2-font-upload-relocation` | Codex 5차 위반 (사용자 _협의 후_ 지시 무시) → 코드 (`8f12f8c`) → Claude r1 사후 → Codex r2 사과+약속 5/6/7 → Claude r3 종료 | 글꼴 업로드 진입점 관리 섹션 이동 + 컨벤션 신뢰도 회복 |
+| `m2-style-color-accent` | r1~r3 ack → 코드 (`d18e359`) → r4 (Claude) | NodeColor.accentColor + button primary/caption 노드별 강조 색상 override |
+| `m2-style-shape-per-side` | r1~r3 ack → 코드 (`717af41`) → r4 (Claude) | 코너별 radius 4 키 (TL/TR/BR/BL) + 전체/분리 mode |
+| `m2-style-gradient-radial` | r1~r3 ack → 코드 (`a12bb39`) → r4 (Claude) | radial circle gradient + 종류 선택 (선형/원형) |
