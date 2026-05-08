@@ -191,6 +191,24 @@ describe('tree schema', () => {
           color: '#112233',
           opacity: 0.32,
         },
+        customShadows: [
+          {
+            offsetX: 0,
+            offsetY: 8,
+            blur: 24,
+            spread: 0,
+            color: '#000000',
+            opacity: 0.2,
+          },
+          {
+            offsetX: 0,
+            offsetY: 0,
+            blur: 16,
+            spread: 4,
+            color: '#ffffff',
+            opacity: 0.4,
+          },
+        ],
       },
       children: [],
     })
@@ -213,6 +231,9 @@ describe('tree schema', () => {
       assert.equal(parsed.shape?.customShadow?.spread, 1)
       assert.equal(parsed.shape?.customShadow?.color, '#112233')
       assert.equal(parsed.shape?.customShadow?.opacity, 0.32)
+      assert.equal(parsed.shape?.customShadows?.length, 2)
+      assert.equal(parsed.shape?.customShadows?.[0]?.offsetY, 8)
+      assert.equal(parsed.shape?.customShadows?.[1]?.spread, 4)
     }
   })
 
@@ -635,6 +656,25 @@ describe('tree schema', () => {
         editKind: 'structure',
         shape: {
           shadow: 'xxl',
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        shape: {
+          customShadows: Array.from({ length: 4 }, (_, index) => ({
+            offsetX: index,
+            offsetY: index,
+            blur: 12,
+            spread: 0,
+            color: '#000000',
+            opacity: 0.25,
+          })),
         },
         children: [],
       }),

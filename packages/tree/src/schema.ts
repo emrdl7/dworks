@@ -159,6 +159,7 @@ export const customShadowSchema = z.object({
   opacity: opacitySchema.optional(),
 })
 export type CustomShadow = z.infer<typeof customShadowSchema>
+export const customShadowListSchema = z.array(customShadowSchema).max(3)
 export const GRADIENT_DIRECTION_IDS = [
   'to-top',
   'to-top-right',
@@ -198,6 +199,7 @@ export const shapeSchema = z.object({
   borderStyle: borderStyleSchema.optional(),
   shadow: shadowPresetSchema.optional(),
   customShadow: customShadowSchema.optional(),
+  customShadows: customShadowListSchema.optional(),
 })
 export type Shape = z.infer<typeof shapeSchema>
 
