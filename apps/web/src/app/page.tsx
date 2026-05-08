@@ -10,6 +10,7 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react'
+import Image from 'next/image'
 import {
   COLOR_PRESETS,
   COLOR_PRESET_IDS,
@@ -936,10 +937,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#f5f7f4] text-[#18211d]">
       <header className="flex h-14 items-center justify-between border-b border-[#d7ddd2] bg-white px-5">
         <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-base font-semibold">Dworks 편집기</h1>
-            <p className="text-xs text-[#647067]">색상 스타일 편집</p>
-          </div>
+          <DworksLogo />
           <label className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#4f5e56]">예제</span>
             <select
@@ -1102,6 +1100,25 @@ function HistoryButton({
     >
       {children}
     </button>
+  )
+}
+
+function DworksLogo() {
+  return (
+    <div className="flex min-w-40 items-center gap-2.5">
+      <Image
+        src="/dworks-logo.png"
+        alt="Dworks"
+        width={32}
+        height={32}
+        priority
+        className="h-8 w-8 rounded-md object-contain"
+      />
+      <div>
+        <h1 className="text-base font-semibold leading-tight">Dworks</h1>
+        <p className="text-xs text-[#647067]">디자인 편집기</p>
+      </div>
+    </div>
   )
 }
 
