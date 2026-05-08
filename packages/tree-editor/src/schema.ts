@@ -7,6 +7,7 @@ import {
   focalPointSchema,
   imageAspectRatioSchema,
   styleTokensSchema,
+  typographySchema,
 } from '@dworks/tree'
 
 import type {
@@ -18,6 +19,7 @@ import type {
   UpdateImageOperation,
   UpdateStyleTokensOperation,
   UpdateTextOperation,
+  UpdateTextTypographyOperation,
 } from './operations.js'
 
 export const updateTextOperationSchema: z.ZodType<UpdateTextOperation> = z.object({
@@ -25,6 +27,13 @@ export const updateTextOperationSchema: z.ZodType<UpdateTextOperation> = z.objec
   nodeId: z.string().min(1),
   content: z.string(),
 })
+
+export const updateTextTypographyOperationSchema: z.ZodType<UpdateTextTypographyOperation> =
+  z.object({
+    type: z.literal('updateTextTypography'),
+    nodeId: z.string().min(1),
+    patch: typographySchema,
+  })
 
 export const updateButtonLabelOperationSchema: z.ZodType<UpdateButtonLabelOperation> =
   z.object({
@@ -73,6 +82,11 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     type: z.ZodLiteral<'updateText'>
     nodeId: z.ZodString
     content: z.ZodString
+  }>,
+  updateTextTypographyOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateTextTypography'>
+    nodeId: z.ZodString
+    patch: typeof typographySchema
   }>,
   updateButtonLabelOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'updateButtonLabel'>

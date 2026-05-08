@@ -13,6 +13,7 @@ import {
   updateImage,
   updateStyleTokens,
   updateText,
+  updateTextTypography,
 } from './operations.js'
 
 function fixtureTree(): Tree {
@@ -143,6 +144,11 @@ describe('tree editor operations', () => {
         label: '바로 시작',
       },
       {
+        type: 'updateTextTypography',
+        nodeId: 'landing.title',
+        patch: { fontSize: 56, fontWeight: '700', textAlign: 'center' },
+      },
+      {
         type: 'updateImage',
         nodeId: 'landing.visual',
         alt: '새 이미지 설명',
@@ -173,6 +179,9 @@ describe('tree editor operations', () => {
         visual?.type === 'image'
       ) {
         assert.equal(title.content, '새 제목')
+        assert.equal(title.typography?.fontSize, 56)
+        assert.equal(title.typography?.fontWeight, '700')
+        assert.equal(title.typography?.textAlign, 'center')
         assert.equal(cta.label, '바로 시작')
         assert.equal(visual.alt, '새 이미지 설명')
       }
@@ -268,6 +277,55 @@ describe('tree editor operations', () => {
     assert.equal(updated.styleTokens?.colorPreset, 'graphite')
   })
 
+  it('updates text typography overrides without changing content', () => {
+    const tree = fixtureTree()
+    const updated = updateTextTypography(tree, 'landing.title', {
+      fontSize: 48,
+      fontWeight: '700',
+      lineHeight: 1.1,
+      letterSpacing: -0.02,
+      textAlign: 'center',
+      fontFamily: 'serif',
+    })
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      const title = updated.root.children[0]
+      assert.equal(title?.type, 'text')
+      if (title?.type === 'text') {
+        assert.equal(title.content, 'Dworks')
+        assert.deepEqual(title.typography, {
+          fontSize: 48,
+          fontWeight: '700',
+          lineHeight: 1.1,
+          letterSpacing: -0.02,
+          textAlign: 'center',
+          fontFamily: 'serif',
+        })
+      }
+    }
+  })
+
+  it('removes text typography fields when patch values are undefined', () => {
+    const styled = updateTextTypography(fixtureTree(), 'landing.title', {
+      fontSize: 48,
+      fontWeight: '700',
+    })
+    const reset = updateTextTypography(styled, 'landing.title', {
+      fontSize: undefined,
+      fontWeight: undefined,
+    })
+
+    assert.equal(reset.root.type, 'section')
+    if (reset.root.type === 'section') {
+      const title = reset.root.children[0]
+      assert.equal(title?.type, 'text')
+      if (title?.type === 'text') {
+        assert.equal(title.typography, undefined)
+      }
+    }
+  })
+
   it('throws when structure operations target the root', () => {
     assert.throws(
       () => moveNode(fixtureTree(), 'landing', 'down'),
@@ -310,6 +368,11 @@ describe('tree editor operations', () => {
     assert.throws(
       () => updateImage(fixtureTree(), 'landing.title', { alt: 'x' }),
       /updateImage requires image node, got text/,
+    )
+
+    assert.throws(
+      () => updateTextTypography(fixtureTree(), 'landing.cta', { fontSize: 18 }),
+      /updateTextTypography requires text node, got button/,
     )
   })
 })

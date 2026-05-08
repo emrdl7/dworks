@@ -48,6 +48,28 @@ export const contentRoleSchema = z.enum([
 ])
 export type ContentRole = z.infer<typeof contentRoleSchema>
 
+export const FONT_WEIGHT_IDS = ['400', '500', '600', '700'] as const
+export const fontWeightSchema = z.enum(FONT_WEIGHT_IDS)
+export type FontWeight = z.infer<typeof fontWeightSchema>
+
+export const TEXT_ALIGN_IDS = ['left', 'center', 'right'] as const
+export const textAlignSchema = z.enum(TEXT_ALIGN_IDS)
+export type TextAlign = z.infer<typeof textAlignSchema>
+
+export const FONT_FAMILY_IDS = ['sans', 'serif'] as const
+export const fontFamilySchema = z.enum(FONT_FAMILY_IDS)
+export type FontFamily = z.infer<typeof fontFamilySchema>
+
+export const typographySchema = z.object({
+  fontSize: z.number().min(8).max(120).optional(),
+  fontWeight: fontWeightSchema.optional(),
+  lineHeight: z.number().min(0.8).max(3).optional(),
+  letterSpacing: z.number().min(-0.1).max(0.2).optional(),
+  textAlign: textAlignSchema.optional(),
+  fontFamily: fontFamilySchema.optional(),
+})
+export type Typography = z.infer<typeof typographySchema>
+
 export const imageAspectRatioSchema = z.enum([
   'square',
   'landscape',
@@ -173,6 +195,7 @@ export interface TextNode extends BaseNodeMeta {
   content: string
   emphasis?: Emphasis
   contentRole?: ContentRole
+  typography?: Typography
 }
 
 export interface ButtonNode extends BaseNodeMeta {
@@ -250,6 +273,7 @@ export const textNodeSchema: z.ZodType<TextNode> = z.object({
   content: z.string(),
   emphasis: emphasisSchema.optional(),
   contentRole: contentRoleSchema.optional(),
+  typography: typographySchema.optional(),
 })
 
 export const buttonNodeSchema: z.ZodType<ButtonNode> = z.object({

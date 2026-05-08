@@ -12,6 +12,7 @@ export {
   updateImage,
   updateStyleTokens,
   updateText,
+  updateTextTypography,
 } from './operations.js'
 export type {
   DeleteNodeOperation,
@@ -22,6 +23,7 @@ export type {
   UpdateImageOperation,
   UpdateStyleTokensOperation,
   UpdateTextOperation,
+  UpdateTextTypographyOperation,
 } from './operations.js'
 
 // m2-edit-fixtures round 2 합의: schema/type 외부 노출.
@@ -35,5 +37,6 @@ export {
   updateImageOperationSchema,
   updateStyleTokensOperationSchema,
   updateTextOperationSchema,
+  updateTextTypographyOperationSchema,
 } from './schema.js'
 export type { EditSequence } from './schema.js'

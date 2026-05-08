@@ -17,6 +17,28 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateTextTypography operation', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateTextTypography',
+      nodeId: 'hero.title',
+      patch: {
+        fontSize: 52,
+        fontWeight: '700',
+        lineHeight: 1.1,
+        letterSpacing: -0.02,
+        textAlign: 'center',
+        fontFamily: 'serif',
+      },
+    })
+
+    assert.equal(op.type, 'updateTextTypography')
+    if (op.type === 'updateTextTypography') {
+      assert.equal(op.nodeId, 'hero.title')
+      assert.equal(op.patch.fontSize, 52)
+      assert.equal(op.patch.fontFamily, 'serif')
+    }
+  })
+
   it('parses updateButtonLabel operation', () => {
     const op = editOperationSchema.parse({
       type: 'updateButtonLabel',
@@ -145,6 +167,28 @@ describe('edit-operation schema', () => {
     )
   })
 
+  it('rejects invalid text typography updates', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateTextTypography',
+        nodeId: 'hero.title',
+        patch: {
+          fontSize: 160,
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateTextTypography',
+        nodeId: 'hero.title',
+        patch: {
+          textAlign: 'justify',
+        },
+      }),
+    )
+  })
+
   it('rejects empty nodeId', () => {
     assert.throws(() =>
       editOperationSchema.parse({
@@ -163,6 +207,11 @@ describe('edit-sequence schema', () => {
     intent: '테스트 의도',
     operations: [
       { type: 'updateText', nodeId: 'foo', content: 'bar' },
+      {
+        type: 'updateTextTypography',
+        nodeId: 'foo',
+        patch: { fontSize: 44, fontWeight: '600' },
+      },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
       { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
       { type: 'moveNode', nodeId: 'cards.card-a', direction: 'down' },
@@ -173,7 +222,7 @@ describe('edit-sequence schema', () => {
   it('parses a valid sequence', () => {
     const seq = editSequenceSchema.parse(validSequence)
     assert.equal(seq.id, 'test')
-    assert.equal(seq.operations.length, 5)
+    assert.equal(seq.operations.length, 6)
     assert.equal(seq.tree, '../../trees/x.json')
   })
 

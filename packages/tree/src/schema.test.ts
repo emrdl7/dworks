@@ -8,8 +8,11 @@ import {
   COLOR_PRESET_IDS,
   COLOR_PRESETS,
   CONTENT_ROLES,
+  FONT_FAMILY_IDS,
+  FONT_WEIGHT_IDS,
   IMAGE_ASPECT_RATIOS,
   LAYOUT_INTENTS,
+  TEXT_ALIGN_IDS,
   TREE_NODE_TYPES,
   treeNodeSchema,
   treeSchema,
@@ -31,6 +34,34 @@ describe('tree schema', () => {
     const parsed = treeNodeSchema.parse(node)
     assert.equal(parsed.type, 'text')
     assert.equal(parsed.id, 't1')
+  })
+
+  it('parses text-node typography overrides', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'hero.title',
+      type: 'text',
+      editKind: 'text',
+      content: 'Dworks',
+      emphasis: 'heading-1',
+      typography: {
+        fontSize: 56,
+        fontWeight: '700',
+        lineHeight: 1.08,
+        letterSpacing: -0.02,
+        textAlign: 'center',
+        fontFamily: 'serif',
+      },
+    })
+
+    assert.equal(parsed.type, 'text')
+    if (parsed.type === 'text') {
+      assert.equal(parsed.typography?.fontSize, 56)
+      assert.equal(parsed.typography?.fontWeight, '700')
+      assert.equal(parsed.typography?.lineHeight, 1.08)
+      assert.equal(parsed.typography?.letterSpacing, -0.02)
+      assert.equal(parsed.typography?.textAlign, 'center')
+      assert.equal(parsed.typography?.fontFamily, 'serif')
+    }
   })
 
   it('parses a section with nested children', () => {
@@ -232,6 +263,26 @@ describe('tree schema', () => {
 
     assert.throws(() =>
       treeNodeSchema.parse({
+        id: 'bad-typography-size',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad size',
+        typography: { fontSize: 4 },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-typography-weight',
+        type: 'text',
+        editKind: 'text',
+        content: 'Bad weight',
+        typography: { fontWeight: '900' },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
         id: 'bad-aspect',
         type: 'image',
         editKind: 'media',
@@ -275,6 +326,9 @@ describe('tree schema', () => {
       'portrait',
       'wide',
     ])
+    assert.deepEqual(FONT_WEIGHT_IDS, ['400', '500', '600', '700'])
+    assert.deepEqual(TEXT_ALIGN_IDS, ['left', 'center', 'right'])
+    assert.deepEqual(FONT_FAMILY_IDS, ['sans', 'serif'])
     assert.deepEqual(COLOR_PRESET_IDS, [
       'mint',
       'navy',

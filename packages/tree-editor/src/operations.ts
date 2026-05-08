@@ -2,8 +2,10 @@ import type {
   FocalPoint,
   ImageAspectRatio,
   StyleTokens,
+  TextNode,
   Tree,
   TreeNode,
+  Typography,
 } from '@dworks/tree'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
@@ -12,6 +14,12 @@ export interface UpdateTextOperation {
   type: 'updateText'
   nodeId: string
   content: string
+}
+
+export interface UpdateTextTypographyOperation {
+  type: 'updateTextTypography'
+  nodeId: string
+  patch: Partial<Typography>
 }
 
 export interface UpdateButtonLabelOperation {
@@ -53,6 +61,7 @@ export interface UpdateStyleTokensOperation {
 
 type ContentEditOperation =
   | UpdateTextOperation
+  | UpdateTextTypographyOperation
   | UpdateButtonLabelOperation
   | UpdateImageOperation
 
@@ -78,6 +87,18 @@ export function updateText(
   content: string,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateText', nodeId, content })
+}
+
+export function updateTextTypography(
+  tree: Tree,
+  nodeId: string,
+  patch: Partial<Typography>,
+): Tree {
+  return applyEditOperation(tree, {
+    type: 'updateTextTypography',
+    nodeId,
+    patch,
+  })
 }
 
 export function replaceTextById(
@@ -211,6 +232,14 @@ function editMatchedNode(
       }
       return { ...node, content: operation.content }
 
+    case 'updateTextTypography':
+      if (node.type !== 'text') {
+        throw new Error(
+          `tree edit failed: updateTextTypography requires text node, got ${node.type}: ${node.id}`,
+        )
+      }
+      return withTypographyPatch(node, operation.patch)
+
     case 'updateButtonLabel':
       if (node.type !== 'button') {
         throw new Error(
@@ -237,6 +266,39 @@ function editMatchedNode(
           : {}),
       }
   }
+}
+
+function withTypographyPatch(
+  node: TextNode,
+  patch: Partial<Typography>,
+): TextNode {
+  const typography = mergeTypographyPatch(node.typography, patch)
+  if (typography === undefined) {
+    const { typography: _removed, ...nodeWithoutTypography } = node
+    return nodeWithoutTypography
+  }
+
+  return { ...node, typography }
+}
+
+function mergeTypographyPatch(
+  current: Typography | undefined,
+  patch: Partial<Typography>,
+): Typography | undefined {
+  const next: Partial<Typography> = { ...(current ?? {}) }
+
+  for (const [key, value] of Object.entries(patch) as [
+    keyof Typography,
+    Typography[keyof Typography] | undefined,
+  ][]) {
+    if (value === undefined) {
+      delete next[key]
+    } else {
+      Object.assign(next, { [key]: value })
+    }
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined
 }
 
 function applyStructureOperation(

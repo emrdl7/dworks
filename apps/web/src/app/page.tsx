@@ -13,10 +13,14 @@ import {
   COLOR_PRESET_IDS,
   type ButtonNode,
   type ColorPreset,
+  type FontFamily,
+  type FontWeight,
   type ImageNode,
   type TextNode,
+  type TextAlign,
   type Tree,
   type TreeNode,
+  type Typography,
 } from '@dworks/tree'
 import {
   deleteNode,
@@ -26,6 +30,7 @@ import {
   updateImage,
   updateStyleTokens,
   updateText,
+  updateTextTypography,
 } from '@dworks/tree-editor'
 import {
   defaultTreeFixture,
@@ -109,6 +114,36 @@ const colorPresetLabels: Record<ColorPreset, string> = {
   graphite: '그래파이트',
 }
 
+const fontWeightLabels: Record<FontWeight, string> = {
+  '400': '보통',
+  '500': '중간',
+  '600': '볼드',
+  '700': '굵게',
+}
+
+const textAlignLabels: Record<TextAlign, string> = {
+  left: '좌',
+  center: '중',
+  right: '우',
+}
+
+const fontFamilyLabels: Record<FontFamily, string> = {
+  sans: '산세리프',
+  serif: '세리프',
+}
+
+const fontWeightOptions: FontWeight[] = ['400', '500', '600', '700']
+const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
+const fontFamilyOptions: FontFamily[] = ['sans', 'serif']
+const typographyFields = [
+  'fontSize',
+  'fontWeight',
+  'lineHeight',
+  'letterSpacing',
+  'textAlign',
+  'fontFamily',
+] as const
+
 const MAX_HISTORY = 100
 
 export default function HomePage() {
@@ -163,6 +198,25 @@ export default function HomePage() {
 
   function handleTextChange(node: TextNode, content: string) {
     commitTreeEdit(updateText(tree, node.id, content))
+  }
+
+  function handleTextTypographyChange(
+    node: TextNode,
+    patch: Partial<Typography>,
+  ) {
+    commitTreeEdit(updateTextTypography(tree, node.id, patch))
+  }
+
+  function handleTextTypographyReset(node: TextNode) {
+    commitTreeEdit(
+      updateTextTypography(
+        tree,
+        node.id,
+        Object.fromEntries(
+          typographyFields.map((field) => [field, undefined]),
+        ) as Partial<Typography>,
+      ),
+    )
   }
 
   function handleButtonLabelChange(node: ButtonNode, label: string) {
@@ -329,6 +383,8 @@ export default function HomePage() {
             node={selectedNode}
             structureInfo={selectedStructureInfo}
             onTextChange={handleTextChange}
+            onTextTypographyChange={handleTextTypographyChange}
+            onTextTypographyReset={handleTextTypographyReset}
             onButtonLabelChange={handleButtonLabelChange}
             onImageChange={handleImageChange}
             onMoveUp={() => handleMoveSelected('up')}
@@ -593,35 +649,88 @@ function SelectableNode({
 }
 
 function TextPreview({ node }: { node: TextNode }) {
+  const typographyStyle = getTypographyStyle(node.typography)
+
   switch (node.emphasis) {
     case 'heading-1':
       return (
-        <h2 className="max-w-3xl text-5xl font-semibold leading-tight">
+        <h2
+          className="max-w-3xl text-5xl font-semibold leading-tight"
+          style={typographyStyle}
+        >
           {node.content}
         </h2>
       )
     case 'heading-2':
       return (
-        <h3 className="text-2xl font-semibold text-[var(--dw-text-primary)]">
+        <h3
+          className="text-2xl font-semibold text-[var(--dw-text-primary)]"
+          style={typographyStyle}
+        >
           {node.content}
         </h3>
       )
     case 'heading-3':
       return (
-        <h4 className="text-lg font-semibold text-[var(--dw-text-primary)]">
+        <h4
+          className="text-lg font-semibold text-[var(--dw-text-primary)]"
+          style={typographyStyle}
+        >
           {node.content}
         </h4>
       )
     case 'caption':
       return (
-        <p className="text-xs font-semibold uppercase text-[var(--dw-accent)]">
+        <p
+          className="text-xs font-semibold uppercase text-[var(--dw-accent)]"
+          style={typographyStyle}
+        >
           {node.content}
         </p>
       )
     case 'body':
     default:
-      return <p className="max-w-2xl text-base leading-7">{node.content}</p>
+      return (
+        <p className="max-w-2xl text-base leading-7" style={typographyStyle}>
+          {node.content}
+        </p>
+      )
   }
+}
+
+function getTypographyStyle(typography?: Typography): CSSProperties | undefined {
+  if (!typography) {
+    return undefined
+  }
+
+  return {
+    ...(typography.fontSize !== undefined
+      ? { fontSize: `${typography.fontSize}px` }
+      : {}),
+    ...(typography.fontWeight !== undefined
+      ? { fontWeight: typography.fontWeight }
+      : {}),
+    ...(typography.lineHeight !== undefined
+      ? { lineHeight: typography.lineHeight }
+      : {}),
+    ...(typography.letterSpacing !== undefined
+      ? { letterSpacing: `${typography.letterSpacing}em` }
+      : {}),
+    ...(typography.textAlign !== undefined
+      ? { textAlign: typography.textAlign }
+      : {}),
+    ...(typography.fontFamily !== undefined
+      ? { fontFamily: getFontFamilyStack(typography.fontFamily) }
+      : {}),
+  }
+}
+
+function getFontFamilyStack(fontFamily: FontFamily): string {
+  if (fontFamily === 'serif') {
+    return 'ui-serif, "Noto Serif KR", Georgia, serif'
+  }
+
+  return 'ui-sans-serif, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif'
 }
 
 function ImagePreview({ node }: { node: ImageNode }) {
@@ -678,6 +787,8 @@ interface NodeInspectorProps {
   structureInfo: StructureInfo
   colorPreset: ColorPreset
   onTextChange: (node: TextNode, content: string) => void
+  onTextTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
+  onTextTypographyReset: (node: TextNode) => void
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: Pick<Partial<ImageNode>, 'src' | 'alt'>) => void
   onMoveUp: () => void
@@ -692,6 +803,8 @@ function NodeInspector({
   structureInfo,
   colorPreset,
   onTextChange,
+  onTextTypographyChange,
+  onTextTypographyReset,
   onButtonLabelChange,
   onImageChange,
   onMoveUp,
@@ -715,23 +828,22 @@ function NodeInspector({
           onColorPresetChange={onColorPresetChange}
         />
 
-        <StructureControls
-          info={structureInfo}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-        />
-
         {node.type === 'text' ? (
-          <label className="block">
-            <span className="text-xs font-semibold text-[#4f5e56]">내용</span>
-            <textarea
-              className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-              value={node.content}
-              onChange={(event) => onTextChange(node, event.target.value)}
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-xs font-semibold text-[#4f5e56]">내용</span>
+              <textarea
+                className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                value={node.content}
+                onChange={(event) => onTextChange(node, event.target.value)}
+              />
+            </label>
+            <TypographyControls
+              node={node}
+              onTypographyChange={onTextTypographyChange}
+              onTypographyReset={onTextTypographyReset}
             />
-          </label>
+          </div>
         ) : null}
 
         {node.type === 'button' ? (
@@ -779,6 +891,14 @@ function NodeInspector({
             </label>
           </div>
         ) : null}
+
+        <StructureControls
+          info={structureInfo}
+          onMoveUp={onMoveUp}
+          onMoveDown={onMoveDown}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+        />
 
         {isContainerNode(node) ? (
           <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
@@ -856,6 +976,232 @@ function StyleControls({
         })}
       </div>
     </div>
+  )
+}
+
+interface TypographyControlsProps {
+  node: TextNode
+  onTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
+  onTypographyReset: (node: TextNode) => void
+}
+
+function TypographyControls({
+  node,
+  onTypographyChange,
+  onTypographyReset,
+}: TypographyControlsProps) {
+  const defaults = getTypographyDefaults(node)
+  const typography = node.typography ?? {}
+  const effectiveTextAlign = typography.textAlign ?? defaults.textAlign
+  const effectiveFontFamily = typography.fontFamily ?? defaults.fontFamily
+  const sliderFontSize = typography.fontSize ?? defaults.fontSize
+
+  function updateNumberField(
+    field: 'fontSize' | 'lineHeight' | 'letterSpacing',
+    value: string,
+    min: number,
+    max: number,
+  ) {
+    onTypographyChange(node, {
+      [field]: parseOptionalNumber(value, min, max),
+    })
+  }
+
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">타이포그래피</h3>
+          <p className="mt-1 text-xs text-[#647067]">
+            선택한 텍스트만 조정
+          </p>
+        </div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+          onClick={() => onTypographyReset(node)}
+        >
+          초기화
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <TypographyNumberField
+          label="크기"
+          unit="px"
+          min={8}
+          max={120}
+          step={1}
+          value={typography.fontSize}
+          placeholder={String(defaults.fontSize)}
+          onChange={(value) => updateNumberField('fontSize', value, 8, 120)}
+        />
+        <label className="block">
+          <span className="text-xs font-semibold text-[#4f5e56]">굵기</span>
+          <select
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            value={typography.fontWeight ?? ''}
+            onChange={(event) =>
+              onTypographyChange(node, {
+                fontWeight:
+                  event.target.value === ''
+                    ? undefined
+                    : (event.target.value as FontWeight),
+              })
+            }
+          >
+            <option value="">기본 {fontWeightLabels[defaults.fontWeight]}</option>
+            {fontWeightOptions.map((weight) => (
+              <option key={weight} value={weight}>
+                {fontWeightLabels[weight]} {weight}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <TypographyNumberField
+          label="행간"
+          min={0.8}
+          max={3}
+          step={0.05}
+          value={typography.lineHeight}
+          placeholder={String(defaults.lineHeight)}
+          onChange={(value) => updateNumberField('lineHeight', value, 0.8, 3)}
+        />
+        <TypographyNumberField
+          label="자간"
+          unit="em"
+          min={-0.1}
+          max={0.2}
+          step={0.005}
+          value={typography.letterSpacing}
+          placeholder={String(defaults.letterSpacing)}
+          onChange={(value) => updateNumberField('letterSpacing', value, -0.1, 0.2)}
+        />
+      </div>
+
+      <label className="mt-3 block">
+        <span className="text-xs font-semibold text-[#4f5e56]">크기 슬라이더</span>
+        <input
+          className="mt-2 w-full accent-[#1b7f72]"
+          type="range"
+          min={8}
+          max={120}
+          step={1}
+          value={sliderFontSize}
+          aria-label="글자 크기 슬라이더"
+          onChange={(event) =>
+            onTypographyChange(node, {
+              fontSize: Number(event.target.value),
+            })
+          }
+        />
+      </label>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div>
+          <span className="text-xs font-semibold text-[#4f5e56]">정렬</span>
+          <div className="mt-2 grid grid-cols-3 gap-1">
+            {textAlignOptions.map((align) => (
+              <TypographyToggleButton
+                key={align}
+                isSelected={effectiveTextAlign === align}
+                onClick={() => onTypographyChange(node, { textAlign: align })}
+              >
+                {textAlignLabels[align]}
+              </TypographyToggleButton>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
+          <div className="mt-2 grid grid-cols-2 gap-1">
+            {fontFamilyOptions.map((family) => (
+              <TypographyToggleButton
+                key={family}
+                isSelected={effectiveFontFamily === family}
+                onClick={() => onTypographyChange(node, { fontFamily: family })}
+              >
+                {fontFamilyLabels[family]}
+              </TypographyToggleButton>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface TypographyNumberFieldProps {
+  label: string
+  max: number
+  min: number
+  onChange: (value: string) => void
+  placeholder: string
+  step: number
+  unit?: string
+  value?: number
+}
+
+function TypographyNumberField({
+  label,
+  max,
+  min,
+  onChange,
+  placeholder,
+  step,
+  unit,
+  value,
+}: TypographyNumberFieldProps) {
+  return (
+    <label className="block">
+      <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
+      <span className="mt-2 flex h-10 items-center rounded-md border border-[#cbd6cf] bg-white focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+        <input
+          className="h-full min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none"
+          type="number"
+          min={min}
+          max={max}
+          step={step}
+          value={value ?? ''}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        {unit ? (
+          <span className="shrink-0 px-2 text-xs font-semibold text-[#647067]">
+            {unit}
+          </span>
+        ) : null}
+      </span>
+    </label>
+  )
+}
+
+interface TypographyToggleButtonProps {
+  children: ReactNode
+  isSelected: boolean
+  onClick: () => void
+}
+
+function TypographyToggleButton({
+  children,
+  isSelected,
+  onClick,
+}: TypographyToggleButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={isSelected}
+      className={`h-9 rounded-md border px-2 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+        isSelected
+          ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+          : 'border-[#c9d4cd] bg-white text-[#26312b] hover:bg-[#eef3ed]'
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -1113,6 +1459,76 @@ function findStructureInfo(node: TreeNode, nodeId: string): StructureInfo | null
   }
 
   return null
+}
+
+function parseOptionalNumber(
+  value: string,
+  min: number,
+  max: number,
+): number | undefined {
+  if (value.trim() === '') {
+    return undefined
+  }
+
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) {
+    return undefined
+  }
+
+  return Math.min(max, Math.max(min, parsed))
+}
+
+type TypographyDefaults = Required<Typography>
+
+function getTypographyDefaults(node: TextNode): TypographyDefaults {
+  switch (node.emphasis) {
+    case 'heading-1':
+      return {
+        fontSize: 48,
+        fontWeight: '600',
+        lineHeight: 1.25,
+        letterSpacing: 0,
+        textAlign: 'left',
+        fontFamily: 'sans',
+      }
+    case 'heading-2':
+      return {
+        fontSize: 24,
+        fontWeight: '600',
+        lineHeight: 1.35,
+        letterSpacing: 0,
+        textAlign: 'left',
+        fontFamily: 'sans',
+      }
+    case 'heading-3':
+      return {
+        fontSize: 18,
+        fontWeight: '600',
+        lineHeight: 1.45,
+        letterSpacing: 0,
+        textAlign: 'left',
+        fontFamily: 'sans',
+      }
+    case 'caption':
+      return {
+        fontSize: 12,
+        fontWeight: '600',
+        lineHeight: 1.35,
+        letterSpacing: 0,
+        textAlign: 'left',
+        fontFamily: 'sans',
+      }
+    case 'body':
+    default:
+      return {
+        fontSize: 16,
+        fontWeight: '400',
+        lineHeight: 1.75,
+        letterSpacing: 0,
+        textAlign: 'left',
+        fontFamily: 'sans',
+      }
+  }
 }
 
 function createDuplicateNodeId(tree: Tree, nodeId: string): string {

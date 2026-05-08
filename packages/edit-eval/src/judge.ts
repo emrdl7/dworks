@@ -83,6 +83,12 @@ export function summarizeEditOperations(operations: EditOperation[]): string {
             operation.type,
             operation.nodeId,
           )} content="${truncate(operation.content)}"`
+        case 'updateTextTypography':
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} typography=${JSON.stringify(operation.patch)}`
         case 'updateButtonLabel':
           return `${operationPrefix(
             index,
