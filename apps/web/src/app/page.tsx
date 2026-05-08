@@ -342,6 +342,7 @@ const gradientDirectionIcons: Record<GradientDirection, LucideIcon> = {
 const gradientTypeLabels: Record<GradientType, string> = {
   linear: '선형',
   radial: '원형',
+  conic: '원뿔형',
 }
 
 const fontWeightOptions: FontWeight[] = [
@@ -6835,6 +6836,10 @@ function gradientToCss(gradient: Gradient): string {
 
   if (gradient.type === 'radial') {
     return `radial-gradient(circle, ${from}, ${to})`
+  }
+
+  if (gradient.type === 'conic') {
+    return `conic-gradient(from 0deg at 50% 50%, ${from}, ${to})`
   }
 
   return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${from}, ${to})`

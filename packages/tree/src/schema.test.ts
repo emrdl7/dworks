@@ -1060,7 +1060,7 @@ describe('tree schema', () => {
       'to-left',
       'to-top-left',
     ])
-    assert.deepEqual(GRADIENT_TYPE_IDS, ['linear', 'radial'])
+    assert.deepEqual(GRADIENT_TYPE_IDS, ['linear', 'radial', 'conic'])
     assert.deepEqual(COLOR_PRESET_IDS, [
       'mint',
       'navy',
