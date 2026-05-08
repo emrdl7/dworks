@@ -194,6 +194,7 @@ describe('tree editor operations', () => {
       disabled: true,
       opacity: 0.42,
       pointerEvents: 'none',
+      cursor: 'help',
       transition: {
         duration: 240,
       },
@@ -203,6 +204,7 @@ describe('tree editor operations', () => {
       disabled: undefined,
       opacity: undefined,
       pointerEvents: undefined,
+      cursor: undefined,
       transition: undefined,
     })
 
@@ -229,16 +231,19 @@ describe('tree editor operations', () => {
         assert.equal(originalCard.disabled, undefined)
         assert.equal(originalCard.opacity, undefined)
         assert.equal(originalCard.pointerEvents, undefined)
+        assert.equal(originalCard.cursor, undefined)
         assert.equal(originalCard.transition, undefined)
         assert.equal(editedCard.hidden, true)
         assert.equal(editedCard.disabled, true)
         assert.equal(editedCard.opacity, 0.42)
         assert.equal(editedCard.pointerEvents, 'none')
+        assert.equal(editedCard.cursor, 'help')
         assert.deepEqual(editedCard.transition, { duration: 240 })
         assert.equal(resetCard.hidden, undefined)
         assert.equal(resetCard.disabled, undefined)
         assert.equal(resetCard.opacity, undefined)
         assert.equal(resetCard.pointerEvents, undefined)
+        assert.equal(resetCard.cursor, undefined)
         assert.equal(resetCard.transition, undefined)
       }
     }
