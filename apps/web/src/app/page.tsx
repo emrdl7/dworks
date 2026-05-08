@@ -52,6 +52,7 @@ import {
   COLOR_PRESET_IDS,
   BUILT_IN_FONT_FAMILY_IDS,
   GRADIENT_DIRECTION_IDS,
+  GRADIENT_TYPE_IDS,
   type BorderStyle,
   type ButtonNode,
   type BuiltInFontFamily,
@@ -62,6 +63,7 @@ import {
   type FontWeight,
   type Gradient,
   type GradientDirection,
+  type GradientType,
   type ImageAspectRatio,
   type ImageFit,
   type ImageNode,
@@ -308,6 +310,10 @@ const gradientDirectionIcons: Record<GradientDirection, LucideIcon> = {
   'to-left': ArrowLeft,
   'to-top-left': ArrowUpLeft,
 }
+const gradientTypeLabels: Record<GradientType, string> = {
+  linear: '선형',
+  radial: '원형',
+}
 
 const fontWeightOptions: FontWeight[] = [
   '100',
@@ -342,6 +348,7 @@ const layoutJustifyOptions: LayoutJustify[] = [
 ]
 const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
 const gradientDirectionOptions: GradientDirection[] = [...GRADIENT_DIRECTION_IDS]
+const gradientTypeOptions: GradientType[] = [...GRADIENT_TYPE_IDS]
 const REGISTERED_FONT_FAMILY_OPTION_PREFIX = 'registered-family:'
 const MAX_FONT_UPLOAD_FILES = 20
 const typographyFields = [
@@ -485,6 +492,7 @@ const DEFAULT_ACCENT_PICKER_COLOR = '#1b7f72'
 const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
 const DEFAULT_GRADIENT_TO_COLOR = '#000000'
 const DEFAULT_GRADIENT_DIRECTION: GradientDirection = 'to-bottom-right'
+const DEFAULT_GRADIENT_TYPE: GradientType = 'linear'
 const DEFAULT_CUSTOM_SHADOW: CustomShadow = {
   offsetX: 0,
   offsetY: 4,
@@ -2712,6 +2720,7 @@ function NodeColorControls({
     node.id,
     backgroundGradient.from,
     backgroundGradient.to,
+    backgroundGradient.type,
     backgroundGradient.direction,
   ])
 
@@ -2924,6 +2933,22 @@ function NodeColorControls({
     )
   }
 
+  function updateBackgroundGradientType(type: GradientType) {
+    onNodeColorChange(
+      node,
+      {
+        backgroundColor: undefined,
+        backgroundOpacity: undefined,
+        backgroundGradient: getGradientWithPatch(backgroundGradient, {
+          type,
+        }),
+      },
+      {
+        mergeKey: getNodeColorMergeKey(node.id, 'backgroundGradient.type'),
+      },
+    )
+  }
+
   function renderColorField({
     colorField,
     defaultColor,
@@ -3025,6 +3050,7 @@ function NodeColorControls({
                 onColorText={updateBackgroundGradientColorFromText}
                 onDirection={updateBackgroundGradientDirection}
                 onOpacity={updateBackgroundGradientOpacity}
+                onType={updateBackgroundGradientType}
               />
             ) : (
               renderColorField({
@@ -3083,6 +3109,7 @@ interface GradientControlsProps {
   onColorText: (field: GradientColorStopField, value: string) => void
   onDirection: (direction: GradientDirection) => void
   onOpacity: (field: GradientOpacityStopField, value: string) => void
+  onType: (type: GradientType) => void
   toError: boolean
   toInput: string
 }
@@ -3096,11 +3123,27 @@ function GradientControls({
   onColorText,
   onDirection,
   onOpacity,
+  onType,
   toError,
   toInput,
 }: GradientControlsProps) {
   return (
     <div className="space-y-4 rounded-md border border-[#e0e5de] bg-white p-3">
+      <div>
+        <span className="text-xs font-semibold text-[#4f5e56]">종류</span>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {gradientTypeOptions.map((type) => (
+            <TypographyToggleButton
+              key={type}
+              isSelected={gradient.type === type}
+              onClick={() => onType(type)}
+            >
+              {gradientTypeLabels[type]}
+            </TypographyToggleButton>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <GradientColorField
           colorField="from"
@@ -3128,20 +3171,22 @@ function GradientControls({
         />
       </div>
 
-      <div>
-        <span className="text-xs font-semibold text-[#4f5e56]">방향</span>
-        <div className="mt-2 grid grid-cols-8 gap-1">
-          {gradientDirectionOptions.map((direction) => (
-            <IconToggleButton
-              key={direction}
-              icon={gradientDirectionIcons[direction]}
-              isSelected={gradient.direction === direction}
-              label={`${gradientDirectionLabels[direction]} 그라디언트`}
-              onClick={() => onDirection(direction)}
-            />
-          ))}
+      {gradient.type === 'linear' ? (
+        <div>
+          <span className="text-xs font-semibold text-[#4f5e56]">방향</span>
+          <div className="mt-2 grid grid-cols-8 gap-1">
+            {gradientDirectionOptions.map((direction) => (
+              <IconToggleButton
+                key={direction}
+                icon={gradientDirectionIcons[direction]}
+                isSelected={gradient.direction === direction}
+                label={`${gradientDirectionLabels[direction]} 그라디언트`}
+                onClick={() => onDirection(direction)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }
@@ -4678,6 +4723,7 @@ function ImageCompositionControls({
     node.id,
     overlayGradient.from,
     overlayGradient.to,
+    overlayGradient.type,
     overlayGradient.direction,
   ])
 
@@ -4904,6 +4950,22 @@ function ImageCompositionControls({
     )
   }
 
+  function updateOverlayGradientType(type: GradientType) {
+    onImageChange(
+      node,
+      {
+        presentation: {
+          overlayColor: undefined,
+          overlayOpacity: undefined,
+          overlayGradient: getGradientWithPatch(overlayGradient, {
+            type,
+          }),
+        },
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'overlayGradient.type') },
+    )
+  }
+
   function resetImageComposition() {
     onImageChange(node, {
       focalPoint: undefined,
@@ -5071,6 +5133,7 @@ function ImageCompositionControls({
             onColorText={updateOverlayGradientColorFromText}
             onDirection={updateOverlayGradientDirection}
             onOpacity={updateOverlayGradientOpacity}
+            onType={updateOverlayGradientType}
           />
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -5636,6 +5699,7 @@ function getResolvedGradient(
   fallbackFromOpacity?: number,
 ): Gradient {
   return {
+    type: gradient?.type ?? DEFAULT_GRADIENT_TYPE,
     from: gradient?.from ?? normalizeHexColor(fallbackFrom),
     to: gradient?.to ?? DEFAULT_GRADIENT_TO_COLOR,
     direction: gradient?.direction ?? DEFAULT_GRADIENT_DIRECTION,
@@ -5662,14 +5726,22 @@ function getGradientWithPatch(
     delete next.toOpacity
   }
 
+  if (next.type === undefined) {
+    delete next.type
+  }
+
   return next
 }
 
 function gradientToCss(gradient: Gradient): string {
-  return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${getCssColorWithOpacity(
-    gradient.from,
-    gradient.fromOpacity,
-  )}, ${getCssColorWithOpacity(gradient.to, gradient.toOpacity)})`
+  const from = getCssColorWithOpacity(gradient.from, gradient.fromOpacity)
+  const to = getCssColorWithOpacity(gradient.to, gradient.toOpacity)
+
+  if (gradient.type === 'radial') {
+    return `radial-gradient(circle, ${from}, ${to})`
+  }
+
+  return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${from}, ${to})`
 }
 
 function customShadowToCss(shadow: CustomShadow): string {

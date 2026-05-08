@@ -12,6 +12,7 @@ import {
   FONT_FAMILY_IDS,
   FONT_WEIGHT_IDS,
   GRADIENT_DIRECTION_IDS,
+  GRADIENT_TYPE_IDS,
   IMAGE_ASPECT_RATIOS,
   IMAGE_FIT_IDS,
   LAYOUT_ALIGN_IDS,
@@ -168,6 +169,7 @@ describe('tree schema', () => {
         backgroundColor: '#f8fafc',
         backgroundOpacity: 0.72,
         backgroundGradient: {
+          type: 'radial',
           from: '#ff6b6b',
           to: '#4ecdc4',
           direction: 'to-bottom-right',
@@ -187,6 +189,7 @@ describe('tree schema', () => {
       assert.equal(parsed.color?.backgroundColor, '#f8fafc')
       assert.equal(parsed.color?.backgroundOpacity, 0.72)
       assert.deepEqual(parsed.color?.backgroundGradient, {
+        type: 'radial',
         from: '#ff6b6b',
         to: '#4ecdc4',
         direction: 'to-bottom-right',
@@ -602,6 +605,7 @@ describe('tree schema', () => {
         overlayColor: '#123456',
         overlayOpacity: 0.42,
         overlayGradient: {
+          type: 'radial',
           from: '#123456',
           to: '#abcdef',
           direction: 'to-top-left',
@@ -619,6 +623,7 @@ describe('tree schema', () => {
         overlayColor: '#123456',
         overlayOpacity: 0.42,
         overlayGradient: {
+          type: 'radial',
           from: '#123456',
           to: '#abcdef',
           direction: 'to-top-left',
@@ -999,6 +1004,7 @@ describe('tree schema', () => {
       'to-left',
       'to-top-left',
     ])
+    assert.deepEqual(GRADIENT_TYPE_IDS, ['linear', 'radial'])
     assert.deepEqual(COLOR_PRESET_IDS, [
       'mint',
       'navy',

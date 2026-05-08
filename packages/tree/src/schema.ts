@@ -168,7 +168,11 @@ export const GRADIENT_DIRECTION_IDS = [
 ] as const
 export const gradientDirectionSchema = z.enum(GRADIENT_DIRECTION_IDS)
 export type GradientDirection = z.infer<typeof gradientDirectionSchema>
+export const GRADIENT_TYPE_IDS = ['linear', 'radial'] as const
+export const gradientTypeSchema = z.enum(GRADIENT_TYPE_IDS)
+export type GradientType = z.infer<typeof gradientTypeSchema>
 export const gradientSchema = z.object({
+  type: gradientTypeSchema.optional(),
   from: hexColorSchema,
   to: hexColorSchema,
   direction: gradientDirectionSchema,

@@ -27,6 +27,7 @@ export {
   hexColorSchema,
   opacitySchema,
   gradientDirectionSchema,
+  gradientTypeSchema,
   gradientSchema,
   shapeSchema,
   nodeColorSchema,
@@ -58,6 +59,7 @@ export {
   BORDER_STYLE_IDS,
   SHADOW_PRESET_IDS,
   GRADIENT_DIRECTION_IDS,
+  GRADIENT_TYPE_IDS,
   COLOR_PRESET_IDS,
   COLOR_PRESETS,
 } from './schema.js'
@@ -84,6 +86,7 @@ export type {
   ShadowPreset,
   CustomShadow,
   GradientDirection,
+  GradientType,
   Gradient,
   Shape,
   NodeColor,
