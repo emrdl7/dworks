@@ -63,6 +63,10 @@ import {
   deleteRegisteredFont,
   generateFontId,
   getDefaultFontDisplayName,
+  getRegisteredFontFamilyId,
+  getRegisteredFontFamilyName,
+  getRegisteredFontWeight,
+  inferFontMetadata,
   listRegisteredFonts,
   readSupportedFontFile,
   registerFontFace,
@@ -234,6 +238,7 @@ const layoutJustifyOptions: LayoutJustify[] = [
 ]
 const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
 const UPLOAD_FONT_OPTION = '__upload-font__'
+const REGISTERED_FONT_OPTION_PREFIX = 'registered-font:'
 const typographyFields = [
   'fontSize',
   'fontWeight',
@@ -541,9 +546,11 @@ export default function HomePage() {
         ...builtInFontFamilyOptions,
         ...registeredFonts.map((font) => font.id),
       ])
+      const metadata = inferFontMetadata(displayName, file.name)
       const font: RegisteredFontRecord = {
         id: generateFontId(displayName, existingIds),
         displayName,
+        ...metadata,
         fileName: file.name,
         mimeType,
         createdAt: new Date().toISOString(),
@@ -555,8 +562,10 @@ export default function HomePage() {
 
       const summary = toRegisteredFontSummary(font, 'available')
       setRegisteredFonts((fonts) => [...fonts, summary])
-      setFontRegistryMessage(`${displayName} 글꼴을 등록했습니다.`)
-      handleTextTypographyChange(node, { fontFamily: summary.id })
+      setFontRegistryMessage(
+        `${getRegisteredFontFamilyName(summary)} 글꼴을 ${getFontWeightLabel(summary)}로 등록했습니다.`,
+      )
+      handleTextTypographyChange(node, getRegisteredFontTypographyPatch(summary))
 
       return summary
     } catch (error) {
@@ -574,10 +583,11 @@ export default function HomePage() {
       return
     }
 
-    const usageCount = fontUsageCounts.get(font.id) ?? 0
+    const familyName = getRegisteredFontFamilyName(font)
+    const usageCount = fontUsageCounts.get(getRegisteredFontFamilyId(font)) ?? 0
     const confirmed = window.confirm(
       usageCount > 0
-        ? `이 글꼴은 ${usageCount}개 노드에서 사용 중입니다. 삭제 후 기본 글꼴로 표시됩니다. 삭제할까요?`
+        ? `${familyName} 패밀리는 ${usageCount}개 노드에서 사용 중입니다. 이 굵기를 삭제하면 해당 굵기는 기본 표시로 대체될 수 있습니다. 삭제할까요?`
         : `${font.displayName} 글꼴을 삭제할까요?`,
     )
 
@@ -1390,6 +1400,104 @@ function getFontFamilyStack(fontFamily: FontFamily): string {
   return 'ui-sans-serif, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif'
 }
 
+interface RegisteredFontGroup {
+  familyId: string
+  familyName: string
+  fonts: RegisteredFontSummary[]
+}
+
+function groupRegisteredFonts(fonts: RegisteredFontSummary[]): RegisteredFontGroup[] {
+  const groups = new Map<string, RegisteredFontGroup>()
+
+  for (const font of fonts) {
+    const familyId = getRegisteredFontFamilyId(font)
+    const group = groups.get(familyId) ?? {
+      familyId,
+      familyName: getRegisteredFontFamilyName(font),
+      fonts: [],
+    }
+
+    group.fonts.push(font)
+    groups.set(familyId, group)
+  }
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      fonts: [...group.fonts].sort(compareRegisteredFonts),
+    }))
+    .sort((a, b) => a.familyName.localeCompare(b.familyName, 'ko'))
+}
+
+function getRegisteredFontSelectValue(font: RegisteredFontSummary): string {
+  return `${REGISTERED_FONT_OPTION_PREFIX}${font.id}`
+}
+
+function getSelectedFontSelectValue(
+  fontFamily: FontFamily,
+  fontWeight: FontWeight | undefined,
+  fonts: RegisteredFontSummary[],
+): string {
+  if (builtInFontFamilyOptions.includes(fontFamily as BuiltInFontFamily)) {
+    return fontFamily
+  }
+
+  const exactFont = fonts.find(
+    (font) =>
+      isRegisteredFontFamilyMatch(font, fontFamily) &&
+      getRegisteredFontWeight(font) === fontWeight,
+  )
+  const fallbackFont = fonts.find((font) =>
+    isRegisteredFontFamilyMatch(font, fontFamily),
+  )
+  const selectedFont = exactFont ?? fallbackFont
+
+  return selectedFont ? getRegisteredFontSelectValue(selectedFont) : fontFamily
+}
+
+function getRegisteredFontTypographyPatch(
+  font: RegisteredFontSummary,
+): Partial<Typography> {
+  const weight = getRegisteredFontWeight(font)
+
+  return {
+    fontFamily: getRegisteredFontFamilyId(font),
+    ...(weight ? { fontWeight: weight } : {}),
+  }
+}
+
+function getRegisteredFontOptionLabel(font: RegisteredFontSummary): string {
+  const missingSuffix = font.status === 'missing' ? ' (누락)' : ''
+  return `${getFontWeightLabel(font)} · ${font.displayName}${missingSuffix}`
+}
+
+function getFontWeightLabel(font: RegisteredFontSummary): string {
+  const weight = getRegisteredFontWeight(font)
+
+  return weight ? `${fontWeightLabels[weight]} ${weight}` : '굵기 미분류'
+}
+
+function isRegisteredFontFamilyMatch(
+  font: RegisteredFontSummary,
+  fontFamily: FontFamily,
+): boolean {
+  return font.id === fontFamily || getRegisteredFontFamilyId(font) === fontFamily
+}
+
+function compareRegisteredFonts(
+  firstFont: RegisteredFontSummary,
+  secondFont: RegisteredFontSummary,
+): number {
+  const firstWeight = Number(getRegisteredFontWeight(firstFont) ?? 0)
+  const secondWeight = Number(getRegisteredFontWeight(secondFont) ?? 0)
+
+  if (firstWeight !== secondWeight) {
+    return firstWeight - secondWeight
+  }
+
+  return firstFont.displayName.localeCompare(secondFont.displayName, 'ko')
+}
+
 function ImagePreview({
   fallbackStyle,
   node,
@@ -1915,9 +2023,18 @@ function TypographyControls({
   const effectiveTextAlign = typography.textAlign ?? defaults.textAlign
   const effectiveFontFamily = typography.fontFamily ?? defaults.fontFamily
   const sliderFontSize = typography.fontSize ?? defaults.fontSize
+  const registeredFontGroups = groupRegisteredFonts(registeredFonts)
+  const selectedFontValue = getSelectedFontSelectValue(
+    effectiveFontFamily,
+    typography.fontWeight,
+    registeredFonts,
+  )
+  const hasRegisteredFamily = registeredFonts.some(
+    (font) => isRegisteredFontFamilyMatch(font, effectiveFontFamily),
+  )
   const hasSelectedMissingFont =
     !builtInFontFamilyOptions.includes(effectiveFontFamily as BuiltInFontFamily) &&
-    !registeredFonts.some((font) => font.id === effectiveFontFamily)
+    !hasRegisteredFamily
 
   function updateNumberField(
     field: 'fontSize' | 'lineHeight' | 'letterSpacing',
@@ -1947,6 +2064,17 @@ function TypographyControls({
   function handleFontSelect(value: string) {
     if (value === UPLOAD_FONT_OPTION) {
       fileInputRef.current?.click()
+      return
+    }
+
+    if (value.startsWith(REGISTERED_FONT_OPTION_PREFIX)) {
+      const fontId = value.slice(REGISTERED_FONT_OPTION_PREFIX.length)
+      const font = registeredFonts.find((item) => item.id === fontId)
+
+      if (font) {
+        onTypographyChange(node, getRegisteredFontTypographyPatch(font))
+      }
+
       return
     }
 
@@ -2064,7 +2192,7 @@ function TypographyControls({
           <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
           <select
             className="mt-2 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-xs font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-            value={effectiveFontFamily}
+            value={selectedFontValue}
             disabled={isFontRegistryBusy}
             onChange={(event) => handleFontSelect(event.target.value)}
           >
@@ -2073,17 +2201,18 @@ function TypographyControls({
                 {builtInFontFamilyLabels[family]}
               </option>
             ))}
-            {registeredFonts.length > 0 ? (
-              <optgroup label="등록한 글꼴">
-                {registeredFonts.map((font) => (
-                  <option key={font.id} value={font.id}>
-                    {font.status === 'missing'
-                      ? `${font.displayName} (누락)`
-                      : font.displayName}
+            {registeredFontGroups.map((group) => (
+              <optgroup
+                key={group.familyId}
+                label={`등록한 글꼴 · ${group.familyName}`}
+              >
+                {group.fonts.map((font) => (
+                  <option key={font.id} value={getRegisteredFontSelectValue(font)}>
+                    {getRegisteredFontOptionLabel(font)}
                   </option>
                 ))}
               </optgroup>
-            ) : null}
+            ))}
             {hasSelectedMissingFont ? (
               <option value={effectiveFontFamily}>
                 누락된 글꼴 ({effectiveFontFamily})
@@ -2109,7 +2238,7 @@ function TypographyControls({
         {isFontRegistryBusy ? '글꼴 처리 중' : 'TTF/OTF 업로드'}
       </button>
       <p className="mt-2 text-xs leading-5 text-[#647067]">
-        글꼴은 브라우저에만 저장됩니다. 등록한 글꼴의 라이선스 준수는 사용자 책임입니다.
+        글꼴은 브라우저에만 저장됩니다. 같은 패밀리의 굵기 파일은 자동으로 묶으며, 라이선스 준수는 사용자 책임입니다.
       </p>
       <p className="mt-1 text-xs leading-5 text-[#647067]" aria-live="polite">
         {fontRegistryMessage}
@@ -2136,7 +2265,8 @@ function TypographyControls({
                     {font.status === 'missing' ? ' (누락)' : ''}
                   </p>
                   <p className="truncate text-[11px] text-[#647067]">
-                    사용 {fontUsageCounts.get(font.id) ?? 0}개
+                    {getRegisteredFontFamilyName(font)} · {getFontWeightLabel(font)} · 사용{' '}
+                    {fontUsageCounts.get(getRegisteredFontFamilyId(font)) ?? 0}개
                   </p>
                 </div>
                 <button
