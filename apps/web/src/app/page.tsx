@@ -2671,6 +2671,9 @@ function mergeStyles(
   return Object.keys(merged).length > 0 ? merged : undefined
 }
 
+const KOREAN_SANS_FALLBACK_STACK =
+  '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Helvetica Neue", "Segoe UI", Arial, sans-serif'
+
 function getFontFamilyStack(fontFamily: FontFamily): string {
   if (fontFamily === 'serif') {
     return 'ui-serif, "Noto Serif KR", Georgia, serif'
@@ -2681,10 +2684,10 @@ function getFontFamilyStack(fontFamily: FontFamily): string {
   }
 
   if (fontFamily !== 'sans') {
-    return `"${fontFamily.replaceAll('"', '\\"')}", ui-sans-serif, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif`
+    return `"${fontFamily.replaceAll('"', '\\"')}", ${KOREAN_SANS_FALLBACK_STACK}`
   }
 
-  return 'ui-sans-serif, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif'
+  return KOREAN_SANS_FALLBACK_STACK
 }
 
 interface RegisteredFontGroup {
