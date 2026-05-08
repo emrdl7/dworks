@@ -451,3 +451,6 @@ placeholder tree (M2 이전 단계)에 대한 P0 vision judge 점수는 "Dworks 
 | `m2-style-font-stack` | r1 (Claude) → r2 (Codex) → r3 ack (Claude) → 코드 (`54fb9d6`) → r4 (Codex) | Pretendard Variable jsdelivr CDN 도입 + sans 한글 fallback chain (Pretendard → -apple-system → Apple SD Gothic Neo → Malgun Gothic → Noto Sans KR) — 의존성 0 |
 | `m2-style-a11y` | r1 (Claude) → r2 (Codex) → r3 ack (Claude) → 코드 (`85beb54`) → r4 (Codex) | 텍스트 노드 WCAG 2.1 contrast readout (대비 본문 기준 + AA/AAA 통과/미달 배지), 배경 walk-up + opacity alpha 블렌딩, 그라디언트 안내 |
 | `m2-style-gradient-conic` | r1 (Claude) → r2 (Codex) → r3 ack (Claude) → 코드 (`00ef3dd`) → r4 (Codex) | conic gradient 종류 추가 — schema enum 확장 + `conic-gradient(from 0deg at 50% 50%)` 기본값, 라벨 `원뿔형` |
+| `m2-style-a11y-large-text` | r1 (Claude) → r2 (Codex) → 코드 (`7956d12`) → r4 (Codex) | 큰 텍스트 (fontSize>=24 OR fontSize>=19+weight>=700) AA 3.0/AAA 4.5 임계값, 본문 4.5/7.0 유지. 가속 §2: round 3 ack 흡수 첫 사례 |
+| `m2-inspector-collapse-master` | r1 (Claude) → r2 (Codex) → 코드 (`6bdcc20`) → r4 (Codex) | NodeInspector header에 master toggle (모두 접기/펼치기), visibleControlledSectionTitles 노드 타입별 동적 |
+| `m2-style-gradient-conic-controls` | r1 (Claude) → r2 (Codex) → 코드 (`53b7e36`) → fix (`5ffc434`) | conic 시작각/중심 X/Y schema 3 optional 필드 + 슬라이더+숫자 입력. Codex fix: range 슬라이더 보강 + schema 회귀 테스트 (가속 §5 첫 사례) |

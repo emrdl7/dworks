@@ -72,9 +72,9 @@
 - `m2-style-shadow-multi` — 다중 shadow
 - `m2-style-color-state` — link / hover / active 상태 색상 override
 - `m2-responsive-override` — viewport별 속성 override
-- `m2-inspector-collapse-master` — 모두 접기 / 펼치기 master toggle (smart-collapse 후속)
+- ✓ `m2-inspector-collapse-master` — 모두 접기 / 펼치기 master toggle (`6bdcc20`)
 - `m2-inspector-collapse-memory` — 노드별 토글 기억 (smart-collapse 후속)
-- `m2-style-a11y-large-text` — 큰 텍스트 18pt+ / 14pt+ bold 임계값 (a11y 후속)
+- ✓ `m2-style-a11y-large-text` — 큰 텍스트 임계값 (`7956d12`)
 - `m2-style-a11y-audit-panel` — 모든 노드 일괄 대비 감사 (a11y 후속)
 - `m2-style-gradient-conic-angle` — conic from 각도 입력 (gradient-conic 후속)
 - `m2-style-gradient-conic-center` — conic 중심 위치 입력 (gradient-conic 후속)
