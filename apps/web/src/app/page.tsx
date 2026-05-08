@@ -3073,10 +3073,39 @@ function NodeInspector({
     }
   }
 
+  const visibleControlledSectionTitles = getVisibleControlledSectionTitles(
+    node.type,
+  )
+  const anyVisibleSectionOpen = visibleControlledSectionTitles.some(
+    (title) => openSections[title] === true,
+  )
+
+  function handleMasterCollapseToggle() {
+    setOpenSections((prev) => {
+      const next: Record<string, boolean> = { ...prev }
+      visibleControlledSectionTitles.forEach((title) => {
+        next[title] = !anyVisibleSectionOpen
+      })
+      return next
+    })
+  }
+
   return (
     <section className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b border-[#e0e5de] px-5 py-4">
-        <h2 className="text-sm font-semibold">속성</h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-semibold">속성</h2>
+          <button
+            type="button"
+            aria-label={
+              anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'
+            }
+            className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+            onClick={handleMasterCollapseToggle}
+          >
+            {anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'}
+          </button>
+        </div>
         <p className="mt-1 break-all text-xs text-[#647067]">{node.id}</p>
       </div>
 
@@ -7091,6 +7120,31 @@ function computeInspectorSmartDefaults(
     return { 레이아웃: true }
   }
   return {}
+}
+
+const COMMON_INSPECTOR_CONTROLLED_SECTIONS = [
+  '표시',
+  '색상',
+  '레이아웃',
+  '간격',
+  '모양',
+  '구조',
+] as const
+
+function getVisibleControlledSectionTitles(
+  nodeType: TreeNode['type'],
+): string[] {
+  const sections: string[] = [...COMMON_INSPECTOR_CONTROLLED_SECTIONS]
+  if (nodeType === 'text') {
+    sections.push('내용', '타이포그래피')
+  }
+  if (nodeType === 'button') {
+    sections.push('내용')
+  }
+  if (nodeType === 'image') {
+    sections.push('이미지', '이미지 구도')
+  }
+  return sections
 }
 
 type RGB = { r: number; g: number; b: number }
