@@ -12,6 +12,42 @@ import {
 } from 'react'
 import Image from 'next/image'
 import {
+  AlignCenter,
+  AlignHorizontalJustifyCenter,
+  AlignHorizontalJustifyEnd,
+  AlignHorizontalJustifyStart,
+  AlignHorizontalSpaceAround,
+  AlignHorizontalSpaceBetween,
+  AlignLeft,
+  AlignRight,
+  AlignVerticalJustifyCenter,
+  AlignVerticalJustifyEnd,
+  AlignVerticalJustifyStart,
+  ArrowDown,
+  ArrowDownLeft,
+  ArrowDownRight,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpLeft,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  Columns2,
+  Copy,
+  Move,
+  PanelTop,
+  Redo2,
+  Rows2,
+  Square,
+  StretchHorizontal,
+  StretchVertical,
+  Trash2,
+  Undo2,
+  WrapText,
+  type LucideIcon,
+} from 'lucide-react'
+import {
   COLOR_PRESETS,
   COLOR_PRESET_IDS,
   BUILT_IN_FONT_FAMILY_IDS,
@@ -175,10 +211,15 @@ const fontWeightLabels: Record<FontWeight, string> = {
   '900': '블랙',
 }
 
-const textAlignLabels: Record<TextAlign, string> = {
-  left: '좌',
-  center: '중',
-  right: '우',
+const textAlignTitles: Record<TextAlign, string> = {
+  left: '왼쪽 정렬',
+  center: '가운데 정렬',
+  right: '오른쪽 정렬',
+}
+const textAlignIcons: Record<TextAlign, LucideIcon> = {
+  left: AlignLeft,
+  center: AlignCenter,
+  right: AlignRight,
 }
 
 const borderStyleLabels: Record<BorderStyle, string> = {
@@ -205,12 +246,22 @@ const layoutDirectionLabels: Record<LayoutDirection, string> = {
   row: '가로',
   column: '세로',
 }
+const layoutDirectionIcons: Record<LayoutDirection, LucideIcon> = {
+  row: Columns2,
+  column: Rows2,
+}
 
 const layoutAlignLabels: Record<LayoutAlign, string> = {
   start: '시작',
   center: '가운데',
   end: '끝',
   stretch: '채움',
+}
+const layoutAlignIcons: Record<LayoutAlign, LucideIcon> = {
+  start: AlignVerticalJustifyStart,
+  center: AlignVerticalJustifyCenter,
+  end: AlignVerticalJustifyEnd,
+  stretch: StretchVertical,
 }
 
 const layoutJustifyLabels: Record<LayoutJustify, string> = {
@@ -220,10 +271,21 @@ const layoutJustifyLabels: Record<LayoutJustify, string> = {
   between: '양끝',
   evenly: '균등',
 }
+const layoutJustifyIcons: Record<LayoutJustify, LucideIcon> = {
+  start: AlignHorizontalJustifyStart,
+  center: AlignHorizontalJustifyCenter,
+  end: AlignHorizontalJustifyEnd,
+  between: AlignHorizontalSpaceBetween,
+  evenly: AlignHorizontalSpaceAround,
+}
 
 const layoutWrapLabels: Record<LayoutWrap, string> = {
   nowrap: '고정',
   wrap: '줄바꿈',
+}
+const layoutWrapIcons: Record<LayoutWrap, LucideIcon> = {
+  nowrap: StretchHorizontal,
+  wrap: WrapText,
 }
 
 const gradientDirectionLabels: Record<GradientDirection, string> = {
@@ -235,6 +297,16 @@ const gradientDirectionLabels: Record<GradientDirection, string> = {
   'to-bottom-left': '좌하',
   'to-left': '왼쪽',
   'to-top-left': '좌상',
+}
+const gradientDirectionIcons: Record<GradientDirection, LucideIcon> = {
+  'to-top': ArrowUp,
+  'to-top-right': ArrowUpRight,
+  'to-right': ArrowRight,
+  'to-bottom-right': ArrowDownRight,
+  'to-bottom': ArrowDown,
+  'to-bottom-left': ArrowDownLeft,
+  'to-left': ArrowLeft,
+  'to-top-left': ArrowUpLeft,
 }
 
 const fontWeightOptions: FontWeight[] = [
@@ -338,6 +410,11 @@ const spacingModeLabels: Record<SpacingMode, string> = {
   axis: 'X-Y',
   sides: '4면',
 }
+const spacingModeIcons: Record<SpacingMode, LucideIcon> = {
+  all: Square,
+  axis: Move,
+  sides: PanelTop,
+}
 const responsiveViewportPresets = {
   mobile: { label: '모바일', width: 375 },
   tablet: { label: '태블릿', width: 768 },
@@ -417,16 +494,6 @@ const GRADIENT_DIRECTION_CSS: Record<GradientDirection, string> = {
   'to-bottom-left': 'to bottom left',
   'to-left': 'to left',
   'to-top-left': 'to top left',
-}
-const GRADIENT_DIRECTION_ROTATION: Record<GradientDirection, number> = {
-  'to-top': 0,
-  'to-top-right': 45,
-  'to-right': 90,
-  'to-bottom-right': 135,
-  'to-bottom': 180,
-  'to-bottom-left': 225,
-  'to-left': 270,
-  'to-top-left': 315,
 }
 
 const MAX_HISTORY = 100
@@ -963,17 +1030,15 @@ export default function HomePage() {
             <HistoryButton
               ariaLabel="실행 취소"
               disabled={historyPast.length === 0}
+              icon={Undo2}
               onClick={handleUndo}
-            >
-              실행 취소
-            </HistoryButton>
+            />
             <HistoryButton
               ariaLabel="다시 실행"
               disabled={historyFuture.length === 0}
+              icon={Redo2}
               onClick={handleRedo}
-            >
-              다시 실행
-            </HistoryButton>
+            />
           </div>
           <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
             <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
@@ -1079,26 +1144,27 @@ export default function HomePage() {
 
 interface HistoryButtonProps {
   ariaLabel: string
-  children: ReactNode
   disabled: boolean
+  icon: LucideIcon
   onClick: () => void
 }
 
 function HistoryButton({
   ariaLabel,
-  children,
   disabled,
+  icon: Icon,
   onClick,
 }: HistoryButtonProps) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
-      className="h-9 rounded-md border border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+      title={ariaLabel}
+      className="flex h-9 w-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
       disabled={disabled}
       onClick={onClick}
     >
-      {children}
+      <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
     </button>
   )
 }
@@ -2961,21 +3027,13 @@ function GradientControls({
         <span className="text-xs font-semibold text-[#4f5e56]">방향</span>
         <div className="mt-2 grid grid-cols-8 gap-1">
           {gradientDirectionOptions.map((direction) => (
-            <button
+            <IconToggleButton
               key={direction}
-              type="button"
-              aria-label={`${gradientDirectionLabels[direction]} 그라디언트`}
-              aria-pressed={gradient.direction === direction}
-              className={`flex h-9 items-center justify-center rounded-md border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
-                gradient.direction === direction
-                  ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
-                  : 'border-[#c9d4cd] bg-white text-[#26312b] hover:bg-[#eef3ed]'
-              }`}
-              title={gradientDirectionLabels[direction]}
+              icon={gradientDirectionIcons[direction]}
+              isSelected={gradient.direction === direction}
+              label={`${gradientDirectionLabels[direction]} 그라디언트`}
               onClick={() => onDirection(direction)}
-            >
-              <GradientDirectionIcon direction={direction} />
-            </button>
+            />
           ))}
         </div>
       </div>
@@ -3041,37 +3099,6 @@ function GradientColorField({
         onChange={(value) => onOpacity(opacityField, value)}
       />
     </div>
-  )
-}
-
-function GradientDirectionIcon({
-  direction,
-}: {
-  direction: GradientDirection
-}) {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-4 w-4"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <g transform={`rotate(${getGradientDirectionRotation(direction)} 12 12)`}>
-        <path
-          d="M12 19V5"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeWidth="2"
-        />
-        <path
-          d="m7 10 5-5 5 5"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-        />
-      </g>
-    </svg>
   )
 }
 
@@ -3469,13 +3496,13 @@ function TypographyControls({
           <span className="text-xs font-semibold text-[#4f5e56]">정렬</span>
           <div className="mt-2 grid grid-cols-3 gap-1">
             {textAlignOptions.map((align) => (
-              <TypographyToggleButton
+              <IconToggleButton
                 key={align}
+                icon={textAlignIcons[align]}
                 isSelected={effectiveTextAlign === align}
+                label={textAlignTitles[align]}
                 onClick={() => onTypographyChange(node, { textAlign: align })}
-              >
-                {textAlignLabels[align]}
-              </TypographyToggleButton>
+              />
             ))}
           </div>
         </div>
@@ -3616,12 +3643,14 @@ function LayoutControls({
     disabled,
     field,
     labels,
+    icons,
     options,
     title,
   }: {
     disabled: boolean
     field: T
     labels: Record<NonNullable<NodeLayout[T]>, string>
+    icons: Record<NonNullable<NodeLayout[T]>, LucideIcon>
     options: Array<NonNullable<NodeLayout[T]>>
     title: string
   }) {
@@ -3630,19 +3659,19 @@ function LayoutControls({
         <span className="text-xs font-semibold text-[#4f5e56]">{title}</span>
         <div className="mt-2 grid grid-cols-2 gap-1">
           {options.map((option) => (
-            <TypographyToggleButton
+            <IconToggleButton
               key={option}
               disabled={disabled}
+              icon={icons[option]}
               isSelected={layout[field] === option}
+              label={`${title}: ${labels[option]}`}
               onClick={() =>
                 updateLayoutField(
                   field,
                   layout[field] === option ? undefined : option,
                 )
               }
-            >
-              {labels[option]}
-            </TypographyToggleButton>
+            />
           ))}
         </div>
       </div>
@@ -3669,6 +3698,7 @@ function LayoutControls({
           {renderToggleGroup({
             disabled: !canEditLayout,
             field: 'direction',
+            icons: layoutDirectionIcons,
             labels: layoutDirectionLabels,
             options: layoutDirectionOptions,
             title: '방향',
@@ -3676,6 +3706,7 @@ function LayoutControls({
           {renderToggleGroup({
             disabled: !canEditLayout,
             field: 'wrap',
+            icons: layoutWrapIcons,
             labels: layoutWrapLabels,
             options: layoutWrapOptions,
             title: '줄바꿈',
@@ -3686,6 +3717,7 @@ function LayoutControls({
           {renderToggleGroup({
             disabled: !canEditLayout,
             field: 'align',
+            icons: layoutAlignIcons,
             labels: layoutAlignLabels,
             options: layoutAlignOptions,
             title: '정렬',
@@ -3693,6 +3725,7 @@ function LayoutControls({
           {renderToggleGroup({
             disabled: !canEditLayout,
             field: 'justify',
+            icons: layoutJustifyIcons,
             labels: layoutJustifyLabels,
             options: layoutJustifyOptions,
             title: '분배',
@@ -3762,13 +3795,13 @@ function SpacingControls({
     return (
       <div className="mt-3 grid grid-cols-3 gap-1">
         {spacingModes.map((modeOption) => (
-          <TypographyToggleButton
+          <IconToggleButton
             key={modeOption}
+            icon={spacingModeIcons[modeOption]}
             isSelected={mode === modeOption}
+            label={`${spacingModeLabels[modeOption]} 간격 모드`}
             onClick={() => onModeChange(modeOption)}
-          >
-            {spacingModeLabels[modeOption]}
-          </TypographyToggleButton>
+          />
         ))}
       </div>
     )
@@ -5023,6 +5056,40 @@ function TypographyToggleButton({
   )
 }
 
+interface IconToggleButtonProps {
+  disabled?: boolean
+  icon: LucideIcon
+  isSelected: boolean
+  label: string
+  onClick: () => void
+}
+
+function IconToggleButton({
+  disabled = false,
+  icon: Icon,
+  isSelected,
+  label,
+  onClick,
+}: IconToggleButtonProps) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={isSelected}
+      title={label}
+      className={`flex h-9 items-center justify-center rounded-md border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+        isSelected
+          ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+          : 'border-[#c9d4cd] bg-white text-[#26312b] hover:bg-[#eef3ed]'
+      } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
+    </button>
+  )
+}
+
 interface StructureControlsProps {
   info: StructureInfo
   onMoveUp: () => void
@@ -5059,32 +5126,28 @@ function StructureControls({
         <InspectorActionButton
           ariaLabel="위로 이동"
           disabled={!canMoveUp}
+          icon={ChevronUp}
           onClick={onMoveUp}
-        >
-          위로 이동
-        </InspectorActionButton>
+        />
         <InspectorActionButton
           ariaLabel="아래로 이동"
           disabled={!canMoveDown}
+          icon={ChevronDown}
           onClick={onMoveDown}
-        >
-          아래로 이동
-        </InspectorActionButton>
+        />
         <InspectorActionButton
           ariaLabel="복제"
           disabled={!canEditStructure}
+          icon={Copy}
           onClick={onDuplicate}
-        >
-          복제
-        </InspectorActionButton>
+        />
         <InspectorActionButton
           ariaLabel="삭제"
           disabled={!canEditStructure}
+          icon={Trash2}
           tone="danger"
           onClick={onDelete}
-        >
-          삭제
-        </InspectorActionButton>
+        />
       </div>
       {info.isRoot ? (
         <p className="mt-3 text-xs text-[#647067]">
@@ -5097,16 +5160,16 @@ function StructureControls({
 
 interface InspectorActionButtonProps {
   ariaLabel: string
-  children: ReactNode
   disabled: boolean
+  icon: LucideIcon
   onClick: () => void
   tone?: 'neutral' | 'danger'
 }
 
 function InspectorActionButton({
   ariaLabel,
-  children,
   disabled,
+  icon: Icon,
   onClick,
   tone = 'neutral',
 }: InspectorActionButtonProps) {
@@ -5119,11 +5182,12 @@ function InspectorActionButton({
     <button
       type="button"
       aria-label={ariaLabel}
-      className={`h-9 rounded-md border border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#26312b] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d4cd] disabled:hover:bg-white disabled:hover:text-[#26312b] ${toneClass}`}
+      title={ariaLabel}
+      className={`flex h-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d4cd] disabled:hover:bg-white disabled:hover:text-[#26312b] ${toneClass}`}
       disabled={disabled}
       onClick={onClick}
     >
-      {children}
+      <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
     </button>
   )
 }
@@ -5399,10 +5463,6 @@ function gradientToCss(gradient: Gradient): string {
     gradient.from,
     gradient.fromOpacity,
   )}, ${getCssColorWithOpacity(gradient.to, gradient.toOpacity)})`
-}
-
-function getGradientDirectionRotation(direction: GradientDirection): number {
-  return GRADIENT_DIRECTION_ROTATION[direction]
 }
 
 function customShadowToCss(shadow: CustomShadow): string {
