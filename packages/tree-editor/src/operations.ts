@@ -1,6 +1,7 @@
 import type {
   FocalPoint,
   ImageAspectRatio,
+  Spacing,
   StyleTokens,
   TextNode,
   Tree,
@@ -20,6 +21,12 @@ export interface UpdateTextTypographyOperation {
   type: 'updateTextTypography'
   nodeId: string
   patch: Partial<Typography>
+}
+
+export interface UpdateSpacingOperation {
+  type: 'updateSpacing'
+  nodeId: string
+  patch: Partial<Spacing>
 }
 
 export interface UpdateButtonLabelOperation {
@@ -62,6 +69,7 @@ export interface UpdateStyleTokensOperation {
 type ContentEditOperation =
   | UpdateTextOperation
   | UpdateTextTypographyOperation
+  | UpdateSpacingOperation
   | UpdateButtonLabelOperation
   | UpdateImageOperation
 
@@ -99,6 +107,14 @@ export function updateTextTypography(
     nodeId,
     patch,
   })
+}
+
+export function updateSpacing(
+  tree: Tree,
+  nodeId: string,
+  patch: Partial<Spacing>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateSpacing', nodeId, patch })
 }
 
 export function replaceTextById(
@@ -240,6 +256,9 @@ function editMatchedNode(
       }
       return withTypographyPatch(node, operation.patch)
 
+    case 'updateSpacing':
+      return withSpacingPatch(node, operation.patch)
+
     case 'updateButtonLabel':
       if (node.type !== 'button') {
         throw new Error(
@@ -266,6 +285,39 @@ function editMatchedNode(
           : {}),
       }
   }
+}
+
+function withSpacingPatch<T extends TreeNode>(
+  node: T,
+  patch: Partial<Spacing>,
+): T {
+  const spacing = mergeSpacingPatch(node.spacing, patch)
+  if (spacing === undefined) {
+    const { spacing: _removed, ...nodeWithoutSpacing } = node
+    return nodeWithoutSpacing as T
+  }
+
+  return { ...node, spacing }
+}
+
+function mergeSpacingPatch(
+  current: Spacing | undefined,
+  patch: Partial<Spacing>,
+): Spacing | undefined {
+  const next: Partial<Spacing> = { ...(current ?? {}) }
+
+  for (const [key, value] of Object.entries(patch) as [
+    keyof Spacing,
+    Spacing[keyof Spacing] | undefined,
+  ][]) {
+    if (value === undefined) {
+      delete next[key]
+    } else {
+      Object.assign(next, { [key]: value })
+    }
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined
 }
 
 function withTypographyPatch(

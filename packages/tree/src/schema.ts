@@ -72,6 +72,19 @@ export const typographySchema = z.object({
 })
 export type Typography = z.infer<typeof typographySchema>
 
+export const spacingSchema = z.object({
+  paddingTop: z.number().min(0).max(500).optional(),
+  paddingRight: z.number().min(0).max(500).optional(),
+  paddingBottom: z.number().min(0).max(500).optional(),
+  paddingLeft: z.number().min(0).max(500).optional(),
+  marginTop: z.number().min(-200).max(500).optional(),
+  marginRight: z.number().min(-200).max(500).optional(),
+  marginBottom: z.number().min(-200).max(500).optional(),
+  marginLeft: z.number().min(-200).max(500).optional(),
+  gap: z.number().min(0).max(200).optional(),
+})
+export type Spacing = z.infer<typeof spacingSchema>
+
 export const imageAspectRatioSchema = z.enum([
   'square',
   'landscape',
@@ -190,6 +203,7 @@ interface BaseNodeMeta {
   editKind: EditKind
   responsive?: ResponsiveIntent
   styleTokens?: string[]
+  spacing?: Spacing
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -267,6 +281,7 @@ const baseShape = {
   editKind: editKindSchema,
   responsive: responsiveIntentSchema,
   styleTokens: z.array(z.string()).optional(),
+  spacing: spacingSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({

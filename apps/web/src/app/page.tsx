@@ -19,6 +19,7 @@ import {
   type FontFamily,
   type FontWeight,
   type ImageNode,
+  type Spacing,
   type TextNode,
   type TextAlign,
   type Tree,
@@ -31,6 +32,7 @@ import {
   moveNode,
   updateButtonLabel,
   updateImage,
+  updateSpacing,
   updateStyleTokens,
   updateText,
   updateTextTypography,
@@ -160,6 +162,54 @@ const typographyFields = [
   'textAlign',
   'fontFamily',
 ] as const
+const spacingFields = [
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+  'gap',
+] as const
+type SpacingField = (typeof spacingFields)[number]
+type SpacingMode = 'all' | 'axis' | 'sides'
+
+const spacingModes: SpacingMode[] = ['all', 'axis', 'sides']
+const spacingModeLabels: Record<SpacingMode, string> = {
+  all: '전체',
+  axis: 'X-Y',
+  sides: '4면',
+}
+const paddingSpacingFields: readonly SpacingField[] = [
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+]
+const marginSpacingFields: readonly SpacingField[] = [
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+]
+const paddingHorizontalFields: readonly SpacingField[] = [
+  'paddingLeft',
+  'paddingRight',
+]
+const paddingVerticalFields: readonly SpacingField[] = [
+  'paddingTop',
+  'paddingBottom',
+]
+const marginHorizontalFields: readonly SpacingField[] = [
+  'marginLeft',
+  'marginRight',
+]
+const marginVerticalFields: readonly SpacingField[] = [
+  'marginTop',
+  'marginBottom',
+]
 
 const MAX_HISTORY = 100
 
@@ -285,6 +335,22 @@ export default function HomePage() {
         Object.fromEntries(
           typographyFields.map((field) => [field, undefined]),
         ) as Partial<Typography>,
+      ),
+    )
+  }
+
+  function handleSpacingChange(node: TreeNode, patch: Partial<Spacing>) {
+    commitTreeEdit(updateSpacing(tree, node.id, patch))
+  }
+
+  function handleSpacingReset(node: TreeNode) {
+    commitTreeEdit(
+      updateSpacing(
+        tree,
+        node.id,
+        Object.fromEntries(
+          spacingFields.map((field) => [field, undefined]),
+        ) as Partial<Spacing>,
       ),
     )
   }
@@ -536,6 +602,8 @@ export default function HomePage() {
             onTextChange={handleTextChange}
             onTextTypographyChange={handleTextTypographyChange}
             onTextTypographyReset={handleTextTypographyReset}
+            onSpacingChange={handleSpacingChange}
+            onSpacingReset={handleSpacingReset}
             registeredFonts={registeredFonts}
             fontUsageCounts={fontUsageCounts}
             fontRegistryMessage={fontRegistryMessage}
@@ -590,13 +658,17 @@ interface CanvasNodeProps {
 }
 
 function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
+  const boxSpacingStyle = getBoxSpacingStyle(node.spacing)
+  const gapSpacingStyle = getGapSpacingStyle(node.spacing)
+  const containerSpacingStyle = getContainerSpacingStyle(node.spacing)
+
   switch (node.type) {
     case 'section': {
       const [firstChild, ...remainingChildren] = node.children
 
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <section className="space-y-8 p-10">
+          <section className="flex flex-col gap-8 p-10" style={boxSpacingStyle}>
             {firstChild ? (
               <CanvasNode
                 node={firstChild}
@@ -605,7 +677,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
               />
             ) : null}
             {node.layoutIntent === 'grid' ? (
-              <div className="grid grid-cols-3 gap-8">
+              <div className="grid grid-cols-3 gap-8" style={gapSpacingStyle}>
                 {remainingChildren.map((child) => (
                   <CanvasNode
                     key={child.id}
@@ -616,7 +688,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                 ))}
               </div>
             ) : (
-              <div className="space-y-10">
+              <div className="flex flex-col gap-10" style={gapSpacingStyle}>
                 {remainingChildren.map((child) => (
                   <CanvasNode
                     key={child.id}
@@ -643,6 +715,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
             className={`grid min-h-[420px] gap-10 bg-[var(--dw-hero-surface)] p-12 text-[var(--dw-hero-text)] ${
               hasImage ? 'grid-cols-[1.05fr_0.95fr]' : 'grid-cols-1'
             }`}
+            style={containerSpacingStyle}
           >
             <div className="flex flex-col justify-center gap-5">
               {contentChildren.map((child) => (
@@ -655,7 +728,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
               ))}
             </div>
             {hasImage ? (
-              <div className="min-h-[320px] space-y-4">
+              <div className="flex min-h-[320px] flex-col gap-4">
                 {imageChildren.map((child) => (
                   <CanvasNode
                     key={child.id}
@@ -674,8 +747,11 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'card':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <article className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-5 shadow-sm">
-            <div className="space-y-3">
+          <article
+            className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-5 shadow-sm"
+            style={boxSpacingStyle}
+          >
+            <div className="flex flex-col gap-3" style={gapSpacingStyle}>
               {node.children.map((child) => (
                 <CanvasNode
                   key={child.id}
@@ -692,7 +768,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'list':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3" style={containerSpacingStyle}>
             {node.children.map((child) => (
               <CanvasNode
                 key={child.id}
@@ -708,7 +784,10 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'form':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <form className="mx-auto max-w-[520px] space-y-5 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-8 shadow-sm">
+          <form
+            className="mx-auto flex max-w-[520px] flex-col gap-5 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-8 shadow-sm"
+            style={containerSpacingStyle}
+          >
             {node.children.map((child) => (
               <CanvasNode
                 key={child.id}
@@ -724,7 +803,9 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'text':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <TextPreview node={node} />
+          <div style={boxSpacingStyle}>
+            <TextPreview node={node} />
+          </div>
         </SelectableNode>
       )
 
@@ -737,6 +818,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
                 ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
                 : 'bg-[var(--dw-accent)] text-[var(--dw-accent-text)]'
             }`}
+            style={boxSpacingStyle}
           >
             {node.label}
           </span>
@@ -746,7 +828,7 @@ function CanvasNode({ node, selectedNodeId, onSelect }: CanvasNodeProps) {
     case 'image':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <ImagePreview key={node.src} node={node} />
+          <ImagePreview key={node.src} node={node} style={boxSpacingStyle} />
         </SelectableNode>
       )
   }
@@ -882,6 +964,60 @@ function getTypographyStyle(typography?: Typography): CSSProperties | undefined 
   }
 }
 
+function getBoxSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
+  if (!spacing) {
+    return undefined
+  }
+
+  const style: CSSProperties = {
+    ...(spacing.paddingTop !== undefined
+      ? { paddingTop: `${spacing.paddingTop}px` }
+      : {}),
+    ...(spacing.paddingRight !== undefined
+      ? { paddingRight: `${spacing.paddingRight}px` }
+      : {}),
+    ...(spacing.paddingBottom !== undefined
+      ? { paddingBottom: `${spacing.paddingBottom}px` }
+      : {}),
+    ...(spacing.paddingLeft !== undefined
+      ? { paddingLeft: `${spacing.paddingLeft}px` }
+      : {}),
+    ...(spacing.marginTop !== undefined
+      ? { marginTop: `${spacing.marginTop}px` }
+      : {}),
+    ...(spacing.marginRight !== undefined
+      ? { marginRight: `${spacing.marginRight}px` }
+      : {}),
+    ...(spacing.marginBottom !== undefined
+      ? { marginBottom: `${spacing.marginBottom}px` }
+      : {}),
+    ...(spacing.marginLeft !== undefined
+      ? { marginLeft: `${spacing.marginLeft}px` }
+      : {}),
+  }
+
+  return Object.keys(style).length > 0 ? style : undefined
+}
+
+function getGapSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
+  if (spacing?.gap === undefined) {
+    return undefined
+  }
+
+  return { gap: `${spacing.gap}px` }
+}
+
+function getContainerSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
+  return mergeStyles(getBoxSpacingStyle(spacing), getGapSpacingStyle(spacing))
+}
+
+function mergeStyles(
+  ...styles: Array<CSSProperties | undefined>
+): CSSProperties | undefined {
+  const merged = Object.assign({}, ...styles.filter(Boolean))
+  return Object.keys(merged).length > 0 ? merged : undefined
+}
+
 function getFontFamilyStack(fontFamily: FontFamily): string {
   if (fontFamily === 'serif') {
     return 'ui-serif, "Noto Serif KR", Georgia, serif'
@@ -898,7 +1034,13 @@ function getFontFamilyStack(fontFamily: FontFamily): string {
   return 'ui-sans-serif, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif'
 }
 
-function ImagePreview({ node }: { node: ImageNode }) {
+function ImagePreview({
+  node,
+  style,
+}: {
+  node: ImageNode
+  style?: CSSProperties
+}) {
   const [hasError, setHasError] = useState(false)
   const canRenderImage = node.src.trim().length > 0 && !hasError
 
@@ -911,6 +1053,7 @@ function ImagePreview({ node }: { node: ImageNode }) {
       className={`relative flex min-h-[320px] overflow-hidden border border-white/25 bg-[var(--dw-image-surface)] ${
         aspectRatioClasses[node.aspectRatio ?? 'wide']
       }`}
+      style={style}
     >
       {canRenderImage ? (
         // Arbitrary design-source URLs cannot use next/image domain allowlists yet.
@@ -954,6 +1097,8 @@ interface NodeInspectorProps {
   onTextChange: (node: TextNode, content: string) => void
   onTextTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
   onTextTypographyReset: (node: TextNode) => void
+  onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
+  onSpacingReset: (node: TreeNode) => void
   registeredFonts: RegisteredFontSummary[]
   fontUsageCounts: Map<string, number>
   fontRegistryMessage: string
@@ -979,6 +1124,8 @@ function NodeInspector({
   onTextChange,
   onTextTypographyChange,
   onTextTypographyReset,
+  onSpacingChange,
+  onSpacingReset,
   registeredFonts,
   fontUsageCounts,
   fontRegistryMessage,
@@ -1006,6 +1153,12 @@ function NodeInspector({
         <StyleControls
           colorPreset={colorPreset}
           onColorPresetChange={onColorPresetChange}
+        />
+
+        <SpacingControls
+          node={node}
+          onSpacingChange={onSpacingChange}
+          onSpacingReset={onSpacingReset}
         />
 
         {node.type === 'text' ? (
@@ -1438,6 +1591,248 @@ function TypographyControls({
   )
 }
 
+interface SpacingControlsProps {
+  node: TreeNode
+  onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
+  onSpacingReset: (node: TreeNode) => void
+}
+
+function SpacingControls({
+  node,
+  onSpacingChange,
+  onSpacingReset,
+}: SpacingControlsProps) {
+  const [paddingMode, setPaddingMode] = useState<SpacingMode>('all')
+  const [marginMode, setMarginMode] = useState<SpacingMode>('all')
+  const spacing = node.spacing ?? {}
+  const canEditGap = isContainerNode(node)
+
+  function updateFields(
+    fields: readonly SpacingField[],
+    value: string,
+    min: number,
+    max: number,
+  ) {
+    const nextValue = parseOptionalNumber(value, min, max)
+    onSpacingChange(
+      node,
+      Object.fromEntries(
+        fields.map((field) => [field, nextValue]),
+      ) as Partial<Spacing>,
+    )
+  }
+
+  function updateField(
+    field: SpacingField,
+    value: string,
+    min: number,
+    max: number,
+  ) {
+    onSpacingChange(node, {
+      [field]: parseOptionalNumber(value, min, max),
+    })
+  }
+
+  function renderModeButtons(
+    mode: SpacingMode,
+    onModeChange: (mode: SpacingMode) => void,
+  ) {
+    return (
+      <div className="mt-3 grid grid-cols-3 gap-1">
+        {spacingModes.map((modeOption) => (
+          <TypographyToggleButton
+            key={modeOption}
+            isSelected={mode === modeOption}
+            onClick={() => onModeChange(modeOption)}
+          >
+            {spacingModeLabels[modeOption]}
+          </TypographyToggleButton>
+        ))}
+      </div>
+    )
+  }
+
+  function renderSpacingGroup({
+    title,
+    mode,
+    onModeChange,
+    fields,
+    horizontalFields,
+    verticalFields,
+    min,
+    max,
+    placeholder,
+  }: {
+    title: string
+    mode: SpacingMode
+    onModeChange: (mode: SpacingMode) => void
+    fields: readonly SpacingField[]
+    horizontalFields: readonly SpacingField[]
+    verticalFields: readonly SpacingField[]
+    min: number
+    max: number
+    placeholder: string
+  }) {
+    const topField = fields[0] as SpacingField
+    const rightField = fields[1] as SpacingField
+    const bottomField = fields[2] as SpacingField
+    const leftField = fields[3] as SpacingField
+
+    return (
+      <div className="rounded-md border border-[#e0e5de] bg-white p-3">
+        <div className="flex items-center justify-between gap-3">
+          <h4 className="text-xs font-semibold text-[#4f5e56]">{title}</h4>
+          <span className="text-[11px] font-semibold text-[#647067]">px</span>
+        </div>
+        {renderModeButtons(mode, onModeChange)}
+        {mode === 'all' ? (
+          <div className="mt-3">
+            <TypographyNumberField
+              label="전체"
+              unit="px"
+              min={min}
+              max={max}
+              step={1}
+              value={getSpacingGroupValue(spacing, fields)}
+              placeholder={placeholder}
+              onChange={(value) => updateFields(fields, value, min, max)}
+            />
+          </div>
+        ) : null}
+        {mode === 'axis' ? (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <TypographyNumberField
+              label="가로"
+              unit="px"
+              min={min}
+              max={max}
+              step={1}
+              value={getSpacingGroupValue(spacing, horizontalFields)}
+              placeholder={placeholder}
+              onChange={(value) =>
+                updateFields(horizontalFields, value, min, max)
+              }
+            />
+            <TypographyNumberField
+              label="세로"
+              unit="px"
+              min={min}
+              max={max}
+              step={1}
+              value={getSpacingGroupValue(spacing, verticalFields)}
+              placeholder={placeholder}
+              onChange={(value) => updateFields(verticalFields, value, min, max)}
+            />
+          </div>
+        ) : null}
+        {mode === 'sides' ? (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <TypographyNumberField
+              label="위"
+              unit="px"
+              min={min}
+              max={max}
+              step={1}
+              value={spacing[topField]}
+              placeholder={placeholder}
+              onChange={(value) => updateField(topField, value, min, max)}
+            />
+            <TypographyNumberField
+              label="오른쪽"
+              unit="px"
+              min={min}
+              max={max}
+              step={1}
+              value={spacing[rightField]}
+              placeholder={placeholder}
+              onChange={(value) => updateField(rightField, value, min, max)}
+            />
+            <TypographyNumberField
+              label="아래"
+              unit="px"
+              min={min}
+              max={max}
+              step={1}
+              value={spacing[bottomField]}
+              placeholder={placeholder}
+              onChange={(value) => updateField(bottomField, value, min, max)}
+            />
+            <TypographyNumberField
+              label="왼쪽"
+              unit="px"
+              min={min}
+              max={max}
+              step={1}
+              value={spacing[leftField]}
+              placeholder={placeholder}
+              onChange={(value) => updateField(leftField, value, min, max)}
+            />
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold">간격</h3>
+          <p className="mt-1 text-xs text-[#647067]">
+            선택한 노드의 여백 조정
+          </p>
+        </div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+          onClick={() => onSpacingReset(node)}
+        >
+          초기화
+        </button>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {renderSpacingGroup({
+          title: '안쪽 여백',
+          mode: paddingMode,
+          onModeChange: setPaddingMode,
+          fields: paddingSpacingFields,
+          horizontalFields: paddingHorizontalFields,
+          verticalFields: paddingVerticalFields,
+          min: 0,
+          max: 500,
+          placeholder: '기본',
+        })}
+        {renderSpacingGroup({
+          title: '바깥 여백',
+          mode: marginMode,
+          onModeChange: setMarginMode,
+          fields: marginSpacingFields,
+          horizontalFields: marginHorizontalFields,
+          verticalFields: marginVerticalFields,
+          min: -200,
+          max: 500,
+          placeholder: '음수 가능',
+        })}
+        {canEditGap ? (
+          <div className="rounded-md border border-[#e0e5de] bg-white p-3">
+            <TypographyNumberField
+              label="자식 간격"
+              unit="px"
+              min={0}
+              max={200}
+              step={1}
+              value={spacing.gap}
+              placeholder="기본"
+              onChange={(value) => updateField('gap', value, 0, 200)}
+            />
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 interface TypographyNumberFieldProps {
   label: string
   max: number
@@ -1803,6 +2198,27 @@ function parseOptionalNumber(
   }
 
   return Math.min(max, Math.max(min, parsed))
+}
+
+function getSpacingGroupValue(
+  spacing: Partial<Spacing>,
+  fields: readonly SpacingField[],
+): number | undefined {
+  const values = fields
+    .map((field) => spacing[field])
+    .filter((value): value is number => value !== undefined)
+
+  if (values.length === 0) {
+    return undefined
+  }
+
+  const first = values[0]
+  if (values.every((value) => value === first)) {
+    return first
+  }
+
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length
+  return Number(average.toFixed(2))
 }
 
 function getFontRegistryErrorMessage(error: unknown): string {

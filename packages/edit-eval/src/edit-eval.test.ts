@@ -64,12 +64,17 @@ describe('edit-eval schema', () => {
           nodeId: 'hero.title',
           patch: { fontSize: 52, fontWeight: '700' },
         },
+        {
+          type: 'updateSpacing',
+          nodeId: 'hero.title',
+          patch: { paddingTop: 12, marginBottom: 24 },
+        },
         { type: 'updateButtonLabel', nodeId: 'hero.cta', label: '바로 시작' },
         { type: 'updateStyleTokens', patch: { colorPreset: 'plum' } },
       ],
     })
 
-    assert.equal(parsed.editSequence?.length, 4)
+    assert.equal(parsed.editSequence?.length, 5)
   })
 
   it('rejects invalid edit axis scores', () => {
@@ -156,13 +161,19 @@ describe('edit-eval dry-run judge', () => {
           nodeId: 'hero.title',
           patch: { fontSize: 52, fontWeight: '700' },
         },
+        {
+          type: 'updateSpacing' as const,
+          nodeId: 'hero.title',
+          patch: { paddingTop: 12, marginBottom: 24 },
+        },
         { type: 'updateStyleTokens' as const, patch: { colorPreset: 'navy' } },
       ]),
       [
         '1. updateText hero.title content="새 제목"',
         '2. updateButtonLabel hero.cta label="바로 시작"',
         '3. updateTextTypography hero.title typography={"fontSize":52,"fontWeight":"700"}',
-        '4. updateStyleTokens colorPreset="navy"',
+        '4. updateSpacing hero.title spacing={"paddingTop":12,"marginBottom":24}',
+        '5. updateStyleTokens colorPreset="navy"',
       ].join('\n'),
     )
   })

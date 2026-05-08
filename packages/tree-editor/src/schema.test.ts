@@ -39,6 +39,29 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateSpacing operation', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateSpacing',
+      nodeId: 'hero.card',
+      patch: {
+        paddingTop: 24,
+        paddingRight: 32,
+        paddingBottom: 24,
+        paddingLeft: 32,
+        marginTop: -12,
+        gap: 16,
+      },
+    })
+
+    assert.equal(op.type, 'updateSpacing')
+    if (op.type === 'updateSpacing') {
+      assert.equal(op.nodeId, 'hero.card')
+      assert.equal(op.patch.paddingTop, 24)
+      assert.equal(op.patch.marginTop, -12)
+      assert.equal(op.patch.gap, 16)
+    }
+  })
+
   it('parses updateButtonLabel operation', () => {
     const op = editOperationSchema.parse({
       type: 'updateButtonLabel',
@@ -189,6 +212,38 @@ describe('edit-operation schema', () => {
     )
   })
 
+  it('rejects invalid spacing updates', () => {
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateSpacing',
+        nodeId: 'hero.card',
+        patch: {
+          paddingTop: -1,
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateSpacing',
+        nodeId: 'hero.card',
+        patch: {
+          marginBottom: -201,
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateSpacing',
+        nodeId: 'hero.card',
+        patch: {
+          gap: 201,
+        },
+      }),
+    )
+  })
+
   it('rejects empty nodeId', () => {
     assert.throws(() =>
       editOperationSchema.parse({
@@ -212,6 +267,11 @@ describe('edit-sequence schema', () => {
         nodeId: 'foo',
         patch: { fontSize: 44, fontWeight: '600' },
       },
+      {
+        type: 'updateSpacing',
+        nodeId: 'foo',
+        patch: { paddingTop: 24, marginBottom: 12, gap: 16 },
+      },
       { type: 'updateButtonLabel', nodeId: 'cta', label: '시작' },
       { type: 'updateImage', nodeId: 'visual', alt: '대체 텍스트' },
       { type: 'moveNode', nodeId: 'cards.card-a', direction: 'down' },
@@ -222,7 +282,7 @@ describe('edit-sequence schema', () => {
   it('parses a valid sequence', () => {
     const seq = editSequenceSchema.parse(validSequence)
     assert.equal(seq.id, 'test')
-    assert.equal(seq.operations.length, 6)
+    assert.equal(seq.operations.length, 7)
     assert.equal(seq.tree, '../../trees/x.json')
   })
 

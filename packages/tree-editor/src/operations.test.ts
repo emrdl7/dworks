@@ -9,6 +9,7 @@ import {
   duplicateNode,
   moveNode,
   replaceTextById,
+  updateSpacing,
   updateButtonLabel,
   updateImage,
   updateStyleTokens,
@@ -149,6 +150,11 @@ describe('tree editor operations', () => {
         patch: { fontSize: 56, fontWeight: '700', textAlign: 'center' },
       },
       {
+        type: 'updateSpacing',
+        nodeId: 'landing.card',
+        patch: { paddingTop: 24, marginBottom: 12, gap: 16 },
+      },
+      {
         type: 'updateImage',
         nodeId: 'landing.visual',
         alt: '새 이미지 설명',
@@ -175,15 +181,20 @@ describe('tree editor operations', () => {
       assert.equal(visual?.type, 'image')
       if (
         title?.type === 'text' &&
+        visual?.type === 'image' &&
         cta?.type === 'button' &&
-        visual?.type === 'image'
+        updated.root.children[3]?.type === 'card'
       ) {
+        const card = updated.root.children[3]
         assert.equal(title.content, '새 제목')
         assert.equal(title.typography?.fontSize, 56)
         assert.equal(title.typography?.fontWeight, '700')
         assert.equal(title.typography?.textAlign, 'center')
         assert.equal(cta.label, '바로 시작')
         assert.equal(visual.alt, '새 이미지 설명')
+        assert.equal(card.spacing?.paddingTop, 24)
+        assert.equal(card.spacing?.marginBottom, 12)
+        assert.equal(card.spacing?.gap, 16)
       }
     }
   })
@@ -322,6 +333,53 @@ describe('tree editor operations', () => {
       assert.equal(title?.type, 'text')
       if (title?.type === 'text') {
         assert.equal(title.typography, undefined)
+      }
+    }
+  })
+
+  it('updates spacing overrides on any node without changing content', () => {
+    const tree = fixtureTree()
+    const updated = updateSpacing(tree, 'landing.cta', {
+      paddingTop: 14,
+      paddingRight: 18,
+      paddingBottom: 14,
+      paddingLeft: 18,
+      marginTop: -4,
+    })
+
+    assert.equal(updated.root.type, 'section')
+    if (updated.root.type === 'section') {
+      const cta = updated.root.children[1]
+      assert.equal(cta?.type, 'button')
+      if (cta?.type === 'button') {
+        assert.equal(cta.label, '시작하기')
+        assert.deepEqual(cta.spacing, {
+          paddingTop: 14,
+          paddingRight: 18,
+          paddingBottom: 14,
+          paddingLeft: 18,
+          marginTop: -4,
+        })
+      }
+    }
+  })
+
+  it('removes spacing fields and clears empty spacing objects', () => {
+    const spaced = updateSpacing(fixtureTree(), 'landing.card', {
+      paddingTop: 24,
+      gap: 12,
+    })
+    const reset = updateSpacing(spaced, 'landing.card', {
+      paddingTop: undefined,
+      gap: undefined,
+    })
+
+    assert.equal(reset.root.type, 'section')
+    if (reset.root.type === 'section') {
+      const card = reset.root.children[3]
+      assert.equal(card?.type, 'card')
+      if (card?.type === 'card') {
+        assert.equal(card.spacing, undefined)
       }
     }
   })

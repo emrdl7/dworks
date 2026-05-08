@@ -65,6 +65,71 @@ describe('tree schema', () => {
     }
   })
 
+  it('parses node spacing overrides', () => {
+    const parsed = treeNodeSchema.parse({
+      id: 'landing.card',
+      type: 'card',
+      editKind: 'structure',
+      spacing: {
+        paddingTop: 24,
+        paddingRight: 32,
+        paddingBottom: 24,
+        paddingLeft: 32,
+        marginTop: -12,
+        marginRight: 0,
+        marginBottom: 20,
+        marginLeft: 0,
+        gap: 16,
+      },
+      children: [],
+    })
+
+    assert.equal(parsed.type, 'card')
+    if (parsed.type === 'card') {
+      assert.equal(parsed.spacing?.paddingTop, 24)
+      assert.equal(parsed.spacing?.marginTop, -12)
+      assert.equal(parsed.spacing?.gap, 16)
+    }
+  })
+
+  it('rejects spacing values outside bounds', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        spacing: {
+          paddingTop: -1,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        spacing: {
+          marginTop: -201,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        spacing: {
+          gap: 201,
+        },
+        children: [],
+      }),
+    )
+  })
+
   it('accepts custom font-family ids for future TTF registration', () => {
     const parsed = treeNodeSchema.parse({
       id: 'hero.title',

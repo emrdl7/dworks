@@ -89,6 +89,12 @@ export function summarizeEditOperations(operations: EditOperation[]): string {
             operation.type,
             operation.nodeId,
           )} typography=${JSON.stringify(operation.patch)}`
+        case 'updateSpacing':
+          return `${operationPrefix(
+            index,
+            operation.type,
+            operation.nodeId,
+          )} spacing=${JSON.stringify(operation.patch)}`
         case 'updateButtonLabel':
           return `${operationPrefix(
             index,
