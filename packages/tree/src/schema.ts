@@ -137,6 +137,26 @@ export const hexColorSchema = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
 export const opacitySchema = z.number().min(0).max(1)
+export const GRADIENT_DIRECTION_IDS = [
+  'to-top',
+  'to-top-right',
+  'to-right',
+  'to-bottom-right',
+  'to-bottom',
+  'to-bottom-left',
+  'to-left',
+  'to-top-left',
+] as const
+export const gradientDirectionSchema = z.enum(GRADIENT_DIRECTION_IDS)
+export type GradientDirection = z.infer<typeof gradientDirectionSchema>
+export const gradientSchema = z.object({
+  from: hexColorSchema,
+  to: hexColorSchema,
+  direction: gradientDirectionSchema,
+  fromOpacity: opacitySchema.optional(),
+  toOpacity: opacitySchema.optional(),
+})
+export type Gradient = z.infer<typeof gradientSchema>
 export const shapeSchema = z.object({
   radius: z.number().min(0).max(120).optional(),
   borderWidth: z.number().min(0).max(20).optional(),
@@ -150,6 +170,7 @@ export type Shape = z.infer<typeof shapeSchema>
 export const nodeColorSchema = z.object({
   backgroundColor: hexColorSchema.optional(),
   backgroundOpacity: opacitySchema.optional(),
+  backgroundGradient: gradientSchema.optional(),
   textColor: hexColorSchema.optional(),
   textOpacity: opacitySchema.optional(),
 })
@@ -177,6 +198,7 @@ export const imagePresentationSchema = z.object({
   fit: imageFitSchema.optional(),
   overlayColor: hexColorSchema.optional(),
   overlayOpacity: opacitySchema.optional(),
+  overlayGradient: gradientSchema.optional(),
 })
 export type ImagePresentation = z.infer<typeof imagePresentationSchema>
 

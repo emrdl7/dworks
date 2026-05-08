@@ -11,6 +11,7 @@ import {
   BUILT_IN_FONT_FAMILY_IDS,
   FONT_FAMILY_IDS,
   FONT_WEIGHT_IDS,
+  GRADIENT_DIRECTION_IDS,
   IMAGE_ASPECT_RATIOS,
   IMAGE_FIT_IDS,
   LAYOUT_ALIGN_IDS,
@@ -132,6 +133,13 @@ describe('tree schema', () => {
       color: {
         backgroundColor: '#f8fafc',
         backgroundOpacity: 0.72,
+        backgroundGradient: {
+          from: '#ff6b6b',
+          to: '#4ecdc4',
+          direction: 'to-bottom-right',
+          fromOpacity: 0.84,
+          toOpacity: 0.56,
+        },
         textColor: '#123',
         textOpacity: 0.64,
       },
@@ -142,6 +150,13 @@ describe('tree schema', () => {
     if (parsed.type === 'card') {
       assert.equal(parsed.color?.backgroundColor, '#f8fafc')
       assert.equal(parsed.color?.backgroundOpacity, 0.72)
+      assert.deepEqual(parsed.color?.backgroundGradient, {
+        from: '#ff6b6b',
+        to: '#4ecdc4',
+        direction: 'to-bottom-right',
+        fromOpacity: 0.84,
+        toOpacity: 0.56,
+      })
       assert.equal(parsed.color?.textColor, '#123')
       assert.equal(parsed.color?.textOpacity, 0.64)
     }
@@ -179,6 +194,38 @@ describe('tree schema', () => {
         editKind: 'structure',
         color: {
           backgroundOpacity: 1.2,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          backgroundGradient: {
+            from: '#ffffff',
+            to: '#000000',
+            direction: 'diagonal',
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        color: {
+          backgroundGradient: {
+            from: 'white',
+            to: '#000000',
+            direction: 'to-bottom',
+          },
         },
         children: [],
       }),
@@ -392,6 +439,11 @@ describe('tree schema', () => {
         fit: 'contain',
         overlayColor: '#123456',
         overlayOpacity: 0.42,
+        overlayGradient: {
+          from: '#123456',
+          to: '#abcdef',
+          direction: 'to-top-left',
+        },
       },
     })
 
@@ -404,6 +456,11 @@ describe('tree schema', () => {
         fit: 'contain',
         overlayColor: '#123456',
         overlayOpacity: 0.42,
+        overlayGradient: {
+          from: '#123456',
+          to: '#abcdef',
+          direction: 'to-top-left',
+        },
       })
     }
   })
@@ -439,6 +496,23 @@ describe('tree schema', () => {
         src: '',
         alt: '',
         presentation: { overlayOpacity: 1.2 },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-overlay-gradient',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: {
+          overlayGradient: {
+            from: '#000000',
+            to: '#ffffff',
+            direction: 'around',
+          },
+        },
       }),
     )
   })
@@ -681,6 +755,16 @@ describe('tree schema', () => {
       'evenly',
     ])
     assert.deepEqual(LAYOUT_WRAP_IDS, ['nowrap', 'wrap'])
+    assert.deepEqual(GRADIENT_DIRECTION_IDS, [
+      'to-top',
+      'to-top-right',
+      'to-right',
+      'to-bottom-right',
+      'to-bottom',
+      'to-bottom-left',
+      'to-left',
+      'to-top-left',
+    ])
     assert.deepEqual(COLOR_PRESET_IDS, [
       'mint',
       'navy',

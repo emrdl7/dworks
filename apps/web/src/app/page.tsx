@@ -14,6 +14,7 @@ import {
   COLOR_PRESETS,
   COLOR_PRESET_IDS,
   BUILT_IN_FONT_FAMILY_IDS,
+  GRADIENT_DIRECTION_IDS,
   type BorderStyle,
   type ButtonNode,
   type BuiltInFontFamily,
@@ -21,6 +22,8 @@ import {
   type FocalPoint,
   type FontFamily,
   type FontWeight,
+  type Gradient,
+  type GradientDirection,
   type ImageAspectRatio,
   type ImageFit,
   type ImageNode,
@@ -220,6 +223,17 @@ const layoutWrapLabels: Record<LayoutWrap, string> = {
   wrap: '줄바꿈',
 }
 
+const gradientDirectionLabels: Record<GradientDirection, string> = {
+  'to-top': '위로',
+  'to-top-right': '우상',
+  'to-right': '오른쪽',
+  'to-bottom-right': '우하',
+  'to-bottom': '아래로',
+  'to-bottom-left': '좌하',
+  'to-left': '왼쪽',
+  'to-top-left': '좌상',
+}
+
 const fontWeightOptions: FontWeight[] = [
   '100',
   '200',
@@ -252,6 +266,7 @@ const layoutJustifyOptions: LayoutJustify[] = [
   'evenly',
 ]
 const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
+const gradientDirectionOptions: GradientDirection[] = [...GRADIENT_DIRECTION_IDS]
 const REGISTERED_FONT_FAMILY_OPTION_PREFIX = 'registered-family:'
 const MAX_FONT_UPLOAD_FILES = 20
 const typographyFields = [
@@ -284,6 +299,7 @@ const shapeFields = [
 const colorFields = [
   'backgroundColor',
   'backgroundOpacity',
+  'backgroundGradient',
   'textColor',
   'textOpacity',
 ] as const
@@ -292,6 +308,7 @@ const imagePresentationFields = [
   'fit',
   'overlayColor',
   'overlayOpacity',
+  'overlayGradient',
 ] as const
 type SpacingField = (typeof spacingFields)[number]
 type ColorField = Extract<
@@ -304,6 +321,9 @@ type ColorOpacityField = Extract<
 >
 type ImagePresentationField = (typeof imagePresentationFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
+type GradientColorStopField = 'from' | 'to'
+type GradientOpacityStopField = 'fromOpacity' | 'toOpacity'
+type ColorMode = 'solid' | 'gradient'
 
 const spacingModes: SpacingMode[] = ['all', 'axis', 'sides']
 const spacingModeLabels: Record<SpacingMode, string> = {
@@ -355,6 +375,8 @@ const DEFAULT_SHAPE_COLOR = '#d7ddd2'
 const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
 const DEFAULT_TEXT_PICKER_COLOR = '#18211d'
 const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
+const DEFAULT_GRADIENT_TO_COLOR = '#000000'
+const DEFAULT_GRADIENT_DIRECTION: GradientDirection = 'to-bottom-right'
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const HISTORY_MERGE_WINDOW_MS = 600
 const SHADOW_VALUES: Record<ShadowPreset, string> = {
@@ -363,6 +385,26 @@ const SHADOW_VALUES: Record<ShadowPreset, string> = {
   md: '0 4px 12px rgba(0, 0, 0, 0.08)',
   lg: '0 12px 32px rgba(0, 0, 0, 0.12)',
   xl: '0 24px 64px rgba(0, 0, 0, 0.16)',
+}
+const GRADIENT_DIRECTION_CSS: Record<GradientDirection, string> = {
+  'to-top': 'to top',
+  'to-top-right': 'to top right',
+  'to-right': 'to right',
+  'to-bottom-right': 'to bottom right',
+  'to-bottom': 'to bottom',
+  'to-bottom-left': 'to bottom left',
+  'to-left': 'to left',
+  'to-top-left': 'to top left',
+}
+const GRADIENT_DIRECTION_ROTATION: Record<GradientDirection, number> = {
+  'to-top': 0,
+  'to-top-right': 45,
+  'to-right': 90,
+  'to-bottom-right': 135,
+  'to-bottom': 180,
+  'to-bottom-left': 225,
+  'to-left': 270,
+  'to-top-left': 315,
 }
 
 const MAX_HISTORY = 100
@@ -1722,7 +1764,11 @@ function getColorStyle(
         )
       : undefined
   const style: CSSProperties = {
-    ...(color?.backgroundColor !== undefined
+    ...(color?.backgroundGradient !== undefined
+      ? { backgroundImage: gradientToCss(color.backgroundGradient) }
+      : {}),
+    ...(color?.backgroundGradient === undefined &&
+    color?.backgroundColor !== undefined
       ? {
           backgroundColor: getCssColorWithOpacity(
             color.backgroundColor,
@@ -1974,7 +2020,8 @@ function ImagePreview({
   const overlayOpacity = presentation.overlayOpacity ?? 1
   const shouldRenderOverlay =
     canRenderImage &&
-    presentation.overlayColor !== undefined &&
+    (presentation.overlayGradient !== undefined ||
+      presentation.overlayColor !== undefined) &&
     overlayOpacity > 0
   const imageStyle: CSSProperties = {
     objectFit: imageFit,
@@ -2025,10 +2072,14 @@ function ImagePreview({
       {shouldRenderOverlay ? (
         <div
           className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundColor: presentation.overlayColor,
-            opacity: overlayOpacity,
-          }}
+          style={
+            presentation.overlayGradient
+              ? { backgroundImage: gradientToCss(presentation.overlayGradient) }
+              : {
+                  backgroundColor: presentation.overlayColor,
+                  opacity: overlayOpacity,
+                }
+          }
         />
       ) : null}
     </figure>
@@ -2424,11 +2475,28 @@ function NodeColorControls({
   onNodeColorReset,
 }: NodeColorControlsProps) {
   const color = node.color ?? {}
+  const backgroundMode: ColorMode =
+    color.backgroundGradient === undefined ? 'solid' : 'gradient'
+  const backgroundGradient = getResolvedGradient(
+    color.backgroundGradient,
+    color.backgroundColor ?? DEFAULT_COLOR_PICKER_COLOR,
+    color.backgroundOpacity,
+  )
   const [backgroundColorInput, setBackgroundColorInput] = useState(
     color.backgroundColor ?? '',
   )
+  const [backgroundGradientFromInput, setBackgroundGradientFromInput] = useState(
+    backgroundGradient.from,
+  )
+  const [backgroundGradientToInput, setBackgroundGradientToInput] = useState(
+    backgroundGradient.to,
+  )
   const [textColorInput, setTextColorInput] = useState(color.textColor ?? '')
   const [backgroundColorError, setBackgroundColorError] = useState(false)
+  const [backgroundGradientFromError, setBackgroundGradientFromError] =
+    useState(false)
+  const [backgroundGradientToError, setBackgroundGradientToError] =
+    useState(false)
   const [textColorError, setTextColorError] = useState(false)
 
   useEffect(() => {
@@ -2440,6 +2508,18 @@ function NodeColorControls({
     setTextColorInput(color.textColor ?? '')
     setTextColorError(false)
   }, [node.id, color.textColor])
+
+  useEffect(() => {
+    setBackgroundGradientFromInput(backgroundGradient.from)
+    setBackgroundGradientToInput(backgroundGradient.to)
+    setBackgroundGradientFromError(false)
+    setBackgroundGradientToError(false)
+  }, [
+    node.id,
+    backgroundGradient.from,
+    backgroundGradient.to,
+    backgroundGradient.direction,
+  ])
 
   function updateColorFromText(field: ColorField, value: string) {
     const trimmedValue = value.trim()
@@ -2514,6 +2594,135 @@ function NodeColorControls({
     })
   }
 
+  function updateBackgroundMode(mode: ColorMode) {
+    if (mode === backgroundMode) {
+      return
+    }
+
+    if (mode === 'gradient') {
+      const nextGradient = getResolvedGradient(
+        color.backgroundGradient,
+        color.backgroundColor ?? DEFAULT_COLOR_PICKER_COLOR,
+        color.backgroundOpacity,
+      )
+      setBackgroundGradientFromInput(nextGradient.from)
+      setBackgroundGradientToInput(nextGradient.to)
+      setBackgroundGradientFromError(false)
+      setBackgroundGradientToError(false)
+      onNodeColorChange(node, {
+        backgroundColor: undefined,
+        backgroundOpacity: undefined,
+        backgroundGradient: nextGradient,
+      })
+      return
+    }
+
+    const nextColor =
+      color.backgroundGradient?.from ??
+      color.backgroundColor ??
+      DEFAULT_COLOR_PICKER_COLOR
+    setBackgroundColorInput(nextColor)
+    setBackgroundColorError(false)
+    onNodeColorChange(node, {
+      backgroundColor: nextColor,
+      backgroundOpacity: color.backgroundGradient?.fromOpacity,
+      backgroundGradient: undefined,
+    })
+  }
+
+  function updateBackgroundGradientColorFromText(
+    field: GradientColorStopField,
+    value: string,
+  ) {
+    const trimmedValue = value.trim()
+    const setInput =
+      field === 'from'
+        ? setBackgroundGradientFromInput
+        : setBackgroundGradientToInput
+    const setError =
+      field === 'from'
+        ? setBackgroundGradientFromError
+        : setBackgroundGradientToError
+
+    setInput(value)
+
+    if (!isValidHexColor(trimmedValue)) {
+      setError(true)
+      return
+    }
+
+    setError(false)
+    onNodeColorChange(node, {
+      backgroundColor: undefined,
+      backgroundOpacity: undefined,
+      backgroundGradient: getGradientWithPatch(backgroundGradient, {
+        [field]: normalizeHexColor(trimmedValue),
+      }),
+    })
+  }
+
+  function updateBackgroundGradientColorFromPicker(
+    field: GradientColorStopField,
+    value: string,
+  ) {
+    const normalizedValue = normalizeHexColor(value)
+    if (field === 'from') {
+      setBackgroundGradientFromInput(normalizedValue)
+      setBackgroundGradientFromError(false)
+    } else {
+      setBackgroundGradientToInput(normalizedValue)
+      setBackgroundGradientToError(false)
+    }
+
+    onNodeColorChange(
+      node,
+      {
+        backgroundColor: undefined,
+        backgroundOpacity: undefined,
+        backgroundGradient: getGradientWithPatch(backgroundGradient, {
+          [field]: normalizedValue,
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `backgroundGradient.${field}`) },
+    )
+  }
+
+  function updateBackgroundGradientOpacity(
+    field: GradientOpacityStopField,
+    value: string,
+  ) {
+    onNodeColorChange(
+      node,
+      {
+        backgroundColor: undefined,
+        backgroundOpacity: undefined,
+        backgroundGradient: getGradientWithPatch(backgroundGradient, {
+          [field]: parseOptionalOpacity(value),
+        }),
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `backgroundGradient.${field}`) },
+    )
+  }
+
+  function updateBackgroundGradientDirection(direction: GradientDirection) {
+    onNodeColorChange(
+      node,
+      {
+        backgroundColor: undefined,
+        backgroundOpacity: undefined,
+        backgroundGradient: getGradientWithPatch(backgroundGradient, {
+          direction,
+        }),
+      },
+      {
+        mergeKey: getNodeColorMergeKey(
+          node.id,
+          'backgroundGradient.direction',
+        ),
+      },
+    )
+  }
+
   function renderColorField({
     colorField,
     defaultColor,
@@ -2581,29 +2790,242 @@ function NodeColorControls({
       description="선택한 노드의 배경과 글자"
       onAction={() => onNodeColorReset(node)}
     >
-      <div className="grid grid-cols-2 gap-3">
-        {renderColorField({
-          colorField: 'backgroundColor',
-          defaultColor: DEFAULT_COLOR_PICKER_COLOR,
-          error: backgroundColorError,
-          inputValue: backgroundColorInput,
-          label: '배경 색상',
-          opacityField: 'backgroundOpacity',
-          opacityLabel: '배경 투명도',
-          opacityValue: color.backgroundOpacity,
-        })}
-        {renderColorField({
-          colorField: 'textColor',
-          defaultColor: DEFAULT_TEXT_PICKER_COLOR,
-          error: textColorError,
-          inputValue: textColorInput,
-          label: '글자 색상',
-          opacityField: 'textOpacity',
-          opacityLabel: '글자 투명도',
-          opacityValue: color.textOpacity,
-        })}
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs font-semibold text-[#4f5e56]">
+              배경 방식
+            </span>
+            <div className="grid w-40 grid-cols-2 gap-1">
+              <TypographyToggleButton
+                isSelected={backgroundMode === 'solid'}
+                onClick={() => updateBackgroundMode('solid')}
+              >
+                단일
+              </TypographyToggleButton>
+              <TypographyToggleButton
+                isSelected={backgroundMode === 'gradient'}
+                onClick={() => updateBackgroundMode('gradient')}
+              >
+                그라디언트
+              </TypographyToggleButton>
+            </div>
+          </div>
+          <div className="mt-3">
+            {backgroundMode === 'gradient' ? (
+              <GradientControls
+                gradient={backgroundGradient}
+                fromError={backgroundGradientFromError}
+                fromInput={backgroundGradientFromInput}
+                labelPrefix="배경"
+                toError={backgroundGradientToError}
+                toInput={backgroundGradientToInput}
+                onColorPicker={updateBackgroundGradientColorFromPicker}
+                onColorText={updateBackgroundGradientColorFromText}
+                onDirection={updateBackgroundGradientDirection}
+                onOpacity={updateBackgroundGradientOpacity}
+              />
+            ) : (
+              renderColorField({
+                colorField: 'backgroundColor',
+                defaultColor: DEFAULT_COLOR_PICKER_COLOR,
+                error: backgroundColorError,
+                inputValue: backgroundColorInput,
+                label: '배경 색상',
+                opacityField: 'backgroundOpacity',
+                opacityLabel: '배경 투명도',
+                opacityValue: color.backgroundOpacity,
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {renderColorField({
+            colorField: 'textColor',
+            defaultColor: DEFAULT_TEXT_PICKER_COLOR,
+            error: textColorError,
+            inputValue: textColorInput,
+            label: '글자 색상',
+            opacityField: 'textOpacity',
+            opacityLabel: '글자 투명도',
+            opacityValue: color.textOpacity,
+          })}
+        </div>
       </div>
     </InspectorDisclosure>
+  )
+}
+
+interface GradientControlsProps {
+  fromError: boolean
+  fromInput: string
+  gradient: Gradient
+  labelPrefix: string
+  onColorPicker: (field: GradientColorStopField, value: string) => void
+  onColorText: (field: GradientColorStopField, value: string) => void
+  onDirection: (direction: GradientDirection) => void
+  onOpacity: (field: GradientOpacityStopField, value: string) => void
+  toError: boolean
+  toInput: string
+}
+
+function GradientControls({
+  fromError,
+  fromInput,
+  gradient,
+  labelPrefix,
+  onColorPicker,
+  onColorText,
+  onDirection,
+  onOpacity,
+  toError,
+  toInput,
+}: GradientControlsProps) {
+  return (
+    <div className="space-y-4 rounded-md border border-[#e0e5de] bg-white p-3">
+      <div className="grid grid-cols-2 gap-3">
+        <GradientColorField
+          colorField="from"
+          error={fromError}
+          inputValue={fromInput}
+          label={`${labelPrefix} 시작 색`}
+          opacityField="fromOpacity"
+          opacityLabel="시작 투명도"
+          opacityValue={gradient.fromOpacity}
+          onColorPicker={onColorPicker}
+          onColorText={onColorText}
+          onOpacity={onOpacity}
+        />
+        <GradientColorField
+          colorField="to"
+          error={toError}
+          inputValue={toInput}
+          label={`${labelPrefix} 끝 색`}
+          opacityField="toOpacity"
+          opacityLabel="끝 투명도"
+          opacityValue={gradient.toOpacity}
+          onColorPicker={onColorPicker}
+          onColorText={onColorText}
+          onOpacity={onOpacity}
+        />
+      </div>
+
+      <div>
+        <span className="text-xs font-semibold text-[#4f5e56]">방향</span>
+        <div className="mt-2 grid grid-cols-8 gap-1">
+          {gradientDirectionOptions.map((direction) => (
+            <button
+              key={direction}
+              type="button"
+              aria-label={`${gradientDirectionLabels[direction]} 그라디언트`}
+              aria-pressed={gradient.direction === direction}
+              className={`flex h-9 items-center justify-center rounded-md border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+                gradient.direction === direction
+                  ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+                  : 'border-[#c9d4cd] bg-white text-[#26312b] hover:bg-[#eef3ed]'
+              }`}
+              title={gradientDirectionLabels[direction]}
+              onClick={() => onDirection(direction)}
+            >
+              <GradientDirectionIcon direction={direction} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface GradientColorFieldProps {
+  colorField: GradientColorStopField
+  error: boolean
+  inputValue: string
+  label: string
+  onColorPicker: (field: GradientColorStopField, value: string) => void
+  onColorText: (field: GradientColorStopField, value: string) => void
+  onOpacity: (field: GradientOpacityStopField, value: string) => void
+  opacityField: GradientOpacityStopField
+  opacityLabel: string
+  opacityValue?: number
+}
+
+function GradientColorField({
+  colorField,
+  error,
+  inputValue,
+  label,
+  onColorPicker,
+  onColorText,
+  onOpacity,
+  opacityField,
+  opacityLabel,
+  opacityValue,
+}: GradientColorFieldProps) {
+  return (
+    <div className="space-y-3">
+      <label className="block">
+        <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
+        <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+          <input
+            className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+            value={inputValue}
+            placeholder="#RRGGBB"
+            aria-invalid={error}
+            spellCheck={false}
+            onChange={(event) => onColorText(colorField, event.target.value)}
+          />
+          <input
+            type="color"
+            aria-label={`${label} 선택`}
+            className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+            value={toColorInputValue(inputValue, DEFAULT_COLOR_PICKER_COLOR)}
+            onChange={(event) => onColorPicker(colorField, event.target.value)}
+          />
+        </span>
+        {error ? (
+          <span className="mt-2 block text-xs text-[#b42318]">
+            HEX 형식 (#RRGGBB)으로 입력해주세요.
+          </span>
+        ) : null}
+      </label>
+      <OpacityControl
+        label={opacityLabel}
+        value={opacityValue}
+        onChange={(value) => onOpacity(opacityField, value)}
+      />
+    </div>
+  )
+}
+
+function GradientDirectionIcon({
+  direction,
+}: {
+  direction: GradientDirection
+}) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <g transform={`rotate(${getGradientDirectionRotation(direction)} 12 12)`}>
+        <path
+          d="M12 19V5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="2"
+        />
+        <path
+          d="m7 10 5-5 5 5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </g>
+    </svg>
   )
 }
 
@@ -3542,15 +3964,42 @@ function ImageCompositionControls({
   const focalXPercent = Math.round(effectiveFocalPoint.x * 100)
   const focalYPercent = Math.round(effectiveFocalPoint.y * 100)
   const overlayOpacityPercent = getOpacityPercent(presentation.overlayOpacity)
+  const overlayMode: ColorMode =
+    presentation.overlayGradient === undefined ? 'solid' : 'gradient'
+  const overlayGradient = getResolvedGradient(
+    presentation.overlayGradient,
+    presentation.overlayColor ?? DEFAULT_IMAGE_OVERLAY_COLOR,
+    presentation.overlayOpacity,
+  )
   const [overlayColorInput, setOverlayColorInput] = useState(
     presentation.overlayColor ?? '',
   )
+  const [overlayGradientFromInput, setOverlayGradientFromInput] = useState(
+    overlayGradient.from,
+  )
+  const [overlayGradientToInput, setOverlayGradientToInput] = useState(
+    overlayGradient.to,
+  )
   const [overlayColorError, setOverlayColorError] = useState(false)
+  const [overlayGradientFromError, setOverlayGradientFromError] = useState(false)
+  const [overlayGradientToError, setOverlayGradientToError] = useState(false)
 
   useEffect(() => {
     setOverlayColorInput(presentation.overlayColor ?? '')
     setOverlayColorError(false)
   }, [node.id, presentation.overlayColor])
+
+  useEffect(() => {
+    setOverlayGradientFromInput(overlayGradient.from)
+    setOverlayGradientToInput(overlayGradient.to)
+    setOverlayGradientFromError(false)
+    setOverlayGradientToError(false)
+  }, [
+    node.id,
+    overlayGradient.from,
+    overlayGradient.to,
+    overlayGradient.direction,
+  ])
 
   function updateAspectRatio(value: string) {
     onImageChange(node, {
@@ -3643,6 +4092,138 @@ function ImageCompositionControls({
     )
   }
 
+  function updateOverlayMode(mode: ColorMode) {
+    if (mode === overlayMode) {
+      return
+    }
+
+    if (mode === 'gradient') {
+      const nextGradient = getResolvedGradient(
+        presentation.overlayGradient,
+        presentation.overlayColor ?? DEFAULT_IMAGE_OVERLAY_COLOR,
+        presentation.overlayOpacity,
+      )
+      setOverlayGradientFromInput(nextGradient.from)
+      setOverlayGradientToInput(nextGradient.to)
+      setOverlayGradientFromError(false)
+      setOverlayGradientToError(false)
+      onImageChange(node, {
+        presentation: {
+          overlayColor: undefined,
+          overlayOpacity: undefined,
+          overlayGradient: nextGradient,
+        },
+      })
+      return
+    }
+
+    const nextColor =
+      presentation.overlayGradient?.from ??
+      presentation.overlayColor ??
+      DEFAULT_IMAGE_OVERLAY_COLOR
+    setOverlayColorInput(nextColor)
+    setOverlayColorError(false)
+    onImageChange(node, {
+      presentation: {
+        overlayColor: nextColor,
+        overlayOpacity: presentation.overlayGradient?.fromOpacity,
+        overlayGradient: undefined,
+      },
+    })
+  }
+
+  function updateOverlayGradientColorFromText(
+    field: GradientColorStopField,
+    value: string,
+  ) {
+    const trimmedValue = value.trim()
+    const setInput =
+      field === 'from' ? setOverlayGradientFromInput : setOverlayGradientToInput
+    const setError =
+      field === 'from' ? setOverlayGradientFromError : setOverlayGradientToError
+
+    setInput(value)
+
+    if (!isValidHexColor(trimmedValue)) {
+      setError(true)
+      return
+    }
+
+    setError(false)
+    onImageChange(node, {
+      presentation: {
+        overlayColor: undefined,
+        overlayOpacity: undefined,
+        overlayGradient: getGradientWithPatch(overlayGradient, {
+          [field]: normalizeHexColor(trimmedValue),
+        }),
+      },
+    })
+  }
+
+  function updateOverlayGradientColorFromPicker(
+    field: GradientColorStopField,
+    value: string,
+  ) {
+    const normalizedValue = normalizeHexColor(value)
+    if (field === 'from') {
+      setOverlayGradientFromInput(normalizedValue)
+      setOverlayGradientFromError(false)
+    } else {
+      setOverlayGradientToInput(normalizedValue)
+      setOverlayGradientToError(false)
+    }
+
+    onImageChange(
+      node,
+      {
+        presentation: {
+          overlayColor: undefined,
+          overlayOpacity: undefined,
+          overlayGradient: getGradientWithPatch(overlayGradient, {
+            [field]: normalizedValue,
+          }),
+        },
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `overlayGradient.${field}`) },
+    )
+  }
+
+  function updateOverlayGradientOpacity(
+    field: GradientOpacityStopField,
+    value: string,
+  ) {
+    onImageChange(
+      node,
+      {
+        presentation: {
+          overlayColor: undefined,
+          overlayOpacity: undefined,
+          overlayGradient: getGradientWithPatch(overlayGradient, {
+            [field]: parseOptionalOpacity(value),
+          }),
+        },
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, `overlayGradient.${field}`) },
+    )
+  }
+
+  function updateOverlayGradientDirection(direction: GradientDirection) {
+    onImageChange(
+      node,
+      {
+        presentation: {
+          overlayColor: undefined,
+          overlayOpacity: undefined,
+          overlayGradient: getGradientWithPatch(overlayGradient, {
+            direction,
+          }),
+        },
+      },
+      { mergeKey: getNodeColorMergeKey(node.id, 'overlayGradient.direction') },
+    )
+  }
+
   function resetImageComposition() {
     onImageChange(node, {
       focalPoint: undefined,
@@ -3728,7 +4309,14 @@ function ImageCompositionControls({
               이미지 슬롯
             </span>
           )}
-          {presentation.overlayColor && overlayOpacityPercent > 0 ? (
+          {presentation.overlayGradient ? (
+            <span
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage: gradientToCss(presentation.overlayGradient),
+              }}
+            />
+          ) : presentation.overlayColor && overlayOpacityPercent > 0 ? (
             <span
               className="pointer-events-none absolute inset-0"
               style={{
@@ -3770,43 +4358,84 @@ function ImageCompositionControls({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <label className="block">
+      <div className="mt-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-semibold text-[#4f5e56]">
-            오버레이 색상
+            오버레이 방식
           </span>
-          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
-            <input
-              className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
-              value={overlayColorInput}
-              placeholder="#RRGGBB"
-              aria-invalid={overlayColorError}
-              spellCheck={false}
-              onChange={(event) => updateOverlayColorFromText(event.target.value)}
-            />
-            <input
-              type="color"
-              aria-label="오버레이 색상 선택"
-              className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
-              value={toColorInputValue(
-                overlayColorInput,
-                DEFAULT_IMAGE_OVERLAY_COLOR,
-              )}
-              onChange={(event) => updateOverlayColorFromPicker(event.target.value)}
-            />
-          </span>
-          {overlayColorError ? (
-            <span className="mt-2 block text-xs text-[#b42318]">
-              HEX 형식 (#RRGGBB)으로 입력해주세요.
-            </span>
-          ) : null}
-        </label>
+          <div className="grid w-40 grid-cols-2 gap-1">
+            <TypographyToggleButton
+              isSelected={overlayMode === 'solid'}
+              onClick={() => updateOverlayMode('solid')}
+            >
+              단일
+            </TypographyToggleButton>
+            <TypographyToggleButton
+              isSelected={overlayMode === 'gradient'}
+              onClick={() => updateOverlayMode('gradient')}
+            >
+              그라디언트
+            </TypographyToggleButton>
+          </div>
+        </div>
 
-        <OpacityControl
-          label="오버레이 투명도"
-          value={presentation.overlayOpacity}
-          onChange={updateOverlayOpacity}
-        />
+        {overlayMode === 'gradient' ? (
+          <GradientControls
+            gradient={overlayGradient}
+            fromError={overlayGradientFromError}
+            fromInput={overlayGradientFromInput}
+            labelPrefix="오버레이"
+            toError={overlayGradientToError}
+            toInput={overlayGradientToInput}
+            onColorPicker={updateOverlayGradientColorFromPicker}
+            onColorText={updateOverlayGradientColorFromText}
+            onDirection={updateOverlayGradientDirection}
+            onOpacity={updateOverlayGradientOpacity}
+          />
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-xs font-semibold text-[#4f5e56]">
+                오버레이 색상
+              </span>
+              <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+                <input
+                  className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
+                  value={overlayColorInput}
+                  placeholder="#RRGGBB"
+                  aria-invalid={overlayColorError}
+                  spellCheck={false}
+                  onChange={(event) =>
+                    updateOverlayColorFromText(event.target.value)
+                  }
+                />
+                <input
+                  type="color"
+                  aria-label="오버레이 색상 선택"
+                  className="h-7 w-8 shrink-0 cursor-pointer rounded border border-[#d7ddd2] bg-white p-0"
+                  value={toColorInputValue(
+                    overlayColorInput,
+                    DEFAULT_IMAGE_OVERLAY_COLOR,
+                  )}
+                  onChange={(event) =>
+                    updateOverlayColorFromPicker(event.target.value)
+                  }
+                />
+              </span>
+              {overlayColorError ? (
+                <span className="mt-2 block text-xs text-[#b42318]">
+                  HEX 형식 (#RRGGBB)으로 입력해주세요.
+                </span>
+              ) : null}
+            </label>
+
+            <OpacityControl
+              label="오버레이 투명도"
+              value={presentation.overlayOpacity}
+              onChange={updateOverlayOpacity}
+            />
+          </div>
+        )}
       </div>
     </InspectorDisclosure>
   )
@@ -4270,6 +4899,52 @@ function normalizeHexColor(value: string): string {
 
 function getNodeColorMergeKey(nodeId: string, field: string): string {
   return `node:${nodeId}:${field}`
+}
+
+function getResolvedGradient(
+  gradient: Gradient | undefined,
+  fallbackFrom: string,
+  fallbackFromOpacity?: number,
+): Gradient {
+  return {
+    from: gradient?.from ?? normalizeHexColor(fallbackFrom),
+    to: gradient?.to ?? DEFAULT_GRADIENT_TO_COLOR,
+    direction: gradient?.direction ?? DEFAULT_GRADIENT_DIRECTION,
+    ...(gradient?.fromOpacity !== undefined
+      ? { fromOpacity: gradient.fromOpacity }
+      : fallbackFromOpacity !== undefined
+        ? { fromOpacity: fallbackFromOpacity }
+        : {}),
+    ...(gradient?.toOpacity !== undefined ? { toOpacity: gradient.toOpacity } : {}),
+  }
+}
+
+function getGradientWithPatch(
+  gradient: Gradient,
+  patch: Partial<Gradient>,
+): Gradient {
+  const next: Gradient = { ...gradient, ...patch }
+
+  if (next.fromOpacity === undefined) {
+    delete next.fromOpacity
+  }
+
+  if (next.toOpacity === undefined) {
+    delete next.toOpacity
+  }
+
+  return next
+}
+
+function gradientToCss(gradient: Gradient): string {
+  return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${getCssColorWithOpacity(
+    gradient.from,
+    gradient.fromOpacity,
+  )}, ${getCssColorWithOpacity(gradient.to, gradient.toOpacity)})`
+}
+
+function getGradientDirectionRotation(direction: GradientDirection): number {
+  return GRADIENT_DIRECTION_ROTATION[direction]
 }
 
 function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
