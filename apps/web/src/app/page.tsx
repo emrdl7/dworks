@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
   type KeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent,
   type ReactNode,
 } from 'react'
@@ -134,6 +135,12 @@ interface StructureInfo {
   parentId?: string
   index?: number
   siblingCount?: number
+}
+
+interface ContextMenuState {
+  nodeId: string
+  x: number
+  y: number
 }
 
 const nodeTypeLabels: Record<TreeNode['type'], string> = {
@@ -564,6 +571,7 @@ export default function HomePage() {
   const [isFontRegistryBusy, setIsFontRegistryBusy] = useState(false)
   const [responsiveViewport, setResponsiveViewport] =
     useState<ResponsiveViewport>('desktop')
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
 
   const selectedNode = useMemo(
@@ -577,6 +585,14 @@ export default function HomePage() {
   const selectedFixture = useMemo(
     () => getTreeFixture(selectedFixtureId) ?? defaultTreeFixture,
     [selectedFixtureId],
+  )
+  const contextMenuNode = useMemo(
+    () => (contextMenu ? findNode(tree.root, contextMenu.nodeId) : null),
+    [contextMenu, tree],
+  )
+  const contextMenuStructureInfo = useMemo(
+    () => (contextMenu ? getStructureInfo(tree, contextMenu.nodeId) : null),
+    [contextMenu, tree],
   )
   const layerItems = useMemo(() => flattenTree(tree.root), [tree])
   const editableCount = useMemo(() => countEditableNodes(tree.root), [tree])
@@ -635,6 +651,14 @@ export default function HomePage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!contextMenu || contextMenuNode) {
+      return
+    }
+
+    setContextMenu(null)
+  }, [contextMenu, contextMenuNode])
+
   function handleFixtureChange(fixtureId: string) {
     const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
     setSelectedFixtureId(nextFixture.id)
@@ -669,6 +693,49 @@ export default function HomePage() {
     )
     lastHistoryMergeRef.current =
       options.mergeKey === undefined ? null : { key: options.mergeKey, time: now }
+  }
+
+  function openContextMenu(
+    nodeId: string,
+    position: Pick<ContextMenuState, 'x' | 'y'>,
+  ) {
+    setSelectedNodeId(nodeId)
+    setContextMenu({ nodeId, ...position })
+  }
+
+  function openPointerContextMenu(
+    nodeId: string,
+    event: ReactMouseEvent<HTMLElement>,
+  ) {
+    event.preventDefault()
+    event.stopPropagation()
+    openContextMenu(nodeId, { x: event.clientX, y: event.clientY })
+  }
+
+  function openElementContextMenu(nodeId: string, element: HTMLElement) {
+    const bounds = element.getBoundingClientRect()
+    openContextMenu(nodeId, {
+      x: bounds.left + 16,
+      y: bounds.top + Math.min(bounds.height, 32),
+    })
+  }
+
+  function openKeyboardContextMenu(
+    nodeId: string,
+    event: KeyboardEvent<HTMLElement>,
+  ) {
+    if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) {
+      return
+    }
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    openElementContextMenu(nodeId, event.currentTarget)
+  }
+
+  function closeContextMenu() {
+    setContextMenu(null)
   }
 
   function handleTextChange(node: TextNode, content: string) {
@@ -996,22 +1063,52 @@ export default function HomePage() {
     commitTreeEdit(updateImage(tree, node.id, patch), undefined, options)
   }
 
+  function handleMoveNode(nodeId: string, direction: 'up' | 'down') {
+    commitTreeEdit(moveNode(tree, nodeId, direction), nodeId)
+    closeContextMenu()
+  }
+
   function handleMoveSelected(direction: 'up' | 'down') {
-    commitTreeEdit(moveNode(tree, selectedNodeId, direction), selectedNodeId)
+    handleMoveNode(selectedNodeId, direction)
+  }
+
+  function handleDuplicateNode(nodeId: string) {
+    const duplicatedNodeId = createDuplicateNodeId(tree, nodeId)
+    commitTreeEdit(duplicateNode(tree, nodeId, duplicatedNodeId), duplicatedNodeId)
+    closeContextMenu()
   }
 
   function handleDuplicateSelected() {
-    const duplicatedNodeId = createDuplicateNodeId(tree, selectedNodeId)
-    commitTreeEdit(
-      duplicateNode(tree, selectedNodeId, duplicatedNodeId),
-      duplicatedNodeId,
-    )
+    handleDuplicateNode(selectedNodeId)
+  }
+
+  function handleDeleteNode(nodeId: string) {
+    const structureInfo = getStructureInfo(tree, nodeId)
+    if (structureInfo.isRoot) {
+      return
+    }
+
+    const nextTree = deleteNode(tree, nodeId)
+    commitTreeEdit(nextTree, structureInfo.parentId)
+    closeContextMenu()
   }
 
   function handleDeleteSelected() {
-    const parentId = selectedStructureInfo.parentId
-    const nextTree = deleteNode(tree, selectedNodeId)
-    commitTreeEdit(nextTree, parentId)
+    handleDeleteNode(selectedNodeId)
+  }
+
+  function handleToggleNodeVisibility(node: TreeNode) {
+    handleNodeMetaChange(node, {
+      hidden: node.hidden === true ? undefined : true,
+    })
+    closeContextMenu()
+  }
+
+  function handleToggleNodeCanvasSelection(node: TreeNode) {
+    handleNodeMetaChange(node, {
+      pointerEvents: node.pointerEvents === 'none' ? undefined : 'none',
+    })
+    closeContextMenu()
   }
 
   function handleColorPresetChange(nextColorPreset: ColorPreset) {
@@ -1120,6 +1217,8 @@ export default function HomePage() {
                 }`}
                 style={{ paddingLeft: 12 + depth * 14 }}
                 onClick={() => setSelectedNodeId(node.id)}
+                onContextMenu={(event) => openPointerContextMenu(node.id, event)}
+                onKeyDown={(event) => openKeyboardContextMenu(node.id, event)}
               >
                 <span className="min-w-0 truncate">{node.id}</span>
                 <span className="flex shrink-0 items-center gap-1">
@@ -1140,7 +1239,46 @@ export default function HomePage() {
           </nav>
         </aside>
 
-        <section className="min-h-0 min-w-0 overflow-auto bg-[#eef2ec]">
+        <section
+          className="min-h-0 min-w-0 overflow-auto bg-[#eef2ec]"
+          onContextMenu={(event) => {
+            const target = event.target
+            if (!(target instanceof Element)) {
+              return
+            }
+
+            const nodeElement = target.closest<HTMLElement>('[data-dworks-node-id]')
+            const nodeId = nodeElement?.dataset.dworksNodeId
+            if (!nodeId) {
+              return
+            }
+
+            openPointerContextMenu(nodeId, event)
+          }}
+          onKeyDownCapture={(event) => {
+            if (
+              event.key !== 'ContextMenu' &&
+              !(event.shiftKey && event.key === 'F10')
+            ) {
+              return
+            }
+
+            const target = event.target
+            if (!(target instanceof Element)) {
+              return
+            }
+
+            const nodeElement = target.closest<HTMLElement>('[data-dworks-node-id]')
+            const nodeId = nodeElement?.dataset.dworksNodeId
+            if (!nodeId) {
+              return
+            }
+
+            event.preventDefault()
+            event.stopPropagation()
+            openElementContextMenu(nodeId, nodeElement)
+          }}
+        >
           <div
             className="px-8 py-8"
             style={{ minWidth: selectedViewportPreset.width + 64 }}
@@ -1195,6 +1333,22 @@ export default function HomePage() {
           />
         </aside>
       </div>
+      {contextMenu && contextMenuNode && contextMenuStructureInfo ? (
+        <NodeContextMenu
+          node={contextMenuNode}
+          position={contextMenu}
+          structureInfo={contextMenuStructureInfo}
+          onClose={closeContextMenu}
+          onDelete={() => handleDeleteNode(contextMenuNode.id)}
+          onDuplicate={() => handleDuplicateNode(contextMenuNode.id)}
+          onMoveDown={() => handleMoveNode(contextMenuNode.id, 'down')}
+          onMoveUp={() => handleMoveNode(contextMenuNode.id, 'up')}
+          onToggleCanvasSelection={() =>
+            handleToggleNodeCanvasSelection(contextMenuNode)
+          }
+          onToggleVisibility={() => handleToggleNodeVisibility(contextMenuNode)}
+        />
+      ) : null}
     </main>
   )
 }
@@ -1286,6 +1440,195 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
         {selectedPreset.width}px
       </span>
     </div>
+  )
+}
+
+interface NodeContextMenuProps {
+  node: TreeNode
+  onClose: () => void
+  onDelete: () => void
+  onDuplicate: () => void
+  onMoveDown: () => void
+  onMoveUp: () => void
+  onToggleCanvasSelection: () => void
+  onToggleVisibility: () => void
+  position: Pick<ContextMenuState, 'x' | 'y'>
+  structureInfo: StructureInfo
+}
+
+function NodeContextMenu({
+  node,
+  onClose,
+  onDelete,
+  onDuplicate,
+  onMoveDown,
+  onMoveUp,
+  onToggleCanvasSelection,
+  onToggleVisibility,
+  position,
+  structureInfo,
+}: NodeContextMenuProps) {
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const canMoveUp = !structureInfo.isRoot && (structureInfo.index ?? 0) > 0
+  const canMoveDown =
+    !structureInfo.isRoot &&
+    (structureInfo.index ?? 0) < (structureInfo.siblingCount ?? 0) - 1
+  const canEditStructure = !structureInfo.isRoot
+  const isVisible = node.hidden !== true
+  const isCanvasSelectable = node.pointerEvents !== 'none'
+
+  useEffect(() => {
+    const firstEnabledItem = getContextMenuItems(menuRef.current)[0]
+    firstEnabledItem?.focus()
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target
+      if (!(target instanceof Node)) {
+        return
+      }
+
+      if (!menuRef.current?.contains(target)) {
+        onClose()
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('resize', onClose)
+    window.addEventListener('scroll', onClose, true)
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('resize', onClose)
+      window.removeEventListener('scroll', onClose, true)
+    }
+  }, [onClose])
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+      return
+    }
+
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+      return
+    }
+
+    event.preventDefault()
+
+    const items = getContextMenuItems(menuRef.current)
+    if (items.length === 0) {
+      return
+    }
+
+    const currentIndex = items.findIndex((item) => item === document.activeElement)
+    const nextIndex =
+      event.key === 'ArrowDown'
+        ? currentIndex < 0
+          ? 0
+          : (currentIndex + 1) % items.length
+        : currentIndex <= 0
+          ? items.length - 1
+          : currentIndex - 1
+
+    items[nextIndex]?.focus()
+  }
+
+  return (
+    <div
+      ref={menuRef}
+      role="menu"
+      aria-label={`${node.id} 컨텍스트 메뉴`}
+      className="fixed z-50 min-w-52 rounded-md border border-[#c9d4cd] bg-white p-1 shadow-xl"
+      style={{
+        left: position.x,
+        top: position.y,
+      }}
+      onContextMenu={(event) => event.preventDefault()}
+      onKeyDown={handleKeyDown}
+    >
+      <ContextMenuButton disabled={!canMoveUp} onClick={onMoveUp}>
+        위로 이동
+      </ContextMenuButton>
+      <ContextMenuButton disabled={!canMoveDown} onClick={onMoveDown}>
+        아래로 이동
+      </ContextMenuButton>
+      <ContextMenuButton disabled={!canEditStructure} onClick={onDuplicate}>
+        복제
+      </ContextMenuButton>
+      <ContextMenuButton
+        disabled={!canEditStructure}
+        onClick={onDelete}
+        tone="danger"
+      >
+        삭제
+      </ContextMenuButton>
+      <div className="my-1 h-px bg-[#e0e5de]" role="separator" />
+      <ContextMenuButton
+        checked={isVisible}
+        onClick={onToggleVisibility}
+        roleType="menuitemcheckbox"
+      >
+        캔버스에 표시
+      </ContextMenuButton>
+      <ContextMenuButton
+        checked={isCanvasSelectable}
+        disabled={!isVisible}
+        onClick={onToggleCanvasSelection}
+        roleType="menuitemcheckbox"
+      >
+        캔버스에서 선택
+      </ContextMenuButton>
+    </div>
+  )
+}
+
+interface ContextMenuButtonProps {
+  checked?: boolean
+  children: ReactNode
+  disabled?: boolean
+  onClick: () => void
+  roleType?: 'menuitem' | 'menuitemcheckbox'
+  tone?: 'neutral' | 'danger'
+}
+
+function ContextMenuButton({
+  checked,
+  children,
+  disabled = false,
+  onClick,
+  roleType = 'menuitem',
+  tone = 'neutral',
+}: ContextMenuButtonProps) {
+  const toneClass =
+    tone === 'danger'
+      ? 'text-[#7a1f1f] hover:bg-[#fff1f1] focus-visible:bg-[#fff1f1]'
+      : 'text-[#26312b] hover:bg-[#eef8f6] focus-visible:bg-[#eef8f6]'
+
+  return (
+    <button
+      type="button"
+      role={roleType}
+      aria-checked={roleType === 'menuitemcheckbox' ? checked : undefined}
+      className={`flex min-h-9 w-full items-center justify-between gap-3 rounded px-3 text-left text-sm font-semibold outline-none transition disabled:cursor-not-allowed disabled:text-[#9aa49d] disabled:hover:bg-transparent ${toneClass}`}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <span>{children}</span>
+      {roleType === 'menuitemcheckbox' ? (
+        <span className="text-xs text-[#1b7f72]">{checked ? '켬' : '끔'}</span>
+      ) : null}
+    </button>
+  )
+}
+
+function getContextMenuItems(menu: HTMLDivElement | null): HTMLButtonElement[] {
+  if (!menu) {
+    return []
+  }
+
+  return Array.from(menu.querySelectorAll<HTMLButtonElement>('button')).filter(
+    (item) => !item.disabled,
   )
 }
 
@@ -1616,6 +1959,7 @@ function SelectableNode({
     <div
       role="button"
       tabIndex={isCanvasSelectable ? 0 : -1}
+      data-dworks-node-id={node.id}
       className={`relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
         isSelected
           ? 'border-[var(--dw-accent)] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
