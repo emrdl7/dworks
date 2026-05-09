@@ -108,6 +108,40 @@ describe('handleGenerate', () => {
     assert.equal(calls[0]?.options?.stdio?.[0], 'ignore')
   })
 
+  it('formats adaptive brief answers into the CLI user prompt', async () => {
+    const { calls, spawn } = createClosingSpawn(JSON.stringify(validTree))
+
+    const result = await handleGenerate(
+      {
+        brief: {
+          intent: '  제주 감귤 카페 랜딩 페이지  ',
+          answers: [
+            {
+              questionId: 'q1',
+              questionLabel: '대표 CTA는 무엇인가요?',
+              answer: '예약하기',
+            },
+            {
+              questionId: 'q2',
+              questionLabel: '강조할 콘텐츠는 무엇인가요?',
+              answer: ['시그니처 메뉴', '방문 후기'],
+            },
+          ],
+          notes: '  Pretendard 기반의 차분한 톤  ',
+        },
+      },
+      { spawnImpl: spawn, command: 'test-claude', timeoutMs: 500 },
+    )
+
+    assert.equal(result.status, 200)
+    assert.equal(calls.length, 1)
+    const userPrompt = calls[0]?.args[1] ?? ''
+    assert.match(userPrompt, /### 의도\n제주 감귤 카페 랜딩 페이지/)
+    assert.match(userPrompt, /- 대표 CTA는 무엇인가요\?: 예약하기/)
+    assert.match(userPrompt, /- 강조할 콘텐츠는 무엇인가요\?: 시그니처 메뉴, 방문 후기/)
+    assert.match(userPrompt, /### 브랜드 \/ 참조 메모\nPretendard 기반의 차분한 톤/)
+  })
+
   it('rejects invalid request payloads before calling the CLI', async () => {
     const { calls, spawn } = createClosingSpawn(JSON.stringify(validTree))
 
