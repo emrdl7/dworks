@@ -2467,20 +2467,25 @@ export default function HomePage() {
             : 'grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_360px]'
         }`}
       >
-        {briefDrawerOpen ? (
-          <button
-            type="button"
-            aria-label="브리프 패널 닫기"
-            onClick={() => setBriefDrawerOpen(false)}
-            className="fixed inset-0 z-40 cursor-default bg-black/40 md:hidden"
-          />
-        ) : null}
+        <button
+          type="button"
+          aria-label="브리프 패널 닫기"
+          aria-hidden={!briefDrawerOpen}
+          tabIndex={briefDrawerOpen ? 0 : -1}
+          onClick={() => setBriefDrawerOpen(false)}
+          className={`fixed inset-0 z-40 cursor-default bg-black/40 transition-opacity duration-200 ease-out md:hidden ${
+            briefDrawerOpen
+              ? 'pointer-events-auto opacity-100'
+              : 'pointer-events-none opacity-0'
+          }`}
+        />
         <aside
           aria-label="AI 디자인 브리프 패널"
-          className={`min-h-0 flex-col border-r border-[#d7ddd2] bg-[#fbfcfa] md:static md:z-auto md:flex md:w-auto md:shadow-none ${
+          aria-hidden={!briefDrawerOpen}
+          className={`fixed inset-y-0 left-0 z-50 flex min-h-0 w-[280px] flex-col border-r border-[#d7ddd2] bg-[#fbfcfa] shadow-xl transition-transform duration-200 ease-out md:static md:z-auto md:w-auto md:translate-x-0 md:shadow-none md:transition-none ${
             briefDrawerOpen
-              ? 'fixed inset-y-0 left-0 z-50 flex w-[280px] shadow-xl'
-              : 'hidden'
+              ? 'translate-x-0'
+              : '-translate-x-full md:translate-x-0'
           }`}
         >
           <div
@@ -3378,20 +3383,25 @@ export default function HomePage() {
 
         {compareMode ? null : (
         <>
-        {inspectorDrawerOpen ? (
-          <button
-            type="button"
-            aria-label="속성 패널 닫기"
-            onClick={() => setInspectorDrawerOpen(false)}
-            className="fixed inset-0 z-40 cursor-default bg-black/40 xl:hidden"
-          />
-        ) : null}
+        <button
+          type="button"
+          aria-label="속성 패널 닫기"
+          aria-hidden={!inspectorDrawerOpen}
+          tabIndex={inspectorDrawerOpen ? 0 : -1}
+          onClick={() => setInspectorDrawerOpen(false)}
+          className={`fixed inset-0 z-40 cursor-default bg-black/40 transition-opacity duration-200 ease-out xl:hidden ${
+            inspectorDrawerOpen
+              ? 'pointer-events-auto opacity-100'
+              : 'pointer-events-none opacity-0'
+          }`}
+        />
         <aside
           aria-label="속성 패널"
-          className={`min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white xl:static xl:z-auto xl:block xl:w-auto xl:shadow-none ${
+          aria-hidden={!inspectorDrawerOpen}
+          className={`fixed inset-y-0 right-0 z-50 block min-h-0 w-[360px] overflow-hidden border-l border-[#d7ddd2] bg-white shadow-xl transition-transform duration-200 ease-out xl:static xl:z-auto xl:block xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
             inspectorDrawerOpen
-              ? 'fixed inset-y-0 right-0 z-50 block w-[360px] shadow-xl'
-              : 'hidden'
+              ? 'translate-x-0'
+              : 'translate-x-full xl:translate-x-0'
           }`}
         >
           <NodeInspector
