@@ -61,7 +61,7 @@
 - `m3-generate-eval-judge` — LLM-as-judge 정성 점수
 - `m3-generate-variant-grid` — 변형들 동시 비교 grid UI
 - `m3-generate-clarify-loop` — multi-turn clarify (답변 부족 시 추가 질문)
-- `m3-generate-clarify-edit` — active generation의 brief 재편집
+- ✓ `m3-generate-clarify-edit` (`d456089` r4 / `ab2a52a` r5) — active variant 선택 시 brief/questions/answers/notes를 Stage 2 폼에 복원, 답변 수정 후 새 변형 추가. GenerationEntry.questions snapshot, deep copy 방어, intent-only 분기, Stage 1에서 stale answers 차단
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 - `m3-generate-image-ref` — 이미지 reference 입력
 
