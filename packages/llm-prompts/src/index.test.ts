@@ -393,6 +393,16 @@ describe('llm-prompts examples', () => {
       GENERATE_TREE_SYSTEM_PROMPT.includes('의도(intent)가 충돌하면 의도를 우선'),
       '의도 우선 규칙 누락',
     )
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes(
+        '첫 번째 이미지의 비율을 hero에 우선',
+      ),
+      '다중 비율 우선순위 규칙 누락',
+    )
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('통합 팔레트(빈도 가중)'),
+      '통합 팔레트 활용 규칙 누락',
+    )
   })
 
   it('GENERATE_TREE_SYSTEM_PROMPT includes 풍부도 8 신호 자체 점검 체크리스트', () => {
