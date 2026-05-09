@@ -2124,6 +2124,7 @@ function CanvasNode({
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <span
             data-disabled={node.disabled === true ? 'true' : undefined}
+            aria-disabled={node.disabled === true ? true : undefined}
             className={`inline-flex min-h-11 items-center rounded-md px-5 text-sm font-semibold transition ${
               node.variant === 'secondary'
                 ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
