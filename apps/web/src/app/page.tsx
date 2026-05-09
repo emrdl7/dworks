@@ -1203,8 +1203,14 @@ export default function HomePage() {
           })),
         })),
       )
-      setClarifyComplete(false)
-      setGenerateStage(restoredQuestions.length === 0 ? 'intent' : 'questions')
+      setClarifyComplete(
+        restoredTurns.length > 0 && restoredQuestions.length === 0,
+      )
+      setGenerateStage(
+        restoredQuestions.length === 0 && restoredTurns.length === 0
+          ? 'intent'
+          : 'questions',
+      )
     }
 
     const nextSelectedId =
