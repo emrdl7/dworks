@@ -2786,9 +2786,16 @@ export default function HomePage() {
                     <div className="mb-1 font-semibold">
                       풍부도 부족 신호 ({missing.length}/8)
                     </div>
-                    <ul className="ml-3 list-disc space-y-0.5">
+                    <ul className="ml-3 list-disc space-y-1">
                       {missing.map((key) => (
-                        <li key={key}>{RICHNESS_SIGNAL_LABELS[key]}</li>
+                        <li key={key}>
+                          <span className="font-semibold">
+                            {RICHNESS_SIGNAL_LABELS[key]}
+                          </span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-snug opacity-80">
+                            {RICHNESS_RETRY_HINTS[key]}
+                          </span>
+                        </li>
                       ))}
                     </ul>
                     {activeEntry.brief !== null ? (
