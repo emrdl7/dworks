@@ -2396,7 +2396,32 @@ export default function HomePage() {
   }
 
   function handleDuplicateSelected() {
-    handleDuplicateNode(selectedNodeId)
+    const ids = Array.from(allSelectedNodeIds).filter(
+      (id) => id !== tree.root.id,
+    )
+    if (ids.length === 0) {
+      return
+    }
+    if (ids.length === 1) {
+      const onlyId = ids[0]
+      if (onlyId !== undefined) handleDuplicateNode(onlyId)
+      return
+    }
+    // multi-target — 각 노드를 개별 복제, 마지막 복제로 selection 이동
+    let nextTree = tree
+    let lastNewId = selectedNodeId
+    for (const id of ids) {
+      try {
+        const dupId = createDuplicateNodeId(nextTree, id)
+        nextTree = duplicateNode(nextTree, id, dupId)
+        lastNewId = dupId
+      } catch {
+        // 노드가 부모와 같이 처리되지 않은 경우는 skip
+      }
+    }
+    commitTreeEdit(nextTree, lastNewId)
+    setAdditionalSelectedNodeIds(new Set())
+    closeContextMenu()
   }
 
   function handleDeleteNode(nodeId: string) {
@@ -2411,7 +2436,33 @@ export default function HomePage() {
   }
 
   function handleDeleteSelected() {
-    handleDeleteNode(selectedNodeId)
+    const ids = Array.from(allSelectedNodeIds).filter(
+      (id) => id !== tree.root.id,
+    )
+    if (ids.length === 0) {
+      return
+    }
+    if (ids.length === 1) {
+      const onlyId = ids[0]
+      if (onlyId !== undefined) handleDeleteNode(onlyId)
+      return
+    }
+    // multi-target — 자손이 부모와 함께 사라질 수 있으니 try-catch로 silent skip
+    let nextTree = tree
+    let surviveAt = tree.root.id
+    for (const id of ids) {
+      try {
+        const info = getStructureInfo(nextTree, id)
+        if (info.isRoot) continue
+        nextTree = deleteNode(nextTree, id)
+        surviveAt = info.parentId ?? tree.root.id
+      } catch {
+        // 노드가 이미 사라짐(부모와 함께)
+      }
+    }
+    setAdditionalSelectedNodeIds(new Set())
+    commitTreeEdit(nextTree, surviveAt)
+    closeContextMenu()
   }
 
   // 컨테이너 자식으로 leaf 노드 수동 추가 — LLM 의존 없는 자유 편집
