@@ -136,6 +136,12 @@ import {
   type RegisteredFontRecord,
   type RegisteredFontSummary,
 } from './font-registry'
+import {
+  VARIANT_COUNT_OPTIONS,
+  appendGenerationHistoryEntries,
+  buildVariantRequestBrief,
+  type VariantCount,
+} from './generation-history'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -196,14 +202,6 @@ interface SubmittedDesignBrief {
 }
 
 type GenerateStage = 'intent' | 'questions'
-
-type VariantCount = 1 | 2 | 3
-const VARIANT_COUNT_OPTIONS: VariantCount[] = [1, 2, 3]
-const VARIANT_DIVERSITY_HINTS: ReadonlyArray<string> = [
-  '변형 1: 구조와 정보 밀도가 균형 잡힌 안정형 레이아웃.',
-  '변형 2: 시각 강조와 헤드라인이 강한 임팩트형 레이아웃.',
-  '변형 3: 여백이 넓고 차분한 실무형 레이아웃.',
-]
 
 interface GenerationEntry {
   id: string
@@ -988,16 +986,7 @@ export default function HomePage() {
       const requests: Array<Promise<Awaited<ReturnType<typeof callGenerateOnce>>>> =
         []
       for (let i = 0; i < count; i++) {
-        const requestBrief: SubmittedDesignBrief =
-          count === 1
-            ? submitted
-            : {
-                ...submitted,
-                notes: [submitted.notes, VARIANT_DIVERSITY_HINTS[i] ?? '']
-                  .filter((part) => part !== undefined && part.trim().length > 0)
-                  .join('\n\n')
-                  .trim(),
-              }
+        const requestBrief = buildVariantRequestBrief(submitted, i, count)
         requests.push(callGenerateOnce(apiBase, requestBrief))
       }
       const settled = await Promise.allSettled(requests)
@@ -1044,9 +1033,10 @@ export default function HomePage() {
         model: success.model,
       }))
       setGenerations((entries) => {
-        const next = [...entries, ...newEntries].slice(-MAX_GENERATIONS)
-        return next.map((entry, index) =>
-          entry.immutable ? entry : { ...entry, label: `생성 ${index}` },
+        return appendGenerationHistoryEntries(
+          entries,
+          newEntries,
+          MAX_GENERATIONS,
         )
       })
       const firstNew = newEntries[0]
