@@ -237,6 +237,46 @@ export function deleteNode(tree: Tree, nodeId: string): Tree {
   return applyEditOperation(tree, { type: 'deleteNode', nodeId })
 }
 
+export type ContainerNodeType = 'section' | 'hero' | 'card' | 'list' | 'form'
+
+// 컨테이너 노드의 마지막 자식으로 새 컨테이너(빈 컨테이너 schema 금지 — 기본 텍스트
+// 자식 1개와 함께 생성) 추가. 사용자 mandate: _그룹 노드 수동 추가_.
+export function addContainerChild(
+  tree: Tree,
+  parentId: string,
+  containerType: ContainerNodeType,
+  newId: string,
+  initialTextChildId: string,
+): Tree {
+  const existingIds = collectNodeIdsLocal(tree.root)
+  if (existingIds.has(newId)) {
+    throw new Error(`tree edit failed: id already exists: ${newId}`)
+  }
+  if (existingIds.has(initialTextChildId)) {
+    throw new Error(
+      `tree edit failed: initial child id already exists: ${initialTextChildId}`,
+    )
+  }
+  const initialChild: TreeNode = {
+    id: initialTextChildId,
+    editKind: 'text',
+    type: 'text',
+    content: '내용',
+  }
+  const newChild = {
+    id: newId,
+    editKind: 'structure',
+    type: containerType,
+    children: [initialChild],
+  } as TreeNode
+  const state: EditState = { matched: false }
+  const root = walkAndAddChild(tree.root, parentId, newChild, state)
+  if (!state.matched) {
+    throw new Error(`tree edit failed: parent not found: ${parentId}`)
+  }
+  return { ...tree, root }
+}
+
 // 컨테이너 노드의 마지막 자식으로 leaf 노드 추가. 사용자 mandate: _노드 수동 추가_.
 // LLM 의존을 줄이기 위한 free-form 편집 진입점.
 export function addLeafChild(

@@ -114,7 +114,9 @@ import {
   type Typography,
 } from '@dworks/tree'
 import {
+  addContainerChild,
   addLeafChild,
+  type ContainerNodeType,
   changeLeafNodeType,
   deleteNode,
   duplicateNode,
@@ -2403,6 +2405,29 @@ export default function HomePage() {
     closeContextMenu()
   }
 
+  function handleAddContainerChild(
+    parentId: string,
+    containerType: ContainerNodeType,
+  ) {
+    const existingIds = collectNodeIds(tree.root)
+    const base = `${parentId}.${containerType}`
+    let suffix = 1
+    while (existingIds.has(`${base}-${suffix}`)) {
+      suffix += 1
+    }
+    const newContainerId = `${base}-${suffix}`
+    const newTextChildId = `${newContainerId}.text-1`
+    const nextTree = addContainerChild(
+      tree,
+      parentId,
+      containerType,
+      newContainerId,
+      newTextChildId,
+    )
+    commitTreeEdit(nextTree, newContainerId)
+    closeContextMenu()
+  }
+
   function handleToggleNodeVisibility(node: TreeNode) {
     handleNodeMetaChange(node, {
       hidden: node.hidden === true ? undefined : true,
@@ -3800,6 +3825,9 @@ export default function HomePage() {
           onAddLeafChild={(childType) =>
             handleAddLeafChild(contextMenuNode.id, childType)
           }
+          onAddContainerChild={(containerType) =>
+            handleAddContainerChild(contextMenuNode.id, containerType)
+          }
           onChangeLeafType={(nextType) =>
             handleChangeLeafType(contextMenuNode.id, nextType)
           }
@@ -4048,6 +4076,7 @@ function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
 interface NodeContextMenuProps {
   node: TreeNode
   onAddLeafChild: (childType: LeafNodeType) => void
+  onAddContainerChild: (containerType: ContainerNodeType) => void
   onChangeLeafType: (nextType: LeafNodeType) => void
   onClose: () => void
   onDelete: () => void
@@ -4063,6 +4092,7 @@ interface NodeContextMenuProps {
 function NodeContextMenu({
   node,
   onAddLeafChild,
+  onAddContainerChild,
   onChangeLeafType,
   onClose,
   onDelete,
@@ -4251,6 +4281,16 @@ function NodeContextMenu({
           </ContextMenuButton>
           <ContextMenuButton onClick={() => onAddLeafChild('image')}>
             이미지 추가
+          </ContextMenuButton>
+          <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
+          <ContextMenuButton onClick={() => onAddContainerChild('section')}>
+            섹션 그룹 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddContainerChild('card')}>
+            카드 그룹 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddContainerChild('list')}>
+            목록 그룹 추가
           </ContextMenuButton>
         </>
       ) : null}

@@ -2,6 +2,7 @@
 // M2 tree-editor 첫 단위: text/button content edits only.
 
 export {
+  addContainerChild,
   addLeafChild,
   applyEditOperation,
   applyEditSequence,
@@ -22,6 +23,7 @@ export {
   updateTextTypography,
 } from './operations.js'
 export type {
+  ContainerNodeType,
   DeleteNodeOperation,
   DuplicateNodeOperation,
   EditOperation,
