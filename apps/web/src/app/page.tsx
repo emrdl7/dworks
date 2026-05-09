@@ -169,13 +169,12 @@ import {
   parseFixtureImportPayload,
 } from './fixture-export'
 import {
+  RICHNESS_SIGNAL_KEYS,
   computeRichnessReport,
   formatRichnessScore,
-  type RichnessReport,
+  type RichnessSignalKey,
 } from './richness'
 import { extractDominantColors, pickAspectRatio } from './image-color'
-
-type RichnessSignalKey = keyof Omit<RichnessReport, 'score'>
 
 const RICHNESS_SIGNAL_LABELS: Record<RichnessSignalKey, string> = {
   hasPageLandmarks: '랜드마크 부족 (banner/main/contentinfo)',
@@ -205,17 +204,6 @@ const RICHNESS_RETRY_HINTS: Record<RichnessSignalKey, string> = {
   hasShapeDepth:
     '카드/이미지에 shape.shadow 또는 radius ≥ 8을 적용해 시각 깊이를 부여한다.',
 }
-
-const RICHNESS_SIGNAL_KEYS: RichnessSignalKey[] = [
-  'hasPageLandmarks',
-  'hasMainMultiSection',
-  'hasDisplayHeadingOne',
-  'hasCallToAction',
-  'fontSizeVariety',
-  'colorVariety',
-  'hasImagery',
-  'hasShapeDepth',
-]
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -1354,6 +1342,9 @@ export default function HomePage() {
     const active = generations.find((entry) => entry.id === activeGenerationId)
     if (active === undefined) return
     const exportedAt = new Date()
+    const richness = active.immutable
+      ? undefined
+      : computeRichnessReport(active.tree)
     const payload = buildExportPayload(
       {
         tree: active.tree,
@@ -1363,6 +1354,7 @@ export default function HomePage() {
         clarifyTurns: active.clarifyTurns,
         model: active.model,
         latencyMs: active.latencyMs,
+        ...(richness !== undefined ? { richness } : {}),
       },
       exportedAt,
     )

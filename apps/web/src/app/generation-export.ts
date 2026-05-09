@@ -9,6 +9,8 @@
 
 import { treeSchema, type Tree } from '@dworks/tree'
 
+import { RICHNESS_SIGNAL_KEYS, type RichnessReport } from './richness'
+
 export const EXPORT_FORMAT_KEY = 'dworks-generation'
 export const EXPORT_FORMAT_VERSION = 1
 
@@ -54,6 +56,7 @@ export interface ExportedGeneration {
   clarifyTurns: ExportedClarifyTurn[]
   model: 'claude' | 'codex' | 'gemini' | null
   latencyMs: number | null
+  richness?: RichnessReport
 }
 
 export interface ExportableGeneration {
@@ -64,6 +67,7 @@ export interface ExportableGeneration {
   clarifyTurns: ExportedClarifyTurn[]
   model: 'claude' | 'codex' | 'gemini' | null
   latencyMs: number | null
+  richness?: RichnessReport
 }
 
 export function buildExportPayload(
@@ -81,6 +85,7 @@ export function buildExportPayload(
     clarifyTurns: source.clarifyTurns,
     model: source.model,
     latencyMs: source.latencyMs,
+    ...(source.richness !== undefined ? { richness: source.richness } : {}),
   }
 }
 
@@ -156,6 +161,9 @@ function validatePayload(raw: unknown): ImportResult {
   const latencyMs = validateLatency(raw.latencyMs)
   if (!latencyMs.ok) return latencyMs
 
+  const richnessResult = validateRichness(raw.richness)
+  if (!richnessResult.ok) return richnessResult
+
   return {
     ok: true,
     payload: {
@@ -169,6 +177,45 @@ function validatePayload(raw: unknown): ImportResult {
       clarifyTurns: clarifyTurnsResult.value,
       model: model.value,
       latencyMs: latencyMs.value,
+      ...(richnessResult.value !== undefined
+        ? { richness: richnessResult.value }
+        : {}),
+    },
+  }
+}
+
+function validateRichness(
+  raw: unknown,
+):
+  | { ok: true; value: RichnessReport | undefined }
+  | { ok: false; reason: string } {
+  if (raw === undefined || raw === null) return { ok: true, value: undefined }
+  if (!isPlainObject(raw)) {
+    return { ok: false, reason: 'richness가 객체가 아닙니다.' }
+  }
+  if (typeof raw.score !== 'number' || !Number.isFinite(raw.score)) {
+    return { ok: false, reason: 'richness.score가 숫자가 아닙니다.' }
+  }
+  if (raw.score < 0 || raw.score > 1) {
+    return { ok: false, reason: 'richness.score는 0~1 범위여야 합니다.' }
+  }
+  for (const key of RICHNESS_SIGNAL_KEYS) {
+    if (typeof raw[key] !== 'boolean') {
+      return { ok: false, reason: `richness.${key}가 boolean이 아닙니다.` }
+    }
+  }
+  return {
+    ok: true,
+    value: {
+      score: raw.score,
+      hasPageLandmarks: raw.hasPageLandmarks as boolean,
+      hasMainMultiSection: raw.hasMainMultiSection as boolean,
+      hasDisplayHeadingOne: raw.hasDisplayHeadingOne as boolean,
+      hasCallToAction: raw.hasCallToAction as boolean,
+      fontSizeVariety: raw.fontSizeVariety as boolean,
+      colorVariety: raw.colorVariety as boolean,
+      hasImagery: raw.hasImagery as boolean,
+      hasShapeDepth: raw.hasShapeDepth as boolean,
     },
   }
 }

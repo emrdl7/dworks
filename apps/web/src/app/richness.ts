@@ -30,6 +30,19 @@ export interface RichnessReport {
   score: number
 }
 
+export type RichnessSignalKey = keyof Omit<RichnessReport, 'score'>
+
+export const RICHNESS_SIGNAL_KEYS: RichnessSignalKey[] = [
+  'hasPageLandmarks',
+  'hasMainMultiSection',
+  'hasDisplayHeadingOne',
+  'hasCallToAction',
+  'fontSizeVariety',
+  'colorVariety',
+  'hasImagery',
+  'hasShapeDepth',
+]
+
 const SIGNAL_COUNT = 8
 
 const COLOR_KEYS = [

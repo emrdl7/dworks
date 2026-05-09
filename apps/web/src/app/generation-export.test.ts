@@ -173,4 +173,91 @@ describe('parseImportPayload', () => {
     const result = parseImportPayload(text)
     assert.equal(result.ok, false)
   })
+
+  it('richness 메타 round-trip — score + 8 신호 boolean', () => {
+    const sourceWithRichness = {
+      ...sampleSource,
+      richness: {
+        score: 0.625,
+        hasPageLandmarks: true,
+        hasMainMultiSection: true,
+        hasDisplayHeadingOne: true,
+        hasCallToAction: true,
+        fontSizeVariety: false,
+        colorVariety: true,
+        hasImagery: false,
+        hasShapeDepth: false,
+      },
+    }
+    const payload = buildExportPayload(sourceWithRichness, new Date())
+    assert.equal(payload.richness?.score, 0.625)
+    const text = JSON.stringify(payload)
+    const result = parseImportPayload(text)
+    assert.equal(result.ok, true)
+    if (result.ok) {
+      assert.equal(result.payload.richness?.score, 0.625)
+      assert.equal(result.payload.richness?.fontSizeVariety, false)
+    }
+  })
+
+  it('richness 미포함도 valid (옵션 필드)', () => {
+    const payload = buildExportPayload(sampleSource, new Date())
+    assert.equal(payload.richness, undefined)
+    const text = JSON.stringify(payload)
+    const result = parseImportPayload(text)
+    assert.equal(result.ok, true)
+    if (result.ok) {
+      assert.equal(result.payload.richness, undefined)
+    }
+  })
+
+  it('richness.score 범위 외 거부', () => {
+    const text = JSON.stringify({
+      format: EXPORT_FORMAT_KEY,
+      version: 1,
+      exportedAt: '2026-05-09T00:00:00Z',
+      tree: sampleTree,
+      label: 'x',
+      brief: null,
+      questions: [],
+      clarifyTurns: [],
+      model: null,
+      latencyMs: null,
+      richness: {
+        score: 1.5,
+        hasPageLandmarks: true,
+        hasMainMultiSection: true,
+        hasDisplayHeadingOne: true,
+        hasCallToAction: true,
+        fontSizeVariety: true,
+        colorVariety: true,
+        hasImagery: true,
+        hasShapeDepth: true,
+      },
+    })
+    const result = parseImportPayload(text)
+    assert.equal(result.ok, false)
+  })
+
+  it('richness 신호 boolean 누락 거부', () => {
+    const text = JSON.stringify({
+      format: EXPORT_FORMAT_KEY,
+      version: 1,
+      exportedAt: '2026-05-09T00:00:00Z',
+      tree: sampleTree,
+      label: 'x',
+      brief: null,
+      questions: [],
+      clarifyTurns: [],
+      model: null,
+      latencyMs: null,
+      richness: {
+        score: 0.5,
+        hasPageLandmarks: true,
+        // hasMainMultiSection 누락
+      },
+    })
+    const result = parseImportPayload(text)
+    assert.equal(result.ok, false)
+  })
 })
