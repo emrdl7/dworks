@@ -1564,6 +1564,9 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - **Generous spacing**: hero \`spacing.padding\` ≥ 96, 섹션 간 \`spacing.gap\` ≥ 64. 정보 밀도 낮추고 호흡.
 - **Single primary CTA per hero**: 1차 CTA 하나 \`variant='primary'\` + \`shape.radius\` 24~48 + \`shadow\`=\`md\`. 보조 ghost.
 - **Mobile-first 의도**: \`layout.direction\`은 column 우선. 헤더만 row + responsive로 mobile 적응.
+- **다크 / 럭셔리 / 스타일리시 옵션**: 사용자가 _다크 / 어두운 / 스타일리시 / 럭셔리 / 세련된 / 미드나잇_ 같은 톤을 의도하면 다크 palette로 출력. \`backgroundColor\` deep tone(#0a0a0a~#1a1d22), text bright(#e5e7eb~#f9fafb), accent vivid(#6366f1 / #a78bfa / #34d399 등). 다크에선 shadow가 약해지므로 _bg 톤 차이_ + _border 약간 강화_(#2a2e35~#3a3f48)로 위계. 흰 카드 위 흰 배경 같은 light 패턴은 와이어프레임이므로 금지.
+- **GenZ / playful / 활기 옵션**: \`hero\` background에 vivid gradient(coral~orange, electric blue~purple, mint~lime 등) + 큰 fontSize 72~96 + 강한 shadow. 회색 안전 디자인 회피.
+- **B2B / SaaS / 전문 옵션**: 흰/oat(#f8f5ef) 또는 deep navy(#0f172a~#1e293b) bg + 작은 radius(4~8) + crisp typography(fontSize 정확, lineHeight 1.5) + 데이터 강조 컴포넌트.
 
 피할 패턴(AI 슬롭, 즉시 거부): 텍스트 박스만 있는 hero, 모든 카드 동일 그라디언트, 이모지 장식, 좌측 강조 막대 카드, 모든 섹션 동일 padding, fontSize 명시 없이 emphasis만 박은 typography, 회색 캔버스에 텍스트만.
 
