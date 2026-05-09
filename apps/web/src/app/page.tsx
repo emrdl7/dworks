@@ -2968,7 +2968,11 @@ export default function HomePage() {
             aria-label={briefDrawerOpen ? '브리프 패널 닫기' : '브리프 패널 열기'}
             aria-pressed={briefDrawerOpen}
             onClick={() => setBriefDrawerOpen((v) => !v)}
-            className="-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] md:hidden"
+            className={`-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] md:hidden ${
+              briefDrawerOpen
+                ? 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
+                : 'border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe]'
+            }`}
           >
             <PanelLeft size={16} />
           </button>
@@ -3041,7 +3045,11 @@ export default function HomePage() {
               aria-label={inspectorDrawerOpen ? '속성 패널 닫기' : '속성 패널 열기'}
               aria-pressed={inspectorDrawerOpen}
               onClick={() => setInspectorDrawerOpen((v) => !v)}
-              className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] xl:hidden"
+              className={`-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-md border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] xl:hidden ${
+                inspectorDrawerOpen
+                  ? 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
+                  : 'border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe]'
+              }`}
             >
               <PanelRight size={16} />
             </button>
