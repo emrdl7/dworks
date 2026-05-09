@@ -66,7 +66,7 @@ describe('generation history', () => {
 
     assert.equal(submitted.notes, '제주 사진 중심')
     assert.match(request.notes ?? '', /제주 사진 중심/)
-    assert.match(request.notes ?? '', /변형 2:/)
+    assert.match(request.notes ?? '', /변형 2/)
   })
 
   it('returns the original brief object for single generation', () => {

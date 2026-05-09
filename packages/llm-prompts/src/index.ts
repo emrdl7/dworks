@@ -33,6 +33,17 @@ export interface DesignBrief {
   imageReference?: ImageReference
   /** 다중 참고 이미지 (max 3). 단일이어도 imageReferences[0]에 두는 것을 권장. */
   imageReferences?: ImageReference[]
+  /**
+   * 다양성 시드 — 이전 변형 수와 무엇과 다르게 갈지 hint. 같은 brief 반복
+   * 호출 시 LLM에 _다른 톤/팔레트/구성_을 명시적으로 요청한다.
+   * undefined면 기본 톤 매핑 사용.
+   */
+  variantSeed?: {
+    /** 이미 만든 변형의 1-based index. 첫 호출은 1, 두 번째는 2. */
+    index: number
+    /** 시도할 톤 (앞 5개는 system prompt 매핑 톤 — 다크/미니멀/빈티지/퓨처/에디토리얼/GenZ 등). */
+    targetTone?: string
+  }
 }
 
 /** brief에서 사용할 imageReferences 배열을 결정한다 — 신규(imageReferences) 우선, 없으면 legacy 단일을 array[0]로. */
@@ -159,6 +170,22 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
     }
     lines.push(
       '  (여러 참고 이미지의 색감/비율을 종합한 시드. 그대로 베끼지 말고 디자인 팔레트의 영감 자료로 활용. raw hex 강제 X)',
+    )
+  }
+  if (brief.variantSeed !== undefined && brief.variantSeed.index >= 2) {
+    lines.push('', `### 변형 시드 — ${brief.variantSeed.index}번째 시도`)
+    lines.push(
+      `- 같은 brief에 대한 ${brief.variantSeed.index - 1}번 변형이 이미 있음. 이번 변형은 _기존과 다른_ 톤/팔레트/구성으로 시도해라.`,
+    )
+    if (brief.variantSeed.targetTone !== undefined) {
+      lines.push(`- 추천 톤: ${brief.variantSeed.targetTone}`)
+    } else {
+      lines.push(
+        '- 톤 다양화: 이전이 차분/절제였다면 활기/임팩트, 이전이 라이트였다면 다크/럭셔리, 이전이 미니멀이었다면 GenZ/vibrant 같이 _대조적 톤_ 시도.',
+      )
+    }
+    lines.push(
+      '- hero pattern, layout direction, color family를 의도적으로 다르게. 같은 패턴 반복 금지.',
     )
   }
   lines.push('', '위 브리프에 맞춰 dworks Tree JSON 하나를 반환한다.')

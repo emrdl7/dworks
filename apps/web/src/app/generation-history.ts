@@ -9,9 +9,9 @@ export type VariantCount = 1 | 2 | 3
 export const VARIANT_COUNT_OPTIONS: VariantCount[] = [1, 2, 3]
 
 export const VARIANT_DIVERSITY_HINTS: ReadonlyArray<string> = [
-  '변형 1: 구조와 정보 밀도가 균형 잡힌 안정형 레이아웃.',
-  '변형 2: 시각 강조와 헤드라인이 강한 임팩트형 레이아웃.',
-  '변형 3: 여백이 넓고 차분한 실무형 레이아웃.',
+  '변형 1 — 균형형: 구조와 정보 밀도가 균형 잡힌 안정형. 도메인 시그니처 기본 톤.',
+  '변형 2 — 임팩트형: bold typography(heading-1 fontSize 64~88, fontWeight 800~900), vivid accent palette(coral / electric blue / mint 중), 강한 shadow(lg/xl), shape.radius 16~28.',
+  '변형 3 — 다크/럭셔리형: bg deep(#0a0a0a~#1a1d22), bright text(#e5e7eb~#f9fafb), vivid accent(violet/cyan/lime), shadow는 약하게 또는 none, border 약간 강화로 위계.',
 ]
 
 interface BriefWithNotes {
