@@ -3340,11 +3340,9 @@ export default function HomePage() {
               className="h-8 w-full rounded-md border border-[#cbd6cf] bg-white px-2.5 text-xs text-[#18211d] outline-none placeholder:text-[#9aa49d] focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
             />
           </div>
-          {filteredLayerItems.length === 0 ? (
+          {filteredLayerItems.length === 0 && layerQuery.trim() !== '' ? (
             <p className="px-4 py-6 text-center text-xs text-[#9aa49d]">
-              {layerQuery.trim() === ''
-                ? '레이어가 없습니다.'
-                : `"${layerQuery}"에 일치하는 레이어가 없습니다.`}
+              {`"${layerQuery}"에 일치하는 레이어가 없습니다.`}
             </p>
           ) : null}
           <nav
