@@ -3868,7 +3868,7 @@ export default function HomePage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="shortcut-help-title"
-            className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-[#2a2e35] bg-[#1d2025] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+            className="fixed bottom-6 right-6 z-50 w-[22rem] max-w-[calc(100vw-3rem)] rounded-lg border border-[#2a2e35] bg-[#1d2025] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
             style={{ animation: 'dw-fade-up 200ms ease-out both' }}
           >
             <div className="mb-3 flex items-center justify-between">
@@ -3888,35 +3888,68 @@ export default function HomePage() {
                 <X size={14} />
               </button>
             </div>
-            <dl className="space-y-2 text-sm">
+            <div className="space-y-3 text-sm">
               {[
-                { keys: ['⌘', 'Z'], label: '실행 취소' },
-                { keys: ['⌘', '⇧', 'Z'], label: '다시 실행' },
-                { keys: ['⌘', 'D'], label: '복제' },
-                { keys: ['⌘', '↑'], label: '위로 이동' },
-                { keys: ['⌘', '↓'], label: '아래로 이동' },
-                { keys: ['Delete'], label: '삭제' },
-                { keys: ['Esc'], label: '선택 해제' },
-                { keys: ['?'], label: '이 도움말 토글' },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between gap-3"
-                >
-                  <dt className="text-[#898d97]">{item.label}</dt>
-                  <dd className="flex items-center gap-1">
-                    {item.keys.map((k, i) => (
-                      <kbd
-                        key={`${item.label}-${i}`}
-                        className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-[#2a2e35] bg-[#1d2025] px-1.5 text-[11px] font-semibold text-[#c5c8cf]"
+                {
+                  category: '편집',
+                  items: [
+                    { keys: ['⌘', 'Z'], label: '실행 취소' },
+                    { keys: ['⌘', '⇧', 'Z'], label: '다시 실행' },
+                    { keys: ['⌘', 'D'], label: '복제' },
+                    { keys: ['Delete'], label: '삭제' },
+                  ],
+                },
+                {
+                  category: '노드 이동',
+                  items: [
+                    { keys: ['⌘', '↑'], label: '형제 위로 이동' },
+                    { keys: ['⌘', '↓'], label: '형제 아래로 이동' },
+                    { keys: ['↑', '↓'], label: '레이어 사이 이동' },
+                    { keys: ['←', '→'], label: '탭 전환' },
+                  ],
+                },
+                {
+                  category: '브리프 입력',
+                  items: [
+                    { keys: ['⌘', 'Enter'], label: '질문 받기' },
+                    { keys: ['⌘', '⇧', 'Enter'], label: '바로 생성' },
+                  ],
+                },
+                {
+                  category: '선택 / 도움말',
+                  items: [
+                    { keys: ['Esc'], label: '선택 해제 / 닫기' },
+                    { keys: ['?'], label: '이 도움말 토글' },
+                  ],
+                },
+              ].map((group) => (
+                <div key={group.category}>
+                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#5b6069]">
+                    {group.category}
+                  </div>
+                  <dl className="space-y-1">
+                    {group.items.map((item) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center justify-between gap-3"
                       >
-                        {k}
-                      </kbd>
+                        <dt className="text-[#898d97]">{item.label}</dt>
+                        <dd className="flex items-center gap-1">
+                          {item.keys.map((k, i) => (
+                            <kbd
+                              key={`${item.label}-${i}`}
+                              className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-[#2a2e35] bg-[#16181c] px-1.5 text-[11px] font-semibold text-[#c5c8cf]"
+                            >
+                              {k}
+                            </kbd>
+                          ))}
+                        </dd>
+                      </div>
                     ))}
-                  </dd>
+                  </dl>
                 </div>
               ))}
-            </dl>
+            </div>
             <p className="mt-4 text-[11px] text-[#5b6069]">
               입력 필드에서는 단축키가 비활성화됩니다.
             </p>
