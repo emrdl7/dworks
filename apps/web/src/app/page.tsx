@@ -2550,7 +2550,7 @@ export default function HomePage() {
                       event.stopPropagation()
                       setCompareMode((v) => !v)
                     }}
-                    className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold transition disabled:opacity-50 ${
+                    className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold transition disabled:opacity-50 ${
                       compareMode
                         ? 'border-[#4f46e5] bg-[#4f46e5] text-white'
                         : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5]'
