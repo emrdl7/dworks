@@ -2659,6 +2659,21 @@ export default function HomePage() {
   ])
 
   return (
+    <CanvasSelectionContext.Provider
+      value={{
+        primarySelectedId: selectedNodeId,
+        allSelectedIds: allSelectedNodeIds,
+        toggleAdditional: (id: string) => {
+          if (id === selectedNodeId) return
+          setAdditionalSelectedNodeIds((prev) => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+          })
+        },
+      }}
+    >
     <CanvasHoverContext.Provider value={canvasHoverValue}>
     <main className="flex h-screen flex-col overflow-hidden bg-[#0d0e10] text-[#ebecef]">
       <header className="flex h-14 items-center justify-between border-b border-[#2a2e35] bg-[#16181c] px-5">
@@ -4090,6 +4105,7 @@ export default function HomePage() {
       ) : null}
     </main>
     </CanvasHoverContext.Provider>
+    </CanvasSelectionContext.Provider>
   )
 }
 
@@ -4568,6 +4584,17 @@ interface CanvasHoverContextValue {
 const CanvasHoverContext = createContext<CanvasHoverContextValue>({
   hoveredNodeId: null,
   setHoveredNodeId: () => {},
+})
+
+interface CanvasSelectionContextValue {
+  primarySelectedId: string
+  allSelectedIds: ReadonlySet<string>
+  toggleAdditional: (id: string) => void
+}
+const CanvasSelectionContext = createContext<CanvasSelectionContextValue>({
+  primarySelectedId: '',
+  allSelectedIds: new Set(),
+  toggleAdditional: () => {},
 })
 
 interface CanvasNodeProps {
@@ -5156,6 +5183,7 @@ function SelectableNode({
 }: SelectableNodeProps) {
   const readOnly = useContext(CanvasReadOnlyContext)
   const { hoveredNodeId, setHoveredNodeId } = useContext(CanvasHoverContext)
+  const _selectionCtxTopLevel = useContext(CanvasSelectionContext)
   const transformStyle = getTransformStyle(node.transform)
   const transitionStyle = getTransitionStyle(node.transition)
 
@@ -5173,9 +5201,11 @@ function SelectableNode({
     )
   }
 
-  const isSelected = node.id === selectedNodeId
+  const selectionCtx = _selectionCtxTopLevel
+  const isPrimary = node.id === selectedNodeId
+  const isInSelection = selectionCtx.allSelectedIds.has(node.id)
   const isCanvasSelectable = node.pointerEvents !== 'none'
-  const isHovered = hoveredNodeId === node.id && !isSelected
+  const isHovered = hoveredNodeId === node.id && !isInSelection
   const nodeMetaStyle: CSSProperties = {
     pointerEvents: isCanvasSelectable ? 'auto' : 'none',
     ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
@@ -5184,12 +5214,16 @@ function SelectableNode({
     ...(transformStyle ?? {}),
   }
 
-  function selectNode() {
+  function selectNode(modifiers?: { shift?: boolean; meta?: boolean }) {
     if (!isCanvasSelectable) {
       return
     }
-
-    onSelect(node.id)
+    const multi = modifiers?.shift === true || modifiers?.meta === true
+    if (multi) {
+      selectionCtx.toggleAdditional(node.id)
+    } else {
+      onSelect(node.id)
+    }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -5202,7 +5236,10 @@ function SelectableNode({
     }
 
     event.preventDefault()
-    onSelect(node.id)
+    selectNode({
+      shift: event.shiftKey,
+      meta: event.metaKey || event.ctrlKey,
+    })
   }
 
   return (
@@ -5211,11 +5248,13 @@ function SelectableNode({
       tabIndex={isCanvasSelectable ? 0 : -1}
       data-dworks-node-id={node.id}
       className={`group/dwnode relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
-        isSelected
+        isPrimary
           ? 'border-[var(--dw-accent)] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
-          : isHovered
-            ? 'border-[var(--dw-accent)]/60 shadow-[0_0_0_2px_rgba(99,102,241,0.3)]'
-            : 'border-transparent hover:border-[var(--dw-border)]'
+          : isInSelection
+            ? 'border-[var(--dw-accent)] shadow-[0_0_0_2px_rgba(99,102,241,0.45)]'
+            : isHovered
+              ? 'border-[var(--dw-accent)]/60 shadow-[0_0_0_2px_rgba(99,102,241,0.3)]'
+              : 'border-transparent hover:border-[var(--dw-border)]'
       }`}
       style={nodeMetaStyle}
       onMouseEnter={() => {
@@ -5228,11 +5267,14 @@ function SelectableNode({
       }}
       onClick={(event) => {
         event.stopPropagation()
-        selectNode()
+        selectNode({
+          shift: event.shiftKey,
+          meta: event.metaKey || event.ctrlKey,
+        })
       }}
       onKeyDown={handleKeyDown}
     >
-      {isSelected ? (
+      {isPrimary ? (
         <span className="pointer-events-none absolute -top-3 left-2 z-10 inline-flex items-center gap-1 rounded bg-[var(--dw-accent)] px-2 py-1 text-[11px] font-semibold text-[var(--dw-accent-text)]">
           {(() => {
             const Icon = nodeTypeIcons[node.type]
@@ -5241,7 +5283,7 @@ function SelectableNode({
           {nodeTypeLabels[node.type]}
         </span>
       ) : null}
-      {isSelected ? <CanvasNodeToolbar nodeId={node.id} /> : null}
+      {isPrimary ? <CanvasNodeToolbar nodeId={node.id} /> : null}
       {children}
     </div>
   )
