@@ -3968,19 +3968,34 @@ function NodeContextMenu({
     items[nextIndex]?.focus()
   }
 
+  const NodeTypeIcon = nodeTypeIcons[node.type]
   return (
     <div
       ref={menuRef}
       role="menu"
       aria-label={`${node.id} 컨텍스트 메뉴`}
-      className="fixed z-50 min-w-52 rounded-md border border-[#c9d4cd] bg-white p-1 shadow-xl"
+      className="fixed z-50 min-w-56 rounded-md border border-[#c9d4cd] bg-white p-1 shadow-xl"
       style={{
         left: position.x,
         top: position.y,
+        animation: 'dw-fade-up 140ms ease-out both',
       }}
       onContextMenu={(event) => event.preventDefault()}
       onKeyDown={handleKeyDown}
     >
+      <div className="mb-1 flex items-center gap-2 border-b border-[#e0e5de] px-3 pb-2 pt-1">
+        <NodeTypeIcon
+          aria-hidden="true"
+          size={13}
+          className="shrink-0 text-[#4f5e56]"
+        />
+        <span className="text-xs font-semibold text-[#18211d]">
+          {nodeTypeLabels[node.type]}
+        </span>
+        <span className="ml-auto truncate text-[11px] text-[#9aa49d]">
+          {node.id}
+        </span>
+      </div>
       <ContextMenuButton disabled={!canMoveUp} onClick={onMoveUp}>
         위로 이동
       </ContextMenuButton>
