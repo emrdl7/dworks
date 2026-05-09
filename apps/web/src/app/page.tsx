@@ -79,6 +79,7 @@ import {
   type LayoutJustify,
   type LayoutWrap,
   type ImageFilter,
+  type ImageDropShadow,
   type NodeColor,
   type NodeCursor,
   type NodeTransform,
@@ -3407,6 +3408,13 @@ function getImageObjectPosition(focalPoint: FocalPoint): string {
   return `${Math.round(focalPoint.x * 100)}% ${Math.round(focalPoint.y * 100)}%`
 }
 
+const IMAGE_DROP_SHADOW_DEFAULT: ImageDropShadow = {
+  offsetX: 0,
+  offsetY: 4,
+  blur: 6,
+  color: '#000000',
+}
+
 function getImageFilterCss(filter?: ImageFilter): string | undefined {
   if (filter === undefined) {
     return undefined
@@ -3426,6 +3434,21 @@ function getImageFilterCss(filter?: ImageFilter): string | undefined {
   }
   if (filter.contrast !== undefined) {
     parts.push(`contrast(${filter.contrast}%)`)
+  }
+  if (filter.hueRotate !== undefined) {
+    parts.push(`hue-rotate(${filter.hueRotate}deg)`)
+  }
+  if (filter.saturate !== undefined) {
+    parts.push(`saturate(${filter.saturate}%)`)
+  }
+  if (filter.invert !== undefined) {
+    parts.push(`invert(${filter.invert}%)`)
+  }
+  if (filter.dropShadow !== undefined) {
+    const ds = filter.dropShadow
+    parts.push(
+      `drop-shadow(${ds.offsetX}px ${ds.offsetY}px ${ds.blur}px ${ds.color})`,
+    )
   }
   return parts.length === 0 ? undefined : parts.join(' ')
 }
@@ -7818,7 +7841,7 @@ function ImageCompositionControls({
   }
 
   function updateImageFilterField(
-    field: keyof ImageFilter,
+    field: 'blur' | 'grayscale' | 'sepia' | 'brightness' | 'contrast' | 'hueRotate' | 'saturate' | 'invert',
     value: number | undefined,
   ) {
     const currentFilter = presentation.filter ?? {}
@@ -7837,6 +7860,58 @@ function ImageCompositionControls({
         },
       },
       { mergeKey: getNodeColorMergeKey(node.id, `imageFilter.${field}`) },
+    )
+  }
+
+  function updateImageDropShadowField<K extends keyof ImageDropShadow>(
+    field: K,
+    value: ImageDropShadow[K],
+  ) {
+    const currentFilter = presentation.filter ?? {}
+    const currentDropShadow =
+      currentFilter.dropShadow ?? IMAGE_DROP_SHADOW_DEFAULT
+    const nextDropShadow: ImageDropShadow = {
+      ...currentDropShadow,
+      [field]: value,
+    }
+    const nextFilter: ImageFilter = {
+      ...currentFilter,
+      dropShadow: nextDropShadow,
+    }
+    onImageChange(
+      node,
+      { presentation: { filter: nextFilter } },
+      {
+        mergeKey: getNodeColorMergeKey(
+          node.id,
+          `imageFilter.dropShadow.${field}`,
+        ),
+      },
+    )
+  }
+
+  function toggleImageDropShadow(enabled: boolean) {
+    const currentFilter = presentation.filter ?? {}
+    const nextFilter: ImageFilter = { ...currentFilter }
+    if (enabled) {
+      nextFilter.dropShadow = IMAGE_DROP_SHADOW_DEFAULT
+    } else {
+      delete nextFilter.dropShadow
+    }
+    const isEmpty = Object.keys(nextFilter).length === 0
+    onImageChange(
+      node,
+      {
+        presentation: {
+          filter: isEmpty ? undefined : nextFilter,
+        },
+      },
+      {
+        mergeKey: getNodeColorMergeKey(
+          node.id,
+          'imageFilter.dropShadow.toggle',
+        ),
+      },
     )
   }
 
@@ -8093,7 +8168,95 @@ function ImageCompositionControls({
             value={presentation.filter?.contrast}
             onChange={(value) => updateImageFilterField('contrast', value)}
           />
+          <ImageFilterInput
+            label="색상 회전 (°)"
+            min={0}
+            max={360}
+            placeholder="0"
+            value={presentation.filter?.hueRotate}
+            onChange={(value) => updateImageFilterField('hueRotate', value)}
+          />
+          <ImageFilterInput
+            label="채도 (%)"
+            min={0}
+            max={200}
+            placeholder="100"
+            value={presentation.filter?.saturate}
+            onChange={(value) => updateImageFilterField('saturate', value)}
+          />
+          <ImageFilterInput
+            label="반전 (%)"
+            min={0}
+            max={100}
+            placeholder="0"
+            value={presentation.filter?.invert}
+            onChange={(value) => updateImageFilterField('invert', value)}
+          />
         </div>
+        <label className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-[#4f5e56]">
+          <input
+            type="checkbox"
+            className="h-4 w-4 cursor-pointer accent-[#1b7f72]"
+            checked={presentation.filter?.dropShadow !== undefined}
+            onChange={(event) => toggleImageDropShadow(event.target.checked)}
+          />
+          그림자
+        </label>
+        {presentation.filter?.dropShadow !== undefined ? (
+          <div className="mt-2 grid grid-cols-2 gap-2 rounded-md border border-dashed border-[#cbd6cf] bg-[#f8faf9] p-3">
+            <ImageFilterInput
+              label="X 오프셋 (px)"
+              min={-50}
+              max={50}
+              placeholder="0"
+              value={presentation.filter.dropShadow.offsetX}
+              onChange={(value) =>
+                updateImageDropShadowField(
+                  'offsetX',
+                  value === undefined ? 0 : value,
+                )
+              }
+            />
+            <ImageFilterInput
+              label="Y 오프셋 (px)"
+              min={-50}
+              max={50}
+              placeholder="4"
+              value={presentation.filter.dropShadow.offsetY}
+              onChange={(value) =>
+                updateImageDropShadowField(
+                  'offsetY',
+                  value === undefined ? 0 : value,
+                )
+              }
+            />
+            <ImageFilterInput
+              label="흐림 (px)"
+              min={0}
+              max={50}
+              placeholder="6"
+              value={presentation.filter.dropShadow.blur}
+              onChange={(value) =>
+                updateImageDropShadowField(
+                  'blur',
+                  value === undefined ? 0 : value,
+                )
+              }
+            />
+            <label className="block">
+              <span className="text-[11px] text-[#647067]">색상</span>
+              <input
+                type="color"
+                aria-label="그림자 색상"
+                className="mt-1 h-9 w-full cursor-pointer rounded-md border border-[#cbd6cf] bg-white p-0.5"
+                value={presentation.filter.dropShadow.color}
+                onChange={(event) =>
+                  updateImageDropShadowField('color', event.target.value)
+                }
+              />
+            </label>
+          </div>
+        ) : null}
       </div>
     </InspectorDisclosure>
   )

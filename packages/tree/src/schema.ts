@@ -291,12 +291,24 @@ export const focalPointSchema = z.object({
 })
 export type FocalPoint = z.infer<typeof focalPointSchema>
 
+export const imageDropShadowSchema = z.object({
+  offsetX: z.number().min(-50).max(50),
+  offsetY: z.number().min(-50).max(50),
+  blur: z.number().min(0).max(50),
+  color: hexColorSchema,
+})
+export type ImageDropShadow = z.infer<typeof imageDropShadowSchema>
+
 export const imageFilterSchema = z.object({
   blur: z.number().min(0).max(20).optional(),
   grayscale: z.number().min(0).max(100).optional(),
   sepia: z.number().min(0).max(100).optional(),
   brightness: z.number().min(50).max(150).optional(),
   contrast: z.number().min(50).max(150).optional(),
+  hueRotate: z.number().min(0).max(360).optional(),
+  saturate: z.number().min(0).max(200).optional(),
+  invert: z.number().min(0).max(100).optional(),
+  dropShadow: imageDropShadowSchema.optional(),
 })
 export type ImageFilter = z.infer<typeof imageFilterSchema>
 
