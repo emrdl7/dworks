@@ -290,8 +290,6 @@ function readFileAsDataUrl(file: File): Promise<string> {
 async function extractFromDataUrl(dataUrl: string): Promise<{
   colors: string[]
   aspectRatio: 'square' | 'landscape' | 'portrait' | 'wide' | null
-  width: number
-  height: number
 }> {
   const image = await loadImage(dataUrl)
   const naturalWidth = image.naturalWidth
@@ -317,7 +315,7 @@ async function extractFromDataUrl(dataUrl: string): Promise<{
     { data: imageData.data, width: drawWidth, height: drawHeight },
     5,
   )
-  return { colors, aspectRatio, width: naturalWidth, height: naturalHeight }
+  return { colors, aspectRatio }
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -881,6 +879,8 @@ export default function HomePage() {
       setClarifyTurns(persisted.clarify.turns as ClarifyTurn[])
       setClarifyComplete(persisted.clarify.complete)
       setGenerateStage(persisted.clarify.stage)
+      setBriefImageRef(persisted.brief.imageReference)
+      setBriefImageRefThumbnail(persisted.brief.imageReferenceThumbnail)
     }
     setIsGenerationStateHydrated(true)
   }, [])
@@ -899,6 +899,8 @@ export default function HomePage() {
         variantCount: briefVariantCount,
         answers: briefAnswers,
         questions: clarifyQuestions,
+        imageReference: briefImageRef,
+        imageReferenceThumbnail: briefImageRefThumbnail,
       },
       clarify: {
         turns: clarifyTurns,
@@ -912,6 +914,8 @@ export default function HomePage() {
     activeGenerationId,
     briefIntent,
     briefNotes,
+    briefImageRef,
+    briefImageRefThumbnail,
     briefVariantCount,
     briefAnswers,
     clarifyQuestions,
@@ -1119,9 +1123,7 @@ export default function HomePage() {
     setBriefImageRefError(null)
     try {
       const dataUrl = await readFileAsDataUrl(file)
-      const { colors, aspectRatio, width, height } = await extractFromDataUrl(
-        dataUrl,
-      )
+      const { colors, aspectRatio } = await extractFromDataUrl(dataUrl)
       if (colors.length === 0) {
         setBriefImageRefError('이미지에서 색을 추출하지 못했습니다.')
         return
@@ -1131,8 +1133,6 @@ export default function HomePage() {
         ...(aspectRatio !== null ? { aspectRatio } : {}),
       })
       setBriefImageRefThumbnail(dataUrl)
-      void width
-      void height
     } catch (error) {
       setBriefImageRefError(
         error instanceof Error
@@ -1414,6 +1414,9 @@ export default function HomePage() {
     if (target.brief === null) {
       setBriefIntent('')
       setBriefNotes('')
+      setBriefImageRef(null)
+      setBriefImageRefThumbnail(null)
+      setBriefImageRefError(null)
       setClarifyQuestions([])
       setBriefAnswers({})
       setClarifyTurns([])
@@ -1425,6 +1428,9 @@ export default function HomePage() {
       const restoredTurns = target.clarifyTurns ?? []
       setBriefIntent(target.brief.intent)
       setBriefNotes(target.brief.notes ?? '')
+      setBriefImageRef(target.brief.imageReference ?? null)
+      setBriefImageRefThumbnail(null)
+      setBriefImageRefError(null)
       setClarifyQuestions(restoredQuestions)
       const restoredAnswers: Record<string, string | string[]> = {}
       for (const a of target.brief.answers ?? []) {
@@ -2235,15 +2241,23 @@ export default function HomePage() {
                   ) : null}
                 </div>
                 {briefImageRef === null ? (
-                  <label className="block cursor-pointer rounded-md border border-dashed border-[#cbd6cf] bg-white px-3 py-2 text-center text-[11px] text-[#7c8580] hover:border-[#1b7f72] hover:text-[#1b7f72]">
+                  <label
+                    className={`block rounded-md border border-dashed border-[#cbd6cf] bg-white px-3 py-2 text-center text-[11px] text-[#7c8580] ${
+                      briefImageRefBusy || clarifyLoading || generateLoading
+                        ? 'cursor-not-allowed opacity-50'
+                        : 'cursor-pointer hover:border-[#1b7f72] hover:text-[#1b7f72]'
+                    }`}
+                  >
                     {briefImageRefBusy
                       ? '이미지 분석 중…'
                       : '이미지 파일 선택 (5MB 이하)'}
                     <input
                       type="file"
                       accept="image/*"
-                      className="hidden"
-                      disabled={briefImageRefBusy}
+                      className="sr-only"
+                      disabled={
+                        briefImageRefBusy || clarifyLoading || generateLoading
+                      }
                       onChange={(event) => {
                         const file = event.target.files?.[0]
                         event.target.value = ''

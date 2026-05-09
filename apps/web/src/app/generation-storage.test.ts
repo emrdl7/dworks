@@ -87,6 +87,8 @@ function buildSampleState(
       variantCount: 1,
       answers: {},
       questions: [],
+      imageReference: null,
+      imageReferenceThumbnail: null,
     },
     clarify: {
       turns: [],
@@ -184,6 +186,8 @@ describe('generation-storage', () => {
             options: ['엔지니어', '디자이너'],
           },
         ],
+        imageReference: null,
+        imageReferenceThumbnail: null,
       },
       clarify: {
         turns: [
@@ -212,5 +216,45 @@ describe('generation-storage', () => {
     writePersistedGenerationState(state)
     const loaded = readPersistedGenerationState()
     assert.deepEqual(loaded, state)
+  })
+
+  it('imageReference + thumbnail round-trip', () => {
+    const state = buildSampleState({
+      brief: {
+        intent: '카페 랜딩 페이지',
+        notes: '',
+        variantCount: 1,
+        answers: {},
+        questions: [],
+        imageReference: {
+          colors: ['#0b1220', '#22d3ee', '#f8fafc'],
+          aspectRatio: 'wide',
+        },
+        imageReferenceThumbnail:
+          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==',
+      },
+    })
+    writePersistedGenerationState(state)
+    const loaded = readPersistedGenerationState()
+    assert.deepEqual(loaded, state)
+  })
+
+  it('imageReference invalid hex 색은 거부한다', () => {
+    const state = buildSampleState()
+    const corrupt = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
+    ;(corrupt.brief as Record<string, unknown>).imageReference = {
+      colors: ['rgba(0,0,0,0.5)'],
+    }
+    storage.setItem(STORAGE_KEY, JSON.stringify(corrupt))
+    assert.equal(readPersistedGenerationState(), null)
+  })
+
+  it('imageReferenceThumbnail이 data:image/ 가 아니면 거부한다', () => {
+    const state = buildSampleState()
+    const corrupt = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
+    ;(corrupt.brief as Record<string, unknown>).imageReferenceThumbnail =
+      'http://example.com/x.jpg'
+    storage.setItem(STORAGE_KEY, JSON.stringify(corrupt))
+    assert.equal(readPersistedGenerationState(), null)
   })
 })

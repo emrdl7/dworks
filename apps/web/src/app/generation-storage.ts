@@ -34,6 +34,11 @@ export interface PersistedClarifyTurn {
   answers: PersistedBriefAnswer[]
 }
 
+export interface PersistedImageReference {
+  colors: string[]
+  aspectRatio?: 'square' | 'landscape' | 'portrait' | 'wide'
+}
+
 export interface PersistedGenerationEntry {
   id: string
   label: string
@@ -43,6 +48,7 @@ export interface PersistedGenerationEntry {
     intent: string
     answers?: PersistedBriefAnswer[]
     notes?: string
+    imageReference?: PersistedImageReference
   } | null
   questions: PersistedClarifyQuestion[]
   clarifyTurns: PersistedClarifyTurn[]
@@ -62,6 +68,8 @@ export interface PersistedGenerationState {
     variantCount: VariantCount
     answers: Record<string, string | string[]>
     questions: PersistedClarifyQuestion[]
+    imageReference: PersistedImageReference | null
+    imageReferenceThumbnail: string | null
   }
   clarify: {
     turns: PersistedClarifyTurn[]
@@ -217,6 +225,37 @@ function validateBriefAnswers(raw: unknown): PersistedBriefAnswer[] | null {
   return out
 }
 
+const HEX6_RE = /^#[0-9a-f]{6}$/
+
+function validateImageReference(raw: unknown): PersistedImageReference | null {
+  if (!isPlainObject(raw)) return null
+  if (!Array.isArray(raw.colors)) return null
+  if (raw.colors.length === 0 || raw.colors.length > 5) return null
+  const colors: string[] = []
+  for (const item of raw.colors) {
+    if (typeof item !== 'string') return null
+    const lower = item.toLowerCase()
+    if (!HEX6_RE.test(lower)) return null
+    colors.push(lower)
+  }
+  let aspectRatio: PersistedImageReference['aspectRatio']
+  if (raw.aspectRatio !== undefined) {
+    if (
+      raw.aspectRatio !== 'square' &&
+      raw.aspectRatio !== 'landscape' &&
+      raw.aspectRatio !== 'portrait' &&
+      raw.aspectRatio !== 'wide'
+    ) {
+      return null
+    }
+    aspectRatio = raw.aspectRatio
+  }
+  return {
+    colors,
+    ...(aspectRatio !== undefined ? { aspectRatio } : {}),
+  }
+}
+
 function validateClarifyTurn(raw: unknown): PersistedClarifyTurn | null {
   if (!isPlainObject(raw)) return null
   const questions = validateClarifyQuestions(raw.questions)
@@ -265,10 +304,17 @@ function validateGenerationEntry(
         : validateBriefAnswers(raw.brief.answers)
     if (briefAnswers === null) return null
     const notes = typeof raw.brief.notes === 'string' ? raw.brief.notes : undefined
+    let imageReference: PersistedImageReference | undefined
+    if (raw.brief.imageReference !== undefined) {
+      const validated = validateImageReference(raw.brief.imageReference)
+      if (validated === null) return null
+      imageReference = validated
+    }
     brief = {
       intent,
       ...(briefAnswers !== undefined ? { answers: briefAnswers } : {}),
       ...(notes !== undefined ? { notes } : {}),
+      ...(imageReference !== undefined ? { imageReference } : {}),
     }
   }
 
@@ -347,6 +393,23 @@ function validatePersistedState(
   const briefQuestions = validateClarifyQuestions(raw.brief.questions)
   if (briefQuestions === null) return null
 
+  let briefImageReference: PersistedImageReference | null = null
+  if (raw.brief.imageReference !== null && raw.brief.imageReference !== undefined) {
+    const validated = validateImageReference(raw.brief.imageReference)
+    if (validated === null) return null
+    briefImageReference = validated
+  }
+
+  let briefImageReferenceThumbnail: string | null = null
+  if (
+    raw.brief.imageReferenceThumbnail !== null &&
+    raw.brief.imageReferenceThumbnail !== undefined
+  ) {
+    if (typeof raw.brief.imageReferenceThumbnail !== 'string') return null
+    if (!raw.brief.imageReferenceThumbnail.startsWith('data:image/')) return null
+    briefImageReferenceThumbnail = raw.brief.imageReferenceThumbnail
+  }
+
   if (!isPlainObject(raw.clarify)) return null
   const clarifyTurns = validateClarifyTurns(raw.clarify.turns)
   if (clarifyTurns === null) return null
@@ -366,6 +429,8 @@ function validatePersistedState(
       variantCount,
       answers: briefAnswers,
       questions: briefQuestions,
+      imageReference: briefImageReference,
+      imageReferenceThumbnail: briefImageReferenceThumbnail,
     },
     clarify: {
       turns: clarifyTurns,
