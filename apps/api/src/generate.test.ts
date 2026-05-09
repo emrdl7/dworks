@@ -190,6 +190,45 @@ describe('handleGenerate', () => {
     assert.equal(calls.length, 0)
   })
 
+  it('rejects invalid request-level provider overrides before calling the CLI', async () => {
+    const { calls, spawn } = createClosingSpawn(JSON.stringify(validTree))
+
+    const result = await handleGenerate(
+      { brief: { intent: 'provider 오류' }, providers: ['unknown'] },
+      { spawnImpl: spawn },
+    )
+
+    assert.equal(result.status, 400)
+    assert.equal(result.body.error, 'invalid-request')
+    assert.equal(calls.length, 0)
+  })
+
+  it('uses request-level providers before dependency defaults', async () => {
+    const { calls, spawn } = createClosingSpawn('')
+
+    const result = await handleGenerate(
+      { brief: { intent: 'Codex만 사용' }, providers: ['codex'] },
+      {
+        spawnImpl: spawn,
+        providerChain: ['claude'],
+        prepareOutputFileImpl: async () => ({
+          path: '/tmp/test-codex-output',
+          cleanup: async () => {},
+        }),
+        readOutputFileImpl: async () => JSON.stringify(validTree),
+      },
+    )
+
+    assert.equal(result.status, 200)
+    if (result.status === 200) {
+      assert.equal(result.body.model, 'codex')
+    }
+    assert.deepEqual(
+      calls.map((call) => call.command),
+      ['codex'],
+    )
+  })
+
   it('maps invalid CLI JSON to a parse failure without exposing raw output', async () => {
     const { calls, spawn } = createClosingSpawn('not-json-output')
 

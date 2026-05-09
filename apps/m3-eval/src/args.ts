@@ -12,6 +12,8 @@ export interface M3EvalArgs {
 }
 
 const POSITIVE_INT = z.number().int().min(1).max(50)
+const PROVIDER_IDS = ['claude', 'codex', 'gemini'] as const
+const PROVIDER_SET = new Set<string>(PROVIDER_IDS)
 
 export class M3EvalArgsError extends Error {}
 
@@ -50,10 +52,7 @@ export function parseM3EvalArgs(argv: readonly string[]): M3EvalArgs {
   const providers =
     providersRaw === undefined
       ? null
-      : providersRaw
-          .split(',')
-          .map((p) => p.trim())
-          .filter((p) => p.length > 0)
+      : parseProviders(providersRaw)
 
   return {
     fixturesPath,
@@ -63,4 +62,22 @@ export function parseM3EvalArgs(argv: readonly string[]): M3EvalArgs {
     providers,
     live: flags.has('live'),
   }
+}
+
+function parseProviders(value: string): string[] {
+  const providers = value
+    .split(',')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+  if (providers.length === 0) {
+    throw new M3EvalArgsError('--providers는 비어 있을 수 없습니다.')
+  }
+  for (const provider of providers) {
+    if (!PROVIDER_SET.has(provider)) {
+      throw new M3EvalArgsError(
+        `--providers는 ${PROVIDER_IDS.join(', ')} 중 하나여야 합니다: ${provider}`,
+      )
+    }
+  }
+  return [...new Set(providers)]
 }

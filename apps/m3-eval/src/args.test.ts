@@ -53,4 +53,17 @@ describe('parseM3EvalArgs', () => {
       (err: unknown) => err instanceof M3EvalArgsError,
     )
   })
+
+  it('rejects unknown providers', () => {
+    assert.throws(
+      () =>
+        parseM3EvalArgs([
+          '--fixtures',
+          'f.json',
+          '--providers',
+          'claude,unknown',
+        ]),
+      (err: unknown) => err instanceof M3EvalArgsError,
+    )
+  })
 })

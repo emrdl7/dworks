@@ -11,6 +11,7 @@ import { treeSchema, type Tree } from '@dworks/tree'
 
 import {
   callLlmChain,
+  LLM_PROVIDER_IDS,
   resolveProviderChain,
   type LlmProvider,
   type SpawnLike,
@@ -30,7 +31,16 @@ export const briefSchema = z.object({
 })
 export type GenerateBrief = z.infer<typeof briefSchema>
 
-const briefRequestSchema = z.object({ brief: briefSchema })
+const providerChainSchema = z
+  .array(z.enum(LLM_PROVIDER_IDS))
+  .min(1)
+  .max(3)
+  .transform((providers) => [...new Set(providers)] as LlmProvider[])
+
+const briefRequestSchema = z.object({
+  brief: briefSchema,
+  providers: providerChainSchema.optional(),
+})
 const legacyPromptRequestSchema = z.object({
   prompt: z.string().min(1).max(500),
 })
@@ -40,11 +50,17 @@ const legacyPromptRequestSchema = z.object({
  * 후속 정리 토픽에서 legacy 제거 결정.
  */
 function resolveBrief(rawBody: unknown):
-  | { ok: true; brief: GenerateBrief }
+  | { ok: true; brief: GenerateBrief; providerChain?: LlmProvider[] }
   | { ok: false } {
   const briefParse = briefRequestSchema.safeParse(rawBody)
   if (briefParse.success) {
-    return { ok: true, brief: briefParse.data.brief }
+    return {
+      ok: true,
+      brief: briefParse.data.brief,
+      ...(briefParse.data.providers !== undefined
+        ? { providerChain: briefParse.data.providers }
+        : {}),
+    }
   }
   const legacy = legacyPromptRequestSchema.safeParse(rawBody)
   if (legacy.success) {
@@ -118,7 +134,7 @@ export async function handleGenerate(
     }
   }
 
-  const chain = deps.providerChain ?? resolveProviderChain()
+  const chain = resolved.providerChain ?? deps.providerChain ?? resolveProviderChain()
   if (chain.length === 0) {
     return {
       status: 502,

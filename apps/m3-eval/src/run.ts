@@ -2,6 +2,7 @@
 
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { z } from 'zod'
 
@@ -10,6 +11,9 @@ import { treeSchema, type Tree } from '@dworks/tree'
 import type { M3EvalArgs } from './args.js'
 import { computeTreeStats } from './tree-stats.js'
 import { renderSummaryMarkdown, summarizeCalls } from './summary.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const REPO_ROOT = resolve(__dirname, '../../..')
 
 export type CallStatus =
   | 'ok'
@@ -64,6 +68,7 @@ export type FixtureIntent = FixturePayload['intents'][number]
 interface CallOnceInput {
   apiBase: string
   brief: FixtureIntent['brief']
+  providers: string[] | null
   live: boolean
   fetchImpl?: typeof fetch
   /** dry-run 모드에서 사용할 deterministic Tree. 미지정 시 default. */
@@ -137,7 +142,10 @@ async function callOnce(
     const response = await fetchFn(`${input.apiBase}/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brief: input.brief }),
+      body: JSON.stringify({
+        brief: input.brief,
+        ...(input.providers !== null ? { providers: input.providers } : {}),
+      }),
     })
     let payload: unknown
     try {
@@ -237,11 +245,10 @@ export async function runM3Eval(
   const fixtures = await deps.loadFixtures(args.fixturesPath)
   const now = (deps.now ?? (() => new Date()))()
   const runId = now.toISOString().replace(/[:.]/g, '-')
-  const repoRoot = resolve(process.cwd())
   const outDir =
     args.outDir !== null
-      ? resolve(repoRoot, args.outDir)
-      : resolve(repoRoot, 'artifacts/m3-eval', runId)
+      ? resolve(REPO_ROOT, args.outDir)
+      : resolve(REPO_ROOT, 'artifacts/m3-eval', runId)
 
   const ensureDir = deps.ensureDir ?? ((path) => mkdir(path, { recursive: true }))
   const writeFileImpl = deps.writeFileImpl ?? writeFile
@@ -252,6 +259,7 @@ export async function runM3Eval(
       const result = await callOnce({
         apiBase: args.apiBase,
         brief: intent.brief,
+        providers: args.providers,
         live: args.live,
         fetchImpl: deps.fetchImpl,
       })
@@ -312,9 +320,7 @@ export async function defaultLoadFixtures(
   path: string,
 ): Promise<FixturePayload> {
   const { readFile } = await import('node:fs/promises')
-  const raw = await readFile(path, 'utf8')
+  const raw = await readFile(resolve(REPO_ROOT, path), 'utf8')
   const json = JSON.parse(raw) as unknown
   return fixtureSchema.parse(json)
 }
-
-export { dirname }
