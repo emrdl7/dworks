@@ -28,7 +28,33 @@
   - 2단계 (7축 84 calls) ✓
   - 3단계 (재현성 7축 × repeat=3 = 252 calls, D8 stable) ✓ — `m1-live-reproducibility` 흡수 (`2adaf40`)
 
-### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙)
+### 2026-05-09 mandate (AI 생성 파이프라인 — M3 트랙)
+
+사용자 신호 (2026-05-09):
+> "ai가 생성한 결과물을 사람이 고치는거야... 근데 ai생성쪽은 시작도 못하는 이유가 뭐야? 사람이 고치는쪽에만 너무 메달려 있는거 아니야?"
+
+**mandate 핵심**: PoC 본질은 _사람이 AI 결과를 다듬는 것_. M2 자유 편집 트랙은 충분한 깊이 도달 (45+ 토픽, ABSORB 10회). 그러나 **AI 생성 파이프라인이 stub 상태** — `apps/api/src/index.ts`는 14줄 health check만, web에 prompt → tree 생성 호출 경로 없음. PoC 입증을 위해 m3 generate 트랙 진입.
+
+**M2 트랙 흡수 (mandate 충분 도달)**:
+- 8 mandate 영역 100% (font-upload / spacing / shape / color-free / layout / image-crop / responsive-preview / text-inline) + 디테일 35+ 후속
+- 디자이너 자유 편집 mental model 완성 (노드 단위 모든 속성 override 가능)
+- 추가 m2 후보 (transition-steps-custom / linear-easing / responsive-override / gradient-stops 등)는 _mandate 충분_ 후 polish 영역. M3 트랙 진척 후 우선순위 재평가.
+
+**M3 트랙 mandate**:
+
+> 사용자 prompt → LLM → tree JSON → 캔버스 즉시 적용. 그 결과를 디자이너가 m2 자유 편집으로 다듬는 end-to-end 1차 사이클을 입증한다.
+
+**M3 트랙 첫 토픽 후보**: `m3-generate-mvp`
+
+핵심 범위:
+1. `apps/api`에 POST `/generate` 엔드포인트 — body: `{ prompt: string }`, response: `{ tree: TreeNode }`
+2. LLM 호출 (D12 fallback chain — claude / codex CLI). 1차는 단일 모델로 시작, fallback 후속.
+3. 응답 파싱 → `treeNodeSchema.safeParse` 검증 → 실패 시 명시 에러
+4. `apps/web` 헤더에 "새 디자인 생성" 입력 + 버튼 → POST → 캔버스에 트리 적용 (기존 fixture-loader 경로 재사용)
+
+라운드 1은 **인터페이스 + 1차 LLM 호출** 범위로 lean (50줄 이내). 프롬프트 엔지니어링 / 다중 모델 fallback / 평가는 후속.
+
+### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
 
 사용자 신호 (2026-05-08):
 > "나는 디자이너야... 디자이너가 봤을때 저정도의 테마교체 로 디자인툴이라고 만족할 수 있겠니?"
