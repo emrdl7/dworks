@@ -6390,6 +6390,11 @@ function NodeInspector({
   onImageChange,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
+  const [nodeIdCopied, setNodeIdCopied] = useState(false)
+  // 노드 변경 시 copied state reset
+  useEffect(() => {
+    setNodeIdCopied(false)
+  }, [node.id])
   const [openSectionsByNode, setOpenSectionsByNode] = useState<
     Record<string, Record<string, boolean>>
   >(() => ({
@@ -6478,11 +6483,19 @@ function NodeInspector({
           type="button"
           title="ID 복사"
           onClick={() => {
-            void navigator.clipboard.writeText(node.id).catch(() => {})
+            void navigator.clipboard
+              .writeText(node.id)
+              .then(() => {
+                setNodeIdCopied(true)
+                window.setTimeout(() => setNodeIdCopied(false), 1200)
+              })
+              .catch(() => {})
           }}
-          className="mt-0.5 block w-full break-all text-left text-[11px] text-[#5b6069] transition-colors hover:text-[#898d97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1]"
+          className="mt-0.5 block w-full break-all text-left text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] data-[copied=true]:text-[#a5b4fc]"
+          data-copied={nodeIdCopied || undefined}
+          style={{ color: nodeIdCopied ? undefined : '#5b6069' }}
         >
-          {node.id}
+          {nodeIdCopied ? 'ID 복사됨 ✓' : node.id}
         </button>
         <div
           role="tablist"
