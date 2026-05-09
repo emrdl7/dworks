@@ -81,6 +81,7 @@ import {
   type ImageFilter,
   type NodeColor,
   type NodeCursor,
+  type NodeTransform,
   type NodeTransition,
   type NodeTransitionTiming,
   NODE_CURSOR_IDS,
@@ -2333,10 +2334,12 @@ function SelectableNode({
 }: SelectableNodeProps) {
   const isSelected = node.id === selectedNodeId
   const isCanvasSelectable = node.pointerEvents !== 'none'
+  const transformStyle = getTransformStyle(node.transform)
   const nodeMetaStyle: CSSProperties = {
     pointerEvents: isCanvasSelectable ? 'auto' : 'none',
     ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
     ...(node.cursor === undefined ? {} : { cursor: node.cursor }),
+    ...(transformStyle ?? {}),
   }
 
   function selectNode() {
@@ -2853,6 +2856,98 @@ function getDisabledTextStyle(color?: NodeColor): CSSProperties | undefined {
     : ({
         '--dw-disabled-text': getCssColorWithOpacity(color.disabledTextColor),
       } as CSSProperties)
+}
+
+function NodeTransformInput({
+  label,
+  max,
+  min,
+  placeholder,
+  step,
+  value,
+  onChange,
+}: {
+  label: string
+  max: number
+  min: number
+  placeholder: string
+  step?: number
+  value: number | undefined
+  onChange: (value: number | undefined) => void
+}) {
+  return (
+    <label className="block">
+      <span className="text-[11px] text-[#647067]">{label}</span>
+      <input
+        type="number"
+        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+        min={min}
+        max={max}
+        step={step ?? 1}
+        placeholder={placeholder}
+        value={value === undefined ? '' : value}
+        onChange={(event) => {
+          const raw = event.target.value
+          if (raw === '') {
+            onChange(undefined)
+            return
+          }
+          const next = Number(raw)
+          if (Number.isNaN(next)) {
+            return
+          }
+          onChange(Math.max(min, Math.min(max, next)))
+        }}
+      />
+    </label>
+  )
+}
+
+function updateNodeTransformField(
+  node: TreeNode,
+  field: keyof NodeTransform,
+  value: number | undefined,
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: NodeMetaPatch,
+    options?: CommitTreeEditOptions,
+  ) => void,
+) {
+  const currentTransform = node.transform ?? {}
+  const nextTransform: NodeTransform = { ...currentTransform }
+  if (value === undefined) {
+    delete nextTransform[field]
+  } else {
+    nextTransform[field] = value
+  }
+  const isEmpty = Object.keys(nextTransform).length === 0
+  onNodeMetaChange(
+    node,
+    { transform: isEmpty ? undefined : nextTransform },
+    { mergeKey: getNodeColorMergeKey(node.id, `meta.transform.${field}`) },
+  )
+}
+
+function getTransformStyle(
+  transform?: NodeTransform,
+): CSSProperties | undefined {
+  if (transform === undefined) {
+    return undefined
+  }
+  const parts: string[] = []
+  if (transform.translateX !== undefined) {
+    parts.push(`translateX(${transform.translateX}px)`)
+  }
+  if (transform.translateY !== undefined) {
+    parts.push(`translateY(${transform.translateY}px)`)
+  }
+  if (transform.rotate !== undefined) {
+    parts.push(`rotate(${transform.rotate}deg)`)
+  }
+  if (transform.scale !== undefined) {
+    parts.push(`scale(${transform.scale})`)
+  }
+  return parts.length === 0 ? undefined : { transform: parts.join(' ') }
 }
 
 function getTransitionStyle(
@@ -3526,6 +3621,84 @@ function NodeInspector({
           onDuplicate={onDuplicate}
           onDelete={onDelete}
         />
+
+        <InspectorDisclosure
+          title="변환"
+          description="이동, 회전, 크기"
+          {...bindSection('변환')}
+          onAction={() =>
+            onNodeMetaChange(
+              node,
+              { transform: undefined },
+              { mergeKey: getNodeColorMergeKey(node.id, 'meta.transform.reset') },
+            )
+          }
+          isActionDisabled={node.transform === undefined}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <NodeTransformInput
+              label="X 이동 (px)"
+              min={-200}
+              max={200}
+              placeholder="0"
+              value={node.transform?.translateX}
+              onChange={(value) =>
+                updateNodeTransformField(
+                  node,
+                  'translateX',
+                  value,
+                  onNodeMetaChange,
+                )
+              }
+            />
+            <NodeTransformInput
+              label="Y 이동 (px)"
+              min={-200}
+              max={200}
+              placeholder="0"
+              value={node.transform?.translateY}
+              onChange={(value) =>
+                updateNodeTransformField(
+                  node,
+                  'translateY',
+                  value,
+                  onNodeMetaChange,
+                )
+              }
+            />
+            <NodeTransformInput
+              label="회전 (°)"
+              min={-360}
+              max={360}
+              placeholder="0"
+              value={node.transform?.rotate}
+              onChange={(value) =>
+                updateNodeTransformField(
+                  node,
+                  'rotate',
+                  value,
+                  onNodeMetaChange,
+                )
+              }
+            />
+            <NodeTransformInput
+              label="크기"
+              min={0.5}
+              max={2}
+              step={0.05}
+              placeholder="1"
+              value={node.transform?.scale}
+              onChange={(value) =>
+                updateNodeTransformField(
+                  node,
+                  'scale',
+                  value,
+                  onNodeMetaChange,
+                )
+              }
+            />
+          </div>
+        </InspectorDisclosure>
 
         {isContainerNode(node) ? (
           <InspectorDisclosure title="그룹" defaultOpen={false}>

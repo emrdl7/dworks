@@ -239,6 +239,14 @@ export const nodeTransitionSchema = z.object({
 })
 export type NodeTransition = z.infer<typeof nodeTransitionSchema>
 
+export const nodeTransformSchema = z.object({
+  translateX: z.number().min(-200).max(200).optional(),
+  translateY: z.number().min(-200).max(200).optional(),
+  rotate: z.number().min(-360).max(360).optional(),
+  scale: z.number().min(0.5).max(2).optional(),
+})
+export type NodeTransform = z.infer<typeof nodeTransformSchema>
+
 export const NODE_CURSOR_IDS = [
   'default',
   'pointer',
@@ -401,6 +409,7 @@ interface BaseNodeMeta {
   color?: NodeColor
   layout?: NodeLayout
   transition?: NodeTransition
+  transform?: NodeTransform
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -488,6 +497,7 @@ const baseShape = {
   color: nodeColorSchema.optional(),
   layout: nodeLayoutSchema.optional(),
   transition: nodeTransitionSchema.optional(),
+  transform: nodeTransformSchema.optional(),
   cursor: nodeCursorSchema.optional(),
 }
 
