@@ -817,6 +817,8 @@ export default function HomePage() {
   const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
   // 캔버스 grid — 디자인 정밀도용 16px 격자 토글
   const [canvasGridVisible, setCanvasGridVisible] = useState(false)
+  // 키보드 단축키 도움말 popover
+  const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -2339,12 +2341,23 @@ export default function HomePage() {
         handleDeleteSelected()
         return
       }
-      // Esc — 선택 해제(root로 되돌림)
+      // Esc — 선택 해제(root로 되돌림). 도움말 popover 열려있으면 그것부터 닫음
       if (event.key === 'Escape') {
+        if (shortcutHelpOpen) {
+          event.preventDefault()
+          setShortcutHelpOpen(false)
+          return
+        }
         if (selectedNodeId !== tree.root.id) {
           event.preventDefault()
           setSelectedNodeId(tree.root.id)
         }
+        return
+      }
+      // ? — 키보드 단축키 도움말 토글
+      if (event.key === '?' && !meta) {
+        event.preventDefault()
+        setShortcutHelpOpen((v) => !v)
         return
       }
     }
@@ -2352,7 +2365,7 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', onKeyDown)
     // 핸들러는 closure로 최신 state를 참조하므로 deps 비움
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyPast, historyFuture, selectedNodeId, tree])
+  }, [historyPast, historyFuture, selectedNodeId, tree, shortcutHelpOpen])
 
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-[#f5f7f4] text-[#18211d]">
@@ -2446,6 +2459,20 @@ export default function HomePage() {
               </span>
             )
           })()}
+          <button
+            type="button"
+            aria-label="키보드 단축키"
+            title="키보드 단축키 (?)"
+            aria-pressed={shortcutHelpOpen}
+            onClick={() => setShortcutHelpOpen((v) => !v)}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-md border text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
+              shortcutHelpOpen
+                ? 'border-[#4f46e5] bg-[#eef0ff] text-[#4f46e5]'
+                : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5] hover:text-[#4f46e5]'
+            }`}
+          >
+            ?
+          </button>
           {compareMode ? null : (
             <button
               type="button"
@@ -3410,6 +3437,69 @@ export default function HomePage() {
           }
           onToggleVisibility={() => handleToggleNodeVisibility(contextMenuNode)}
         />
+      ) : null}
+      {shortcutHelpOpen ? (
+        <>
+          <button
+            type="button"
+            aria-label="단축키 도움말 닫기"
+            onClick={() => setShortcutHelpOpen(false)}
+            className="fixed inset-0 z-40 cursor-default bg-black/30"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shortcut-help-title"
+            className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-[#e0e5de] bg-white p-5 shadow-2xl"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <h2
+                id="shortcut-help-title"
+                className="text-sm font-semibold text-[#18211d]"
+              >
+                키보드 단축키
+              </h2>
+              <button
+                type="button"
+                aria-label="닫기"
+                onClick={() => setShortcutHelpOpen(false)}
+                className="inline-flex h-6 w-6 items-center justify-center rounded text-[#647067] hover:bg-[#f1f5f3] hover:text-[#18211d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <dl className="space-y-2 text-sm">
+              {[
+                { keys: ['⌘', 'Z'], label: '실행 취소' },
+                { keys: ['⌘', '⇧', 'Z'], label: '다시 실행' },
+                { keys: ['⌘', 'D'], label: '복제' },
+                { keys: ['Delete'], label: '삭제' },
+                { keys: ['Esc'], label: '선택 해제' },
+                { keys: ['?'], label: '이 도움말 토글' },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <dt className="text-[#4f5e56]">{item.label}</dt>
+                  <dd className="flex items-center gap-1">
+                    {item.keys.map((k, i) => (
+                      <kbd
+                        key={`${item.label}-${i}`}
+                        className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-[#cbd6cf] bg-[#f8faf9] px-1.5 text-[11px] font-semibold text-[#26312b]"
+                      >
+                        {k}
+                      </kbd>
+                    ))}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-4 text-[11px] text-[#9aa49d]">
+              입력 필드에서는 단축키가 비활성화됩니다.
+            </p>
+          </div>
+        </>
       ) : null}
     </main>
   )
