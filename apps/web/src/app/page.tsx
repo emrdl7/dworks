@@ -3460,12 +3460,14 @@ export default function HomePage() {
             aria-label="단축키 도움말 닫기"
             onClick={() => setShortcutHelpOpen(false)}
             className="fixed inset-0 z-40 cursor-default bg-black/30"
+            style={{ animation: 'dw-fade-in 180ms ease-out both' }}
           />
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="shortcut-help-title"
             className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-[#e0e5de] bg-white p-5 shadow-2xl"
+            style={{ animation: 'dw-fade-up 200ms ease-out both' }}
           >
             <div className="mb-3 flex items-center justify-between">
               <h2
