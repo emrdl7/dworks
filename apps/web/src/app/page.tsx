@@ -2819,7 +2819,7 @@ export default function HomePage() {
     >
     <CanvasHoverContext.Provider value={canvasHoverValue}>
     <main className="flex h-screen flex-col overflow-hidden bg-[#0d0e10] text-[#ebecef]">
-      <header className="flex h-14 items-center justify-between border-b border-[#2a2e35] bg-[#16181c] px-5">
+      <header className="flex h-14 items-center justify-between border-b border-[#2a2e35] bg-[#16181c] px-4">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -4103,7 +4103,7 @@ export default function HomePage() {
           }`}
         >
           {additionalSelectedNodeIds.size > 0 ? (
-            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#6366f1]/40 bg-[#1e1f3a] px-5 py-2 text-xs font-semibold text-[#a5b4fc]">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#6366f1]/40 bg-[#1e1f3a] px-4 py-2 text-xs font-semibold text-[#a5b4fc]">
               <span>
                 +{additionalSelectedNodeIds.size}개 다중 선택됨 (primary
                 속성만 표시)
@@ -6694,7 +6694,7 @@ function NodeInspector({
   const NodeTypeIcon = nodeTypeIcons[node.type]
   return (
     <section className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-[#2a2e35] px-5 pb-0 pt-4">
+      <div className="shrink-0 border-b border-[#2a2e35] px-4 pb-0 pt-4">
         <div className="flex items-center justify-between gap-3 px-0">
           <div className="flex min-w-0 items-center gap-2">
             <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#1e1f3a] text-[#a5b4fc]">
@@ -6755,7 +6755,7 @@ function NodeInspector({
             )
             nextEl?.focus()
           }}
-          className="-mx-5 mt-3 flex items-stretch border-t border-[#2a2e35] px-5"
+          className="-mx-4 mt-3 flex items-stretch border-t border-[#2a2e35] px-4"
         >
           {INSPECTOR_TABS.map((tab) => {
             const isActive = activeTab === tab.id
