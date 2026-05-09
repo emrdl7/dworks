@@ -173,52 +173,29 @@ interface LayerReorderPlan {
   sourceIndex: number
 }
 
-const DESIGN_BRIEF_PAGE_TYPES = [
-  'landing',
-  'about',
-  'pricing',
-  'blog',
-  'docs',
-  'other',
-] as const
-type DesignBriefPageType = (typeof DESIGN_BRIEF_PAGE_TYPES)[number]
+type ClarifyQuestionType = 'single' | 'multi' | 'text'
 
-const designBriefPageTypeLabels: Record<DesignBriefPageType, string> = {
-  landing: '랜딩',
-  about: '소개',
-  pricing: '요금제',
-  blog: '블로그',
-  docs: '문서',
-  other: '기타',
+interface ClarifyQuestionDto {
+  id: string
+  label: string
+  type: ClarifyQuestionType
+  options?: string[]
+  hint?: string
 }
 
-const DESIGN_BRIEF_TONE_PRESETS = [
-  '따뜻',
-  '전문',
-  '미니멀',
-  '캐주얼',
-  '럭셔리',
-  '활기',
-] as const
-
-const DESIGN_BRIEF_SECTION_PRESETS = [
-  'hero',
-  '특장점',
-  '사용법',
-  'CTA',
-  '후기',
-  'FAQ',
-  '가격표',
-  '푸터',
-] as const
+interface BriefAnswer {
+  questionId: string
+  questionLabel: string
+  answer: string | string[]
+}
 
 interface SubmittedDesignBrief {
   intent: string
-  pageType?: DesignBriefPageType
-  tones?: string[]
-  sections?: string[]
+  answers?: BriefAnswer[]
   notes?: string
 }
+
+type GenerateStage = 'intent' | 'questions'
 
 interface GenerationEntry {
   id: string
@@ -719,11 +696,16 @@ export default function HomePage() {
   const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
     null,
   )
+  const [generateStage, setGenerateStage] = useState<GenerateStage>('intent')
   const [briefIntent, setBriefIntent] = useState('')
-  const [briefPageType, setBriefPageType] = useState<DesignBriefPageType | ''>('')
-  const [briefTones, setBriefTones] = useState<string[]>([])
-  const [briefSections, setBriefSections] = useState<string[]>([])
   const [briefNotes, setBriefNotes] = useState('')
+  const [clarifyQuestions, setClarifyQuestions] = useState<ClarifyQuestionDto[]>(
+    [],
+  )
+  const [briefAnswers, setBriefAnswers] = useState<Record<string, string | string[]>>(
+    {},
+  )
+  const [clarifyLoading, setClarifyLoading] = useState(false)
   const [generateLoading, setGenerateLoading] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
   const [generations, setGenerations] = useState<GenerationEntry[]>(() => [
@@ -834,6 +816,11 @@ export default function HomePage() {
     setGenerations([nextOriginal])
     setActiveGenerationId(nextOriginal.id)
     setGenerateError(null)
+    setBriefIntent('')
+    setBriefNotes('')
+    setClarifyQuestions([])
+    setBriefAnswers({})
+    setGenerateStage('intent')
     setSelectedNodeId(
       findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
     )
@@ -844,17 +831,87 @@ export default function HomePage() {
     if (intent.length === 0) {
       return null
     }
-    const tones = briefTones.length > 0 ? [...briefTones] : undefined
-    const sections = briefSections.length > 0 ? [...briefSections] : undefined
+    const answers: BriefAnswer[] = []
+    for (const question of clarifyQuestions) {
+      const raw = briefAnswers[question.id]
+      if (raw === undefined) continue
+      if (Array.isArray(raw)) {
+        if (raw.length === 0) continue
+        answers.push({
+          questionId: question.id,
+          questionLabel: question.label,
+          answer: raw,
+        })
+      } else {
+        const trimmed = raw.trim()
+        if (trimmed.length === 0) continue
+        answers.push({
+          questionId: question.id,
+          questionLabel: question.label,
+          answer: trimmed,
+        })
+      }
+    }
     const trimmedNotes = briefNotes.trim()
     const notes = trimmedNotes.length > 0 ? trimmedNotes : undefined
     return {
       intent,
-      ...(briefPageType !== '' ? { pageType: briefPageType } : {}),
-      ...(tones !== undefined ? { tones } : {}),
-      ...(sections !== undefined ? { sections } : {}),
+      ...(answers.length > 0 ? { answers } : {}),
       ...(notes !== undefined ? { notes } : {}),
     }
+  }
+
+  function resetBriefForm() {
+    setBriefIntent('')
+    setBriefNotes('')
+    setClarifyQuestions([])
+    setBriefAnswers({})
+    setGenerateStage('intent')
+  }
+
+  async function handleAskQuestions() {
+    const intent = briefIntent.trim()
+    if (intent.length === 0 || clarifyLoading) return
+    setClarifyLoading(true)
+    setGenerateError(null)
+    try {
+      const apiBase =
+        process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
+      const response = await fetch(`${apiBase}/clarify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent }),
+      })
+      const payload = (await response.json()) as
+        | { questions: ClarifyQuestionDto[]; model: string; latencyMs: number }
+        | { error: string; message: string }
+      if (!response.ok) {
+        const message =
+          'message' in payload
+            ? payload.message
+            : '질문 생성에 실패했습니다.'
+        setGenerateError(message)
+        return
+      }
+      if (!('questions' in payload)) {
+        setGenerateError('질문 응답이 비어 있습니다.')
+        return
+      }
+      setClarifyQuestions(payload.questions)
+      setBriefAnswers({})
+      setGenerateStage('questions')
+    } catch (error) {
+      setGenerateError(
+        error instanceof Error ? error.message : '질문 생성에 실패했습니다.',
+      )
+    } finally {
+      setClarifyLoading(false)
+    }
+  }
+
+  function handleEditIntent() {
+    if (clarifyLoading || generateLoading) return
+    setGenerateStage('intent')
   }
 
   function snapshotActiveGeneration(currentTree: Tree) {
@@ -917,6 +974,7 @@ export default function HomePage() {
       })
       setActiveGenerationId(newEntry.id)
       commitTreeEdit(nextTree, nextSelectedId)
+      resetBriefForm()
     } catch (error) {
       setGenerateError(
         error instanceof Error ? error.message : 'AI 생성에 실패했습니다.',
@@ -1617,146 +1675,190 @@ export default function HomePage() {
                 })}
               </div>
 
-              <label className="block">
-                <span className="text-[11px] font-semibold text-[#4f5e56]">
-                  의도 *
-                </span>
-                <textarea
-                  rows={3}
-                  maxLength={500}
-                  placeholder="이 페이지로 무엇을 보여주고 싶은가요? (필수)"
-                  className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-                  value={briefIntent}
-                  disabled={generateLoading}
-                  onChange={(event) => {
-                    setBriefIntent(event.target.value)
-                    if (generateError !== null) setGenerateError(null)
-                  }}
-                />
-              </label>
+              {generateStage === 'intent' ? (
+                <>
+                  <label className="block">
+                    <span className="text-[11px] font-semibold text-[#4f5e56]">
+                      의도 *
+                    </span>
+                    <textarea
+                      rows={4}
+                      maxLength={500}
+                      placeholder="이 페이지로 무엇을 보여주고 싶은가요?"
+                      className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                      value={briefIntent}
+                      disabled={clarifyLoading || generateLoading}
+                      onChange={(event) => {
+                        setBriefIntent(event.target.value)
+                        if (generateError !== null) setGenerateError(null)
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="w-full rounded-md bg-[#1b7f72] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
+                    disabled={
+                      clarifyLoading ||
+                      generateLoading ||
+                      briefIntent.trim().length === 0
+                    }
+                    onClick={() => void handleAskQuestions()}
+                  >
+                    {clarifyLoading ? '질문 받는 중…' : '질문 받기'}
+                  </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-xs font-semibold text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-40"
+                    disabled={
+                      clarifyLoading ||
+                      generateLoading ||
+                      briefIntent.trim().length === 0
+                    }
+                    onClick={() => void handleGenerateTree()}
+                  >
+                    {generateLoading
+                      ? '생성 중…'
+                      : '의도만으로 바로 생성'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-md border border-[#e0e5de] bg-[#f8faf9] p-2">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#4f5e56]">
+                        의도
+                      </span>
+                      <button
+                        type="button"
+                        className="text-[11px] text-[#1b7f72] underline"
+                        onClick={handleEditIntent}
+                        disabled={clarifyLoading || generateLoading}
+                      >
+                        수정
+                      </button>
+                    </div>
+                    <p className="text-xs text-[#18211d]">{briefIntent}</p>
+                  </div>
 
-              <div>
-                <span className="text-[11px] font-semibold text-[#4f5e56]">
-                  페이지 타입
-                </span>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {DESIGN_BRIEF_PAGE_TYPES.map((pt) => (
-                    <button
-                      key={pt}
-                      type="button"
-                      aria-pressed={briefPageType === pt}
-                      className={`rounded-md border px-2 py-1 text-[11px] transition ${
-                        briefPageType === pt
-                          ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
-                          : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
-                      }`}
+                  {clarifyQuestions.map((question) => {
+                    const answer = briefAnswers[question.id]
+                    return (
+                      <div key={question.id} className="space-y-1">
+                        <span className="text-[11px] font-semibold text-[#4f5e56]">
+                          {question.label}
+                        </span>
+                        {question.hint !== undefined ? (
+                          <p className="text-[10px] text-[#647067]">
+                            {question.hint}
+                          </p>
+                        ) : null}
+                        {question.type === 'single' ? (
+                          <div className="flex flex-wrap gap-1">
+                            {(question.options ?? []).map((opt) => {
+                              const isOn = answer === opt
+                              return (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  aria-pressed={isOn}
+                                  disabled={generateLoading}
+                                  className={`rounded-md border px-2 py-1 text-[11px] transition ${
+                                    isOn
+                                      ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+                                      : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                                  }`}
+                                  onClick={() =>
+                                    setBriefAnswers((current) => ({
+                                      ...current,
+                                      [question.id]:
+                                        current[question.id] === opt ? '' : opt,
+                                    }))
+                                  }
+                                >
+                                  {opt}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        ) : null}
+                        {question.type === 'multi' ? (
+                          <div className="flex flex-wrap gap-1">
+                            {(question.options ?? []).map((opt) => {
+                              const list = Array.isArray(answer) ? answer : []
+                              const isOn = list.includes(opt)
+                              return (
+                                <button
+                                  key={opt}
+                                  type="button"
+                                  aria-pressed={isOn}
+                                  disabled={generateLoading}
+                                  className={`rounded-md border px-2 py-1 text-[11px] transition ${
+                                    isOn
+                                      ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+                                      : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                                  }`}
+                                  onClick={() =>
+                                    setBriefAnswers((current) => {
+                                      const prev = current[question.id]
+                                      const prevList = Array.isArray(prev) ? prev : []
+                                      const next = prevList.includes(opt)
+                                        ? prevList.filter((v) => v !== opt)
+                                        : [...prevList, opt]
+                                      return { ...current, [question.id]: next }
+                                    })
+                                  }
+                                >
+                                  {opt}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        ) : null}
+                        {question.type === 'text' ? (
+                          <textarea
+                            rows={2}
+                            maxLength={500}
+                            placeholder="자유롭게 답변하세요 (선택)"
+                            className="w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                            value={typeof answer === 'string' ? answer : ''}
+                            disabled={generateLoading}
+                            onChange={(event) =>
+                              setBriefAnswers((current) => ({
+                                ...current,
+                                [question.id]: event.target.value,
+                              }))
+                            }
+                          />
+                        ) : null}
+                      </div>
+                    )
+                  })}
+
+                  <label className="block">
+                    <span className="text-[11px] font-semibold text-[#4f5e56]">
+                      추가 메모 (선택)
+                    </span>
+                    <textarea
+                      rows={2}
+                      maxLength={300}
+                      placeholder="브랜드 voice, 참조 사이트 등"
+                      className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                      value={briefNotes}
                       disabled={generateLoading}
-                      onClick={() =>
-                        setBriefPageType((current) =>
-                          current === pt ? '' : pt,
-                        )
-                      }
-                    >
-                      {designBriefPageTypeLabels[pt]}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                      onChange={(event) => setBriefNotes(event.target.value)}
+                    />
+                  </label>
 
-              <div>
-                <span className="text-[11px] font-semibold text-[#4f5e56]">
-                  톤 (최대 3)
-                </span>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {DESIGN_BRIEF_TONE_PRESETS.map((tone) => {
-                    const isOn = briefTones.includes(tone)
-                    const isLimited = !isOn && briefTones.length >= 3
-                    return (
-                      <button
-                        key={tone}
-                        type="button"
-                        aria-pressed={isOn}
-                        disabled={generateLoading || isLimited}
-                        className={`rounded-md border px-2 py-1 text-[11px] transition ${
-                          isOn
-                            ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
-                            : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-40'
-                        }`}
-                        onClick={() =>
-                          setBriefTones((current) =>
-                            current.includes(tone)
-                              ? current.filter((t) => t !== tone)
-                              : [...current, tone],
-                          )
-                        }
-                      >
-                        {tone}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[11px] font-semibold text-[#4f5e56]">
-                  필수 섹션 (최대 6, 순서대로 배치)
-                </span>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {DESIGN_BRIEF_SECTION_PRESETS.map((section) => {
-                    const order = briefSections.indexOf(section)
-                    const isOn = order >= 0
-                    const isLimited = !isOn && briefSections.length >= 6
-                    return (
-                      <button
-                        key={section}
-                        type="button"
-                        aria-pressed={isOn}
-                        disabled={generateLoading || isLimited}
-                        className={`rounded-md border px-2 py-1 text-[11px] transition ${
-                          isOn
-                            ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
-                            : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-40'
-                        }`}
-                        onClick={() =>
-                          setBriefSections((current) =>
-                            current.includes(section)
-                              ? current.filter((s) => s !== section)
-                              : [...current, section],
-                          )
-                        }
-                      >
-                        {isOn ? `${order + 1}. ${section}` : section}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <label className="block">
-                <span className="text-[11px] font-semibold text-[#4f5e56]">
-                  브랜드 / 참조 메모
-                </span>
-                <textarea
-                  rows={2}
-                  maxLength={300}
-                  placeholder="브랜드 voice, 참조 사이트, 키워드 등"
-                  className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-                  value={briefNotes}
-                  disabled={generateLoading}
-                  onChange={(event) => setBriefNotes(event.target.value)}
-                />
-              </label>
-
-              <button
-                type="button"
-                className="w-full rounded-md bg-[#1b7f72] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
-                disabled={
-                  generateLoading || briefIntent.trim().length === 0
-                }
-                onClick={() => void handleGenerateTree()}
-              >
-                {generateLoading ? '생성 중…' : '디자인 생성'}
-              </button>
+                  <button
+                    type="button"
+                    className="w-full rounded-md bg-[#1b7f72] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
+                    disabled={generateLoading}
+                    onClick={() => void handleGenerateTree()}
+                  >
+                    {generateLoading ? '생성 중…' : '디자인 생성'}
+                  </button>
+                </>
+              )}
 
               {generateError !== null ? (
                 <p

@@ -11,23 +11,17 @@ import { treeSchema, type Tree } from '@dworks/tree'
 
 import { callClaudeCli, type SpawnLike } from './llm.js'
 
-export const PAGE_TYPE_IDS = [
-  'landing',
-  'about',
-  'pricing',
-  'blog',
-  'docs',
-  'other',
-] as const
-export const pageTypeSchema = z.enum(PAGE_TYPE_IDS)
-export type PageType = z.infer<typeof pageTypeSchema>
+export const briefAnswerSchema = z.object({
+  questionId: z.string().min(1).max(40),
+  questionLabel: z.string().min(1).max(120),
+  answer: z.union([z.string().max(500), z.array(z.string().max(40)).max(6)]),
+})
+export type BriefAnswer = z.infer<typeof briefAnswerSchema>
 
 export const briefSchema = z.object({
-  intent: z.string().min(1).max(500),
-  pageType: pageTypeSchema.optional(),
-  tones: z.array(z.string().min(1).max(20)).max(3).optional(),
-  sections: z.array(z.string().min(1).max(20)).max(6).optional(),
-  notes: z.string().max(300).optional(),
+  intent: z.string().trim().min(1).max(500),
+  answers: z.array(briefAnswerSchema).max(6).optional(),
+  notes: z.string().trim().max(300).optional(),
 })
 export type GenerateBrief = z.infer<typeof briefSchema>
 
