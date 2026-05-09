@@ -2322,11 +2322,6 @@ export default function HomePage() {
           </label>
         </div>
         <div className="flex shrink-0 items-center gap-4">
-          <ViewportSwitcher
-            value={responsiveViewport}
-            onChange={setResponsiveViewport}
-          />
-          <CanvasZoomControl value={canvasZoom} onChange={setCanvasZoom} />
           <div className="flex items-center gap-1">
             <HistoryButton
               ariaLabel="실행 취소"
@@ -3086,48 +3081,59 @@ export default function HomePage() {
           ) : null}
         </aside>
 
-        <section
-          className="min-h-0 min-w-0 overflow-auto bg-[#eef2ec]"
-          onContextMenu={(event) => {
-            if (compareMode) return
-            const target = event.target
-            if (!(target instanceof Element)) {
-              return
-            }
+        <section className="flex min-h-0 min-w-0 flex-col bg-[#eef2ec]">
+          {compareMode ? null : (
+            <div className="flex h-10 shrink-0 items-center gap-3 border-b border-[#dde3df] bg-white px-4">
+              <ViewportSwitcher
+                value={responsiveViewport}
+                onChange={setResponsiveViewport}
+              />
+              <span className="h-4 w-px bg-[#dde3df]" aria-hidden="true" />
+              <CanvasZoomControl value={canvasZoom} onChange={setCanvasZoom} />
+            </div>
+          )}
+          <div
+            className="min-h-0 flex-1 overflow-auto"
+            onContextMenu={(event) => {
+              if (compareMode) return
+              const target = event.target
+              if (!(target instanceof Element)) {
+                return
+              }
 
-            const nodeElement = target.closest<HTMLElement>('[data-dworks-node-id]')
-            const nodeId = nodeElement?.dataset.dworksNodeId
-            if (!nodeId) {
-              return
-            }
+              const nodeElement = target.closest<HTMLElement>('[data-dworks-node-id]')
+              const nodeId = nodeElement?.dataset.dworksNodeId
+              if (!nodeId) {
+                return
+              }
 
-            openPointerContextMenu(nodeId, event)
-          }}
-          onKeyDownCapture={(event) => {
-            if (compareMode) return
-            if (
-              event.key !== 'ContextMenu' &&
-              !(event.shiftKey && event.key === 'F10')
-            ) {
-              return
-            }
+              openPointerContextMenu(nodeId, event)
+            }}
+            onKeyDownCapture={(event) => {
+              if (compareMode) return
+              if (
+                event.key !== 'ContextMenu' &&
+                !(event.shiftKey && event.key === 'F10')
+              ) {
+                return
+              }
 
-            const target = event.target
-            if (!(target instanceof Element)) {
-              return
-            }
+              const target = event.target
+              if (!(target instanceof Element)) {
+                return
+              }
 
-            const nodeElement = target.closest<HTMLElement>('[data-dworks-node-id]')
-            const nodeId = nodeElement?.dataset.dworksNodeId
-            if (!nodeId) {
-              return
-            }
+              const nodeElement = target.closest<HTMLElement>('[data-dworks-node-id]')
+              const nodeId = nodeElement?.dataset.dworksNodeId
+              if (!nodeId) {
+                return
+              }
 
-            event.preventDefault()
-            event.stopPropagation()
-            openElementContextMenu(nodeId, nodeElement)
-          }}
-        >
+              event.preventDefault()
+              event.stopPropagation()
+              openElementContextMenu(nodeId, nodeElement)
+            }}
+          >
           {compareMode ? (
             <div className="space-y-3 px-8 py-6">
               <p className="text-xs text-[#4f5e56]">
@@ -3187,6 +3193,7 @@ export default function HomePage() {
               </div>
             </div>
           )}
+          </div>
         </section>
 
         {compareMode ? null : (
