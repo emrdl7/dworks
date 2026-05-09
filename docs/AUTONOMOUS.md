@@ -50,12 +50,13 @@
 - ✓ `m3-generate-clarify` (`d6d84cc` r4 / `e873a6d` r5 통합) — POST /clarify (적응형 질문 3~6) + brief 재정의 (answers) + Stage 1/2 web UI + "의도만으로 바로 생성" fallback
 - ✓ `m3-generate-fallback` (`eb6aada` r4 / `c312aba` r5) — LlmProvider chain (claude/codex/gemini) + resolveProviderChain env + callLlmChain 순회. /generate + /clarify 모두 적용. parse/schema 실패는 fallback 안 함
 - ✓ `m3-generate-codex-adapter` (`9f61575` r4 / `b40cd6a` r5) — codex `-o tempfile` + final message 회수. extract-failure 분류 + 다음 provider 시도
+- ✓ `m3-generate-variant` (`9b6b503` r4 / `d31e3f2` r5 fix) — N (1/2/3) 변형 동시 생성. Promise.allSettled, diversity hint request-only, immutable 원본 보호 헬퍼
 
 **M3 후속 후보**:
 - `m3-generate-gemini-adapter` — Gemini CLI 어댑터
 - `m3-generate-prompt-uplift` — 프롬프트 최적화 / few-shot examples
 - `m3-generate-eval` — 재현성 7축 × repeat 평가 (M1 D8 baseline 패턴)
-- `m3-generate-variant` — 트리 재생성 / 변형
+- `m3-generate-variant-grid` — 변형들 동시 비교 grid UI
 - `m3-generate-clarify-loop` — multi-turn clarify (답변 부족 시 추가 질문)
 - `m3-generate-clarify-edit` — active generation의 brief 재편집
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
