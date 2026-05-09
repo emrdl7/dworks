@@ -3165,7 +3165,7 @@ export default function HomePage() {
             id="left-panel-tabpanel-brief"
             aria-labelledby="left-panel-tab-brief"
             style={{ animation: 'dw-fade-in 150ms ease-out both' }}
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
           >
           <div className="border-b border-[#2a2e35]">
             <div className="flex items-center justify-between px-4 py-3">
@@ -3811,7 +3811,7 @@ export default function HomePage() {
             </p>
           ) : null}
           <nav
-            className="flex-1 overflow-auto p-2"
+            className="flex-1 overflow-auto overscroll-contain p-2"
             onKeyDown={(event) => {
               if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
                 return
@@ -4099,7 +4099,7 @@ export default function HomePage() {
           )}
           <div
             ref={canvasScrollRef}
-            className={`min-h-0 flex-1 overflow-auto ${
+            className={`min-h-0 flex-1 overflow-auto overscroll-contain ${
               isPanning
                 ? 'cursor-grabbing select-none'
                 : isSpacePressed
@@ -7035,7 +7035,7 @@ function NodeInspector({
         id={`inspector-tabpanel-${activeTab}`}
         aria-labelledby={`inspector-tab-${activeTab}`}
         style={{ animation: 'dw-fade-in 150ms ease-out both' }}
-        className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4"
       >
         {activeTab === 'design' ? (
           <>
