@@ -2477,8 +2477,8 @@ export default function HomePage() {
         >
           <div role="tablist" aria-label="좌측 패널" className="flex shrink-0 items-stretch border-b border-[#e0e5de] bg-white">
             {([
-              { id: 'brief' as const, label: '브리프' },
-              { id: 'layers' as const, label: '레이어' },
+              { id: 'brief' as const, label: '브리프', count: generations.length },
+              { id: 'layers' as const, label: '레이어', count: layerItems.length },
             ]).map((tab) => {
               const isActive = leftPanelTab === tab.id
               return (
@@ -2491,13 +2491,20 @@ export default function HomePage() {
                   aria-controls={`left-panel-tabpanel-${tab.id}`}
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => setLeftPanelTab(tab.id)}
-                  className={`relative -mb-px flex-1 border-b-2 py-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
+                  className={`relative -mb-px inline-flex flex-1 items-center justify-center gap-1.5 border-b-2 py-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
                     isActive
                       ? 'border-[#4f46e5] text-[#4f46e5]'
                       : 'border-transparent text-[#647067] hover:text-[#1f2a25]'
                   }`}
                 >
-                  {tab.label}
+                  <span>{tab.label}</span>
+                  <span
+                    className={`tabular-nums text-[10px] font-medium ${
+                      isActive ? 'text-[#4f46e5]/70' : 'text-[#9aa49d]'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
                 </button>
               )
             })}
