@@ -2943,13 +2943,29 @@ export default function HomePage() {
                     <textarea
                       rows={4}
                       maxLength={500}
-                      placeholder="이 페이지로 무엇을 보여주고 싶은가요?"
+                      placeholder="이 페이지로 무엇을 보여주고 싶은가요? (⌘Enter — 질문 받기)"
                       className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-sm text-[#18211d] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                       value={briefIntent}
                       disabled={clarifyLoading || generateLoading}
                       onChange={(event) => {
                         setBriefIntent(event.target.value)
                         if (generateError !== null) setGenerateError(null)
+                      }}
+                      onKeyDown={(event) => {
+                        if (
+                          (event.metaKey || event.ctrlKey) &&
+                          event.key === 'Enter' &&
+                          !clarifyLoading &&
+                          !generateLoading &&
+                          briefIntent.trim().length > 0
+                        ) {
+                          event.preventDefault()
+                          if (event.shiftKey) {
+                            void handleGenerateTree()
+                          } else {
+                            void handleAskQuestions()
+                          }
+                        }
                       }}
                     />
                   </label>
