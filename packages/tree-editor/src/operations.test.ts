@@ -135,7 +135,17 @@ describe('tree editor operations', () => {
         filter: {
           blur: 8,
           grayscale: 70,
+          sepia: 18,
           brightness: 115,
+          hueRotate: 140,
+          saturate: 165,
+          invert: 10,
+          dropShadow: {
+            offsetX: 6,
+            offsetY: 14,
+            blur: 22,
+            color: '#123456',
+          },
         },
       },
     })
@@ -145,8 +155,18 @@ describe('tree editor operations', () => {
         filter: {
           blur: 4,
           grayscale: 70,
+          sepia: 18,
           brightness: 115,
           contrast: 130,
+          hueRotate: 220,
+          saturate: 165,
+          invert: 10,
+          dropShadow: {
+            offsetX: 8,
+            offsetY: 16,
+            blur: 24,
+            color: '#654321',
+          },
         },
       },
     })
@@ -189,7 +209,17 @@ describe('tree editor operations', () => {
           filter: {
             blur: 8,
             grayscale: 70,
+            sepia: 18,
             brightness: 115,
+            hueRotate: 140,
+            saturate: 165,
+            invert: 10,
+            dropShadow: {
+              offsetX: 6,
+              offsetY: 14,
+              blur: 22,
+              color: '#123456',
+            },
           },
         })
         assert.deepEqual(retintedVisual.presentation, {
@@ -199,8 +229,18 @@ describe('tree editor operations', () => {
           filter: {
             blur: 4,
             grayscale: 70,
+            sepia: 18,
             brightness: 115,
             contrast: 130,
+            hueRotate: 220,
+            saturate: 165,
+            invert: 10,
+            dropShadow: {
+              offsetX: 8,
+              offsetY: 16,
+              blur: 24,
+              color: '#654321',
+            },
           },
         })
         assert.equal(resetVisual.aspectRatio, undefined)

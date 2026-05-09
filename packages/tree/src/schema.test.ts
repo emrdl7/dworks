@@ -1115,6 +1115,15 @@ describe('tree schema', () => {
           sepia: 35,
           brightness: 120,
           contrast: 140,
+          hueRotate: 180,
+          saturate: 160,
+          invert: 12,
+          dropShadow: {
+            offsetX: 6,
+            offsetY: 10,
+            blur: 18,
+            color: '#112233',
+          },
         },
         overlayGradient: {
           type: 'radial',
@@ -1140,6 +1149,15 @@ describe('tree schema', () => {
           sepia: 35,
           brightness: 120,
           contrast: 140,
+          hueRotate: 180,
+          saturate: 160,
+          invert: 12,
+          dropShadow: {
+            offsetX: 6,
+            offsetY: 10,
+            blur: 18,
+            color: '#112233',
+          },
         },
         overlayGradient: {
           type: 'radial',
@@ -1221,6 +1239,59 @@ describe('tree schema', () => {
         src: '',
         alt: '',
         presentation: { filter: { brightness: 49 } },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-hue-rotate',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { filter: { hueRotate: 361 } },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-saturate',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { filter: { saturate: 201 } },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-invert',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: { filter: { invert: 101 } },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-drop-shadow',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: {
+          filter: {
+            dropShadow: {
+              offsetX: 0,
+              offsetY: 0,
+              blur: 51,
+              color: '#000000',
+            },
+          },
+        },
       }),
     )
   })

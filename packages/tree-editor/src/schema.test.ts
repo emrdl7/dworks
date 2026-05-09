@@ -248,6 +248,15 @@ describe('edit-operation schema', () => {
           sepia: 20,
           brightness: 125,
           contrast: 90,
+          hueRotate: 210,
+          saturate: 175,
+          invert: 8,
+          dropShadow: {
+            offsetX: 8,
+            offsetY: 12,
+            blur: 20,
+            color: '#123456',
+          },
         },
       },
     })
@@ -269,6 +278,15 @@ describe('edit-operation schema', () => {
           sepia: 20,
           brightness: 125,
           contrast: 90,
+          hueRotate: 210,
+          saturate: 175,
+          invert: 8,
+          dropShadow: {
+            offsetX: 8,
+            offsetY: 12,
+            blur: 20,
+            color: '#123456',
+          },
         },
       })
     }
@@ -395,6 +413,47 @@ describe('edit-operation schema', () => {
         type: 'updateImage',
         nodeId: 'hero.visual',
         presentation: { filter: { contrast: 151 } },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { filter: { hueRotate: -1 } },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { filter: { saturate: 201 } },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: { filter: { invert: 101 } },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: {
+          filter: {
+            dropShadow: {
+              offsetX: 0,
+              offsetY: 0,
+              blur: 20,
+              color: 'black',
+            },
+          },
+        },
       }),
     )
   })
