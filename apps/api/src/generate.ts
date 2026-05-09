@@ -145,84 +145,113 @@ export async function handleGenerate(
     }
   }
 
-  const { final } = await callLlmChain({
-    chain,
-    systemPrompt: GENERATE_TREE_SYSTEM_PROMPT,
-    userPrompt: formatBriefAsUserPrompt(resolved.brief),
-    spawnImpl: deps.spawnImpl,
-    command: deps.command,
-    timeoutMs: deps.timeoutMs,
-    readOutputFileImpl: deps.readOutputFileImpl,
-    prepareOutputFileImpl: deps.prepareOutputFileImpl,
-  })
+  const userPrompt = formatBriefAsUserPrompt(resolved.brief)
 
-  if (final === null || !final.result.ok) {
-    const lastKind = final?.result.ok === false ? final.result.kind : undefined
-    if (lastKind === 'timeout') {
+  async function runOnce(): Promise<GenerateResponse> {
+    const { final } = await callLlmChain({
+      chain,
+      systemPrompt: GENERATE_TREE_SYSTEM_PROMPT,
+      userPrompt,
+      spawnImpl: deps.spawnImpl,
+      command: deps.command,
+      timeoutMs: deps.timeoutMs,
+      readOutputFileImpl: deps.readOutputFileImpl,
+      prepareOutputFileImpl: deps.prepareOutputFileImpl,
+    })
+
+    if (final === null || !final.result.ok) {
+      const lastKind = final?.result.ok === false ? final.result.kind : undefined
+      if (lastKind === 'timeout') {
+        return {
+          status: 502,
+          body: {
+            error: 'cli-timeout',
+            message: 'LLM 응답이 시간 안에 도착하지 않았습니다.',
+          },
+        }
+      }
+      if (lastKind === 'spawn-error') {
+        return {
+          status: 502,
+          body: {
+            error: 'cli-unavailable',
+            message: 'LLM CLI를 실행할 수 없습니다.',
+          },
+        }
+      }
       return {
         status: 502,
         body: {
-          error: 'cli-timeout',
-          message: 'LLM 응답이 시간 안에 도착하지 않았습니다.',
+          error: 'cli-failure',
+          message: 'LLM 호출에 실패했습니다.',
         },
       }
     }
-    if (lastKind === 'spawn-error') {
+
+    let json: unknown
+    try {
+      json = JSON.parse(final.result.stdout)
+    } catch {
       return {
-        status: 502,
+        status: 422,
         body: {
-          error: 'cli-unavailable',
-          message: 'LLM CLI를 실행할 수 없습니다.',
+          error: 'parse-failure',
+          message: 'LLM 응답이 유효한 JSON이 아닙니다.',
         },
       }
     }
+
+    const treeParse = treeSchema.safeParse(json)
+    if (!treeParse.success) {
+      if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
+        console.error(
+          '[dworks-api] schema-failure issues:',
+          JSON.stringify(treeParse.error.issues.slice(0, 8), null, 2),
+        )
+        const head = JSON.stringify(json).slice(0, 1500)
+        console.error('[dworks-api] schema-failure raw json (head):', head)
+      }
+      return {
+        status: 422,
+        body: {
+          error: 'schema-failure',
+          message: 'LLM 응답이 트리 스키마를 만족하지 않습니다.',
+        },
+      }
+    }
+
     return {
-      status: 502,
+      status: 200,
       body: {
-        error: 'cli-failure',
-        message: 'LLM 호출에 실패했습니다.',
+        tree: treeParse.data,
+        model: final.provider,
+        latencyMs: final.result.latencyMs,
       },
     }
   }
 
-  let json: unknown
-  try {
-    json = JSON.parse(final.result.stdout)
-  } catch {
-    return {
-      status: 422,
-      body: {
-        error: 'parse-failure',
-        message: 'LLM 응답이 유효한 JSON이 아닙니다.',
-      },
-    }
-  }
+  const defaultRetries = process.env.NODE_ENV === 'test' ? '0' : '1'
+  const rawRetries = Number(
+    process.env.DWORKS_GENERATE_RETRIES ?? defaultRetries,
+  )
+  const maxRetries =
+    Number.isFinite(rawRetries) && rawRetries >= 0 ? rawRetries : 1
 
-  const treeParse = treeSchema.safeParse(json)
-  if (!treeParse.success) {
+  let result = await runOnce()
+  let attempts = 0
+  while (
+    result.status === 422 &&
+    (result.body.error === 'parse-failure' ||
+      result.body.error === 'schema-failure') &&
+    attempts < maxRetries
+  ) {
+    attempts += 1
     if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
       console.error(
-        '[dworks-api] schema-failure issues:',
-        JSON.stringify(treeParse.error.issues.slice(0, 8), null, 2),
+        `[dworks-api] retry ${attempts}/${maxRetries} after ${result.body.error}`,
       )
-      const head = JSON.stringify(json).slice(0, 1500)
-      console.error('[dworks-api] schema-failure raw json (head):', head)
     }
-    return {
-      status: 422,
-      body: {
-        error: 'schema-failure',
-        message: 'LLM 응답이 트리 스키마를 만족하지 않습니다.',
-      },
-    }
+    result = await runOnce()
   }
-
-  return {
-    status: 200,
-    body: {
-      tree: treeParse.data,
-      model: final.provider,
-      latencyMs: final.result.latencyMs,
-    },
-  }
+  return result
 }
