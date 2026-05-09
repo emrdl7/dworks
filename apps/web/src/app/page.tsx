@@ -3323,21 +3323,34 @@ export default function HomePage() {
                         className="shrink-0 text-[#647067]"
                       />
                       <span className="min-w-0 flex-1 truncate">{node.id}</span>
-                      <span className="flex shrink-0 items-center gap-1">
-                        {getNodeLayerStateIcons(node).map(
-                          ({ icon: StateIcon, label }) => (
-                            <span
+                    </button>
+                    {(() => {
+                      const stateIcons = getNodeLayerStateIcons(node)
+                      if (stateIcons.length === 0) return null
+                      return (
+                        <span className="flex shrink-0 items-center gap-1">
+                          {stateIcons.map(({ icon: StateIcon, label }) => (
+                            <button
                               key={label}
-                              title={label}
-                              aria-label={label}
-                              className="inline-flex h-5 w-5 items-center justify-center rounded border border-[#d5b56c] bg-[#fff8df] text-[#6b4b00]"
+                              type="button"
+                              title={`${label} 해제`}
+                              aria-label={`${label} 해제`}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                if (label === '숨김') {
+                                  handleToggleNodeVisibility(node)
+                                } else if (label === '선택 제외') {
+                                  handleToggleNodeCanvasSelection(node)
+                                }
+                              }}
+                              className="inline-flex h-5 w-5 items-center justify-center rounded border border-[#d5b56c] bg-[#fff8df] text-[#6b4b00] transition hover:border-[#4f46e5] hover:text-[#4f46e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
                             >
                               <StateIcon size={11} aria-hidden="true" />
-                            </span>
-                          ),
-                        )}
-                      </span>
-                    </button>
+                            </button>
+                          ))}
+                        </span>
+                      )
+                    })()}
                   </div>
                 </div>
               )
