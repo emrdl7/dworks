@@ -60,7 +60,7 @@
 - ✓ `m3-generate-eval-diversity` (`1de372e` r4 / `4b98f10` r5) — m3-eval에 multiset Jaccard 기반 구조 다양성 score, summary `구조 다양성` 컬럼 + dry-run 메모, in-memory tree 누적
 - `m3-generate-eval-judge` — LLM-as-judge 정성 점수
 - ✓ `m3-generate-variant-grid` (`892290f` r4 / `fc8223a` r5) — compareMode 토글 + mini canvas grid + 단일 모드 복귀. CanvasReadOnlyContext로 SelectableNode 비활성화, fixture/생성 시 자동 복귀 + generateLoading 중 cell 차단
-- `m3-generate-clarify-loop` — multi-turn clarify (답변 부족 시 추가 질문)
+- ✓ `m3-generate-clarify-loop` (`763b657` r4 / `4565e81` r5) — 선택형 multi-turn clarify (max 2 history). API schema 분리(첫 turn 3~6 / follow-up 0~3), web ClarifyTurn snapshot, "더 구체적으로" + "답변이 충분합니다" 신호. 별도 fix `c984b21` — api에 hono/cors 추가
 - ✓ `m3-generate-clarify-edit` (`d456089` r4 / `ab2a52a` r5) — active variant 선택 시 brief/questions/answers/notes를 Stage 2 폼에 복원, 답변 수정 후 새 변형 추가. GenerationEntry.questions snapshot, deep copy 방어, intent-only 분기, Stage 1에서 stale answers 차단
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 - `m3-generate-image-ref` — 이미지 reference 입력
