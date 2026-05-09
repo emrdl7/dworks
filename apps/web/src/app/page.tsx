@@ -714,7 +714,7 @@ const shapeCornerRadiusLabels: Record<ShapeRadiusField, string> = {
 const DEFAULT_SHAPE_COLOR = '#d7ddd2'
 const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
 const DEFAULT_TEXT_PICKER_COLOR = '#18211d'
-const DEFAULT_ACCENT_PICKER_COLOR = '#1b7f72'
+const DEFAULT_ACCENT_PICKER_COLOR = '#4f46e5'
 const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
 const DEFAULT_GRADIENT_TO_COLOR = '#000000'
 const DEFAULT_GRADIENT_DIRECTION: GradientDirection = 'to-bottom-right'
@@ -2328,7 +2328,7 @@ export default function HomePage() {
           <label className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#4f5e56]">예제</span>
             <select
-              className="h-9 min-w-40 rounded-md border border-[#c9d4cd] bg-white px-3 text-sm text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+              className="h-9 min-w-40 rounded-md border border-[#c9d4cd] bg-white px-3 text-sm text-[#18211d] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
               value={selectedFixture.id}
               title={selectedFixture.description}
               onChange={(event) => handleFixtureChange(event.target.value)}
@@ -2394,7 +2394,7 @@ export default function HomePage() {
                   ? 'border-[#dde3df] bg-white text-[#9aa49d]'
                   : contrastAuditSummary.passesAA ===
                       contrastAuditSummary.total
-                    ? 'border-[#1b7f72] bg-[#eef8f6] text-[#1b7f72]'
+                    ? 'border-[#4f46e5] bg-[#eef8f6] text-[#4f46e5]'
                     : 'border-[#c9d4cd] bg-white text-[#4f5e56]'
               }`}
             >
@@ -2418,7 +2418,7 @@ export default function HomePage() {
             className="border-b border-[#e0e5de] [&_summary]:cursor-pointer"
           >
             <summary className="flex items-center justify-between px-4 py-3">
-              <h2 className="text-sm font-semibold text-[#1b7f72]">AI 디자인</h2>
+              <h2 className="text-sm font-semibold text-[#4f46e5]">AI 디자인</h2>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-[#647067]">
                   {generations.length}/{MAX_GENERATIONS}
@@ -2435,8 +2435,8 @@ export default function HomePage() {
                     }}
                     className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold transition disabled:opacity-50 ${
                       compareMode
-                        ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
-                        : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                        ? 'border-[#4f46e5] bg-[#4f46e5] text-white'
+                        : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5]'
                     }`}
                   >
                     변형 비교
@@ -2475,7 +2475,7 @@ export default function HomePage() {
                               handleCancelLabelEdit()
                             }
                           }}
-                          className="rounded-l-full rounded-r-none border border-[#1b7f72] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#18211d] outline-none focus:ring-2 focus:ring-[#1b7f72]/20"
+                          className="rounded-l-full rounded-r-none border border-[#4f46e5] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#18211d] outline-none focus:ring-2 focus:ring-[#4f46e5]/20"
                           style={{ width: '6.5rem' }}
                           placeholder="이름 (비우면 기본값)"
                         />
@@ -2493,8 +2493,8 @@ export default function HomePage() {
                               : 'rounded-l-full rounded-r-none'
                           } border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50 ${
                             isActive
-                              ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
-                              : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                              ? 'border-[#4f46e5] bg-[#4f46e5] text-white'
+                              : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5]'
                           }`}
                           onClick={() => handleSelectGeneration(entry.id)}
                           onDoubleClick={() => handleStartLabelEdit(entry)}
@@ -2519,8 +2519,8 @@ export default function HomePage() {
                           disabled={compareMode}
                           className={`rounded-r-full rounded-l-none border border-l-0 px-1.5 py-1 text-[12px] leading-none transition disabled:opacity-50 ${
                             isPinned
-                              ? 'border-[#c8a473] bg-[#fcf6ec] text-[#7c5a2a]'
-                              : 'border-[#cbd6cf] bg-white text-[#9aa6a0] hover:border-[#c8a473] hover:text-[#7c5a2a]'
+                              ? 'border-[#c7d2fe] bg-[#eef2ff] text-[#4f46e5]'
+                              : 'border-[#cbd6cf] bg-white text-[#9aa6a0] hover:border-[#c7d2fe] hover:text-[#4f46e5]'
                           }`}
                           onClick={() => handleToggleGenerationPin(entry.id)}
                         >
@@ -2532,10 +2532,10 @@ export default function HomePage() {
                 })}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-[11px]">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
                 <button
                   type="button"
-                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
+                  className="rounded-md border border-[#cbd6cf] bg-white px-3 py-2 font-semibold text-[#4f5e56] hover:border-[#4f46e5] hover:text-[#4f46e5] disabled:opacity-40"
                   onClick={handleSaveAsUserFixture}
                   disabled={compareMode}
                   title="활성 디자인을 사용자 fixture로 저장 — 다음 세션에서 예제 dropdown에 표시됩니다."
@@ -2546,7 +2546,7 @@ export default function HomePage() {
                 undefined ? (
                   <button
                     type="button"
-                    className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb]"
+                    className="rounded-md border border-[#fecaca] bg-white px-3 py-2 font-semibold text-[#b91c1c] hover:bg-[#fee2e2]"
                     onClick={() => handleDeleteUserFixture(selectedFixtureId)}
                     title="현재 선택된 사용자 fixture를 삭제합니다."
                   >
@@ -2555,14 +2555,14 @@ export default function HomePage() {
                 ) : null}
                 <button
                   type="button"
-                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
+                  className="rounded-md border border-[#cbd6cf] bg-white px-3 py-2 font-semibold text-[#4f5e56] hover:border-[#4f46e5] hover:text-[#4f46e5] disabled:opacity-40"
                   onClick={handleExportActiveGeneration}
                   disabled={compareMode}
                   title="활성 디자인을 JSON 파일로 내보냅니다."
                 >
                   내보내기
                 </button>
-                <label className="cursor-pointer rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]">
+                <label className="cursor-pointer rounded-md border border-[#cbd6cf] bg-white px-3 py-2 font-semibold text-[#4f5e56] hover:border-[#4f46e5] hover:text-[#4f46e5]">
                   불러오기
                   <input
                     type="file"
@@ -2582,13 +2582,13 @@ export default function HomePage() {
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#4f5e56]">
+                  <span className="text-xs font-semibold text-[#4f5e56]">
                     참고 이미지 (선택, {briefImageRefs.length}/{MAX_IMAGE_REFS})
                   </span>
                   {briefImageRefs.length > 0 ? (
                     <button
                       type="button"
-                      className="text-[10px] text-[#7c8580] hover:text-[#1b7f72]"
+                      className="text-[10px] text-[#7c8580] hover:text-[#4f46e5]"
                       onClick={handleImageRefClear}
                     >
                       모두 지우기
@@ -2654,7 +2654,7 @@ export default function HomePage() {
                     className={`block rounded-md border border-dashed border-[#cbd6cf] bg-white px-3 py-2 text-center text-[11px] text-[#7c8580] ${
                       briefImageRefBusy || clarifyLoading || generateLoading
                         ? 'cursor-not-allowed opacity-50'
-                        : 'cursor-pointer hover:border-[#1b7f72] hover:text-[#1b7f72]'
+                        : 'cursor-pointer hover:border-[#4f46e5] hover:text-[#4f46e5]'
                     }`}
                   >
                     {briefImageRefBusy
@@ -2690,14 +2690,14 @@ export default function HomePage() {
               {generateStage === 'intent' ? (
                 <>
                   <label className="block">
-                    <span className="text-[11px] font-semibold text-[#4f5e56]">
+                    <span className="text-xs font-semibold text-[#4f5e56]">
                       의도 *
                     </span>
                     <textarea
                       rows={4}
                       maxLength={500}
                       placeholder="이 페이지로 무엇을 보여주고 싶은가요?"
-                      className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                      className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-sm text-[#18211d] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                       value={briefIntent}
                       disabled={clarifyLoading || generateLoading}
                       onChange={(event) => {
@@ -2708,7 +2708,7 @@ export default function HomePage() {
                   </label>
                   <button
                     type="button"
-                    className="w-full rounded-md bg-[#1b7f72] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
+                    className="w-full rounded-md bg-[#4f46e5] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4338ca] disabled:opacity-50"
                     disabled={
                       clarifyLoading ||
                       generateLoading ||
@@ -2720,7 +2720,7 @@ export default function HomePage() {
                   </button>
                   <button
                     type="button"
-                    className="w-full rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-xs font-semibold text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-40"
+                    className="w-full rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-xs font-semibold text-[#4f5e56] hover:border-[#4f46e5] disabled:opacity-40"
                     disabled={
                       clarifyLoading ||
                       generateLoading ||
@@ -2748,7 +2748,7 @@ export default function HomePage() {
                       </span>
                       <button
                         type="button"
-                        className="text-[11px] text-[#1b7f72] underline"
+                        className="text-[11px] text-[#4f46e5] underline"
                         onClick={handleEditIntent}
                         disabled={clarifyLoading || generateLoading}
                       >
@@ -2792,7 +2792,7 @@ export default function HomePage() {
                     const answer = briefAnswers[question.id]
                     return (
                       <div key={question.id} className="space-y-1">
-                        <span className="text-[11px] font-semibold text-[#4f5e56]">
+                        <span className="text-xs font-semibold text-[#4f5e56]">
                           {question.label}
                         </span>
                         {question.hint !== undefined ? (
@@ -2812,8 +2812,8 @@ export default function HomePage() {
                                   disabled={generateLoading}
                                   className={`rounded-md border px-2 py-1 text-[11px] transition ${
                                     isOn
-                                      ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
-                                      : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                                      ? 'border-[#4f46e5] bg-[#dff1ee] text-[#073d37]'
+                                      : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5]'
                                   }`}
                                   onClick={() =>
                                     setBriefAnswers((current) => ({
@@ -2842,8 +2842,8 @@ export default function HomePage() {
                                   disabled={generateLoading}
                                   className={`rounded-md border px-2 py-1 text-[11px] transition ${
                                     isOn
-                                      ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
-                                      : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                                      ? 'border-[#4f46e5] bg-[#dff1ee] text-[#073d37]'
+                                      : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5]'
                                   }`}
                                   onClick={() =>
                                     setBriefAnswers((current) => {
@@ -2867,7 +2867,7 @@ export default function HomePage() {
                             rows={2}
                             maxLength={500}
                             placeholder="자유롭게 답변하세요 (선택)"
-                            className="w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                            className="w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-sm text-[#18211d] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                             value={typeof answer === 'string' ? answer : ''}
                             disabled={generateLoading}
                             onChange={(event) =>
@@ -2883,13 +2883,13 @@ export default function HomePage() {
                   })}
 
                   {clarifyComplete ? (
-                    <p className="rounded-md border border-[#dde3df] bg-[#eef8f6] px-2 py-1.5 text-[11px] text-[#1b7f72]">
+                    <p className="rounded-md border border-[#dde3df] bg-[#eef8f6] px-2 py-1.5 text-[11px] text-[#4f46e5]">
                       답변이 충분합니다. 이제 디자인을 생성할 수 있습니다.
                     </p>
                   ) : clarifyTurns.length < 2 && clarifyQuestions.length > 0 ? (
                     <button
                       type="button"
-                      className="w-full rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-[11px] font-semibold text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-50"
+                      className="w-full rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-xs font-semibold text-[#4f5e56] hover:border-[#4f46e5] disabled:opacity-50"
                       disabled={
                         clarifyLoading ||
                         generateLoading ||
@@ -2904,14 +2904,14 @@ export default function HomePage() {
                   ) : null}
 
                   <label className="block">
-                    <span className="text-[11px] font-semibold text-[#4f5e56]">
+                    <span className="text-xs font-semibold text-[#4f5e56]">
                       추가 메모 (선택)
                     </span>
                     <textarea
                       rows={2}
                       maxLength={300}
                       placeholder="브랜드 voice, 참조 사이트 등"
-                      className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                      className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-sm text-[#18211d] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                       value={briefNotes}
                       disabled={generateLoading}
                       onChange={(event) => setBriefNotes(event.target.value)}
@@ -2919,7 +2919,7 @@ export default function HomePage() {
                   </label>
 
                   <div>
-                    <span className="text-[11px] font-semibold text-[#4f5e56]">
+                    <span className="text-xs font-semibold text-[#4f5e56]">
                       변형 개수
                     </span>
                     <div className="mt-1 flex gap-1">
@@ -2931,8 +2931,8 @@ export default function HomePage() {
                           disabled={generateLoading}
                           className={`rounded-md border px-3 py-1 text-[11px] transition ${
                             briefVariantCount === opt
-                              ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
-                              : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                              ? 'border-[#4f46e5] bg-[#dff1ee] text-[#073d37]'
+                              : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5]'
                           }`}
                           onClick={() => setBriefVariantCount(opt)}
                         >
@@ -2949,7 +2949,7 @@ export default function HomePage() {
 
                   <button
                     type="button"
-                    className="w-full rounded-md bg-[#1b7f72] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
+                    className="w-full rounded-md bg-[#4f46e5] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4338ca] disabled:opacity-50"
                     disabled={generateLoading}
                     onClick={() => void handleGenerateTree()}
                   >
@@ -3006,8 +3006,8 @@ export default function HomePage() {
                         dropPosition === 'before' ? '-top-1' : '-bottom-1'
                       }`}
                     >
-                      <span className="h-0.5 flex-1 rounded bg-[#1b7f72]" />
-                      <span className="ml-2 rounded-full bg-[#1b7f72] px-2 py-0.5 text-[10px] font-semibold text-white shadow">
+                      <span className="h-0.5 flex-1 rounded bg-[#4f46e5]" />
+                      <span className="ml-2 rounded-full bg-[#4f46e5] px-2 py-0.5 text-[10px] font-semibold text-white shadow">
                         여기에 놓기
                       </span>
                     </span>
@@ -3027,7 +3027,7 @@ export default function HomePage() {
                           ? `${node.id} 루트는 이동할 수 없습니다`
                           : `${node.id} 순서 이동`
                       }
-                      className="flex h-8 w-7 shrink-0 items-center justify-center rounded text-[#6d7a72] outline-none transition hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#b5beb8] disabled:hover:bg-transparent"
+                      className="flex h-8 w-7 shrink-0 items-center justify-center rounded text-[#6d7a72] outline-none transition hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:text-[#b5beb8] disabled:hover:bg-transparent"
                       disabled={isRoot}
                       draggable={!isRoot}
                       title={isRoot ? '루트는 이동할 수 없습니다' : '순서 이동'}
@@ -3038,7 +3038,7 @@ export default function HomePage() {
                     </button>
                     <button
                       type="button"
-                      className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#1b7f72]"
+                      className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
                       onClick={() => setSelectedNodeId(node.id)}
                       onKeyDown={(event) => openKeyboardContextMenu(node.id, event)}
                     >
@@ -3239,7 +3239,7 @@ function HistoryButton({
       type="button"
       aria-label={ariaLabel}
       title={ariaLabel}
-      className="flex h-9 w-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+      className="flex h-9 w-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
       disabled={disabled}
       onClick={onClick}
     >
@@ -3292,7 +3292,7 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
               key={viewport}
               type="button"
               aria-pressed={isSelected}
-              className={`min-w-16 rounded px-3 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+              className={`min-w-16 rounded px-3 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
                 isSelected
                   ? 'bg-white text-[#073d37] shadow-sm'
                   : 'text-[#4f5e56] hover:bg-white/70'
@@ -3484,7 +3484,7 @@ function ContextMenuButton({
     >
       <span>{children}</span>
       {roleType === 'menuitemcheckbox' ? (
-        <span className="text-xs text-[#1b7f72]">{checked ? '켬' : '끔'}</span>
+        <span className="text-xs text-[#4f46e5]">{checked ? '켬' : '끔'}</span>
       ) : null}
     </button>
   )
@@ -4646,7 +4646,7 @@ function NodeTransformInput({
       <span className="text-[11px] text-[#647067]">{label}</span>
       <input
         type="number"
-        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
         min={min}
         max={max}
         step={step ?? 1}
@@ -5376,7 +5376,7 @@ function NodeInspector({
             aria-label={
               anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'
             }
-            className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+            className="text-xs font-semibold text-[#4f46e5] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
             onClick={handleMasterCollapseToggle}
           >
             {anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'}
@@ -5421,7 +5421,7 @@ function NodeInspector({
               <label className="block">
                 <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
                 <textarea
-                  className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                  className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                   placeholder="내용을 입력하세요. 마크다운으로 **굵게**, *기울임*, [링크](URL)를 사용할 수 있습니다."
                   value={node.content}
                   onChange={(event) => onTextChange(node, event.target.value)}
@@ -5476,7 +5476,7 @@ function NodeInspector({
             <label className="block">
               <span className="text-xs font-semibold text-[#4f5e56]">버튼 문구</span>
               <input
-                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                 value={node.label}
                 onChange={(event) => onButtonLabelChange(node, event.target.value)}
               />
@@ -5493,7 +5493,7 @@ function NodeInspector({
                     이미지 주소
                   </span>
                   <input
-                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                     value={node.src}
                     onChange={(event) =>
                       onImageChange(node, { src: event.target.value })
@@ -5510,7 +5510,7 @@ function NodeInspector({
                     대체 텍스트
                   </span>
                   <input
-                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                     value={node.alt}
                     onChange={(event) =>
                       onImageChange(node, { alt: event.target.value })
@@ -5648,7 +5648,7 @@ function NodeInspector({
             />
           </div>
           <div className="mt-3 rounded-md border border-dashed border-[#cbd6cf] bg-[#f8faf9] p-3">
-            <span className="text-[11px] font-semibold text-[#4f5e56]">3D</span>
+            <span className="text-xs font-semibold text-[#4f5e56]">3D</span>
             <div className="mt-2 grid grid-cols-2 gap-2">
               <NodeTransformInput
                 label="X 회전 (°)"
@@ -5713,7 +5713,7 @@ function NodeInspector({
                     title={preset.label}
                     className={`flex h-6 w-6 items-center justify-center rounded border text-[10px] transition-colors ${
                       isActive
-                        ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
+                        ? 'border-[#4f46e5] bg-[#4f46e5] text-white'
                         : 'border-transparent text-[#647067] hover:border-[#cbd6cf] hover:bg-[#f1f5f3]'
                     }`}
                     onClick={() => {
@@ -5820,7 +5820,7 @@ function InspectorDisclosure({
           : undefined
       }
     >
-      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4f46e5] [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-[#1d2923]">{title}</h3>
           {description ? (
@@ -5831,7 +5831,7 @@ function InspectorDisclosure({
           {onAction ? (
             <button
               type="button"
-              className="text-xs font-semibold text-[#1b7f72] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:no-underline"
+              className="text-xs font-semibold text-[#4f46e5] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:no-underline"
               disabled={isActionDisabled}
               onClick={(event) => {
                 event.preventDefault()
@@ -5881,7 +5881,7 @@ function StyleControls({
       description="캔버스 전체 색상"
       defaultOpen={false}
       summaryEnd={
-        <span className="rounded-full border border-[#c9d4cd] bg-white px-2 py-1 text-[11px] font-semibold text-[#4f5e56]">
+        <span className="rounded-full border border-[#c9d4cd] bg-white px-2 py-1 text-xs font-semibold text-[#4f5e56]">
           {colorPresetLabels[colorPreset]}
         </span>
       }
@@ -5897,9 +5897,9 @@ function StyleControls({
               type="button"
               aria-label={`${colorPresetLabels[presetId]} 색상 프리셋`}
               aria-pressed={isSelected}
-              className={`h-11 rounded-md border bg-white p-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+              className={`h-11 rounded-md border bg-white p-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
                 isSelected
-                  ? 'border-[#1b7f72] shadow-[0_0_0_2px_rgba(27,127,114,0.18)]'
+                  ? 'border-[#4f46e5] shadow-[0_0_0_2px_rgba(27,127,114,0.18)]'
                   : 'border-[#c9d4cd] hover:border-[#8c9a91]'
               }`}
               title={colorPresetLabels[presetId]}
@@ -5998,7 +5998,7 @@ function NodeVisibilityControls({
         <label className="block">
           <span className="text-xs font-semibold text-[#4f5e56]">커서</span>
           <select
-            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
             value={node.cursor ?? ''}
             onChange={(event) => {
               const raw = event.target.value
@@ -6043,7 +6043,7 @@ function VisibilitySwitch({
       type="button"
       role="switch"
       aria-checked={checked}
-      className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md border border-[#d7ddd2] bg-white px-3 text-left transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+      className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md border border-[#d7ddd2] bg-white px-3 text-left transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
       disabled={disabled}
       onClick={() => onChange(!checked)}
     >
@@ -6052,7 +6052,7 @@ function VisibilitySwitch({
         {checked ? '켬' : '끔'}
         <span
           className={`flex h-6 w-11 items-center rounded-full p-0.5 transition ${
-            checked ? 'bg-[#1b7f72]' : 'bg-[#c9d4cd]'
+            checked ? 'bg-[#4f46e5]' : 'bg-[#c9d4cd]'
           }`}
         >
           <span
@@ -6751,7 +6751,7 @@ function NodeColorControls({
       <div className="space-y-3">
         <label className="block">
           <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
-          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
             <input
               className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
               value={inputValue}
@@ -6885,7 +6885,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               호버 배경
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={hoverBackgroundColorInput}
@@ -6922,7 +6922,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               호버 글자
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={hoverTextColorInput}
@@ -6959,7 +6959,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               활성 배경
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={activeBackgroundColorInput}
@@ -6996,7 +6996,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               활성 글자
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={activeTextColorInput}
@@ -7033,7 +7033,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               포커스 배경
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={focusBackgroundColorInput}
@@ -7070,7 +7070,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               포커스 글자
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={focusTextColorInput}
@@ -7114,7 +7114,7 @@ function NodeColorControls({
               step={10}
               placeholder="150"
               value={node.transition?.duration ?? ''}
-              className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+              className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
               onChange={(event) => {
                 const raw = event.target.value
                 const currentTiming = node.transition?.timing
@@ -7179,7 +7179,7 @@ function NodeColorControls({
               전환 곡선
             </span>
             <select
-              className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+              className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
               value={node.transition?.timing ?? ''}
               onChange={(event) => {
                 const raw = event.target.value
@@ -7227,7 +7227,7 @@ function NodeColorControls({
 
         {supportsHoverBackgroundColor && node.transition?.timing === 'custom' ? (
           <div className="space-y-2 rounded-md border border-dashed border-[#cbd6cf] bg-[#f8faf9] p-3">
-            <span className="text-[11px] font-semibold text-[#4f5e56]">
+            <span className="text-xs font-semibold text-[#4f5e56]">
               사용자 지정 곡선
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -7263,7 +7263,7 @@ function NodeColorControls({
           <label className="flex items-center gap-2 text-xs font-semibold text-[#4f5e56]">
             <input
               type="checkbox"
-              className="h-4 w-4 cursor-pointer accent-[#1b7f72]"
+              className="h-4 w-4 cursor-pointer accent-[#4f46e5]"
               checked={node.disabled === true}
               onChange={(event) =>
                 onNodeMetaChange(
@@ -7282,7 +7282,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               비활성 배경
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={disabledBackgroundColorInput}
@@ -7319,7 +7319,7 @@ function NodeColorControls({
             <span className="text-xs font-semibold text-[#4f5e56]">
               비활성 글자
             </span>
-            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+            <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
               <input
                 className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                 value={disabledTextColorInput}
@@ -7528,7 +7528,7 @@ function ConicGeometryInput({
       <span className="text-[11px] text-[#647067]">{label}</span>
       <input
         type="number"
-        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
         min={min}
         max={max}
         step={1}
@@ -7538,7 +7538,7 @@ function ConicGeometryInput({
       />
       <input
         type="range"
-        className="mt-2 w-full accent-[#1b7f72]"
+        className="mt-2 w-full accent-[#4f46e5]"
         min={min}
         max={max}
         step={1}
@@ -7582,7 +7582,7 @@ function TextContrastReadout({ contrast }: { contrast: TextContrastResult }) {
 
 function ContrastBadge({ label, pass }: { label: string; pass: boolean }) {
   const className = pass
-    ? 'border-[#1b7f72] bg-[#eef8f6] text-[#1b7f72]'
+    ? 'border-[#4f46e5] bg-[#eef8f6] text-[#4f46e5]'
     : 'border-[#cbd6cf] bg-white text-[#647067]'
   return (
     <span
@@ -7622,7 +7622,7 @@ function GradientColorField({
     <div className="space-y-3">
       <label className="block">
         <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
-        <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+        <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
           <input
             className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
             value={inputValue}
@@ -7892,7 +7892,7 @@ function TypographyControls({
           <button
             key={preset.id}
             type="button"
-            className="rounded-full border border-[#cbd6cf] px-3 py-1 text-xs font-semibold text-[#26312b] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+            className="rounded-full border border-[#cbd6cf] px-3 py-1 text-xs font-semibold text-[#26312b] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
             onClick={() =>
               onTypographyChange(node, preset.typography, {
                 mergeKey: getNodeColorMergeKey(
@@ -7909,7 +7909,7 @@ function TypographyControls({
       <label className="block">
         <span className="text-xs font-semibold text-[#4f5e56]">글꼴</span>
         <select
-          className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+          className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
           value={selectedFontValue}
           disabled={isFontRegistryBusy}
           onChange={(event) => handleFontSelect(event.target.value)}
@@ -7935,7 +7935,7 @@ function TypographyControls({
         </select>
       </label>
       <details className="mt-3 rounded-md border border-[#e0e5de] bg-white [&[open]>summary_.dw-chevron]:rotate-180">
-        <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4f46e5] [&::-webkit-details-marker]:hidden">
           <span className="text-xs font-semibold text-[#4f5e56]">
             글꼴 관리
           </span>
@@ -7957,7 +7957,7 @@ function TypographyControls({
           />
           <button
             type="button"
-            className="h-9 w-full rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#1b7f72] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:bg-white"
+            className="h-9 w-full rounded-md border border-dashed border-[#c9d4cd] bg-white px-3 text-xs font-semibold text-[#4f46e5] transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:text-[#8a958d] disabled:hover:bg-white"
             disabled={isFontRegistryBusy}
             onClick={() => fileInputRef.current?.click()}
           >
@@ -7976,7 +7976,7 @@ function TypographyControls({
                   key={group.familyId}
                   className="rounded-md border border-[#eef1ec] bg-[#fbfcfa] [&[open]>summary_.dw-chevron]:rotate-180"
                 >
-                  <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#1b7f72] [&::-webkit-details-marker]:hidden">
+                  <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 px-2 py-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4f46e5] [&::-webkit-details-marker]:hidden">
                     <span className="min-w-0">
                       <span className="block truncate text-xs font-semibold text-[#26312b]">
                         {group.familyName}
@@ -8044,7 +8044,7 @@ function TypographyControls({
         <label className="block">
           <span className="text-xs font-semibold text-[#4f5e56]">굵기</span>
           <select
-            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
             value={typography.fontWeight ?? ''}
             onChange={(event) =>
               onTypographyChange(node, {
@@ -8088,7 +8088,7 @@ function TypographyControls({
       <label className="mt-3 block">
         <span className="text-xs font-semibold text-[#4f5e56]">크기 슬라이더</span>
         <input
-          className="mt-2 w-full accent-[#1b7f72]"
+          className="mt-2 w-full accent-[#4f46e5]"
           type="range"
           min={8}
           max={120}
@@ -8184,7 +8184,7 @@ function TypographyControls({
             />
             <label className="col-span-2 block">
               <span className="text-xs font-semibold text-[#4f5e56]">색상</span>
-              <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
                 <input
                   className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                   value={textShadowColorInput}
@@ -9040,7 +9040,7 @@ function ShapeControls({
             테두리 종류
           </span>
           <select
-            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
             value={shape.borderStyle ?? ''}
             onChange={(event) => updateBorderStyle(event.target.value)}
           >
@@ -9068,7 +9068,7 @@ function ShapeControls({
           <span className="text-xs font-semibold text-[#4f5e56]">
             테두리 색상
           </span>
-          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+          <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
             <input
               className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none disabled:cursor-not-allowed"
               value={borderColorInput}
@@ -9128,7 +9128,7 @@ function ShapeControls({
                 그림자 종류
               </span>
               <select
-                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
                 value={shape.shadow ?? ''}
                 onChange={(event) => updateShadow(event.target.value)}
               >
@@ -9148,7 +9148,7 @@ function ShapeControls({
                 </span>
                 <button
                   type="button"
-                  className="inline-flex h-8 items-center gap-1 rounded-md border border-[#c9d4cd] bg-white px-2 text-xs font-semibold text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+                  className="inline-flex h-8 items-center gap-1 rounded-md border border-[#c9d4cd] bg-white px-2 text-xs font-semibold text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
                   disabled={activeCustomShadows.length >= MAX_CUSTOM_SHADOWS}
                   onClick={addCustomShadow}
                 >
@@ -9176,7 +9176,7 @@ function ShapeControls({
                           type="button"
                           aria-label={`그림자 ${index + 1} 위로 이동`}
                           title="위로 이동"
-                          className="flex h-7 w-7 items-center justify-center rounded border border-[#c9d4cd] bg-white text-[#4f5e56] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+                          className="flex h-7 w-7 items-center justify-center rounded border border-[#c9d4cd] bg-white text-[#4f5e56] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
                           disabled={index === 0}
                           onClick={() => moveCustomShadow(index, -1)}
                         >
@@ -9186,7 +9186,7 @@ function ShapeControls({
                           type="button"
                           aria-label={`그림자 ${index + 1} 아래로 이동`}
                           title="아래로 이동"
-                          className="flex h-7 w-7 items-center justify-center rounded border border-[#c9d4cd] bg-white text-[#4f5e56] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+                          className="flex h-7 w-7 items-center justify-center rounded border border-[#c9d4cd] bg-white text-[#4f5e56] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
                           disabled={index === activeCustomShadows.length - 1}
                           onClick={() => moveCustomShadow(index, 1)}
                         >
@@ -9196,7 +9196,7 @@ function ShapeControls({
                           type="button"
                           aria-label={`그림자 ${index + 1} 삭제`}
                           title="삭제"
-                          className="flex h-7 w-7 items-center justify-center rounded border border-[#c9d4cd] bg-white text-[#7a3b31] transition hover:bg-[#fff1ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+                          className="flex h-7 w-7 items-center justify-center rounded border border-[#c9d4cd] bg-white text-[#7a3b31] transition hover:bg-[#fff1ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
                           onClick={() => deleteCustomShadow(index)}
                         >
                           <Trash2 aria-hidden="true" size={14} />
@@ -9275,7 +9275,7 @@ function ShapeControls({
                         <span className="text-xs font-semibold text-[#4f5e56]">
                           색상
                         </span>
-                        <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+                        <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
                           <input
                             className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                             value={colorInput}
@@ -9323,7 +9323,7 @@ function ShapeControls({
                     <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#4f5e56]">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer accent-[#1b7f72]"
+                        className="h-4 w-4 cursor-pointer accent-[#4f46e5]"
                         checked={customShadow.inset === true}
                         onChange={(event) =>
                           updateCustomShadowInset(index, event.target.checked)
@@ -9812,7 +9812,7 @@ function ImageCompositionControls({
           <span className="text-xs font-semibold text-[#4f5e56]">비율</span>
           <select
             aria-label="이미지 비율"
-            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
             value={node.aspectRatio ?? ''}
             onChange={(event) => updateAspectRatio(event.target.value)}
           >
@@ -9851,7 +9851,7 @@ function ImageCompositionControls({
         <button
           type="button"
           aria-label="이미지 초점 미리보기"
-          className="relative mt-2 flex aspect-[3/2] w-full cursor-crosshair overflow-hidden rounded-md border border-[#d7ddd2] bg-[var(--dw-image-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72]"
+          className="relative mt-2 flex aspect-[3/2] w-full cursor-crosshair overflow-hidden rounded-md border border-[#d7ddd2] bg-[var(--dw-image-surface)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId)
             updateFocalPointFromPointer(event)
@@ -9896,7 +9896,7 @@ function ImageCompositionControls({
             />
           ) : null}
           <span
-            className="pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#1b7f72] shadow"
+            className="pointer-events-none absolute h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#4f46e5] shadow"
             style={{
               left: `${focalXPercent}%`,
               top: `${focalYPercent}%`,
@@ -9970,7 +9970,7 @@ function ImageCompositionControls({
               <span className="text-xs font-semibold text-[#4f5e56]">
                 오버레이 색상
               </span>
-              <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+              <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#cbd6cf] bg-white px-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
                 <input
                   className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
                   value={overlayColorInput}
@@ -10078,10 +10078,10 @@ function ImageCompositionControls({
             onChange={(value) => updateImageFilterField('invert', value)}
           />
         </div>
-        <label className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-[#4f5e56]">
+        <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#4f5e56]">
           <input
             type="checkbox"
-            className="h-4 w-4 cursor-pointer accent-[#1b7f72]"
+            className="h-4 w-4 cursor-pointer accent-[#4f46e5]"
             checked={presentation.filter?.dropShadow !== undefined}
             onChange={(event) => toggleImageDropShadow(event.target.checked)}
           />
@@ -10150,7 +10150,7 @@ function ImageCompositionControls({
                 className="rounded-md border border-[#e0e5de] bg-white p-2"
               >
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#4f5e56]">
+                  <span className="text-xs font-semibold text-[#4f5e56]">
                     추가 그림자 {index + 1}
                   </span>
                   <div className="flex items-center gap-1">
@@ -10284,7 +10284,7 @@ function ImageFilterInput({
       <span className="text-[11px] text-[#647067]">{label}</span>
       <input
         type="number"
-        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+        className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
         min={min}
         max={max}
         placeholder={placeholder}
@@ -10337,7 +10337,7 @@ function OpacityControl({
       <label className="mt-2 block">
         <span className="sr-only">{label} 슬라이더</span>
         <input
-          className="w-full accent-[#1b7f72] disabled:cursor-not-allowed"
+          className="w-full accent-[#4f46e5] disabled:cursor-not-allowed"
           type="range"
           min={0}
           max={100}
@@ -10378,7 +10378,7 @@ function TypographyNumberField({
   return (
     <label className={disabled ? 'block opacity-50' : 'block'}>
       <span className="text-xs font-semibold text-[#4f5e56]">{label}</span>
-      <span className="mt-2 flex h-10 items-center rounded-md border border-[#cbd6cf] bg-white focus-within:border-[#1b7f72] focus-within:ring-2 focus-within:ring-[#1b7f72]/20">
+      <span className="mt-2 flex h-10 items-center rounded-md border border-[#cbd6cf] bg-white focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#4f46e5]/20">
         <input
           className="h-full min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none disabled:cursor-not-allowed"
           type="number"
@@ -10417,9 +10417,9 @@ function TypographyToggleButton({
     <button
       type="button"
       aria-pressed={isSelected}
-      className={`h-9 rounded-md border px-2 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+      className={`h-9 rounded-md border px-2 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
         isSelected
-          ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+          ? 'border-[#4f46e5] bg-[#dff1ee] text-[#073d37]'
           : 'border-[#c9d4cd] bg-white text-[#26312b] hover:bg-[#eef3ed]'
       } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
       disabled={disabled}
@@ -10451,9 +10451,9 @@ function IconToggleButton({
       aria-label={label}
       aria-pressed={isSelected}
       title={label}
-      className={`flex h-9 items-center justify-center rounded-md border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+      className={`flex h-9 items-center justify-center rounded-md border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
         isSelected
-          ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+          ? 'border-[#4f46e5] bg-[#dff1ee] text-[#073d37]'
           : 'border-[#c9d4cd] bg-white text-[#26312b] hover:bg-[#eef3ed]'
       } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white`}
       disabled={disabled}
@@ -10560,7 +10560,7 @@ function InspectorActionButton({
       type="button"
       aria-label={ariaLabel}
       title={ariaLabel}
-      className={`flex h-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d4cd] disabled:hover:bg-white disabled:hover:text-[#26312b] ${toneClass}`}
+      className={`flex h-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d4cd] disabled:hover:bg-white disabled:hover:text-[#26312b] ${toneClass}`}
       disabled={disabled}
       onClick={onClick}
     >
@@ -11700,12 +11700,12 @@ function MiniGenerationCanvas({
         if (!disabled) onSelect()
       }}
       onKeyDown={handleKeyDown}
-      className={`group flex flex-col overflow-hidden rounded-lg border bg-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+      className={`group flex flex-col overflow-hidden rounded-lg border bg-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
       } ${
         isActive
-          ? 'border-[#1b7f72] shadow-[0_0_0_3px_rgba(27,127,114,0.22)]'
-          : 'border-[#cbd6cf] hover:border-[#1b7f72]'
+          ? 'border-[#4f46e5] shadow-[0_0_0_3px_rgba(27,127,114,0.22)]'
+          : 'border-[#cbd6cf] hover:border-[#4f46e5]'
       }`}
       style={{ width: MINI_CELL_WIDTH }}
     >
