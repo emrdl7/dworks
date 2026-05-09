@@ -148,7 +148,35 @@ import {
   readPersistedGenerationState,
   writePersistedGenerationState,
 } from './generation-storage'
-import { computeRichnessReport } from './richness'
+import {
+  computeRichnessReport,
+  formatRichnessScore,
+  type RichnessReport,
+} from './richness'
+
+type RichnessSignalKey = keyof Omit<RichnessReport, 'score'>
+
+const RICHNESS_SIGNAL_LABELS: Record<RichnessSignalKey, string> = {
+  hasPageLandmarks: '랜드마크 부족 (banner/main/contentinfo)',
+  hasMainMultiSection: 'main 단일 섹션',
+  hasDisplayHeadingOne: '헤딩 작음 (≥48px 권장)',
+  hasCallToAction: 'CTA 부재',
+  fontSizeVariety: '글자 크기 단조로움',
+  colorVariety: '색 다양성 부족',
+  hasImagery: '이미지 부재',
+  hasShapeDepth: 'shape 깊이 부재',
+}
+
+const RICHNESS_SIGNAL_KEYS: RichnessSignalKey[] = [
+  'hasPageLandmarks',
+  'hasMainMultiSection',
+  'hasDisplayHeadingOne',
+  'hasCallToAction',
+  'fontSizeVariety',
+  'colorVariety',
+  'hasImagery',
+  'hasShapeDepth',
+]
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -1986,13 +2014,24 @@ export default function HomePage() {
                   const richness = entry.immutable
                     ? null
                     : computeRichnessReport(entry.tree).score
+                  const formattedRichness =
+                    richness === null ? null : formatRichnessScore(richness)
+                  const generationTitle =
+                    entry.brief?.intent ??
+                    (entry.immutable ? '원본 fixture' : '생성 결과')
                   return (
                     <button
                       key={entry.id}
                       type="button"
                       title={
-                        entry.brief?.intent ??
-                        (entry.immutable ? '원본 fixture' : '생성 결과')
+                        formattedRichness === null
+                          ? generationTitle
+                          : `${generationTitle} · 디자인 풍부도 ${formattedRichness}`
+                      }
+                      aria-label={
+                        formattedRichness === null
+                          ? entry.label
+                          : `${entry.label} 디자인 풍부도 ${formattedRichness}`
                       }
                       aria-pressed={isActive}
                       aria-disabled={compareMode || undefined}
@@ -2005,18 +2044,51 @@ export default function HomePage() {
                       onClick={() => handleSelectGeneration(entry.id)}
                     >
                       {entry.label}
-                      {richness !== null ? (
+                      {formattedRichness !== null ? (
                         <span
                           className="ml-1 text-[10px] font-normal opacity-70"
-                          aria-label={`디자인 풍부도 ${richness.toFixed(2)}`}
+                          aria-hidden="true"
                         >
-                          {richness.toFixed(2)}
+                          {formattedRichness}
                         </span>
                       ) : null}
                     </button>
                   )
                 })}
               </div>
+
+              {(() => {
+                const activeEntry = generations.find(
+                  (entry) => entry.id === activeGenerationId,
+                )
+                if (
+                  activeEntry === undefined ||
+                  activeEntry.immutable
+                ) {
+                  return null
+                }
+                const report = computeRichnessReport(activeEntry.tree)
+                const missing = RICHNESS_SIGNAL_KEYS.filter(
+                  (key) => report[key] === false,
+                )
+                if (missing.length === 0) return null
+                return (
+                  <div
+                    className="rounded-md border border-[#e7d6c1] bg-[#fcf6ec] px-3 py-2 text-[11px] text-[#7c5a2a]"
+                    role="note"
+                    aria-label="디자인 풍부도 경고"
+                  >
+                    <div className="mb-1 font-semibold">
+                      풍부도 부족 신호 ({missing.length}/8)
+                    </div>
+                    <ul className="ml-3 list-disc space-y-0.5">
+                      {missing.map((key) => (
+                        <li key={key}>{RICHNESS_SIGNAL_LABELS[key]}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })()}
 
               {generateStage === 'intent' ? (
                 <>
