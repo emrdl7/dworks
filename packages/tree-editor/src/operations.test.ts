@@ -275,6 +275,9 @@ describe('tree editor operations', () => {
         scale: 1.2,
         skewX: -8,
         skewY: 6,
+        rotateX: 28,
+        rotateY: -34,
+        perspective: 900,
         originX: 0,
       },
     })
@@ -286,6 +289,9 @@ describe('tree editor operations', () => {
         scale: 1.2,
         skewX: -8,
         skewY: 6,
+        rotateX: 28,
+        rotateY: -34,
+        perspective: 900,
         originX: 0,
         originY: 100,
       },
@@ -368,6 +374,9 @@ describe('tree editor operations', () => {
           scale: 1.2,
           skewX: -8,
           skewY: 6,
+          rotateX: 28,
+          rotateY: -34,
+          perspective: 900,
           originX: 0,
         })
         assert.deepEqual(originCard.transform, {
@@ -377,6 +386,9 @@ describe('tree editor operations', () => {
           scale: 1.2,
           skewX: -8,
           skewY: 6,
+          rotateX: 28,
+          rotateY: -34,
+          perspective: 900,
           originX: 0,
           originY: 100,
         })
