@@ -2611,7 +2611,7 @@ export default function HomePage() {
         handleDeleteSelected()
         return
       }
-      // Esc — 우선순위: 도움말 popover → drawer → 선택 해제
+      // Esc — 우선순위: 도움말 popover → drawer → multi-select → 선택 해제
       if (event.key === 'Escape') {
         if (shortcutHelpOpen) {
           event.preventDefault()
@@ -2622,6 +2622,11 @@ export default function HomePage() {
           event.preventDefault()
           setBriefDrawerOpen(false)
           setInspectorDrawerOpen(false)
+          return
+        }
+        if (additionalSelectedNodeIds.size > 0) {
+          event.preventDefault()
+          setAdditionalSelectedNodeIds(new Set())
           return
         }
         if (selectedNodeId !== tree.root.id) {
@@ -2649,6 +2654,8 @@ export default function HomePage() {
     shortcutHelpOpen,
     briefDrawerOpen,
     inspectorDrawerOpen,
+    additionalSelectedNodeIds,
+    allSelectedNodeIds,
   ])
 
   return (
