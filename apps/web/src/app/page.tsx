@@ -2992,6 +2992,9 @@ function getTransformStyle(
     return undefined
   }
   const parts: string[] = []
+  if (transform.perspective !== undefined) {
+    parts.push(`perspective(${transform.perspective}px)`)
+  }
   if (transform.translateX !== undefined) {
     parts.push(`translateX(${transform.translateX}px)`)
   }
@@ -3009,6 +3012,12 @@ function getTransformStyle(
   }
   if (transform.skewY !== undefined) {
     parts.push(`skewY(${transform.skewY}deg)`)
+  }
+  if (transform.rotateX !== undefined) {
+    parts.push(`rotateX(${transform.rotateX}deg)`)
+  }
+  if (transform.rotateY !== undefined) {
+    parts.push(`rotateY(${transform.rotateY}deg)`)
   }
   const style: CSSProperties = {}
   if (parts.length > 0) {
@@ -3872,6 +3881,56 @@ function NodeInspector({
                 )
               }
             />
+          </div>
+          <div className="mt-3 rounded-md border border-dashed border-[#cbd6cf] bg-[#f8faf9] p-3">
+            <span className="text-[11px] font-semibold text-[#4f5e56]">3D</span>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <NodeTransformInput
+                label="X 회전 (°)"
+                min={-360}
+                max={360}
+                placeholder="0"
+                value={node.transform?.rotateX}
+                onChange={(value) =>
+                  updateNodeTransformField(
+                    node,
+                    'rotateX',
+                    value,
+                    onNodeMetaChange,
+                  )
+                }
+              />
+              <NodeTransformInput
+                label="Y 회전 (°)"
+                min={-360}
+                max={360}
+                placeholder="0"
+                value={node.transform?.rotateY}
+                onChange={(value) =>
+                  updateNodeTransformField(
+                    node,
+                    'rotateY',
+                    value,
+                    onNodeMetaChange,
+                  )
+                }
+              />
+              <NodeTransformInput
+                label="원근 (px)"
+                min={200}
+                max={2000}
+                placeholder="800"
+                value={node.transform?.perspective}
+                onChange={(value) =>
+                  updateNodeTransformField(
+                    node,
+                    'perspective',
+                    value,
+                    onNodeMetaChange,
+                  )
+                }
+              />
+            </div>
           </div>
           <div className="mt-3">
             <span className="text-[11px] text-[#647067]">기준점</span>
