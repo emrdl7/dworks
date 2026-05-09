@@ -825,6 +825,7 @@ export default function HomePage() {
     const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
     const nextOriginal = createOriginalEntry(nextFixture.tree)
     setSelectedFixtureId(nextFixture.id)
+    setCompareMode(false)
     setTree(nextFixture.tree)
     setHistoryPast([])
     setHistoryFuture([])
@@ -1048,6 +1049,7 @@ export default function HomePage() {
         const nextSelectedId =
           findFirstEditableNodeId(firstNew.tree.root) ?? firstNew.tree.root.id
         setActiveGenerationId(firstNew.id)
+        setCompareMode(false)
         commitTreeEdit(firstNew.tree, nextSelectedId, {
           skipGenerationSync: true,
         })
@@ -2185,7 +2187,11 @@ export default function HomePage() {
                 activeGenerationId={activeGenerationId}
                 viewportWidth={selectedViewportPreset.width}
                 canvasStyle={canvasStyle}
+                disabled={generateLoading}
                 onSelect={(id) => {
+                  if (generateLoading) {
+                    return
+                  }
                   setCompareMode(false)
                   if (id !== activeGenerationId) {
                     handleSelectGeneration(id)
@@ -10576,6 +10582,7 @@ interface VariantCompareGridProps {
   activeGenerationId: string
   viewportWidth: number
   canvasStyle: CSSProperties
+  disabled: boolean
   onSelect: (id: string) => void
 }
 
@@ -10584,6 +10591,7 @@ function VariantCompareGrid({
   activeGenerationId,
   viewportWidth,
   canvasStyle,
+  disabled,
   onSelect,
 }: VariantCompareGridProps) {
   return (
@@ -10596,6 +10604,7 @@ function VariantCompareGrid({
           isActive={entry.id === activeGenerationId}
           viewportWidth={viewportWidth}
           canvasStyle={canvasStyle}
+          disabled={disabled}
           onSelect={() => onSelect(entry.id)}
         />
       ))}
@@ -10609,6 +10618,7 @@ interface MiniGenerationCanvasProps {
   isActive: boolean
   viewportWidth: number
   canvasStyle: CSSProperties
+  disabled: boolean
   onSelect: () => void
 }
 
@@ -10621,6 +10631,7 @@ function MiniGenerationCanvas({
   isActive,
   viewportWidth,
   canvasStyle,
+  disabled,
   onSelect,
 }: MiniGenerationCanvasProps) {
   const scale = MINI_CELL_WIDTH / viewportWidth
@@ -10628,6 +10639,7 @@ function MiniGenerationCanvas({
   const intentText = entry.brief?.intent ?? '원본 fixture'
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (disabled) return
     if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
     onSelect()
@@ -10636,14 +10648,19 @@ function MiniGenerationCanvas({
   return (
     <div
       role="button"
-      tabIndex={0}
+      tabIndex={disabled ? -1 : 0}
       aria-label={`${label} 선택하여 편집`}
       aria-current={isActive ? 'true' : undefined}
-      onClick={onSelect}
+      aria-disabled={disabled || undefined}
+      onClick={() => {
+        if (!disabled) onSelect()
+      }}
       onKeyDown={handleKeyDown}
-      className={`group flex cursor-pointer flex-col overflow-hidden rounded-lg border bg-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
+      className={`group flex flex-col overflow-hidden rounded-lg border bg-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b7f72] ${
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+      } ${
         isActive
-          ? 'border-[#1b7f72] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
+          ? 'border-[#1b7f72] shadow-[0_0_0_3px_rgba(27,127,114,0.22)]'
           : 'border-[#cbd6cf] hover:border-[#1b7f72]'
       }`}
       style={{ width: MINI_CELL_WIDTH }}
