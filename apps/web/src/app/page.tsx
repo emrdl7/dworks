@@ -723,7 +723,14 @@ export default function HomePage() {
   const [activeGenerationId, setActiveGenerationId] = useState<string>(
     () => generations[0]?.id ?? 'original',
   )
+  const [compareMode, setCompareMode] = useState(false)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
+
+  useEffect(() => {
+    if (compareMode && generations.length < 2) {
+      setCompareMode(false)
+    }
+  }, [compareMode, generations.length])
 
   const selectedNode = useMemo(
     () => findNode(tree.root, selectedNodeId) ?? tree.root,
@@ -1736,7 +1743,13 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="grid h-[calc(100vh-56px)] min-h-0 grid-cols-[260px_minmax(0,1fr)_360px]">
+      <div
+        className={`grid h-[calc(100vh-56px)] min-h-0 ${
+          compareMode
+            ? 'grid-cols-[260px_minmax(0,1fr)]'
+            : 'grid-cols-[260px_minmax(0,1fr)_360px]'
+        }`}
+      >
         <aside className="flex min-h-0 flex-col border-r border-[#d7ddd2] bg-[#fbfcfa]">
           <details
             open
@@ -1744,9 +1757,30 @@ export default function HomePage() {
           >
             <summary className="flex items-center justify-between px-4 py-3">
               <h2 className="text-sm font-semibold text-[#1b7f72]">AI 디자인</h2>
-              <span className="text-[10px] text-[#647067]">
-                {generations.length}/{MAX_GENERATIONS}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-[#647067]">
+                  {generations.length}/{MAX_GENERATIONS}
+                </span>
+                {generations.length >= 2 ? (
+                  <button
+                    type="button"
+                    aria-pressed={compareMode}
+                    disabled={generateLoading}
+                    onClick={(event) => {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      setCompareMode((v) => !v)
+                    }}
+                    className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold transition disabled:opacity-50 ${
+                      compareMode
+                        ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
+                        : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                    }`}
+                  >
+                    변형 비교
+                  </button>
+                ) : null}
+              </div>
             </summary>
             <div className="space-y-3 px-4 pb-4">
               <div className="flex flex-wrap gap-1">
@@ -1758,7 +1792,9 @@ export default function HomePage() {
                       type="button"
                       title={entry.brief?.intent ?? '원본 fixture'}
                       aria-pressed={isActive}
-                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+                      aria-disabled={compareMode || undefined}
+                      disabled={compareMode}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50 ${
                         isActive
                           ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
                           : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
@@ -2100,6 +2136,7 @@ export default function HomePage() {
         <section
           className="min-h-0 min-w-0 overflow-auto bg-[#eef2ec]"
           onContextMenu={(event) => {
+            if (compareMode) return
             const target = event.target
             if (!(target instanceof Element)) {
               return
@@ -2114,6 +2151,7 @@ export default function HomePage() {
             openPointerContextMenu(nodeId, event)
           }}
           onKeyDownCapture={(event) => {
+            if (compareMode) return
             if (
               event.key !== 'ContextMenu' &&
               !(event.shiftKey && event.key === 'F10')
@@ -2137,37 +2175,58 @@ export default function HomePage() {
             openElementContextMenu(nodeId, nodeElement)
           }}
         >
-          <div
-            className="px-8 py-8"
-            style={{ minWidth: selectedViewportPreset.width + 64 }}
-          >
+          {compareMode ? (
+            <div className="space-y-3 px-8 py-6">
+              <p className="text-xs text-[#4f5e56]">
+                비교할 디자인을 선택하면 편집 화면으로 돌아갑니다.
+              </p>
+              <VariantCompareGrid
+                generations={generations}
+                activeGenerationId={activeGenerationId}
+                viewportWidth={selectedViewportPreset.width}
+                canvasStyle={canvasStyle}
+                onSelect={(id) => {
+                  setCompareMode(false)
+                  if (id !== activeGenerationId) {
+                    handleSelectGeneration(id)
+                  }
+                }}
+              />
+            </div>
+          ) : (
             <div
-              className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
-              style={{
-                ...canvasStyle,
-                width: selectedViewportPreset.width,
-              }}
+              className="px-8 py-8"
+              style={{ minWidth: selectedViewportPreset.width + 64 }}
             >
-              <CanvasToolbarContext.Provider
-                value={{
-                  selectedNodeId,
-                  selectedStructureInfo,
-                  onMoveUp: () => handleMoveSelected('up'),
-                  onMoveDown: () => handleMoveSelected('down'),
-                  onDuplicate: handleDuplicateSelected,
-                  onDelete: handleDeleteSelected,
+              <div
+                className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
+                style={{
+                  ...canvasStyle,
+                  width: selectedViewportPreset.width,
                 }}
               >
-                <CanvasNode
-                  node={tree.root}
-                  selectedNodeId={selectedNodeId}
-                  onSelect={setSelectedNodeId}
-                />
-              </CanvasToolbarContext.Provider>
+                <CanvasToolbarContext.Provider
+                  value={{
+                    selectedNodeId,
+                    selectedStructureInfo,
+                    onMoveUp: () => handleMoveSelected('up'),
+                    onMoveDown: () => handleMoveSelected('down'),
+                    onDuplicate: handleDuplicateSelected,
+                    onDelete: handleDeleteSelected,
+                  }}
+                >
+                  <CanvasNode
+                    node={tree.root}
+                    selectedNodeId={selectedNodeId}
+                    onSelect={setSelectedNodeId}
+                  />
+                </CanvasToolbarContext.Provider>
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
+        {compareMode ? null : (
         <aside className="min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white">
           <NodeInspector
             node={selectedNode}
@@ -2202,6 +2261,7 @@ export default function HomePage() {
             onColorPresetChange={handleColorPresetChange}
           />
         </aside>
+        )}
       </div>
       {contextMenu && contextMenuNode && contextMenuStructureInfo ? (
         <NodeContextMenu
@@ -2501,6 +2561,8 @@ function getContextMenuItems(menu: HTMLDivElement | null): HTMLButtonElement[] {
     (item) => !item.disabled,
   )
 }
+
+const CanvasReadOnlyContext = createContext(false)
 
 interface CanvasNodeProps {
   inheritedTextColor?: string
@@ -2973,10 +3035,26 @@ function SelectableNode({
   onSelect,
   children,
 }: SelectableNodeProps) {
-  const isSelected = node.id === selectedNodeId
-  const isCanvasSelectable = node.pointerEvents !== 'none'
+  const readOnly = useContext(CanvasReadOnlyContext)
   const transformStyle = getTransformStyle(node.transform)
   const transitionStyle = getTransitionStyle(node.transition)
+
+  if (readOnly) {
+    const readOnlyStyle: CSSProperties = {
+      pointerEvents: 'none',
+      ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
+      ...(transitionStyle ?? {}),
+      ...(transformStyle ?? {}),
+    }
+    return (
+      <div className="border border-transparent" style={readOnlyStyle}>
+        {children}
+      </div>
+    )
+  }
+
+  const isSelected = node.id === selectedNodeId
+  const isCanvasSelectable = node.pointerEvents !== 'none'
   const nodeMetaStyle: CSSProperties = {
     pointerEvents: isCanvasSelectable ? 'auto' : 'none',
     ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
@@ -10491,4 +10569,112 @@ function hexToRgba(hex: string, alpha: number): string {
   const blue = value & 255
 
   return `rgba(${red},${green},${blue},${alpha})`
+}
+
+interface VariantCompareGridProps {
+  generations: GenerationEntry[]
+  activeGenerationId: string
+  viewportWidth: number
+  canvasStyle: CSSProperties
+  onSelect: (id: string) => void
+}
+
+function VariantCompareGrid({
+  generations,
+  activeGenerationId,
+  viewportWidth,
+  canvasStyle,
+  onSelect,
+}: VariantCompareGridProps) {
+  return (
+    <div className="flex flex-wrap gap-4">
+      {generations.map((entry, index) => (
+        <MiniGenerationCanvas
+          key={entry.id}
+          entry={entry}
+          fallbackLabel={entry.immutable ? '원본' : `변형 ${index}`}
+          isActive={entry.id === activeGenerationId}
+          viewportWidth={viewportWidth}
+          canvasStyle={canvasStyle}
+          onSelect={() => onSelect(entry.id)}
+        />
+      ))}
+    </div>
+  )
+}
+
+interface MiniGenerationCanvasProps {
+  entry: GenerationEntry
+  fallbackLabel: string
+  isActive: boolean
+  viewportWidth: number
+  canvasStyle: CSSProperties
+  onSelect: () => void
+}
+
+const MINI_CELL_WIDTH = 320
+const MINI_CELL_HEIGHT = 220
+
+function MiniGenerationCanvas({
+  entry,
+  fallbackLabel,
+  isActive,
+  viewportWidth,
+  canvasStyle,
+  onSelect,
+}: MiniGenerationCanvasProps) {
+  const scale = MINI_CELL_WIDTH / viewportWidth
+  const label = entry.label.length > 0 ? entry.label : fallbackLabel
+  const intentText = entry.brief?.intent ?? '원본 fixture'
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    onSelect()
+  }
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`${label} 선택하여 편집`}
+      aria-current={isActive ? 'true' : undefined}
+      onClick={onSelect}
+      onKeyDown={handleKeyDown}
+      className={`group flex cursor-pointer flex-col overflow-hidden rounded-lg border bg-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
+        isActive
+          ? 'border-[#1b7f72] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
+          : 'border-[#cbd6cf] hover:border-[#1b7f72]'
+      }`}
+      style={{ width: MINI_CELL_WIDTH }}
+    >
+      <div className="flex items-center justify-between gap-2 border-b border-[#e0e5de] px-3 py-2">
+        <span className="text-xs font-semibold text-[#18211d]">{label}</span>
+        <span className="truncate text-[10px] text-[#647067]" title={intentText}>
+          {intentText}
+        </span>
+      </div>
+      <div
+        className="relative overflow-hidden bg-[var(--dw-surface)]"
+        style={{ width: MINI_CELL_WIDTH, height: MINI_CELL_HEIGHT }}
+      >
+        <div
+          style={{
+            ...canvasStyle,
+            width: viewportWidth,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+          }}
+        >
+          <CanvasReadOnlyContext.Provider value={true}>
+            <CanvasNode
+              node={entry.tree.root}
+              selectedNodeId=""
+              onSelect={() => {}}
+            />
+          </CanvasReadOnlyContext.Provider>
+        </div>
+      </div>
+    </div>
+  )
 }
