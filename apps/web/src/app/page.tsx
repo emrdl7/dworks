@@ -4165,6 +4165,15 @@ export default function HomePage() {
                       <span className="min-w-0 flex-1 truncate">
                         {highlightSearchMatch(node.id, layerQuery)}
                       </span>
+                      {isContainer ? (
+                        <span
+                          aria-hidden="true"
+                          className="shrink-0 text-[10px] tabular-nums text-[#5b6069]"
+                          title={`자식 ${node.children.length}개`}
+                        >
+                          {node.children.length}
+                        </span>
+                      ) : null}
                     </button>
                     <span className="flex shrink-0 items-center gap-1">
                       {/* visibility */}
