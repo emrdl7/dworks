@@ -1661,7 +1661,7 @@ ${GENERATE_EXAMPLES_BLOCK}
 - **layout.justify는 enum**: \`'start'\` | \`'center'\` | \`'end'\` | \`'between'\` | \`'evenly'\` 만. \`'space-between'\` X.
 - **section.role enum**: \`'banner'\` | \`'main'\` | \`'contentinfo'\` 만 (HTML landmark 표준). \`'header'\` / \`'footer'\` X.
 
-이제 사용자 입력을 받아 위 규칙에 따라 Tree JSON 하나만 반환한다.`
+이제 사용자 입력을 받아 위 규칙(브리프 처리 + 페이지 기본 구조 + 2026 트렌드 가이드 + 톤 매핑 11종 + 8 신호 자체 점검 + AI 슬롭 회피 + 절대 규칙 + Schema 정확 형식)에 따라 Tree JSON 하나만 반환한다. 절대 와이어프레임 / 단순 텍스트 박스 / 회색 캔버스 / 동일 padding 반복으로 응답하지 마라.`
 
 /**
  * m3-generate-clarify용 system prompt.
