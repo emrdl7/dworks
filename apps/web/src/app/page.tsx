@@ -2770,6 +2770,16 @@ export default function HomePage() {
         handleDuplicateSelected()
         return
       }
+      // Cmd/Ctrl+A — select all nodes (root는 primary, 나머지는 additional)
+      if (meta && event.key.toLowerCase() === 'a') {
+        event.preventDefault()
+        const allItems = flattenTree(tree.root)
+        const others = allItems
+          .map((item) => item.node.id)
+          .filter((id) => id !== selectedNodeId)
+        setAdditionalSelectedNodeIds(new Set(others))
+        return
+      }
       // Cmd/Ctrl+↑/↓ — 형제 노드 사이 reorder
       if (meta && event.key === 'ArrowUp') {
         event.preventDefault()
@@ -4688,6 +4698,7 @@ export default function HomePage() {
                   items: [
                     { keys: ['⇧', 'click'], label: '범위 선택 (primary ~ target)' },
                     { keys: ['⌘', 'click'], label: '개별 토글' },
+                    { keys: ['⌘', 'A'], label: '전체 선택' },
                   ],
                 },
                 {
