@@ -11,11 +11,7 @@ import {
   type LlmProvider,
   type SpawnLike,
 } from './llm.js'
-
-export const clarifyRequestSchema = z.object({
-  intent: z.string().trim().min(1).max(500),
-})
-export type ClarifyRequest = z.infer<typeof clarifyRequestSchema>
+import { briefAnswerSchema } from './generate.js'
 
 export const clarifyQuestionSchema = z
   .object({
@@ -36,10 +32,27 @@ export const clarifyQuestionSchema = z
   )
 export type ClarifyQuestion = z.infer<typeof clarifyQuestionSchema>
 
-export const clarifyResponseSchema = z.object({
+export const clarifyTurnSchema = z.object({
+  questions: z.array(clarifyQuestionSchema).min(1).max(6),
+  answers: z.array(briefAnswerSchema).max(6),
+})
+export type ClarifyTurn = z.infer<typeof clarifyTurnSchema>
+
+export const clarifyRequestSchema = z.object({
+  intent: z.string().trim().min(1).max(500),
+  history: z.array(clarifyTurnSchema).max(2).optional(),
+})
+export type ClarifyRequest = z.infer<typeof clarifyRequestSchema>
+
+export const clarifyResponseFirstSchema = z.object({
   questions: z.array(clarifyQuestionSchema).min(3).max(6),
 })
-export type ClarifyResponse = z.infer<typeof clarifyResponseSchema>
+
+export const clarifyResponseFollowUpSchema = z.object({
+  questions: z.array(clarifyQuestionSchema).max(3),
+})
+
+export type ClarifyResponse = z.infer<typeof clarifyResponseFirstSchema>
 
 export type ClarifyErrorKind =
   | 'invalid-request'
@@ -80,6 +93,41 @@ export interface ClarifyDeps {
   }>
 }
 
+function formatAnswer(answer: string | string[]): string {
+  return Array.isArray(answer) ? answer.join(', ') : answer
+}
+
+function buildClarifyUserPrompt(
+  intent: string,
+  history: ClarifyTurn[] | undefined,
+): string {
+  if (history === undefined || history.length === 0) {
+    return intent
+  }
+
+  const lines: string[] = []
+  lines.push('## 의도', intent, '')
+  lines.push('## 이전 turn 답변')
+  history.forEach((turn, i) => {
+    lines.push(`### turn ${i + 1}`)
+    for (const a of turn.answers) {
+      lines.push(`- ${a.questionLabel}: ${formatAnswer(a.answer)}`)
+    }
+    if (turn.answers.length === 0) {
+      lines.push('- (답변 없음)')
+    }
+    lines.push('')
+  })
+  lines.push(
+    '## 지시',
+    '위 답변에서 부족한 영역만 1~3개의 추가 질문으로 보강하라.',
+    '답변이 충분히 구체적이면 빈 배열 `{ "questions": [] }`를 반환하라.',
+    '이전 turn에서 사용한 question id는 재사용 금지.',
+  )
+
+  return lines.join('\n')
+}
+
 /**
  * POST /clarify 처리. Framework-agnostic.
  */
@@ -109,10 +157,18 @@ export async function handleClarify(
     }
   }
 
+  const isFollowUp =
+    parsed.data.history !== undefined && parsed.data.history.length > 0
+
+  const userPrompt = buildClarifyUserPrompt(
+    parsed.data.intent,
+    parsed.data.history,
+  )
+
   const { final } = await callLlmChain({
     chain,
     systemPrompt: CLARIFY_QUESTIONS_SYSTEM_PROMPT,
-    userPrompt: parsed.data.intent,
+    userPrompt,
     spawnImpl: deps.spawnImpl,
     command: deps.command,
     timeoutMs: deps.timeoutMs,
@@ -162,7 +218,9 @@ export async function handleClarify(
     }
   }
 
-  const responseParse = clarifyResponseSchema.safeParse(json)
+  const responseParse = isFollowUp
+    ? clarifyResponseFollowUpSchema.safeParse(json)
+    : clarifyResponseFirstSchema.safeParse(json)
   if (!responseParse.success) {
     return {
       status: 422,

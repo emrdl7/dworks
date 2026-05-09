@@ -201,6 +201,11 @@ interface SubmittedDesignBrief {
   notes?: string
 }
 
+interface ClarifyTurn {
+  questions: ClarifyQuestionDto[]
+  answers: BriefAnswer[]
+}
+
 type GenerateStage = 'intent' | 'questions'
 
 interface GenerationEntry {
@@ -210,6 +215,7 @@ interface GenerationEntry {
   immutable: boolean
   brief: SubmittedDesignBrief | null
   questions: ClarifyQuestionDto[]
+  clarifyTurns: ClarifyTurn[]
   createdAt: number
   latencyMs: number | null
   model: 'claude' | 'codex' | 'gemini' | null
@@ -231,6 +237,7 @@ function createOriginalEntry(tree: Tree): GenerationEntry {
     immutable: true,
     brief: null,
     questions: [],
+    clarifyTurns: [],
     createdAt: Date.now(),
     latencyMs: null,
     model: null,
@@ -714,6 +721,8 @@ export default function HomePage() {
   const [briefAnswers, setBriefAnswers] = useState<Record<string, string | string[]>>(
     {},
   )
+  const [clarifyTurns, setClarifyTurns] = useState<ClarifyTurn[]>([])
+  const [clarifyComplete, setClarifyComplete] = useState(false)
   const [clarifyLoading, setClarifyLoading] = useState(false)
   const [generateLoading, setGenerateLoading] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
@@ -837,10 +846,37 @@ export default function HomePage() {
     setBriefNotes('')
     setClarifyQuestions([])
     setBriefAnswers({})
+    setClarifyTurns([])
+    setClarifyComplete(false)
     setGenerateStage('intent')
     setSelectedNodeId(
       findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
     )
+  }
+
+  function collectCurrentAnswers(): BriefAnswer[] {
+    const collected: BriefAnswer[] = []
+    for (const question of clarifyQuestions) {
+      const raw = briefAnswers[question.id]
+      if (raw === undefined) continue
+      if (Array.isArray(raw)) {
+        if (raw.length === 0) continue
+        collected.push({
+          questionId: question.id,
+          questionLabel: question.label,
+          answer: raw,
+        })
+      } else {
+        const trimmed = raw.trim()
+        if (trimmed.length === 0) continue
+        collected.push({
+          questionId: question.id,
+          questionLabel: question.label,
+          answer: trimmed,
+        })
+      }
+    }
+    return collected
   }
 
   function buildSubmittedBrief(): SubmittedDesignBrief | null {
@@ -851,27 +887,20 @@ export default function HomePage() {
     if (generateStage === 'intent') {
       return { intent }
     }
-    const answers: BriefAnswer[] = []
-    for (const question of clarifyQuestions) {
-      const raw = briefAnswers[question.id]
-      if (raw === undefined) continue
-      if (Array.isArray(raw)) {
-        if (raw.length === 0) continue
-        answers.push({
-          questionId: question.id,
-          questionLabel: question.label,
-          answer: raw,
-        })
-      } else {
-        const trimmed = raw.trim()
-        if (trimmed.length === 0) continue
-        answers.push({
-          questionId: question.id,
-          questionLabel: question.label,
-          answer: trimmed,
+    const answerMap = new Map<string, BriefAnswer>()
+    for (const turn of clarifyTurns) {
+      for (const a of turn.answers) {
+        answerMap.set(a.questionId, {
+          questionId: a.questionId,
+          questionLabel: a.questionLabel,
+          answer: Array.isArray(a.answer) ? [...a.answer] : a.answer,
         })
       }
     }
+    for (const a of collectCurrentAnswers()) {
+      answerMap.set(a.questionId, a)
+    }
+    const answers = Array.from(answerMap.values()).slice(0, 6)
     const trimmedNotes = briefNotes.trim()
     const notes = trimmedNotes.length > 0 ? trimmedNotes : undefined
     return {
@@ -911,6 +940,8 @@ export default function HomePage() {
       }
       setClarifyQuestions(payload.questions)
       setBriefAnswers({})
+      setClarifyTurns([])
+      setClarifyComplete(false)
       setGenerateStage('questions')
     } catch (error) {
       setGenerateError(
@@ -924,6 +955,66 @@ export default function HomePage() {
   function handleEditIntent() {
     if (clarifyLoading || generateLoading) return
     setGenerateStage('intent')
+    setClarifyTurns([])
+    setClarifyComplete(false)
+  }
+
+  async function handleAskFollowUp() {
+    const intent = briefIntent.trim()
+    if (intent.length === 0 || clarifyLoading || generateLoading) return
+    if (clarifyTurns.length >= 2) return
+    const currentAnswers = collectCurrentAnswers()
+    if (currentAnswers.length === 0) return
+
+    const completedTurn: ClarifyTurn = {
+      questions: clarifyQuestions,
+      answers: currentAnswers,
+    }
+    const nextTurns = [...clarifyTurns, completedTurn]
+
+    setClarifyLoading(true)
+    setGenerateError(null)
+    try {
+      const apiBase =
+        process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
+      const response = await fetch(`${apiBase}/clarify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intent, history: nextTurns }),
+      })
+      const payload = (await response.json()) as
+        | { questions: ClarifyQuestionDto[]; model: string; latencyMs: number }
+        | { error: string; message: string }
+      if (!response.ok) {
+        const message =
+          'message' in payload
+            ? payload.message
+            : '추가 질문 생성에 실패했습니다.'
+        setGenerateError(message)
+        return
+      }
+      if (!('questions' in payload)) {
+        setGenerateError('질문 응답이 비어 있습니다.')
+        return
+      }
+
+      setClarifyTurns(nextTurns)
+      if (payload.questions.length === 0) {
+        setClarifyQuestions([])
+        setBriefAnswers({})
+        setClarifyComplete(true)
+      } else {
+        setClarifyQuestions(payload.questions)
+        setBriefAnswers({})
+        setClarifyComplete(false)
+      }
+    } catch (error) {
+      setGenerateError(
+        error instanceof Error ? error.message : '추가 질문 생성에 실패했습니다.',
+      )
+    } finally {
+      setClarifyLoading(false)
+    }
   }
 
   function snapshotActiveGeneration(currentTree: Tree) {
@@ -1033,6 +1124,7 @@ export default function HomePage() {
         immutable: false,
         brief: submitted,
         questions: clarifyQuestions,
+        clarifyTurns: clarifyTurns,
         createdAt: now,
         latencyMs: success.latencyMs,
         model: success.model,
@@ -1084,10 +1176,13 @@ export default function HomePage() {
       setBriefNotes('')
       setClarifyQuestions([])
       setBriefAnswers({})
+      setClarifyTurns([])
+      setClarifyComplete(false)
       setGenerateStage('intent')
       setGenerateError(null)
     } else {
       const restoredQuestions = target.questions ?? []
+      const restoredTurns = target.clarifyTurns ?? []
       setBriefIntent(target.brief.intent)
       setBriefNotes(target.brief.notes ?? '')
       setClarifyQuestions(restoredQuestions)
@@ -1098,6 +1193,17 @@ export default function HomePage() {
           : a.answer
       }
       setBriefAnswers(restoredAnswers)
+      setClarifyTurns(
+        restoredTurns.map((turn) => ({
+          questions: turn.questions,
+          answers: turn.answers.map((a) => ({
+            questionId: a.questionId,
+            questionLabel: a.questionLabel,
+            answer: Array.isArray(a.answer) ? [...a.answer] : a.answer,
+          })),
+        })),
+      )
+      setClarifyComplete(false)
       setGenerateStage(restoredQuestions.length === 0 ? 'intent' : 'questions')
     }
 
@@ -1880,6 +1986,36 @@ export default function HomePage() {
                     <p className="text-xs text-[#18211d]">{briefIntent}</p>
                   </div>
 
+                  {clarifyTurns.length > 0 ? (
+                    <div className="space-y-1">
+                      {clarifyTurns.map((turn, turnIndex) => (
+                        <details
+                          key={turnIndex}
+                          className="rounded-md border border-[#e0e5de] bg-white"
+                        >
+                          <summary className="cursor-pointer px-2.5 py-1.5 text-[11px] text-[#4f5e56]">
+                            이전 답변 {turnIndex + 1} ({turn.answers.length}개)
+                          </summary>
+                          <div className="space-y-0.5 border-t border-[#e0e5de] px-2.5 py-1.5">
+                            {turn.answers.map((a) => (
+                              <div key={a.questionId} className="text-[11px]">
+                                <span className="font-semibold text-[#4f5e56]">
+                                  {a.questionLabel}
+                                </span>
+                                <span className="text-[#647067]">
+                                  {': '}
+                                  {Array.isArray(a.answer)
+                                    ? a.answer.join(', ')
+                                    : a.answer}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  ) : null}
+
                   {clarifyQuestions.map((question) => {
                     const answer = briefAnswers[question.id]
                     return (
@@ -1973,6 +2109,27 @@ export default function HomePage() {
                       </div>
                     )
                   })}
+
+                  {clarifyComplete ? (
+                    <p className="rounded-md border border-[#dde3df] bg-[#eef8f6] px-2 py-1.5 text-[11px] text-[#1b7f72]">
+                      답변이 충분합니다. 이제 디자인을 생성할 수 있습니다.
+                    </p>
+                  ) : clarifyTurns.length < 2 && clarifyQuestions.length > 0 ? (
+                    <button
+                      type="button"
+                      className="w-full rounded-md border border-[#cbd6cf] bg-white px-3 py-2 text-[11px] font-semibold text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-50"
+                      disabled={
+                        clarifyLoading ||
+                        generateLoading ||
+                        collectCurrentAnswers().length === 0
+                      }
+                      onClick={() => void handleAskFollowUp()}
+                    >
+                      {clarifyLoading
+                        ? '추가 질문 생성 중…'
+                        : '더 구체적으로 답변하기'}
+                    </button>
+                  ) : null}
 
                   <label className="block">
                     <span className="text-[11px] font-semibold text-[#4f5e56]">

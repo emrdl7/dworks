@@ -250,4 +250,151 @@ describe('handleClarify', () => {
     assert.equal(result.body.error, 'cli-unavailable')
     assert.equal(calls.length, 0)
   })
+
+  it('first-turn empty questions array fails with schema-failure', async () => {
+    const { spawn } = createClosingSpawn(JSON.stringify({ questions: [] }))
+
+    const result = await handleClarify({ intent: '카페 랜딩' }, { spawnImpl: spawn })
+
+    assert.equal(result.status, 422)
+    assert.equal(result.body.error, 'schema-failure')
+  })
+
+  it('follow-up turn with empty questions returns 200 (clarifyComplete)', async () => {
+    const { spawn } = createClosingSpawn(JSON.stringify({ questions: [] }))
+
+    const history = [
+      {
+        questions: [
+          {
+            id: 'q1',
+            label: '핵심 행동은?',
+            type: 'single' as const,
+            options: ['예약', '문의'],
+          },
+        ],
+        answers: [
+          { questionId: 'q1', questionLabel: '핵심 행동은?', answer: '예약' },
+        ],
+      },
+    ]
+
+    const result = await handleClarify(
+      { intent: '카페 랜딩', history },
+      { spawnImpl: spawn },
+    )
+
+    assert.equal(result.status, 200)
+    if (result.status === 200) {
+      assert.deepEqual(result.body.questions, [])
+    }
+  })
+
+  it('follow-up turn with too many (>3) questions fails with schema-failure', async () => {
+    const { spawn } = createClosingSpawn(
+      JSON.stringify({
+        questions: [
+          { id: 'q4', label: 'a?', type: 'single', options: ['x', 'y'] },
+          { id: 'q5', label: 'b?', type: 'single', options: ['x', 'y'] },
+          { id: 'q6', label: 'c?', type: 'single', options: ['x', 'y'] },
+          { id: 'q7', label: 'd?', type: 'single', options: ['x', 'y'] },
+        ],
+      }),
+    )
+
+    const history = [
+      {
+        questions: [
+          {
+            id: 'q1',
+            label: '핵심 행동은?',
+            type: 'single' as const,
+            options: ['예약', '문의'],
+          },
+        ],
+        answers: [
+          { questionId: 'q1', questionLabel: '핵심 행동은?', answer: '예약' },
+        ],
+      },
+    ]
+
+    const result = await handleClarify(
+      { intent: '카페 랜딩', history },
+      { spawnImpl: spawn },
+    )
+
+    assert.equal(result.status, 422)
+    assert.equal(result.body.error, 'schema-failure')
+  })
+
+  it('follow-up serializes history into user prompt', async () => {
+    const { calls, spawn } = createClosingSpawn(
+      JSON.stringify({
+        questions: [
+          {
+            id: 'q4',
+            label: '브랜드 톤은?',
+            type: 'single',
+            options: ['차분', '활기'],
+          },
+        ],
+      }),
+    )
+
+    const history = [
+      {
+        questions: [
+          {
+            id: 'q1',
+            label: '핵심 행동은?',
+            type: 'single' as const,
+            options: ['예약', '문의'],
+          },
+        ],
+        answers: [
+          { questionId: 'q1', questionLabel: '핵심 행동은?', answer: '예약' },
+        ],
+      },
+    ]
+
+    const result = await handleClarify(
+      { intent: '카페 랜딩', history },
+      { spawnImpl: spawn },
+    )
+
+    assert.equal(result.status, 200)
+    assert.equal(calls.length, 1)
+    const userPrompt = calls[0]?.args[1] ?? ''
+    assert.ok(userPrompt.includes('카페 랜딩'))
+    assert.ok(userPrompt.includes('핵심 행동은?'))
+    assert.ok(userPrompt.includes('예약'))
+    assert.ok(userPrompt.includes('이전 turn 답변'))
+  })
+
+  it('rejects history exceeding max 2 turns', async () => {
+    const { calls, spawn } = createClosingSpawn(JSON.stringify(validQuestions))
+
+    const turn = {
+      questions: [
+        {
+          id: 'q1',
+          label: '핵심 행동은?',
+          type: 'single' as const,
+          options: ['예약', '문의'],
+        },
+      ],
+      answers: [
+        { questionId: 'q1', questionLabel: '핵심 행동은?', answer: '예약' },
+      ],
+    }
+
+    const result = await handleClarify(
+      { intent: '카페 랜딩', history: [turn, turn, turn] },
+      { spawnImpl: spawn },
+    )
+
+    assert.equal(result.status, 400)
+    assert.equal(result.body.error, 'invalid-request')
+    assert.equal(calls.length, 0)
+  })
 })

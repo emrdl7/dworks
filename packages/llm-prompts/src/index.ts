@@ -485,4 +485,12 @@ ${CLARIFY_EXAMPLE_BLOCK}
 - text에 \`options\` 포함 무효.
 - 중복 \`id\` 금지.
 
+## Multi-turn (history가 user prompt에 들어왔을 때)
+
+- 이전 turn 답변을 분석한다.
+- 답변이 충분히 구체적이면 \`{ "questions": [] }\`를 반환한다.
+- 부족한 영역만 1~3개의 추가 질문으로 보강한다.
+- 이전 turn에서 사용한 question \`id\`는 재사용 금지 — \`q4\`, \`q5\`처럼 새 id를 만든다.
+- 같은 질문 반복 금지 — 다른 axis(예: brand voice / target audience / 핵심 행동 강조도)를 묻는다.
+
 이제 사용자 의도를 받아 위 규칙에 따라 질문 JSON 하나만 반환한다.`
