@@ -58,6 +58,22 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
         id: 'landing.hero',
         editKind: 'structure',
         type: 'hero',
+        color: {
+          backgroundGradient: {
+            from: '#fff5e8',
+            to: '#f0c891',
+            direction: 'to-bottom-right',
+          },
+        },
+        spacing: {
+          paddingTop: 96,
+          paddingBottom: 96,
+          paddingLeft: 32,
+          paddingRight: 32,
+          gap: 24,
+        },
+        shape: { radius: 24 },
+        layout: { align: 'center' },
         children: [
           {
             id: 'hero.title',
@@ -80,6 +96,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             src: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085',
             alt: '원목 테이블 위 따뜻한 라떼 한 잔',
             aspectRatio: 'wide',
+            shape: { radius: 16 },
           },
           {
             id: 'hero.cta',
@@ -87,6 +104,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             type: 'button',
             label: '메뉴 보기',
             variant: 'primary',
+            shape: { radius: 32, shadow: 'sm' },
           },
         ],
       },
@@ -100,6 +118,14 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
         id: 'pricing.section',
         editKind: 'structure',
         type: 'section',
+        spacing: {
+          paddingTop: 80,
+          paddingBottom: 80,
+          paddingLeft: 24,
+          paddingRight: 24,
+          gap: 48,
+        },
+        layout: { direction: 'column', align: 'center' },
         children: [
           {
             id: 'pricing.title',
@@ -119,11 +145,25 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             id: 'pricing.plans',
             editKind: 'structure',
             type: 'section',
+            spacing: { gap: 24 },
+            layout: { direction: 'row', align: 'stretch' },
             children: [
               {
                 id: 'pricing.plan.starter',
                 editKind: 'structure',
                 type: 'card',
+                spacing: {
+                  paddingTop: 24,
+                  paddingBottom: 24,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  gap: 16,
+                },
+                shape: {
+                  radius: 16,
+                  borderWidth: 1,
+                  borderColor: '#dde3ec',
+                },
                 children: [
                   {
                     id: 'pricing.plan.starter.name',
@@ -152,6 +192,18 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                 id: 'pricing.plan.pro',
                 editKind: 'structure',
                 type: 'card',
+                color: {
+                  backgroundColor: '#0f4c75',
+                  textColor: '#ffffff',
+                },
+                spacing: {
+                  paddingTop: 32,
+                  paddingBottom: 32,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  gap: 16,
+                },
+                shape: { radius: 16, shadow: 'lg' },
                 children: [
                   {
                     id: 'pricing.plan.pro.name',
@@ -180,6 +232,18 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                 id: 'pricing.plan.enterprise',
                 editKind: 'structure',
                 type: 'card',
+                spacing: {
+                  paddingTop: 24,
+                  paddingBottom: 24,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  gap: 16,
+                },
+                shape: {
+                  radius: 16,
+                  borderWidth: 1,
+                  borderColor: '#dde3ec',
+                },
                 children: [
                   {
                     id: 'pricing.plan.enterprise.name',
@@ -218,6 +282,14 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
         id: 'article.section',
         editKind: 'structure',
         type: 'section',
+        spacing: {
+          paddingTop: 64,
+          paddingBottom: 64,
+          paddingLeft: 24,
+          paddingRight: 24,
+          gap: 24,
+        },
+        layout: { direction: 'column' },
         children: [
           {
             id: 'article.heading',
@@ -240,6 +312,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             src: 'https://images.unsplash.com/photo-1505765050516-f72dcac9c60e',
             alt: '제주 오름 정상에서 바라본 가을 하늘과 억새 풍경',
             aspectRatio: 'wide',
+            shape: { radius: 12 },
           },
           {
             id: 'article.intro',
@@ -248,6 +321,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             content:
               '바람이 차가워지면 제주의 오름은 다른 얼굴로 바뀐다. 억새가 은빛으로 출렁이고, 발 아래 도시는 안개에 잠긴다.',
             emphasis: 'body',
+            typography: { lineHeight: 1.7 },
           },
           {
             id: 'article.section1.title',
@@ -263,6 +337,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             content:
               '동이 트기 전에 다랑쉬오름 입구에 도착했다. 분화구를 한 바퀴 도는 동안 능선이 점점 황금빛으로 물들었다.',
             emphasis: 'body',
+            typography: { lineHeight: 1.7 },
           },
         ],
       },
@@ -347,7 +422,7 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - image: \`aspectRatio\` ("square" | "landscape" | "portrait" | "wide")
 - 공통: \`hidden\`, \`disabled\` (button만), \`opacity\` (0~1)
 
-스타일 prop (color/spacing/shape/layout/typography/transition/transform)은 사용자가 명시적으로 요청하지 않았다면 **생략** — 디자이너가 m2에서 자유 편집한다.
+스타일 prop은 도메인 시그니처가 명확하면 \`color\` / \`spacing\` / \`shape\` / \`layout\`과 제한적 \`typography\`(주로 본문 \`lineHeight\`)를 **최소 범위**로 사용한다. 다만 과한 장식보다 구조와 콘텐츠를 우선하고, 디자이너가 m2에서 자유 편집할 수 있도록 노드 단위 스타일을 과밀하게 넣지 않는다. \`transition\` / \`transform\` / \`cursor\` / \`responsive\` / 상태 색(hover/active/focus/disabled)은 명시 요청 없으면 생략.
 
 ## 디자인 브리프 처리
 

@@ -35,6 +35,41 @@ const clarifyExampleSchema = z.object({
   questions: z.array(clarifyQuestionSchema).min(3).max(6),
 })
 
+const STYLE_CATEGORIES = [
+  'color',
+  'spacing',
+  'shape',
+  'layout',
+  'typography',
+] as const
+type StyleCategory = (typeof STYLE_CATEGORIES)[number]
+
+function collectStyleCategories(
+  node: unknown,
+  into: Set<StyleCategory>,
+): void {
+  if (node === null || typeof node !== 'object') return
+  const obj = node as Record<string, unknown>
+  for (const key of STYLE_CATEGORIES) {
+    if (
+      Object.prototype.hasOwnProperty.call(obj, key) &&
+      obj[key] !== undefined
+    ) {
+      into.add(key)
+    }
+  }
+  const children = obj.children
+  if (Array.isArray(children)) {
+    for (const c of children) collectStyleCategories(c, into)
+  }
+}
+
+function categoriesInTree(tree: unknown): Set<StyleCategory> {
+  const set = new Set<StyleCategory>()
+  collectStyleCategories((tree as { root?: unknown }).root, set)
+  return set
+}
+
 describe('llm-prompts examples', () => {
   it('exposes 3 generate examples', () => {
     assert.equal(GENERATE_TREE_EXAMPLES.length, 3)
@@ -78,6 +113,46 @@ describe('llm-prompts examples', () => {
     )
     for (const q of CLARIFY_QUESTIONS_EXAMPLE.questions) {
       assert.ok(CLARIFY_QUESTIONS_SYSTEM_PROMPT.includes(q.label))
+    }
+  })
+
+  it('every generate example has at least 2 style prop categories (DFS)', () => {
+    for (const example of GENERATE_TREE_EXAMPLES) {
+      const cats = categoriesInTree(example.tree)
+      assert.ok(
+        cats.size >= 2,
+        `example "${example.intent}" categories=${[...cats].join(',') || '(none)'}`,
+      )
+    }
+  })
+
+  it('three generate examples together cover color, spacing, shape', () => {
+    const union = new Set<StyleCategory>()
+    for (const example of GENERATE_TREE_EXAMPLES) {
+      for (const c of categoriesInTree(example.tree)) union.add(c)
+    }
+    for (const required of ['color', 'spacing', 'shape'] as const) {
+      assert.ok(union.has(required), `missing required category: ${required}`)
+    }
+  })
+
+  it('serialized examples do not contain forbidden field names', () => {
+    const serialized = JSON.stringify(
+      GENERATE_TREE_EXAMPLES.map((e) => e.tree),
+    )
+    const forbidden = [
+      '"gradient":',
+      '"borderRadius":',
+      '"shadow":{"preset"',
+      '"color":{"color":',
+      '"padding":',
+    ]
+    for (const f of forbidden) {
+      assert.equal(
+        serialized.includes(f),
+        false,
+        `forbidden field substring present: ${f}`,
+      )
     }
   })
 })
