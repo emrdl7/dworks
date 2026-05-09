@@ -3220,7 +3220,34 @@ export default function HomePage() {
                 : `"${layerQuery}"에 일치하는 레이어가 없습니다.`}
             </p>
           ) : null}
-          <nav className="flex-1 overflow-auto p-2">
+          <nav
+            className="flex-1 overflow-auto p-2"
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
+                return
+              }
+              const target = event.target
+              if (!(target instanceof HTMLElement)) return
+              const main = target.closest<HTMLElement>('[data-layer-row-main]')
+              if (!main) return
+              event.preventDefault()
+              const buttons = Array.from(
+                event.currentTarget.querySelectorAll<HTMLElement>(
+                  '[data-layer-row-main]',
+                ),
+              )
+              const idx = buttons.indexOf(main)
+              if (idx < 0) return
+              const nextIdx =
+                event.key === 'ArrowDown' ? idx + 1 : idx - 1
+              if (nextIdx < 0 || nextIdx >= buttons.length) return
+              const nextEl = buttons[nextIdx]
+              if (!nextEl) return
+              nextEl.focus()
+              const nextNodeId = nextEl.dataset.layerNodeId
+              if (nextNodeId) setSelectedNodeId(nextNodeId)
+            }}
+          >
             {filteredLayerItems.map(({ node, depth }) => {
               const structureInfo = getStructureInfo(tree, node.id)
               const isRoot = structureInfo.isRoot
@@ -3312,6 +3339,8 @@ export default function HomePage() {
                     )}
                     <button
                       type="button"
+                      data-layer-row-main
+                      data-layer-node-id={node.id}
                       title={nodeTypeLabels[node.type]}
                       className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
                       onClick={() => setSelectedNodeId(node.id)}
