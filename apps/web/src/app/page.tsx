@@ -5374,11 +5374,6 @@ function NodeInspector({
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-        <StyleControls
-          colorPreset={colorPreset}
-          onColorPresetChange={onColorPresetChange}
-        />
-
         <NodeColorControls
           node={node}
           tree={tree}
