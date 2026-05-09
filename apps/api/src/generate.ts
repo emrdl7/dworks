@@ -1,17 +1,58 @@
-// POST /generate 핸들러 — m3-generate-mvp.
-// 사용자 prompt → Claude CLI → JSON → treeSchema 검증 → full Tree 반환.
+// POST /generate 핸들러 — m3-generate-brief.
+// 사용자 brief → Claude CLI → JSON → treeSchema 검증 → full Tree 반환.
 
 import { z } from 'zod'
 
-import { GENERATE_TREE_SYSTEM_PROMPT } from '@dworks/llm-prompts'
+import {
+  GENERATE_TREE_SYSTEM_PROMPT,
+  formatBriefAsUserPrompt,
+} from '@dworks/llm-prompts'
 import { treeSchema, type Tree } from '@dworks/tree'
 
 import { callClaudeCli, type SpawnLike } from './llm.js'
 
-export const generateRequestSchema = z.object({
+export const PAGE_TYPE_IDS = [
+  'landing',
+  'about',
+  'pricing',
+  'blog',
+  'docs',
+  'other',
+] as const
+export const pageTypeSchema = z.enum(PAGE_TYPE_IDS)
+export type PageType = z.infer<typeof pageTypeSchema>
+
+export const briefSchema = z.object({
+  intent: z.string().min(1).max(500),
+  pageType: pageTypeSchema.optional(),
+  tones: z.array(z.string().min(1).max(20)).max(3).optional(),
+  sections: z.array(z.string().min(1).max(20)).max(6).optional(),
+  notes: z.string().max(300).optional(),
+})
+export type GenerateBrief = z.infer<typeof briefSchema>
+
+const briefRequestSchema = z.object({ brief: briefSchema })
+const legacyPromptRequestSchema = z.object({
   prompt: z.string().min(1).max(500),
 })
-export type GenerateRequest = z.infer<typeof generateRequestSchema>
+
+/**
+ * Codex r2: { brief } primary, { prompt } deprecated → brief.intent로 매핑.
+ * 후속 정리 토픽에서 legacy 제거 결정.
+ */
+function resolveBrief(rawBody: unknown):
+  | { ok: true; brief: GenerateBrief }
+  | { ok: false } {
+  const briefParse = briefRequestSchema.safeParse(rawBody)
+  if (briefParse.success) {
+    return { ok: true, brief: briefParse.data.brief }
+  }
+  const legacy = legacyPromptRequestSchema.safeParse(rawBody)
+  if (legacy.success) {
+    return { ok: true, brief: { intent: legacy.data.prompt } }
+  }
+  return { ok: false }
+}
 
 export interface GenerateSuccess {
   status: 200
@@ -47,34 +88,34 @@ export interface GenerateDeps {
 }
 
 /**
- * POST /generate 처리.
- * Hono / Express / 테스트 모두에서 호출 가능하게 framework-agnostic.
+ * POST /generate 처리. Framework-agnostic.
  *
- * 에러 코드 매핑:
- * - 400: prompt 검증 실패 (zod)
+ * 에러 코드:
+ * - 400: brief / legacy prompt 검증 실패
  * - 502: Claude CLI 실행 실패 / 종료 코드 ≠ 0 / timeout / empty stdout
  * - 422: JSON parse 실패 또는 treeSchema 검증 실패
  *
- * raw CLI stdout/stderr는 응답에 노출하지 않는다 (Codex round 2 안전 권장).
+ * raw CLI stdout/stderr는 응답에 노출하지 않는다.
  */
 export async function handleGenerate(
   rawBody: unknown,
   deps: GenerateDeps = {},
 ): Promise<GenerateResponse> {
-  const parsed = generateRequestSchema.safeParse(rawBody)
-  if (!parsed.success) {
+  const resolved = resolveBrief(rawBody)
+  if (!resolved.ok) {
     return {
       status: 400,
       body: {
         error: 'invalid-request',
-        message: 'prompt는 1~500자 문자열이어야 합니다.',
+        message:
+          '브리프(intent 1~500자)가 필요합니다. 선택 필드는 pageType / tones (max 3) / sections (max 6) / notes (max 300).',
       },
     }
   }
 
   const cliResult = await callClaudeCli({
     systemPrompt: GENERATE_TREE_SYSTEM_PROMPT,
-    userPrompt: parsed.data.prompt,
+    userPrompt: formatBriefAsUserPrompt(resolved.brief),
     spawnImpl: deps.spawnImpl,
     command: deps.command,
     timeoutMs: deps.timeoutMs,

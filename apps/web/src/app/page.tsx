@@ -173,6 +173,85 @@ interface LayerReorderPlan {
   sourceIndex: number
 }
 
+const DESIGN_BRIEF_PAGE_TYPES = [
+  'landing',
+  'about',
+  'pricing',
+  'blog',
+  'docs',
+  'other',
+] as const
+type DesignBriefPageType = (typeof DESIGN_BRIEF_PAGE_TYPES)[number]
+
+const designBriefPageTypeLabels: Record<DesignBriefPageType, string> = {
+  landing: '랜딩',
+  about: '소개',
+  pricing: '요금제',
+  blog: '블로그',
+  docs: '문서',
+  other: '기타',
+}
+
+const DESIGN_BRIEF_TONE_PRESETS = [
+  '따뜻',
+  '전문',
+  '미니멀',
+  '캐주얼',
+  '럭셔리',
+  '활기',
+] as const
+
+const DESIGN_BRIEF_SECTION_PRESETS = [
+  'hero',
+  '특장점',
+  '사용법',
+  'CTA',
+  '후기',
+  'FAQ',
+  '가격표',
+  '푸터',
+] as const
+
+interface SubmittedDesignBrief {
+  intent: string
+  pageType?: DesignBriefPageType
+  tones?: string[]
+  sections?: string[]
+  notes?: string
+}
+
+interface GenerationEntry {
+  id: string
+  label: string
+  tree: Tree
+  immutable: boolean
+  brief: SubmittedDesignBrief | null
+  createdAt: number
+  latencyMs: number | null
+  model: 'claude' | 'codex' | 'gemini' | null
+}
+
+const MAX_GENERATIONS = 6
+
+let generationCounter = 0
+function createGenerationEntryId(): string {
+  generationCounter += 1
+  return `gen-${Date.now().toString(36)}-${generationCounter}`
+}
+
+function createOriginalEntry(tree: Tree): GenerationEntry {
+  return {
+    id: createGenerationEntryId(),
+    label: '원본',
+    tree,
+    immutable: true,
+    brief: null,
+    createdAt: Date.now(),
+    latencyMs: null,
+    model: null,
+  }
+}
+
 const nodeTypeLabels: Record<TreeNode['type'], string> = {
   text: '텍스트',
   button: '버튼',
@@ -604,6 +683,7 @@ const MAX_HISTORY = 100
 
 interface CommitTreeEditOptions {
   mergeKey?: string
+  skipGenerationSync?: boolean
 }
 
 interface HistoryMergeState {
@@ -639,9 +719,19 @@ export default function HomePage() {
   const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
     null,
   )
-  const [generatePrompt, setGeneratePrompt] = useState('')
+  const [briefIntent, setBriefIntent] = useState('')
+  const [briefPageType, setBriefPageType] = useState<DesignBriefPageType | ''>('')
+  const [briefTones, setBriefTones] = useState<string[]>([])
+  const [briefSections, setBriefSections] = useState<string[]>([])
+  const [briefNotes, setBriefNotes] = useState('')
   const [generateLoading, setGenerateLoading] = useState(false)
   const [generateError, setGenerateError] = useState<string | null>(null)
+  const [generations, setGenerations] = useState<GenerationEntry[]>(() => [
+    createOriginalEntry(defaultTreeFixture.tree),
+  ])
+  const [activeGenerationId, setActiveGenerationId] = useState<string>(
+    () => generations[0]?.id ?? 'original',
+  )
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
 
   const selectedNode = useMemo(
@@ -735,19 +825,51 @@ export default function HomePage() {
 
   function handleFixtureChange(fixtureId: string) {
     const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
+    const nextOriginal = createOriginalEntry(nextFixture.tree)
     setSelectedFixtureId(nextFixture.id)
     setTree(nextFixture.tree)
     setHistoryPast([])
     setHistoryFuture([])
     lastHistoryMergeRef.current = null
+    setGenerations([nextOriginal])
+    setActiveGenerationId(nextOriginal.id)
+    setGenerateError(null)
     setSelectedNodeId(
       findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
     )
   }
 
+  function buildSubmittedBrief(): SubmittedDesignBrief | null {
+    const intent = briefIntent.trim()
+    if (intent.length === 0) {
+      return null
+    }
+    const tones = briefTones.length > 0 ? [...briefTones] : undefined
+    const sections = briefSections.length > 0 ? [...briefSections] : undefined
+    const trimmedNotes = briefNotes.trim()
+    const notes = trimmedNotes.length > 0 ? trimmedNotes : undefined
+    return {
+      intent,
+      ...(briefPageType !== '' ? { pageType: briefPageType } : {}),
+      ...(tones !== undefined ? { tones } : {}),
+      ...(sections !== undefined ? { sections } : {}),
+      ...(notes !== undefined ? { notes } : {}),
+    }
+  }
+
+  function snapshotActiveGeneration(currentTree: Tree) {
+    setGenerations((entries) =>
+      entries.map((entry) =>
+        entry.id === activeGenerationId && !entry.immutable
+          ? { ...entry, tree: currentTree }
+          : entry,
+      ),
+    )
+  }
+
   async function handleGenerateTree() {
-    const prompt = generatePrompt.trim()
-    if (prompt.length === 0 || generateLoading) {
+    const submitted = buildSubmittedBrief()
+    if (submitted === null || generateLoading) {
       return
     }
     setGenerateLoading(true)
@@ -758,10 +880,10 @@ export default function HomePage() {
       const response = await fetch(`${apiBase}/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ brief: submitted }),
       })
       const payload = (await response.json()) as
-        | { tree: Tree; model: string; latencyMs: number }
+        | { tree: Tree; model: GenerationEntry['model']; latencyMs: number }
         | { error: string; message: string }
       if (!response.ok) {
         const message =
@@ -776,8 +898,25 @@ export default function HomePage() {
       const nextTree = payload.tree
       const nextSelectedId =
         findFirstEditableNodeId(nextTree.root) ?? nextTree.root.id
+      snapshotActiveGeneration(tree)
+      const newEntry: GenerationEntry = {
+        id: createGenerationEntryId(),
+        label: '',
+        tree: nextTree,
+        immutable: false,
+        brief: submitted,
+        createdAt: Date.now(),
+        latencyMs: payload.latencyMs ?? null,
+        model: payload.model ?? 'claude',
+      }
+      setGenerations((entries) => {
+        const next = [...entries, newEntry].slice(-MAX_GENERATIONS)
+        return next.map((entry, index) =>
+          entry.immutable ? entry : { ...entry, label: `생성 ${index}` },
+        )
+      })
+      setActiveGenerationId(newEntry.id)
       commitTreeEdit(nextTree, nextSelectedId)
-      setGeneratePrompt('')
     } catch (error) {
       setGenerateError(
         error instanceof Error ? error.message : 'AI 생성에 실패했습니다.',
@@ -785,6 +924,23 @@ export default function HomePage() {
     } finally {
       setGenerateLoading(false)
     }
+  }
+
+  function handleSelectGeneration(targetId: string) {
+    if (targetId === activeGenerationId || generateLoading) return
+    const target = generations.find((entry) => entry.id === targetId)
+    if (target === undefined) return
+    setGenerations((entries) =>
+      entries.map((entry) =>
+        entry.id === activeGenerationId && !entry.immutable
+          ? { ...entry, tree }
+          : entry,
+      ),
+    )
+    setActiveGenerationId(target.id)
+    const nextSelectedId =
+      findFirstEditableNodeId(target.tree.root) ?? target.tree.root.id
+    commitTreeEdit(target.tree, nextSelectedId, { skipGenerationSync: true })
   }
 
   function commitTreeEdit(
@@ -804,6 +960,15 @@ export default function HomePage() {
     )
     setHistoryFuture([])
     setTree(nextTree)
+    if (options.skipGenerationSync !== true) {
+      setGenerations((entries) =>
+        entries.map((entry) =>
+          entry.id === activeGenerationId && !entry.immutable
+            ? { ...entry, tree: nextTree }
+            : entry,
+        ),
+      )
+    }
     setSelectedNodeId((currentNodeId) =>
       getSafeSelectedNodeId(nextTree, nextSelectedNodeId ?? currentNodeId),
     )
@@ -1367,47 +1532,6 @@ export default function HomePage() {
               ))}
             </select>
           </label>
-          <span className="h-7 w-px bg-[#d7ddd2]" aria-hidden="true" />
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#1b7f72]">
-              AI 생성
-            </span>
-            <input
-              type="text"
-              maxLength={500}
-              placeholder="페이지 의도를 한 줄로 입력하세요"
-              className="h-9 w-72 rounded-md border border-[#c9d4cd] bg-white px-3 text-sm text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
-              value={generatePrompt}
-              disabled={generateLoading}
-              onChange={(event) => {
-                setGeneratePrompt(event.target.value)
-                if (generateError !== null) setGenerateError(null)
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  void handleGenerateTree()
-                }
-              }}
-            />
-            <button
-              type="button"
-              className="h-9 rounded-md bg-[#1b7f72] px-3 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
-              disabled={generateLoading || generatePrompt.trim().length === 0}
-              onClick={() => void handleGenerateTree()}
-            >
-              {generateLoading ? '생성 중…' : '새 디자인 생성'}
-            </button>
-            {generateError !== null ? (
-              <span
-                role="status"
-                className="max-w-48 truncate text-xs text-[#9b3030]"
-                title={generateError}
-              >
-                {generateError}
-              </span>
-            ) : null}
-          </div>
         </div>
         <div className="flex shrink-0 items-center gap-4">
           <ViewportSwitcher
@@ -1459,11 +1583,197 @@ export default function HomePage() {
       </header>
 
       <div className="grid h-[calc(100vh-56px)] min-h-0 grid-cols-[260px_minmax(0,1fr)_360px]">
-        <aside className="min-h-0 border-r border-[#d7ddd2] bg-[#fbfcfa]">
+        <aside className="flex min-h-0 flex-col border-r border-[#d7ddd2] bg-[#fbfcfa]">
+          <details
+            open
+            className="border-b border-[#e0e5de] [&_summary]:cursor-pointer"
+          >
+            <summary className="flex items-center justify-between px-4 py-3">
+              <h2 className="text-sm font-semibold text-[#1b7f72]">AI 디자인</h2>
+              <span className="text-[10px] text-[#647067]">
+                {generations.length}/{MAX_GENERATIONS}
+              </span>
+            </summary>
+            <div className="space-y-3 px-4 pb-4">
+              <div className="flex flex-wrap gap-1">
+                {generations.map((entry) => {
+                  const isActive = entry.id === activeGenerationId
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      title={entry.brief?.intent ?? '원본 fixture'}
+                      aria-pressed={isActive}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+                        isActive
+                          ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
+                          : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                      }`}
+                      onClick={() => handleSelectGeneration(entry.id)}
+                    >
+                      {entry.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <label className="block">
+                <span className="text-[11px] font-semibold text-[#4f5e56]">
+                  의도 *
+                </span>
+                <textarea
+                  rows={3}
+                  maxLength={500}
+                  placeholder="이 페이지로 무엇을 보여주고 싶은가요? (필수)"
+                  className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                  value={briefIntent}
+                  disabled={generateLoading}
+                  onChange={(event) => {
+                    setBriefIntent(event.target.value)
+                    if (generateError !== null) setGenerateError(null)
+                  }}
+                />
+              </label>
+
+              <div>
+                <span className="text-[11px] font-semibold text-[#4f5e56]">
+                  페이지 타입
+                </span>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {DESIGN_BRIEF_PAGE_TYPES.map((pt) => (
+                    <button
+                      key={pt}
+                      type="button"
+                      aria-pressed={briefPageType === pt}
+                      className={`rounded-md border px-2 py-1 text-[11px] transition ${
+                        briefPageType === pt
+                          ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+                          : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                      }`}
+                      disabled={generateLoading}
+                      onClick={() =>
+                        setBriefPageType((current) =>
+                          current === pt ? '' : pt,
+                        )
+                      }
+                    >
+                      {designBriefPageTypeLabels[pt]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-semibold text-[#4f5e56]">
+                  톤 (최대 3)
+                </span>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {DESIGN_BRIEF_TONE_PRESETS.map((tone) => {
+                    const isOn = briefTones.includes(tone)
+                    const isLimited = !isOn && briefTones.length >= 3
+                    return (
+                      <button
+                        key={tone}
+                        type="button"
+                        aria-pressed={isOn}
+                        disabled={generateLoading || isLimited}
+                        className={`rounded-md border px-2 py-1 text-[11px] transition ${
+                          isOn
+                            ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+                            : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-40'
+                        }`}
+                        onClick={() =>
+                          setBriefTones((current) =>
+                            current.includes(tone)
+                              ? current.filter((t) => t !== tone)
+                              : [...current, tone],
+                          )
+                        }
+                      >
+                        {tone}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-semibold text-[#4f5e56]">
+                  필수 섹션 (최대 6, 순서대로 배치)
+                </span>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {DESIGN_BRIEF_SECTION_PRESETS.map((section) => {
+                    const order = briefSections.indexOf(section)
+                    const isOn = order >= 0
+                    const isLimited = !isOn && briefSections.length >= 6
+                    return (
+                      <button
+                        key={section}
+                        type="button"
+                        aria-pressed={isOn}
+                        disabled={generateLoading || isLimited}
+                        className={`rounded-md border px-2 py-1 text-[11px] transition ${
+                          isOn
+                            ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+                            : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72] disabled:opacity-40'
+                        }`}
+                        onClick={() =>
+                          setBriefSections((current) =>
+                            current.includes(section)
+                              ? current.filter((s) => s !== section)
+                              : [...current, section],
+                          )
+                        }
+                      >
+                        {isOn ? `${order + 1}. ${section}` : section}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="text-[11px] font-semibold text-[#4f5e56]">
+                  브랜드 / 참조 메모
+                </span>
+                <textarea
+                  rows={2}
+                  maxLength={300}
+                  placeholder="브랜드 voice, 참조 사이트, 키워드 등"
+                  className="mt-1 w-full resize-none rounded-md border border-[#cbd6cf] bg-white px-2 py-1.5 text-xs text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+                  value={briefNotes}
+                  disabled={generateLoading}
+                  onChange={(event) => setBriefNotes(event.target.value)}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="w-full rounded-md bg-[#1b7f72] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
+                disabled={
+                  generateLoading || briefIntent.trim().length === 0
+                }
+                onClick={() => void handleGenerateTree()}
+              >
+                {generateLoading ? '생성 중…' : '디자인 생성'}
+              </button>
+
+              {generateError !== null ? (
+                <p
+                  role="status"
+                  className="text-xs text-[#9b3030]"
+                  title={generateError}
+                >
+                  {generateError}
+                </p>
+              ) : null}
+            </div>
+          </details>
+
           <div className="border-b border-[#e0e5de] px-4 py-3">
             <h2 className="text-sm font-semibold">레이어</h2>
           </div>
-          <nav className="max-h-[calc(100vh-105px)] overflow-auto p-2">
+          <nav className="flex-1 overflow-auto p-2">
             {layerItems.map(({ node, depth }) => {
               const structureInfo = getStructureInfo(tree, node.id)
               const isRoot = structureInfo.isRoot

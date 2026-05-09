@@ -4,6 +4,55 @@
 export const PACKAGE_NAME = '@dworks/llm-prompts'
 
 /**
+ * m3-generate-brief 디자인 브리프 (web → API → LLM).
+ * 1차 5 필드 — Codex r2 합의.
+ */
+export interface DesignBrief {
+  intent: string
+  pageType?: string
+  tones?: string[]
+  sections?: string[]
+  notes?: string
+}
+
+const PAGE_TYPE_LABELS: Record<string, string> = {
+  landing: '랜딩 페이지',
+  about: '소개 페이지',
+  pricing: '요금제 페이지',
+  blog: '블로그 페이지',
+  docs: '문서 페이지',
+  other: '기타 페이지',
+}
+
+/**
+ * Brief 객체를 LLM user prompt 문자열로 직렬화.
+ * 빈 필드는 출력하지 않아 system prompt 컨텍스트를 절약.
+ */
+export function formatBriefAsUserPrompt(brief: DesignBrief): string {
+  const lines: string[] = ['## 디자인 브리프', '']
+  lines.push(`### 의도`)
+  lines.push(brief.intent.trim())
+  if (brief.pageType !== undefined && brief.pageType.length > 0) {
+    const label = PAGE_TYPE_LABELS[brief.pageType] ?? brief.pageType
+    lines.push('', `### 페이지 타입`, label)
+  }
+  if (brief.tones !== undefined && brief.tones.length > 0) {
+    lines.push('', `### 톤`, brief.tones.join(', '))
+  }
+  if (brief.sections !== undefined && brief.sections.length > 0) {
+    lines.push('', `### 필수 섹션 (제시 순서대로 children에 배치)`)
+    brief.sections.forEach((section, index) => {
+      lines.push(`${index + 1}. ${section}`)
+    })
+  }
+  if (brief.notes !== undefined && brief.notes.trim().length > 0) {
+    lines.push('', `### 브랜드 / 참조 메모`, brief.notes.trim())
+  }
+  lines.push('', '위 브리프에 맞춰 dworks Tree JSON 하나를 반환한다.')
+  return lines.join('\n')
+}
+
+/**
  * m3-generate-mvp용 system prompt.
  *
  * 목표: 사용자 prompt → 항상 유효한 dworks Tree JSON 1개 출력.
@@ -114,6 +163,18 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
     ]
   }
 }
+
+## 디자인 브리프 처리
+
+사용자 메시지는 다음 구조의 디자인 브리프 형태로 도착할 수 있다:
+
+- **의도**: 페이지의 목적과 메시지 (필수, 가장 중요).
+- **페이지 타입**: landing / about / pricing / blog / docs / other — root 노드 종류 선택에 반영 (landing → hero, blog/docs → section).
+- **톤**: 따뜻 / 전문 / 미니멀 등 — text content 어조와 emphasis / contentRole 결정에 hint.
+- **필수 섹션**: hero / 특장점 / CTA / 후기 등 — root의 children 구성에 강한 hint. **제시된 순서대로 배치**한다.
+- **브랜드 / 참조 메모**: brand voice / 참조 자료 — content 디테일 보강에 사용.
+
+브리프 필드가 없으면 의도만으로 합리적 기본 트리를 만든다.
 
 ## 절대 규칙
 

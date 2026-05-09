@@ -103,7 +103,7 @@ describe('handleGenerate', () => {
     assert.equal(calls.length, 1)
     assert.equal(calls[0]?.command, 'test-claude')
     assert.equal(calls[0]?.args[0], '-p')
-    assert.equal(calls[0]?.args[1], '감귤 카페 랜딩 페이지를 만들어줘')
+    assert.match(calls[0]?.args[1] ?? '', /감귤 카페 랜딩 페이지를 만들어줘/)
     assert.equal(calls[0]?.args[2], '--system-prompt')
     assert.equal(calls[0]?.options?.stdio?.[0], 'ignore')
   })
