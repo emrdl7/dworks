@@ -1471,6 +1471,19 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 
 피할 패턴(AI 슬롭, 즉시 거부): 텍스트 박스만 있는 hero, 모든 카드 동일 그라디언트, 이모지 장식, 좌측 강조 막대 카드, 모든 섹션 동일 padding, fontSize 명시 없이 emphasis만 박은 typography, 회색 캔버스에 텍스트만.
 
+## 풍부도 8 신호 자체 점검
+
+응답 직전 트리를 8 신호로 자체 검사하고 모두 만족하지 않으면 그 자리에서 보강한 뒤 반환한다. 미달한 채 응답하지 않는다.
+
+1. **랜드마크 구조** — root는 \`section\` 하나, 직접 자식에 \`role: 'banner'\` / \`role: 'main'\` / \`role: 'contentinfo'\` 모두 존재.
+2. **main 다중 섹션** — \`role: 'main'\` 직접 자식에 \`type: 'section'\` 또는 \`type: 'hero'\`가 _2개 이상_.
+3. **Display heading-1** — \`emphasis: 'heading-1'\` 텍스트는 \`typography.fontSize\` ≥ 48 명시.
+4. **Call to action** — \`type: 'button'\` 노드 또는 \`contentRole: 'cta'\` 텍스트 노드가 _1개 이상_.
+5. **fontSize 다양성** — \`typography.fontSize\` 고유값 _3종 이상_(예: 디스플레이 / 본문 / 캡션).
+6. **색 다양성** — \`color\` prop의 hex 고유값 _3개 이상_(\`backgroundColor\` / \`textColor\` / \`borderColor\` / \`accentColor\` / \`overlayColor\` 통합).
+7. **이미지 사용** — \`type: 'image'\` 노드 _1개 이상_, plausible https URL.
+8. **Shape 깊이** — \`shape.shadow !== 'none'\` 또는 \`shape.radius\` ≥ 8 인 노드 _1개 이상_.
+
 ## 답변 → 스타일 매핑 가이드
 
 답변의 감성/톤 키워드를 \`color\` / \`spacing\` / \`shape\` / \`layout\` / \`typography\` prop에 일관되게 반영한다. 색 계열만 제시 — raw hex는 자유롭게 고른다.

@@ -325,4 +325,27 @@ describe('llm-prompts examples', () => {
     assert.ok(out.includes('주요 색: #000000'))
     assert.ok(!out.includes('화면 비율'))
   })
+
+  it('GENERATE_TREE_SYSTEM_PROMPT includes 풍부도 8 신호 자체 점검 체크리스트', () => {
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('## 풍부도 8 신호 자체 점검'),
+      '풍부도 자체 점검 헤더 누락',
+    )
+    const checkpoints = [
+      '랜드마크 구조',
+      'main 다중 섹션',
+      'Display heading-1',
+      'Call to action',
+      'fontSize 다양성',
+      '색 다양성',
+      '이미지 사용',
+      'Shape 깊이',
+    ]
+    for (const point of checkpoints) {
+      assert.ok(
+        GENERATE_TREE_SYSTEM_PROMPT.includes(point),
+        `풍부도 체크리스트 누락: ${point}`,
+      )
+    }
+  })
 })
