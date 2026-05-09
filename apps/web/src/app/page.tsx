@@ -639,6 +639,9 @@ export default function HomePage() {
   const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
     null,
   )
+  const [generatePrompt, setGeneratePrompt] = useState('')
+  const [generateLoading, setGenerateLoading] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
 
   const selectedNode = useMemo(
@@ -740,6 +743,48 @@ export default function HomePage() {
     setSelectedNodeId(
       findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
     )
+  }
+
+  async function handleGenerateTree() {
+    const prompt = generatePrompt.trim()
+    if (prompt.length === 0 || generateLoading) {
+      return
+    }
+    setGenerateLoading(true)
+    setGenerateError(null)
+    try {
+      const apiBase =
+        process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
+      const response = await fetch(`${apiBase}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      })
+      const payload = (await response.json()) as
+        | { tree: Tree; model: string; latencyMs: number }
+        | { error: string; message: string }
+      if (!response.ok) {
+        const message =
+          'message' in payload ? payload.message : 'AI 생성에 실패했습니다.'
+        setGenerateError(message)
+        return
+      }
+      if (!('tree' in payload)) {
+        setGenerateError('AI 응답이 비어 있습니다.')
+        return
+      }
+      const nextTree = payload.tree
+      const nextSelectedId =
+        findFirstEditableNodeId(nextTree.root) ?? nextTree.root.id
+      commitTreeEdit(nextTree, nextSelectedId)
+      setGeneratePrompt('')
+    } catch (error) {
+      setGenerateError(
+        error instanceof Error ? error.message : 'AI 생성에 실패했습니다.',
+      )
+    } finally {
+      setGenerateLoading(false)
+    }
   }
 
   function commitTreeEdit(
@@ -1322,6 +1367,47 @@ export default function HomePage() {
               ))}
             </select>
           </label>
+          <span className="h-7 w-px bg-[#d7ddd2]" aria-hidden="true" />
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[#1b7f72]">
+              AI 생성
+            </span>
+            <input
+              type="text"
+              maxLength={500}
+              placeholder="페이지 의도를 한 줄로 입력하세요"
+              className="h-9 w-72 rounded-md border border-[#c9d4cd] bg-white px-3 text-sm text-[#18211d] outline-none focus:border-[#1b7f72] focus:ring-2 focus:ring-[#1b7f72]/20"
+              value={generatePrompt}
+              disabled={generateLoading}
+              onChange={(event) => {
+                setGeneratePrompt(event.target.value)
+                if (generateError !== null) setGenerateError(null)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  void handleGenerateTree()
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="h-9 rounded-md bg-[#1b7f72] px-3 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
+              disabled={generateLoading || generatePrompt.trim().length === 0}
+              onClick={() => void handleGenerateTree()}
+            >
+              {generateLoading ? '생성 중…' : '새 디자인 생성'}
+            </button>
+            {generateError !== null ? (
+              <span
+                role="status"
+                className="max-w-48 truncate text-xs text-[#9b3030]"
+                title={generateError}
+              >
+                {generateError}
+              </span>
+            ) : null}
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-4">
           <ViewportSwitcher
