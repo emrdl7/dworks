@@ -2949,7 +2949,61 @@ function getTransformStyle(
   if (transform.scale !== undefined) {
     parts.push(`scale(${transform.scale})`)
   }
-  return parts.length === 0 ? undefined : { transform: parts.join(' ') }
+  const style: CSSProperties = {}
+  if (parts.length > 0) {
+    style.transform = parts.join(' ')
+  }
+  if (transform.originX !== undefined || transform.originY !== undefined) {
+    style.transformOrigin = `${transform.originX ?? 50}% ${transform.originY ?? 50}%`
+  }
+  return Object.keys(style).length === 0 ? undefined : style
+}
+
+const TRANSFORM_ORIGIN_PRESETS: ReadonlyArray<{
+  id: string
+  label: string
+  x: number
+  y: number
+}> = [
+  { id: 'top-left', label: '좌상', x: 0, y: 0 },
+  { id: 'top', label: '상', x: 50, y: 0 },
+  { id: 'top-right', label: '우상', x: 100, y: 0 },
+  { id: 'left', label: '좌', x: 0, y: 50 },
+  { id: 'center', label: '중앙', x: 50, y: 50 },
+  { id: 'right', label: '우', x: 100, y: 50 },
+  { id: 'bottom-left', label: '좌하', x: 0, y: 100 },
+  { id: 'bottom', label: '하', x: 50, y: 100 },
+  { id: 'bottom-right', label: '우하', x: 100, y: 100 },
+]
+
+function setNodeTransformOrigin(
+  node: TreeNode,
+  originX: number | undefined,
+  originY: number | undefined,
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: NodeMetaPatch,
+    options?: CommitTreeEditOptions,
+  ) => void,
+) {
+  const currentTransform = node.transform ?? {}
+  const nextTransform: NodeTransform = { ...currentTransform }
+  if (originX === undefined) {
+    delete nextTransform.originX
+  } else {
+    nextTransform.originX = originX
+  }
+  if (originY === undefined) {
+    delete nextTransform.originY
+  } else {
+    nextTransform.originY = originY
+  }
+  const isEmpty = Object.keys(nextTransform).length === 0
+  onNodeMetaChange(
+    node,
+    { transform: isEmpty ? undefined : nextTransform },
+    { mergeKey: getNodeColorMergeKey(node.id, 'meta.transform.origin') },
+  )
 }
 
 function getTransitionStyle(
@@ -3699,6 +3753,53 @@ function NodeInspector({
                 )
               }
             />
+          </div>
+          <div className="mt-3">
+            <span className="text-[11px] text-[#647067]">기준점</span>
+            <div className="mt-1 grid w-fit grid-cols-3 gap-1 rounded-md border border-[#cbd6cf] bg-white p-1">
+              {TRANSFORM_ORIGIN_PRESETS.map((preset) => {
+                const isActive =
+                  node.transform?.originX === preset.x &&
+                  node.transform?.originY === preset.y
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    aria-label={`기준점 ${preset.label}`}
+                    aria-pressed={isActive}
+                    title={preset.label}
+                    className={`flex h-6 w-6 items-center justify-center rounded border text-[10px] transition-colors ${
+                      isActive
+                        ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
+                        : 'border-transparent text-[#647067] hover:border-[#cbd6cf] hover:bg-[#f1f5f3]'
+                    }`}
+                    onClick={() => {
+                      if (isActive) {
+                        setNodeTransformOrigin(
+                          node,
+                          undefined,
+                          undefined,
+                          onNodeMetaChange,
+                        )
+                      } else {
+                        setNodeTransformOrigin(
+                          node,
+                          preset.x,
+                          preset.y,
+                          onNodeMetaChange,
+                        )
+                      }
+                    }}
+                  >
+                    <span
+                      className={`block h-1.5 w-1.5 rounded-full ${
+                        isActive ? 'bg-white' : 'bg-[#647067]'
+                      }`}
+                    />
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </InspectorDisclosure>
 
