@@ -51,10 +51,11 @@
 - ✓ `m3-generate-fallback` (`eb6aada` r4 / `c312aba` r5) — LlmProvider chain (claude/codex/gemini) + resolveProviderChain env + callLlmChain 순회. /generate + /clarify 모두 적용. parse/schema 실패는 fallback 안 함
 - ✓ `m3-generate-codex-adapter` (`9f61575` r4 / `b40cd6a` r5) — codex `-o tempfile` + final message 회수. extract-failure 분류 + 다음 provider 시도
 - ✓ `m3-generate-variant` (`9b6b503` r4 / `d31e3f2` r5 fix) — N (1/2/3) 변형 동시 생성. Promise.allSettled, diversity hint request-only, immutable 원본 보호 헬퍼
+- ✓ `m3-generate-prompt-uplift` (`f6eba0e` r4 / `2280a56` r5) — schema-valid 3 generate examples (카페/SaaS 가격/블로그) + 1 clarify example (도시 호텔). TS 객체 + JSON.stringify, llm-prompts test로 drift 방지
 
 **M3 후속 후보**:
 - `m3-generate-gemini-adapter` — Gemini CLI 어댑터
-- `m3-generate-prompt-uplift` — 프롬프트 최적화 / few-shot examples
+- `m3-generate-prompt-style` — examples에 스타일 prop 노출 (prompt-uplift 후속, eval 기반 튜닝)
 - `m3-generate-eval` — 재현성 7축 × repeat 평가 (M1 D8 baseline 패턴)
 - `m3-generate-variant-grid` — 변형들 동시 비교 grid UI
 - `m3-generate-clarify-loop` — multi-turn clarify (답변 부족 시 추가 질문)
