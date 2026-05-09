@@ -2964,6 +2964,32 @@ export default function HomePage() {
             return next
           })
         },
+        selectRange: (targetId: string) => {
+          if (targetId === selectedNodeId) return
+          // tree 전체를 flat 순서로 — 모든 컨테이너 expand 가정 (캔버스 위 노드는 다 보임)
+          const allItems = flattenTree(tree.root)
+          const primaryIdx = allItems.findIndex(
+            (item) => item.node.id === selectedNodeId,
+          )
+          const targetIdx = allItems.findIndex(
+            (item) => item.node.id === targetId,
+          )
+          if (primaryIdx < 0 || targetIdx < 0) return
+          const [start, end] =
+            primaryIdx < targetIdx
+              ? [primaryIdx, targetIdx]
+              : [targetIdx, primaryIdx]
+          const range = allItems.slice(start, end + 1)
+          setAdditionalSelectedNodeIds(() => {
+            const next = new Set<string>()
+            for (const item of range) {
+              if (item.node.id !== selectedNodeId) {
+                next.add(item.node.id)
+              }
+            }
+            return next
+          })
+        },
         isPanActive: isSpacePressed || isPanning,
       }}
     >
@@ -3954,8 +3980,35 @@ export default function HomePage() {
                       title={nodeTypeLabels[node.type]}
                       className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#6366f1]"
                       onClick={(event) => {
-                        if (event.shiftKey || event.metaKey || event.ctrlKey) {
-                          // multi-select 토글 — selectedNodeId는 그대로, additional만 변경
+                        // Shift = 범위 선택 (primary~target)
+                        if (event.shiftKey) {
+                          if (node.id === selectedNodeId) return
+                          const allItems = flattenTree(tree.root)
+                          const primaryIdx = allItems.findIndex(
+                            (item) => item.node.id === selectedNodeId,
+                          )
+                          const targetIdx = allItems.findIndex(
+                            (item) => item.node.id === node.id,
+                          )
+                          if (primaryIdx < 0 || targetIdx < 0) return
+                          const [start, end] =
+                            primaryIdx < targetIdx
+                              ? [primaryIdx, targetIdx]
+                              : [targetIdx, primaryIdx]
+                          const range = allItems.slice(start, end + 1)
+                          setAdditionalSelectedNodeIds(() => {
+                            const next = new Set<string>()
+                            for (const item of range) {
+                              if (item.node.id !== selectedNodeId) {
+                                next.add(item.node.id)
+                              }
+                            }
+                            return next
+                          })
+                          return
+                        }
+                        // Cmd/Ctrl = 개별 토글
+                        if (event.metaKey || event.ctrlKey) {
                           if (node.id === selectedNodeId) return
                           setAdditionalSelectedNodeIds((prev) => {
                             const next = new Set(prev)
@@ -3966,9 +4019,9 @@ export default function HomePage() {
                             }
                             return next
                           })
-                        } else {
-                          setSelectedNodeId(node.id)
+                          return
                         }
+                        setSelectedNodeId(node.id)
                       }}
                       onKeyDown={(event) => openKeyboardContextMenu(node.id, event)}
                     >
@@ -4480,8 +4533,8 @@ export default function HomePage() {
                 {
                   category: '다중 선택',
                   items: [
-                    { keys: ['⇧', 'click'], label: '노드 추가/해제 (레이어·캔버스)' },
-                    { keys: ['⌘', 'click'], label: '노드 추가/해제 (대체)' },
+                    { keys: ['⇧', 'click'], label: '범위 선택 (primary ~ target)' },
+                    { keys: ['⌘', 'click'], label: '개별 토글' },
                   ],
                 },
                 {
@@ -5039,6 +5092,8 @@ interface CanvasSelectionContextValue {
   primarySelectedId: string
   allSelectedIds: ReadonlySet<string>
   toggleAdditional: (id: string) => void
+  // Shift+click 범위 선택: primary부터 target까지 (트리 flat 순서 기준)
+  selectRange: (id: string) => void
   // 캔버스 panning 활성 시 노드 click을 무시 (Space drag 시 selection 변경 방지)
   isPanActive: boolean
 }
@@ -5046,6 +5101,7 @@ const CanvasSelectionContext = createContext<CanvasSelectionContextValue>({
   primarySelectedId: '',
   allSelectedIds: new Set(),
   toggleAdditional: () => {},
+  selectRange: () => {},
   isPanActive: false,
 })
 
@@ -5670,12 +5726,16 @@ function SelectableNode({
     if (!isCanvasSelectable) {
       return
     }
-    const multi = modifiers?.shift === true || modifiers?.meta === true
-    if (multi) {
-      selectionCtx.toggleAdditional(node.id)
-    } else {
-      onSelect(node.id)
+    // Shift = 범위 선택 (primary~target). Cmd/Ctrl = 개별 토글.
+    if (modifiers?.shift === true) {
+      selectionCtx.selectRange(node.id)
+      return
     }
+    if (modifiers?.meta === true) {
+      selectionCtx.toggleAdditional(node.id)
+      return
+    }
+    onSelect(node.id)
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
