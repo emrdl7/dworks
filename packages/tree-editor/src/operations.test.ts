@@ -4,6 +4,8 @@ import assert from 'node:assert/strict'
 import type { Tree } from '@dworks/tree'
 
 import {
+  addContainerSibling,
+  addLeafSibling,
   applyEditSequence,
   changeLeafNodeType,
   deleteNode,
@@ -1017,6 +1019,114 @@ describe('tree editor operations', () => {
       () => updateTextTypography(fixtureTree(), 'landing.cta', { fontSize: 18 }),
       /updateTextTypography requires text node, got button/,
     )
+  })
+})
+
+describe('addLeafSibling / addContainerSibling', () => {
+  it('inserts leaf sibling immediately after target in same parent', () => {
+    const tree = fixtureTree()
+    const next = addLeafSibling(tree, 'landing.title', 'text', 'landing.title-2')
+    const root = next.root
+    if (
+      root.type !== 'section' &&
+      root.type !== 'hero' &&
+      root.type !== 'card' &&
+      root.type !== 'list' &&
+      root.type !== 'form'
+    ) {
+      throw new Error('root must be container')
+    }
+    const ids = root.children.map((c) => c.id)
+    assert.deepEqual(ids, [
+      'landing.title',
+      'landing.title-2',
+      'landing.cta',
+      'landing.visual',
+      'landing.card',
+    ])
+    const inserted = root.children[1]
+    assert.equal(inserted?.type, 'text')
+  })
+
+  it('inserts container sibling with default text child', () => {
+    const tree = fixtureTree()
+    const next = addContainerSibling(
+      tree,
+      'landing.cta',
+      'card',
+      'landing.card-2',
+      'landing.card-2.text-1',
+    )
+    const root = next.root
+    if (
+      root.type !== 'section' &&
+      root.type !== 'hero' &&
+      root.type !== 'card' &&
+      root.type !== 'list' &&
+      root.type !== 'form'
+    ) {
+      throw new Error('root must be container')
+    }
+    const ids = root.children.map((c) => c.id)
+    // landing.cta 다음에 새 card 삽입
+    assert.deepEqual(ids[2], 'landing.card-2')
+    const inserted = root.children[2]
+    if (inserted?.type !== 'card') throw new Error('expected card')
+    assert.equal(inserted.children.length, 1)
+    assert.equal(inserted.children[0]?.id, 'landing.card-2.text-1')
+  })
+
+  it('throws when target is root (no parent)', () => {
+    const tree = fixtureTree()
+    assert.throws(() =>
+      addLeafSibling(tree, 'landing', 'text', 'landing.text-x'),
+    )
+  })
+
+  it('throws when new id collides with existing', () => {
+    const tree = fixtureTree()
+    assert.throws(() =>
+      addLeafSibling(tree, 'landing.title', 'text', 'landing.cta'),
+    )
+  })
+
+  it('inserts sibling for nested target', () => {
+    const tree = fixtureTree()
+    const next = addLeafSibling(
+      tree,
+      'landing.card.title',
+      'text',
+      'landing.card.body',
+    )
+    function findCard(): { children: { id: string }[] } | null {
+      const root = next.root
+      if (
+        root.type !== 'section' &&
+        root.type !== 'hero' &&
+        root.type !== 'card' &&
+        root.type !== 'list' &&
+        root.type !== 'form'
+      ) {
+        return null
+      }
+      const card = root.children.find((c) => c.id === 'landing.card')
+      if (!card) return null
+      if (
+        card.type !== 'section' &&
+        card.type !== 'hero' &&
+        card.type !== 'card' &&
+        card.type !== 'list' &&
+        card.type !== 'form'
+      ) {
+        return null
+      }
+      return card
+    }
+    const card = findCard()
+    assert.notEqual(card, null)
+    if (!card) throw new Error('card missing')
+    const childIds = card.children.map((c) => c.id)
+    assert.deepEqual(childIds, ['landing.card.title', 'landing.card.body'])
   })
 })
 
