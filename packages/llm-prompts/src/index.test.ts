@@ -58,12 +58,23 @@ describe('llm-prompts examples', () => {
         GENERATE_TREE_SYSTEM_PROMPT.includes(example.intent),
         `intent missing in prompt: ${example.intent}`,
       )
+      assert.ok(
+        GENERATE_TREE_SYSTEM_PROMPT.includes(
+          JSON.stringify(example.tree, null, 2),
+        ),
+        `tree JSON missing in prompt: ${example.intent}`,
+      )
     }
   })
 
   it('CLARIFY_QUESTIONS_SYSTEM_PROMPT embeds the clarify example', () => {
     assert.ok(
       CLARIFY_QUESTIONS_SYSTEM_PROMPT.includes(CLARIFY_QUESTIONS_EXAMPLE.intent),
+    )
+    assert.ok(
+      CLARIFY_QUESTIONS_SYSTEM_PROMPT.includes(
+        JSON.stringify({ questions: CLARIFY_QUESTIONS_EXAMPLE.questions }, null, 2),
+      ),
     )
     for (const q of CLARIFY_QUESTIONS_EXAMPLE.questions) {
       assert.ok(CLARIFY_QUESTIONS_SYSTEM_PROMPT.includes(q.label))
