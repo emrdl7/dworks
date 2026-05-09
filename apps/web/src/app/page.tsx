@@ -855,6 +855,8 @@ export default function HomePage() {
   // 좁은 화면 drawer 토글 — md 이상은 grid 컬럼으로 표시되고, 미만에서는 fixed overlay로 띄움
   const [briefDrawerOpen, setBriefDrawerOpen] = useState(false)
   const [inspectorDrawerOpen, setInspectorDrawerOpen] = useState(false)
+  // ⌘\ — 데스크톱에서 좌/우 패널 동시 hide (집중 모드 / Figma 표준)
+  const [panelsHidden, setPanelsHidden] = useState(false)
   // 좌측 패널 탭 — 브리프/레이어 풀 높이 전환
   const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
   // 캔버스 grid — 디자인 정밀도용 격자 (off / 8 / 16 / 24 px cycle)
@@ -2733,6 +2735,12 @@ export default function HomePage() {
         setShortcutHelpOpen((v) => !v)
         return
       }
+      // ⌘\ — 좌/우 패널 동시 hide (집중 모드, Figma 표준)
+      if (meta && event.key === '\\') {
+        event.preventDefault()
+        setPanelsHidden((v) => !v)
+        return
+      }
       // ⌘0 — 캔버스 줌 100% 리셋 (Figma/Sketch 표준)
       if (meta && event.key === '0') {
         event.preventDefault()
@@ -3059,7 +3067,11 @@ export default function HomePage() {
 
       <div
         className={`grid h-[calc(100vh-56px)] min-h-0 grid-cols-1 ${
-          compareMode ? 'dw-grid-2col' : 'dw-grid-2col dw-grid-3col'
+          panelsHidden
+            ? ''
+            : compareMode
+              ? 'dw-grid-2col'
+              : 'dw-grid-2col dw-grid-3col'
         }`}
         style={{
           // CSS 변수: globals.css의 .dw-grid-2col / .dw-grid-3col 미디어 쿼리에서 사용
@@ -3086,7 +3098,7 @@ export default function HomePage() {
             briefDrawerOpen
               ? 'translate-x-0'
               : '-translate-x-full md:translate-x-0'
-          }`}
+          } ${panelsHidden ? 'md:hidden' : ''}`}
         >
           {/* 우측 가장자리 resize handle (md+에서만 보임) */}
           <button
@@ -4314,7 +4326,7 @@ export default function HomePage() {
             inspectorDrawerOpen
               ? 'translate-x-0'
               : 'translate-x-full xl:translate-x-0'
-          }`}
+          } ${panelsHidden ? 'xl:hidden' : ''}`}
         >
           {/* 좌측 가장자리 resize handle (xl+에서만 보임) */}
           <button
@@ -4490,6 +4502,7 @@ export default function HomePage() {
                   items: [
                     { keys: ['Esc'], label: '선택 해제 / 닫기' },
                     { keys: ['?'], label: '이 도움말 토글' },
+                    { keys: ['⌘', '\\'], label: '좌/우 패널 hide (집중 모드)' },
                   ],
                 },
               ].map((group) => (
