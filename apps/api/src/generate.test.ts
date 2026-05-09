@@ -219,6 +219,50 @@ describe('handleGenerate', () => {
     }
   })
 
+  it('serializes imageReferences (배열) into prompt when provided', async () => {
+    const { calls, spawn } = createClosingSpawn(JSON.stringify(validTree))
+
+    const result = await handleGenerate(
+      {
+        brief: {
+          intent: '카페 랜딩',
+          imageReferences: [
+            { colors: ['#0b1220', '#22d3ee'], aspectRatio: 'wide' },
+            { colors: ['#f8fafc'] },
+          ],
+        },
+      },
+      { spawnImpl: spawn, command: 'test-claude', timeoutMs: 500 },
+    )
+
+    assert.equal(result.status, 200)
+    const userPrompt = calls[0]?.args[1] ?? ''
+    assert.match(userPrompt, /### 참고 이미지 시드 \(2장\)/)
+    assert.match(userPrompt, /이미지 1:/)
+    assert.match(userPrompt, /이미지 2:/)
+  })
+
+  it('rejects imageReferences exceeding max 3', async () => {
+    const result = await handleGenerate(
+      {
+        brief: {
+          intent: '카페',
+          imageReferences: [
+            { colors: ['#000000'] },
+            { colors: ['#111111'] },
+            { colors: ['#222222'] },
+            { colors: ['#333333'] },
+          ],
+        },
+      },
+      {},
+    )
+    assert.equal(result.status, 400)
+    if (result.status === 400) {
+      assert.equal(result.body.error, 'invalid-request')
+    }
+  })
+
   it('rejects invalid request payloads before calling the CLI', async () => {
     const { calls, spawn } = createClosingSpawn(JSON.stringify(validTree))
 

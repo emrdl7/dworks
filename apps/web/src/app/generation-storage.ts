@@ -50,7 +50,9 @@ export interface PersistedGenerationEntry {
     intent: string
     answers?: PersistedBriefAnswer[]
     notes?: string
+    /** @deprecated imageReferences[0] 우선. legacy v1 단일 호환. */
     imageReference?: PersistedImageReference
+    imageReferences?: PersistedImageReference[]
   } | null
   questions: PersistedClarifyQuestion[]
   clarifyTurns: PersistedClarifyTurn[]
@@ -70,8 +72,12 @@ export interface PersistedGenerationState {
     variantCount: VariantCount
     answers: Record<string, string | string[]>
     questions: PersistedClarifyQuestion[]
+    /** @deprecated imageReferences[0] 우선. legacy v1 단일 호환. */
     imageReference: PersistedImageReference | null
+    /** @deprecated imageReferenceThumbnails[0] 우선. */
     imageReferenceThumbnail: string | null
+    imageReferences?: PersistedImageReference[]
+    imageReferenceThumbnails?: string[]
     autoRichnessRetry?: boolean
   }
   clarify: {
@@ -322,11 +328,25 @@ function validateGenerationEntry(
       if (validated === null) return null
       imageReference = validated
     }
+    let imageReferences: PersistedImageReference[] | undefined
+    if (raw.brief.imageReferences !== undefined) {
+      if (!Array.isArray(raw.brief.imageReferences)) return null
+      if (raw.brief.imageReferences.length === 0) return null
+      if (raw.brief.imageReferences.length > 3) return null
+      const refs: PersistedImageReference[] = []
+      for (const item of raw.brief.imageReferences) {
+        const validated = validateImageReference(item)
+        if (validated === null) return null
+        refs.push(validated)
+      }
+      imageReferences = refs
+    }
     brief = {
       intent,
       ...(briefAnswers !== undefined ? { answers: briefAnswers } : {}),
       ...(notes !== undefined ? { notes } : {}),
       ...(imageReference !== undefined ? { imageReference } : {}),
+      ...(imageReferences !== undefined ? { imageReferences } : {}),
     }
   }
 
@@ -437,6 +457,34 @@ function validatePersistedState(
     briefImageReferenceThumbnail = raw.brief.imageReferenceThumbnail
   }
 
+  let briefImageReferences: PersistedImageReference[] | undefined
+  if (raw.brief.imageReferences !== undefined) {
+    if (!Array.isArray(raw.brief.imageReferences)) return null
+    if (raw.brief.imageReferences.length === 0) return null
+    if (raw.brief.imageReferences.length > 3) return null
+    const refs: PersistedImageReference[] = []
+    for (const item of raw.brief.imageReferences) {
+      const validated = validateImageReference(item)
+      if (validated === null) return null
+      refs.push(validated)
+    }
+    briefImageReferences = refs
+  }
+
+  let briefImageReferenceThumbnails: string[] | undefined
+  if (raw.brief.imageReferenceThumbnails !== undefined) {
+    if (!Array.isArray(raw.brief.imageReferenceThumbnails)) return null
+    if (raw.brief.imageReferenceThumbnails.length === 0) return null
+    if (raw.brief.imageReferenceThumbnails.length > 3) return null
+    const thumbs: string[] = []
+    for (const item of raw.brief.imageReferenceThumbnails) {
+      if (typeof item !== 'string') return null
+      if (!item.startsWith('data:image/')) return null
+      thumbs.push(item)
+    }
+    briefImageReferenceThumbnails = thumbs
+  }
+
   let autoRichnessRetry: boolean | undefined
   if (raw.brief.autoRichnessRetry !== undefined) {
     if (typeof raw.brief.autoRichnessRetry !== 'boolean') return null
@@ -464,6 +512,12 @@ function validatePersistedState(
       questions: briefQuestions,
       imageReference: briefImageReference,
       imageReferenceThumbnail: briefImageReferenceThumbnail,
+      ...(briefImageReferences !== undefined
+        ? { imageReferences: briefImageReferences }
+        : {}),
+      ...(briefImageReferenceThumbnails !== undefined
+        ? { imageReferenceThumbnails: briefImageReferenceThumbnails }
+        : {}),
       ...(autoRichnessRetry !== undefined ? { autoRichnessRetry } : {}),
     },
     clarify: {

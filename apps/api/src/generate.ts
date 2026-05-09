@@ -37,6 +37,7 @@ export const briefSchema = z.object({
   answers: z.array(briefAnswerSchema).max(6).optional(),
   notes: z.string().trim().max(300).optional(),
   imageReference: imageReferenceSchema.optional(),
+  imageReferences: z.array(imageReferenceSchema).min(1).max(3).optional(),
 })
 export type GenerateBrief = z.infer<typeof briefSchema>
 

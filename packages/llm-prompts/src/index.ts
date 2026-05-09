@@ -29,7 +29,21 @@ export interface DesignBrief {
   intent: string
   answers?: BriefAnswer[]
   notes?: string
+  /** @deprecated imageReferences[0]을 우선 사용. legacy v1 단일 호환. */
   imageReference?: ImageReference
+  /** 다중 참고 이미지 (max 3). 단일이어도 imageReferences[0]에 두는 것을 권장. */
+  imageReferences?: ImageReference[]
+}
+
+/** brief에서 사용할 imageReferences 배열을 결정한다 — 신규(imageReferences) 우선, 없으면 legacy 단일을 array[0]로. */
+export function resolveImageReferences(brief: DesignBrief): ImageReference[] {
+  if (brief.imageReferences !== undefined && brief.imageReferences.length > 0) {
+    return brief.imageReferences
+  }
+  if (brief.imageReference !== undefined) {
+    return [brief.imageReference]
+  }
+  return []
 }
 
 /**
@@ -52,17 +66,32 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
   if (brief.notes !== undefined && brief.notes.trim().length > 0) {
     lines.push('', `### 브랜드 / 참조 메모`, brief.notes.trim())
   }
-  if (
-    brief.imageReference !== undefined &&
-    brief.imageReference.colors.length > 0
-  ) {
-    lines.push('', `### 참고 이미지 시드`)
-    lines.push(`- 주요 색: ${brief.imageReference.colors.join(', ')}`)
-    if (brief.imageReference.aspectRatio !== undefined) {
-      lines.push(`- 화면 비율: ${brief.imageReference.aspectRatio}`)
+  const refs = resolveImageReferences(brief).filter(
+    (ref) => ref.colors.length > 0,
+  )
+  if (refs.length === 1) {
+    const ref = refs[0]
+    if (ref !== undefined) {
+      lines.push('', `### 참고 이미지 시드`)
+      lines.push(`- 주요 색: ${ref.colors.join(', ')}`)
+      if (ref.aspectRatio !== undefined) {
+        lines.push(`- 화면 비율: ${ref.aspectRatio}`)
+      }
+      lines.push(
+        '  (참고 이미지에서 추출. 그대로 베끼지 말고 디자인 팔레트의 시드로 활용. raw hex 강제 X)',
+      )
+    }
+  } else if (refs.length > 1) {
+    lines.push('', `### 참고 이미지 시드 (${refs.length}장)`)
+    for (let i = 0; i < refs.length; i += 1) {
+      const ref = refs[i]
+      if (ref === undefined) continue
+      lines.push(`- 이미지 ${i + 1}: 색 ${ref.colors.join(', ')}${
+        ref.aspectRatio !== undefined ? ` · 비율 ${ref.aspectRatio}` : ''
+      }`)
     }
     lines.push(
-      '  (참고 이미지에서 추출. 그대로 베끼지 말고 디자인 팔레트의 시드로 활용. raw hex 강제 X)',
+      '  (여러 참고 이미지의 색감/비율을 종합한 시드. 그대로 베끼지 말고 디자인 팔레트의 영감 자료로 활용. raw hex 강제 X)',
     )
   }
   lines.push('', '위 브리프에 맞춰 dworks Tree JSON 하나를 반환한다.')

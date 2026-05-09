@@ -269,7 +269,9 @@ interface SubmittedDesignBrief {
   intent: string
   answers?: BriefAnswer[]
   notes?: string
+  /** @deprecated imageReferences[0]을 권장 (legacy 단일 호환). */
   imageReference?: ImageReferenceSeed
+  imageReferences?: ImageReferenceSeed[]
 }
 
 interface ClarifyTurn {
@@ -1287,10 +1289,12 @@ export default function HomePage() {
       briefImageRef !== null && briefImageRef.colors.length > 0
         ? briefImageRef
         : undefined
+    const imageReferences =
+      imageReference !== undefined ? [imageReference] : undefined
     if (generateStage === 'intent') {
       return {
         intent,
-        ...(imageReference !== undefined ? { imageReference } : {}),
+        ...(imageReferences !== undefined ? { imageReferences } : {}),
       }
     }
     const answerMap = new Map<string, BriefAnswer>()
@@ -1313,7 +1317,7 @@ export default function HomePage() {
       intent,
       ...(answers.length > 0 ? { answers } : {}),
       ...(notes !== undefined ? { notes } : {}),
-      ...(imageReference !== undefined ? { imageReference } : {}),
+      ...(imageReferences !== undefined ? { imageReferences } : {}),
     }
   }
 

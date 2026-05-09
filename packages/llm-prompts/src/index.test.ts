@@ -326,6 +326,48 @@ describe('llm-prompts examples', () => {
     assert.ok(!out.includes('화면 비율'))
   })
 
+  it('formatBriefAsUserPrompt — imageReferences (배열, 다중)을 우선 사용', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReferences: [
+        { colors: ['#0b1220', '#22d3ee'], aspectRatio: 'wide' },
+        { colors: ['#f8fafc'], aspectRatio: 'square' },
+      ],
+    })
+    assert.ok(out.includes('### 참고 이미지 시드 (2장)'))
+    assert.ok(out.includes('이미지 1: 색 #0b1220, #22d3ee · 비율 wide'))
+    assert.ok(out.includes('이미지 2: 색 #f8fafc · 비율 square'))
+    assert.ok(out.includes('영감 자료'))
+  })
+
+  it('formatBriefAsUserPrompt — imageReferences[0] 단일이면 단일 형식 출력', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReferences: [{ colors: ['#0b1220'] }],
+    })
+    assert.ok(out.includes('### 참고 이미지 시드'))
+    assert.ok(!out.includes('### 참고 이미지 시드 ('))
+    assert.ok(out.includes('주요 색: #0b1220'))
+  })
+
+  it('formatBriefAsUserPrompt — legacy imageReference fallback (imageReferences 없을 때)', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReference: { colors: ['#abcdef'] },
+    })
+    assert.ok(out.includes('주요 색: #abcdef'))
+  })
+
+  it('formatBriefAsUserPrompt — imageReferences 우선, legacy imageReference는 무시', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReference: { colors: ['#aabbcc'] },
+      imageReferences: [{ colors: ['#112233'] }],
+    })
+    assert.ok(out.includes('#112233'))
+    assert.ok(!out.includes('#aabbcc'))
+  })
+
   it('GENERATE_TREE_SYSTEM_PROMPT includes 풍부도 8 신호 자체 점검 체크리스트', () => {
     assert.ok(
       GENERATE_TREE_SYSTEM_PROMPT.includes('## 풍부도 8 신호 자체 점검'),
