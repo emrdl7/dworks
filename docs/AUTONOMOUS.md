@@ -90,6 +90,11 @@
 - ✓ `m3-generate-fixture-rename` (`afd6d81`) — user fixture 등록 후 이름 변경. renameUserFixture(fixtures, id, newName) pure helper(빈 이름/id 미일치/같은 이름 시 원본 참조). user-fixtures.test 4 추가
 - ✓ `m3-generate-richness-detail-hint` (`9e1befb`) — 부족 신호 카드 li에 RICHNESS_RETRY_HINTS의 보강 hint를 작은 보조 텍스트로 인라인 표시. 라벨(굵게) + 10px hint 줄
 - ✓ `m3-generate-history-clear-mutable` (`e7ee124`) — mutable 생성 일괄 정리. clearMutableEntries(entries) helper(immutable + pinned 보호). chip group 아래 "히스토리 정리 (N)" 버튼(개수 표시, 0이면 disabled, 베이지 destructive 톤). generation-history.test 3 추가
+- ✓ `m3-generate-export-include-richness` (`e021847`) — export .json에 richness 메타(score + 8 신호 boolean) 포함. RICHNESS_SIGNAL_KEYS richness.ts로 단일 출처. validateRichness 검증. test 4 추가
+- ✓ `m3-generate-fixture-overwrite` (`30690d8`) — 같은 이름 fixture 등록 시 confirm — 덮어쓰기(id 유지) vs 신규 추가 선택
+- ✓ `m3-generate-export-batch` (`5a22b56`) — history 전체 한 .json batch (format 'dworks-generation-batch' v1). 단일과 format key 분리. richness 메타 자동 주입. test 7 추가
+- ✓ `m3-generate-richness-trend` (`2d5487c`) — chip group 위 inline SVG sparkline (W140 H28). 0.6 dashed 임계, 활성 강조, generations ≥ 2일 때만 표시
+- ✓ `m3-generate-trend-tooltip` (`368e084`) — trend 점에 native title hover + onClick 시 handleSelectGeneration 전환
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
