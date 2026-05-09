@@ -59,7 +59,7 @@
 - ✓ `m3-generate-prompt-style` (`f98a6e2` r4) — examples 3개에 도메인 시그니처(카페 따뜻한 그라디언트 / SaaS pro card accent / 블로그 절제 lineHeight), system prompt 정책 완화, drift 방지 test 3건. examples block 1.34×
 - ✓ `m3-generate-eval-diversity` (`1de372e` r4 / `4b98f10` r5) — m3-eval에 multiset Jaccard 기반 구조 다양성 score, summary `구조 다양성` 컬럼 + dry-run 메모, in-memory tree 누적
 - `m3-generate-eval-judge` — LLM-as-judge 정성 점수
-- `m3-generate-variant-grid` — 변형들 동시 비교 grid UI
+- ✓ `m3-generate-variant-grid` (`892290f` r4 / `fc8223a` r5) — compareMode 토글 + mini canvas grid + 단일 모드 복귀. CanvasReadOnlyContext로 SelectableNode 비활성화, fixture/생성 시 자동 복귀 + generateLoading 중 cell 차단
 - `m3-generate-clarify-loop` — multi-turn clarify (답변 부족 시 추가 질문)
 - ✓ `m3-generate-clarify-edit` (`d456089` r4 / `ab2a52a` r5) — active variant 선택 시 brief/questions/answers/notes를 Stage 2 폼에 복원, 답변 수정 후 새 변형 추가. GenerationEntry.questions snapshot, deep copy 방어, intent-only 분기, Stage 1에서 stale answers 차단
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
