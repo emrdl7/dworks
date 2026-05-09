@@ -2742,6 +2742,15 @@ export default function HomePage() {
     }
   }, [isPanning])
 
+  // 줌 변경 시 cursor anchor 위치 보정 — Figma처럼 커서 아래 점이 그대로
+  const pendingZoomAnchorRef = useRef<{
+    cursorX: number
+    cursorY: number
+    oldScrollLeft: number
+    oldScrollTop: number
+    oldZoom: number
+  } | null>(null)
+
   // 캔버스 트랙패드/⌘+wheel 줌 — passive:false로 native attach (preventDefault 위해)
   useEffect(() => {
     const el = canvasScrollRef.current
@@ -2751,11 +2760,26 @@ export default function HomePage() {
       // metaKey: ⌘+휠 사용자 명시 줌
       if (!event.ctrlKey && !event.metaKey) return
       event.preventDefault()
+      const target = canvasScrollRef.current
+      if (!target) return
+      const rect = target.getBoundingClientRect()
       // delta 한 단계당 약 5% — 부드러운 줌
       const factor = Math.exp(-event.deltaY * 0.005)
       setCanvasZoom((prev) => {
-        const next = prev * factor
-        return Math.max(0.25, Math.min(2, Math.round(next * 100) / 100))
+        const next = Math.max(
+          0.25,
+          Math.min(2, Math.round(prev * factor * 100) / 100),
+        )
+        if (next === prev) return prev
+        // cursor anchor 저장 — 다음 effect에서 scroll 보정
+        pendingZoomAnchorRef.current = {
+          cursorX: event.clientX - rect.left,
+          cursorY: event.clientY - rect.top,
+          oldScrollLeft: target.scrollLeft,
+          oldScrollTop: target.scrollTop,
+          oldZoom: prev,
+        }
+        return next
       })
     }
     el.addEventListener('wheel', onWheel, { passive: false })
@@ -2763,6 +2787,19 @@ export default function HomePage() {
       el.removeEventListener('wheel', onWheel)
     }
   }, [])
+
+  // canvasZoom 변경 후 cursor anchor 적용 — DOM 갱신 후 scroll 보정
+  useEffect(() => {
+    const anchor = pendingZoomAnchorRef.current
+    if (!anchor) return
+    const el = canvasScrollRef.current
+    if (!el) return
+    const ratio = canvasZoom / anchor.oldZoom
+    // 새 scrollLeft = (이전 scroll + cursor offset) × 줌 비 - cursor offset
+    el.scrollLeft = (anchor.oldScrollLeft + anchor.cursorX) * ratio - anchor.cursorX
+    el.scrollTop = (anchor.oldScrollTop + anchor.cursorY) * ratio - anchor.cursorY
+    pendingZoomAnchorRef.current = null
+  }, [canvasZoom])
 
   return (
     <CanvasSelectionContext.Provider
