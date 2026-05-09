@@ -2340,11 +2340,17 @@ export default function HomePage() {
         handleDeleteSelected()
         return
       }
-      // Esc — 선택 해제(root로 되돌림). 도움말 popover 열려있으면 그것부터 닫음
+      // Esc — 우선순위: 도움말 popover → drawer → 선택 해제
       if (event.key === 'Escape') {
         if (shortcutHelpOpen) {
           event.preventDefault()
           setShortcutHelpOpen(false)
+          return
+        }
+        if (briefDrawerOpen || inspectorDrawerOpen) {
+          event.preventDefault()
+          setBriefDrawerOpen(false)
+          setInspectorDrawerOpen(false)
           return
         }
         if (selectedNodeId !== tree.root.id) {
@@ -2364,7 +2370,15 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', onKeyDown)
     // 핸들러는 closure로 최신 state를 참조하므로 deps 비움
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyPast, historyFuture, selectedNodeId, tree, shortcutHelpOpen])
+  }, [
+    historyPast,
+    historyFuture,
+    selectedNodeId,
+    tree,
+    shortcutHelpOpen,
+    briefDrawerOpen,
+    inspectorDrawerOpen,
+  ])
 
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-[#f5f7f4] text-[#18211d]">
