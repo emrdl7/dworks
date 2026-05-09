@@ -100,9 +100,9 @@
 - ✓ `m2-style-color-state-aria` — aria-disabled 명시 (`2244398`)
 - ✓ `m2-style-transform` — translate/rotate/scale 노드별 변환 (`eb22afd` + Codex fix `fc0cfda`)
 - ✓ `m2-style-transform-origin` — 9-point preset 기준점 (`52ed785` + Codex test `14e9b68`)
-- `m2-style-transform-3d` — rotateX/Y/Z + perspective (transform 후속)
+- ✓ `m2-style-transform-3d` — rotateX/Y + perspective (`476ad75` + Codex test `e722688`)
 - ✓ `m2-style-skew` — skewX/Y ±45° (`c593666` + Codex test `6dd5af3`)
-- `m2-style-image-filter-drop-shadow-multi` — multi drop-shadow (image-filter-extra 후속 — 1차 1개만)
+- ✓ `m2-style-image-filter-drop-shadow-multi` — multi drop-shadow stack (`12f41f8` + Codex test `9801e67`)
 - `m2-style-transition-spring` — spring/steps timing 함수 (cubic-bezier 후속)
 
 ## 코드 변경 정책
