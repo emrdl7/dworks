@@ -47,6 +47,32 @@ export function resolveImageReferences(brief: DesignBrief): ImageReference[] {
 }
 
 /**
+ * 다중 참고 이미지의 색을 빈도 가중으로 통합 — 앞쪽 색일수록 높은 가중치, 동일 색 합산.
+ * apps/web/image-color.ts의 mergeImageReferenceColors와 동일 알고리즘 (LLM prompt-side reference).
+ */
+export function mergeReferenceColors(
+  refs: ReadonlyArray<{ colors: ReadonlyArray<string> }>,
+  maxColors = 5,
+): string[] {
+  if (maxColors <= 0) return []
+  const weights = new Map<string, number>()
+  for (const ref of refs) {
+    const N = ref.colors.length
+    for (let i = 0; i < N; i += 1) {
+      const hex = ref.colors[i]
+      if (typeof hex !== 'string') continue
+      const lower = hex.toLowerCase()
+      const weight = N - i
+      weights.set(lower, (weights.get(lower) ?? 0) + weight)
+    }
+  }
+  return Array.from(weights.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxColors)
+    .map(([hex]) => hex)
+}
+
+/**
  * Brief 객체를 LLM user prompt 문자열로 직렬화.
  */
 export function formatBriefAsUserPrompt(brief: DesignBrief): string {
@@ -89,6 +115,10 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
       lines.push(`- 이미지 ${i + 1}: 색 ${ref.colors.join(', ')}${
         ref.aspectRatio !== undefined ? ` · 비율 ${ref.aspectRatio}` : ''
       }`)
+    }
+    const merged = mergeReferenceColors(refs, 5)
+    if (merged.length > 0) {
+      lines.push(`- 통합 팔레트(빈도 가중): ${merged.join(', ')}`)
     }
     lines.push(
       '  (여러 참고 이미지의 색감/비율을 종합한 시드. 그대로 베끼지 말고 디자인 팔레트의 영감 자료로 활용. raw hex 강제 X)',

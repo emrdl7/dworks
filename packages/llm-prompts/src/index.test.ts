@@ -350,6 +350,18 @@ describe('llm-prompts examples', () => {
     assert.ok(out.includes('주요 색: #0b1220'))
   })
 
+  it('formatBriefAsUserPrompt — 다중 참고 이미지 시 통합 팔레트 line 자동 출력', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReferences: [
+        { colors: ['#aabbcc', '#ddeeff'] },
+        { colors: ['#aabbcc', '#112233'] },
+      ],
+    })
+    assert.ok(out.includes('통합 팔레트(빈도 가중)'))
+    assert.ok(out.includes('#aabbcc'))
+  })
+
   it('formatBriefAsUserPrompt — legacy imageReference fallback (imageReferences 없을 때)', () => {
     const out = formatBriefAsUserPrompt({
       intent: '카페',
