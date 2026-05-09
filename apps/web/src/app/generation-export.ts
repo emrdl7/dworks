@@ -48,7 +48,9 @@ export interface ExportedBrief {
   intent: string
   answers?: ExportedBriefAnswer[]
   notes?: string
+  /** @deprecated imageReferences[0] 우선. legacy v1 단일 호환. */
   imageReference?: ExportedImageReference
+  imageReferences?: ExportedImageReference[]
 }
 
 export interface ExportedGeneration {
@@ -538,6 +540,29 @@ function validateBrief(
       return { ok: false, reason: 'brief.imageReference 형식이 올바르지 않습니다.' }
     }
     out.imageReference = validated
+  }
+  if (raw.imageReferences !== undefined && raw.imageReferences !== null) {
+    if (!Array.isArray(raw.imageReferences)) {
+      return { ok: false, reason: 'brief.imageReferences가 배열이 아닙니다.' }
+    }
+    if (raw.imageReferences.length === 0 || raw.imageReferences.length > 3) {
+      return {
+        ok: false,
+        reason: 'brief.imageReferences는 1~3장이어야 합니다.',
+      }
+    }
+    const refs: ExportedImageReference[] = []
+    for (const item of raw.imageReferences) {
+      const validated = validateImageReference(item)
+      if (validated === null) {
+        return {
+          ok: false,
+          reason: 'brief.imageReferences 항목 형식이 올바르지 않습니다.',
+        }
+      }
+      refs.push(validated)
+    }
+    out.imageReferences = refs
   }
   return { ok: true, value: out }
 }

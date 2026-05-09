@@ -162,6 +162,58 @@ describe('parseImportPayload', () => {
     assert.equal(result.ok, false)
   })
 
+  it('imageReferences (배열) round-trip — 1~3장', () => {
+    const text = JSON.stringify({
+      format: EXPORT_FORMAT_KEY,
+      version: 1,
+      exportedAt: '2026-05-09T00:00:00Z',
+      tree: sampleTree,
+      label: 'x',
+      brief: {
+        intent: '카페',
+        imageReferences: [
+          { colors: ['#0b1220', '#22d3ee'], aspectRatio: 'wide' },
+          { colors: ['#f8fafc'] },
+        ],
+      },
+      questions: [],
+      clarifyTurns: [],
+      model: null,
+      latencyMs: null,
+    })
+    const result = parseImportPayload(text)
+    assert.equal(result.ok, true)
+    if (result.ok) {
+      assert.equal(result.payload.brief?.imageReferences?.length, 2)
+      assert.equal(result.payload.brief?.imageReferences?.[0]?.aspectRatio, 'wide')
+    }
+  })
+
+  it('imageReferences max 3 초과 거부', () => {
+    const text = JSON.stringify({
+      format: EXPORT_FORMAT_KEY,
+      version: 1,
+      exportedAt: '2026-05-09T00:00:00Z',
+      tree: sampleTree,
+      label: 'x',
+      brief: {
+        intent: '카페',
+        imageReferences: [
+          { colors: ['#000000'] },
+          { colors: ['#111111'] },
+          { colors: ['#222222'] },
+          { colors: ['#333333'] },
+        ],
+      },
+      questions: [],
+      clarifyTurns: [],
+      model: null,
+      latencyMs: null,
+    })
+    const result = parseImportPayload(text)
+    assert.equal(result.ok, false)
+  })
+
   it('imageReference 잘못된 hex 거부', () => {
     const text = JSON.stringify({
       format: EXPORT_FORMAT_KEY,
