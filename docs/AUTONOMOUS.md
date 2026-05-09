@@ -79,6 +79,11 @@
 - ✓ `m3-generate-image-ref-persist` (`728bb39`) — image ref + 썸네일을 v1 schema에 additive 추가. validateImageReference + thumbnail data:image/ prefix 검증. 새 test 3건
 - ✓ `m3-generate-export-import` (`c55825a`) — 단일 generation .json 다운로드/업로드. generation-export.ts(format/version 키 + tree schema 재검증 + 모든 nested 형식 검증). 좌측 패널 "내보내기"/"불러오기" 버튼. import 시 새 mutable entry로 합류. 8 test
 - ✓ `m3-generate-richness-retry` (`89a0dc3`) — 풍부도 부족 신호 8종을 한국어 hint 매핑(RICHNESS_RETRY_HINTS) → brief.notes에 "자동 보강 힌트" 섹션 append → /generate 한 번 호출. 카드에 "이 신호로 다시 시도" 버튼. 명시 클릭에서만(자동 retry X)
+- ✓ `m3-generate-richness-auto-retry` (`4e4f064`) — generate 직후 firstNew 풍부도 < 0.6 + 토글 ON 시 runRichnessRetry 자동 호출. 기본 OFF (비용 통제). 좌측 "변형 개수" 아래 체크박스. PersistedGenerationState.brief.autoRichnessRetry?: boolean (additive)
+- ✓ `m3-generate-prompt-richness-checklist` (`c09357b`) — system prompt에 "## 풍부도 8 신호 자체 점검" 섹션. LLM이 응답 직전 자체 검사하고 미달이면 보강 후 반환. ai-slop / web richness가 측정하는 동일 8 신호 명시. drift test 1건
+- ✓ `m3-generate-eval-richness-min` (`19c583c`) — m3-eval `--min-richness 0.6` flag. CallResult에 richness + belowMinRichness 추가, summary에 "풍부도 임계" footer 섹션. test 5건
+- ✓ `m3-generate-history-pin` (`c67ca2d` r4 / `574ddc8` Codex r5) — chip ⭐ 토글로 좋은 generation을 max-trim에서 보호. immutable + pinned 둘 다 protected. inline-flex chip + 별 토글 UI. relabelGenerationHistory도 pinned 라벨 보존. PersistedGenerationEntry.pinned?: boolean (additive). Codex r5: QuotaExceeded fallback도 pinned 보호 + active 정합
+- ✓ `m3-generate-multi-import` (`d2faaa8`) — file input multiple + handleImportGenerationFiles(files: File[]). 부분 실패 reason 누적, 마지막 성공 entry로 active 전환
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
