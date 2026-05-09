@@ -3,7 +3,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { extractDominantColors, pickAspectRatio } from './image-color.js'
+import {
+  extractDominantColors,
+  mergeImageReferenceColors,
+  pickAspectRatio,
+} from './image-color.js'
 
 function rgbaPlane(
   pixels: Array<[number, number, number, number]>,
@@ -94,5 +98,52 @@ describe('pickAspectRatio', () => {
   it('잘못된 입력은 null', () => {
     assert.equal(pickAspectRatio(0, 100), null)
     assert.equal(pickAspectRatio(NaN, 100), null)
+  })
+})
+
+describe('mergeImageReferenceColors', () => {
+  it('단일 ref은 colors 그대로 (빈도 가중 desc)', () => {
+    const merged = mergeImageReferenceColors([
+      { colors: ['#aabbcc', '#ddeeff', '#112233'] },
+    ])
+    assert.deepEqual(merged, ['#aabbcc', '#ddeeff', '#112233'])
+  })
+
+  it('동일 색은 가중 합산', () => {
+    const merged = mergeImageReferenceColors(
+      [
+        { colors: ['#aabbcc', '#ddeeff'] },
+        { colors: ['#aabbcc'] }, // 가중치 +1
+      ],
+      5,
+    )
+    // ref1: aabbcc(2) + ddeeff(1), ref2: aabbcc(1) = aabbcc 3, ddeeff 1
+    assert.equal(merged[0], '#aabbcc')
+    assert.equal(merged[1], '#ddeeff')
+  })
+
+  it('대소문자 정규화 — 동일 색 합산', () => {
+    const merged = mergeImageReferenceColors([
+      { colors: ['#AABBCC'] },
+      { colors: ['#aabbcc'] },
+    ])
+    assert.deepEqual(merged, ['#aabbcc'])
+  })
+
+  it('빈 입력 → 빈 배열', () => {
+    assert.deepEqual(mergeImageReferenceColors([]), [])
+    assert.deepEqual(mergeImageReferenceColors([{ colors: [] }]), [])
+  })
+
+  it('maxColors cap 동작', () => {
+    const merged = mergeImageReferenceColors(
+      [
+        {
+          colors: ['#000001', '#000002', '#000003', '#000004', '#000005', '#000006'],
+        },
+      ],
+      3,
+    )
+    assert.equal(merged.length, 3)
   })
 })

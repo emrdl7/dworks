@@ -89,3 +89,29 @@ function rgbToHex(r: number, g: number, b: number): string {
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
+
+// 여러 참고 이미지의 색을 빈도 가중으로 통합 — image-ref-multi 흐름의 reference helper.
+// 각 ref의 colors 순서를 _빈도 가중치_(앞쪽일수록 높음)로 누적, 동일 색은 합산.
+// 결과는 가중치 desc, 최대 maxColors 만큼 unique hex 배열.
+export function mergeImageReferenceColors(
+  refs: ReadonlyArray<{ colors: ReadonlyArray<string> }>,
+  maxColors = 5,
+): string[] {
+  if (maxColors <= 0) return []
+  const weights = new Map<string, number>()
+  for (const ref of refs) {
+    const N = ref.colors.length
+    for (let i = 0; i < N; i += 1) {
+      const hex = ref.colors[i]
+      if (typeof hex !== 'string') continue
+      const lower = hex.toLowerCase()
+      // 앞쪽 색일수록 높은 가중치 — N개 중 1번째는 N, N번째는 1.
+      const weight = N - i
+      weights.set(lower, (weights.get(lower) ?? 0) + weight)
+    }
+  }
+  return Array.from(weights.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxColors)
+    .map(([hex]) => hex)
+}

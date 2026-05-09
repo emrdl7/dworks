@@ -177,7 +177,11 @@ import {
   formatRichnessScore,
   type RichnessSignalKey,
 } from './richness'
-import { extractDominantColors, pickAspectRatio } from './image-color'
+import {
+  extractDominantColors,
+  mergeImageReferenceColors,
+  pickAspectRatio,
+} from './image-color'
 
 const RICHNESS_SIGNAL_LABELS: Record<RichnessSignalKey, string> = {
   hasPageLandmarks: '랜드마크 부족 (banner/main/contentinfo)',
@@ -3353,6 +3357,38 @@ export default function HomePage() {
                     {briefImageRefError}
                   </div>
                 ) : null}
+                {briefImageRefs.length > 1
+                  ? (() => {
+                      const merged = mergeImageReferenceColors(briefImageRefs, 5)
+                      if (merged.length === 0) return null
+                      return (
+                        <div
+                          className="rounded-md border border-[#e0e5de] bg-white px-2 py-1.5 text-[10px] text-[#647067]"
+                          aria-label="통합 팔레트"
+                        >
+                          <div className="mb-1 font-semibold text-[#4f5e56]">
+                            통합 팔레트 ({merged.length}색)
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {merged.map((hex) => (
+                              <span
+                                key={hex}
+                                className="inline-flex items-center gap-1 rounded bg-[#f3efe8] px-1.5 py-0.5"
+                                title={hex}
+                              >
+                                <span
+                                  aria-hidden="true"
+                                  className="inline-block h-2.5 w-2.5 rounded-full border border-[#cbd6cf]"
+                                  style={{ backgroundColor: hex }}
+                                />
+                                {hex}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })()
+                  : null}
               </div>
 
               {generateStage === 'intent' ? (
