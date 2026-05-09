@@ -3536,7 +3536,7 @@ function HistoryButton({
 
 function DworksLogo() {
   return (
-    <div className="flex min-w-40 items-center gap-2.5">
+    <div className="flex items-center gap-2.5">
       <Image
         src="/dworks-logo.png"
         alt="Dworks"
@@ -3545,9 +3545,9 @@ function DworksLogo() {
         priority
         className="h-8 w-8 rounded-md object-contain"
       />
-      <div>
+      <div className="hidden lg:block">
         <h1 className="text-base font-semibold leading-tight">Dworks</h1>
-        <p className="text-xs text-[#647067]">디자인 편집기</p>
+        <p className="text-[11px] text-[#9aa49d]">디자인 편집기</p>
       </div>
     </div>
   )
@@ -3590,7 +3590,7 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
           )
         })}
       </div>
-      <span className="rounded-full border border-[#c9d4cd] bg-white px-3 py-1 font-semibold text-[#26312b]">
+      <span className="inline-flex h-7 items-center rounded-md border border-[#c9d4cd] bg-white px-2 text-xs font-semibold tabular-nums text-[#26312b]">
         {selectedPreset.width}px
       </span>
     </div>
