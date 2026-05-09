@@ -2381,36 +2381,6 @@ export default function HomePage() {
             <PanelLeft size={16} />
           </button>
           <DworksLogo />
-          <label className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#4f5e56]">예제</span>
-            <select
-              className="h-9 min-w-40 rounded-md border border-[#c9d4cd] bg-white px-3 text-sm text-[#18211d] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-              value={selectedFixture.id}
-              title={selectedFixture.description}
-              onChange={(event) => handleFixtureChange(event.target.value)}
-            >
-              <optgroup label="기본">
-                {treeFixtures.map((fixture) => (
-                  <option
-                    key={fixture.id}
-                    title={fixture.description}
-                    value={fixture.id}
-                  >
-                    {fixture.name}
-                  </option>
-                ))}
-              </optgroup>
-              {userFixtures.length > 0 ? (
-                <optgroup label="내 fixture">
-                  {userFixtures.map((fixture) => (
-                      <option key={fixture.id} value={fixture.id}>
-                        {fixture.name}
-                      </option>
-                    ))}
-                </optgroup>
-              ) : null}
-            </select>
-          </label>
         </div>
         <div className="flex shrink-0 items-center gap-4">
           <div className="flex items-center gap-1">
@@ -2603,6 +2573,38 @@ export default function HomePage() {
               </div>
             </div>
             <div className="space-y-3 px-4 pb-4">
+              <label className="block">
+                <span className="text-[11px] font-semibold text-[#647067]">
+                  예제 fixture
+                </span>
+                <select
+                  className="mt-1 h-9 w-full rounded-md border border-[#cbd6cf] bg-white px-2 text-xs text-[#18211d] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+                  value={selectedFixture.id}
+                  title={selectedFixture.description}
+                  onChange={(event) => handleFixtureChange(event.target.value)}
+                >
+                  <optgroup label="기본">
+                    {treeFixtures.map((fixture) => (
+                      <option
+                        key={fixture.id}
+                        title={fixture.description}
+                        value={fixture.id}
+                      >
+                        {fixture.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {userFixtures.length > 0 ? (
+                    <optgroup label="내 fixture">
+                      {userFixtures.map((fixture) => (
+                        <option key={fixture.id} value={fixture.id}>
+                          {fixture.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                </select>
+              </label>
               <div className="flex flex-wrap gap-1">
                 {generations.map((entry) => {
                   const isActive = entry.id === activeGenerationId
