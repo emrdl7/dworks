@@ -2569,6 +2569,19 @@ export default function HomePage() {
     setSelectedNodeId((currentNodeId) => getSafeSelectedNodeId(nextTree, currentNodeId))
   }
 
+  // 캔버스 화면에 맞춤 (Figma ⌘1) — 사용 가능한 폭 ÷ viewport 폭으로 줌 계산
+  function handleCanvasFit(): void {
+    const el = canvasScrollRef.current
+    if (!el) return
+    const available = el.clientWidth - 64 // px-8 양쪽 padding 제외
+    if (available <= 0) return
+    const next = Math.max(
+      0.25,
+      Math.min(2, Math.round((available / selectedViewportPreset.width) * 100) / 100),
+    )
+    setCanvasZoom(next)
+  }
+
   // 글로벌 키보드 shortcut — input/textarea/contenteditable에서는 비활성
   useEffect(() => {
     function isEditableTarget(el: EventTarget | null): boolean {
@@ -2655,6 +2668,12 @@ export default function HomePage() {
       if (meta && event.key === '0') {
         event.preventDefault()
         setCanvasZoom(1)
+        return
+      }
+      // ⌘1 — fit to screen (선택 viewport가 화면에 꽉 차도록)
+      if (meta && event.key === '1') {
+        event.preventDefault()
+        handleCanvasFit()
         return
       }
       // ⌘+ / ⌘= — 줌 인 (= 키도 받음, shift 없는 + 입력 호환)
@@ -3893,7 +3912,11 @@ export default function HomePage() {
                   onChange={setResponsiveViewport}
                 />
                 <span className="h-4 w-px shrink-0 bg-[#2a2e35]" aria-hidden="true" />
-                <CanvasZoomControl value={canvasZoom} onChange={setCanvasZoom} />
+                <CanvasZoomControl
+                  value={canvasZoom}
+                  onChange={setCanvasZoom}
+                  onFit={handleCanvasFit}
+                />
                 <span className="h-4 w-px shrink-0 bg-[#2a2e35]" aria-hidden="true" />
                 <button
                   type="button"
@@ -4253,6 +4276,7 @@ export default function HomePage() {
                     { keys: ['⌘', '+'], label: '줌 인 10%' },
                     { keys: ['⌘', '-'], label: '줌 아웃 10%' },
                     { keys: ['⌘', '0'], label: '줌 100% 리셋' },
+                    { keys: ['⌘', '1'], label: '화면에 맞춤 (fit to screen)' },
                   ],
                 },
                 {
@@ -4399,9 +4423,10 @@ const CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2] as const
 interface CanvasZoomControlProps {
   value: number
   onChange: (next: number) => void
+  onFit?: () => void
 }
 
-function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
+function CanvasZoomControl({ value, onChange, onFit }: CanvasZoomControlProps) {
   function step(direction: 1 | -1): void {
     const idx = CANVAS_ZOOM_LEVELS.findIndex((z) => z === value)
     if (idx < 0) {
@@ -4457,6 +4482,17 @@ function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
       >
         +
       </button>
+      {onFit ? (
+        <button
+          type="button"
+          aria-label="화면에 맞춤"
+          title="화면에 맞춤 (⌘1)"
+          className="flex h-full items-center justify-center border-l border-[#2a2e35] px-2 text-[10px] font-semibold uppercase tracking-wide text-[#898d97] hover:bg-[#2a2e35] hover:text-[#ebecef] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1]"
+          onClick={onFit}
+        >
+          fit
+        </button>
+      ) : null}
     </div>
   )
 }
