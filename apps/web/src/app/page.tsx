@@ -2845,21 +2845,47 @@ export default function HomePage() {
                 const min = scored.reduce((worst, cur) =>
                   cur.score < worst.score ? cur : worst,
                 )
+                const active = scored.find(
+                  (s) => s.entry.id === activeGenerationId,
+                )
+                let activePosition: string | null = null
+                if (active !== undefined) {
+                  const diff = active.score - avg
+                  const absDiff = Math.abs(diff)
+                  if (absDiff < 0.05) {
+                    activePosition = '평균 수준'
+                  } else if (diff > 0) {
+                    activePosition = `평균 +${absDiff.toFixed(2)} 위`
+                  } else {
+                    activePosition = `평균 −${absDiff.toFixed(2)} 아래`
+                  }
+                }
                 return (
                   <div className="rounded-md border border-[#e0e5de] bg-white px-3 py-1.5 text-[10px] text-[#647067]">
-                    평균{' '}
-                    <span className="font-semibold text-[#1b7f72]">
-                      {avg.toFixed(2)}
-                    </span>{' '}
-                    · 최고{' '}
-                    <span className="font-semibold text-[#1b7f72]">
-                      {max.score.toFixed(2)}
-                    </span>{' '}
-                    ({max.entry.userLabel ?? max.entry.label}) · 최저{' '}
-                    <span className="font-semibold text-[#7c5a2a]">
-                      {min.score.toFixed(2)}
-                    </span>{' '}
-                    ({min.entry.userLabel ?? min.entry.label})
+                    <div>
+                      평균{' '}
+                      <span className="font-semibold text-[#1b7f72]">
+                        {avg.toFixed(2)}
+                      </span>{' '}
+                      · 최고{' '}
+                      <span className="font-semibold text-[#1b7f72]">
+                        {max.score.toFixed(2)}
+                      </span>{' '}
+                      ({max.entry.userLabel ?? max.entry.label}) · 최저{' '}
+                      <span className="font-semibold text-[#7c5a2a]">
+                        {min.score.toFixed(2)}
+                      </span>{' '}
+                      ({min.entry.userLabel ?? min.entry.label})
+                    </div>
+                    {active !== undefined && activePosition !== null ? (
+                      <div className="mt-0.5">
+                        활성{' '}
+                        <span className="font-semibold text-[#1b7f72]">
+                          {active.score.toFixed(2)}
+                        </span>{' '}
+                        — {activePosition}
+                      </div>
+                    ) : null}
                   </div>
                 )
               })()}
