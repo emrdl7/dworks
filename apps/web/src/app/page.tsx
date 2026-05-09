@@ -154,6 +154,13 @@ import {
   parseImportPayload,
 } from './generation-export'
 import {
+  createUserFixtureId,
+  readUserFixtures,
+  sanitizeUserFixtureName,
+  writeUserFixtures,
+  type UserFixture,
+} from './user-fixtures'
+import {
   computeRichnessReport,
   formatRichnessScore,
   type RichnessReport,
@@ -838,6 +845,7 @@ export default function HomePage() {
   const [briefNotes, setBriefNotes] = useState('')
   const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
   const [autoRichnessRetry, setAutoRichnessRetry] = useState(false)
+  const [userFixtures, setUserFixtures] = useState<UserFixture[]>([])
   const [briefImageRef, setBriefImageRef] = useState<ImageReferenceSeed | null>(
     null,
   )
@@ -961,6 +969,17 @@ export default function HomePage() {
     }
   }, [compareMode, generations.length])
 
+  const isUserFixturesHydratedRef = useRef(false)
+  useEffect(() => {
+    setUserFixtures(readUserFixtures())
+    isUserFixturesHydratedRef.current = true
+  }, [])
+
+  useEffect(() => {
+    if (!isUserFixturesHydratedRef.current) return
+    writeUserFixtures(userFixtures)
+  }, [userFixtures])
+
   const selectedNode = useMemo(
     () => findNode(tree.root, selectedNodeId) ?? tree.root,
     [selectedNodeId, tree],
@@ -969,10 +988,22 @@ export default function HomePage() {
     () => getStructureInfo(tree, selectedNodeId),
     [selectedNodeId, tree],
   )
-  const selectedFixture = useMemo(
-    () => getTreeFixture(selectedFixtureId) ?? defaultTreeFixture,
-    [selectedFixtureId],
-  )
+  const selectedFixture = useMemo(() => {
+    const builtin = getTreeFixture(selectedFixtureId)
+    if (builtin !== undefined) return builtin
+    const userFixture = userFixtures.find(
+      (fixture) => fixture.id === selectedFixtureId,
+    )
+    if (userFixture !== undefined) {
+      return {
+        id: userFixture.id,
+        name: userFixture.name,
+        description: '사용자 fixture',
+        tree: userFixture.tree,
+      }
+    }
+    return defaultTreeFixture
+  }, [selectedFixtureId, userFixtures])
   const contextMenuNode = useMemo(
     () => (contextMenu ? findNode(tree.root, contextMenu.nodeId) : null),
     [contextMenu, tree],
@@ -1051,11 +1082,19 @@ export default function HomePage() {
   }, [contextMenu, contextMenuNode])
 
   function handleFixtureChange(fixtureId: string) {
-    const nextFixture = getTreeFixture(fixtureId) ?? defaultTreeFixture
-    const nextOriginal = createOriginalEntry(nextFixture.tree)
-    setSelectedFixtureId(nextFixture.id)
+    const builtin = getTreeFixture(fixtureId)
+    const userFixture =
+      builtin === undefined
+        ? userFixtures.find((fixture) => fixture.id === fixtureId)
+        : undefined
+    const nextTree =
+      builtin?.tree ?? userFixture?.tree ?? defaultTreeFixture.tree
+    const resolvedId =
+      builtin?.id ?? userFixture?.id ?? defaultTreeFixture.id
+    const nextOriginal = createOriginalEntry(nextTree)
+    setSelectedFixtureId(resolvedId)
     setCompareMode(false)
-    setTree(nextFixture.tree)
+    setTree(nextTree)
     setHistoryPast([])
     setHistoryFuture([])
     lastHistoryMergeRef.current = null
@@ -1071,8 +1110,42 @@ export default function HomePage() {
     setGenerateStage('intent')
     handleImageRefClear()
     setSelectedNodeId(
-      findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
+      findFirstEditableNodeId(nextTree.root) ?? nextTree.root.id,
     )
+  }
+
+  function handleSaveAsUserFixture(): void {
+    const active = generations.find((entry) => entry.id === activeGenerationId)
+    if (active === undefined) return
+    const defaultName =
+      active.brief?.intent !== undefined
+        ? sanitizeUserFixtureName(active.brief.intent)
+        : sanitizeUserFixtureName(active.label)
+    const name = window.prompt(
+      'fixture 이름을 입력하세요 (40자 이내). 다음 세션에서 예제 dropdown에 표시됩니다.',
+      defaultName.length > 0 ? defaultName : '내 디자인',
+    )
+    if (name === null) return
+    const sanitized = sanitizeUserFixtureName(name)
+    if (sanitized.length === 0) {
+      setGenerateError('fixture 이름이 비어 있습니다.')
+      return
+    }
+    const newFixture: UserFixture = {
+      id: createUserFixtureId(),
+      name: sanitized,
+      tree: active.tree,
+      createdAt: Date.now(),
+    }
+    setUserFixtures((prev) => [...prev, newFixture])
+    setGenerateError(null)
+  }
+
+  function handleDeleteUserFixture(fixtureId: string): void {
+    setUserFixtures((prev) => prev.filter((fixture) => fixture.id !== fixtureId))
+    if (selectedFixtureId === fixtureId) {
+      handleFixtureChange(defaultTreeFixture.id)
+    }
   }
 
   function collectCurrentAnswers(): BriefAnswer[] {
@@ -2265,11 +2338,22 @@ export default function HomePage() {
               title={selectedFixture.description}
               onChange={(event) => handleFixtureChange(event.target.value)}
             >
-              {treeFixtures.map((fixture) => (
-                <option key={fixture.id} title={fixture.description} value={fixture.id}>
-                  {fixture.name}
-                </option>
-              ))}
+              <optgroup label="기본">
+                {treeFixtures.map((fixture) => (
+                  <option key={fixture.id} title={fixture.description} value={fixture.id}>
+                    {fixture.name}
+                  </option>
+                ))}
+              </optgroup>
+              {userFixtures.length > 0 ? (
+                <optgroup label="내 fixture">
+                  {userFixtures.map((fixture) => (
+                    <option key={fixture.id} value={fixture.id}>
+                      {fixture.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </select>
           </label>
         </div>
@@ -2442,7 +2526,7 @@ export default function HomePage() {
                 })}
               </div>
 
-              <div className="flex items-center gap-2 text-[11px]">
+              <div className="flex flex-wrap items-center gap-2 text-[11px]">
                 <button
                   type="button"
                   className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
@@ -2468,6 +2552,26 @@ export default function HomePage() {
                     }}
                   />
                 </label>
+                <button
+                  type="button"
+                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
+                  onClick={handleSaveAsUserFixture}
+                  disabled={compareMode}
+                  title="활성 디자인을 사용자 fixture로 저장 — 다음 세션에서 예제 dropdown에 표시됩니다."
+                >
+                  fixture로 등록
+                </button>
+                {userFixtures.find((fx) => fx.id === selectedFixtureId) !==
+                undefined ? (
+                  <button
+                    type="button"
+                    className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb]"
+                    onClick={() => handleDeleteUserFixture(selectedFixtureId)}
+                    title="현재 선택된 사용자 fixture를 삭제합니다."
+                  >
+                    fixture 삭제
+                  </button>
+                ) : null}
               </div>
 
               {(() => {
