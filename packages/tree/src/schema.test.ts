@@ -89,6 +89,8 @@ describe('tree schema', () => {
         translateY: -12,
         rotate: 8,
         scale: 1.1,
+        originX: 0,
+        originY: 100,
       },
       children: [],
     })
@@ -105,6 +107,8 @@ describe('tree schema', () => {
         translateY: -12,
         rotate: 8,
         scale: 1.1,
+        originX: 0,
+        originY: 100,
       })
     }
   })
@@ -150,6 +154,30 @@ describe('tree schema', () => {
         type: 'card',
         editKind: 'structure',
         cursor: 'move',
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transform: {
+          originX: -1,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transform: {
+          originY: 101,
+        },
         children: [],
       }),
     )

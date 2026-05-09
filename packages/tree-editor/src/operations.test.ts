@@ -227,6 +227,17 @@ describe('tree editor operations', () => {
         translateY: -16,
         rotate: 12,
         scale: 1.2,
+        originX: 0,
+      },
+    })
+    const withOrigin = updateNodeMeta(edited, 'landing.card', {
+      transform: {
+        translateX: 24,
+        translateY: -16,
+        rotate: 12,
+        scale: 1.2,
+        originX: 0,
+        originY: 100,
       },
     })
     const reset = updateNodeMeta(edited, 'landing.card', {
@@ -245,17 +256,21 @@ describe('tree editor operations', () => {
     if (
       tree.root.type === 'section' &&
       edited.root.type === 'section' &&
+      withOrigin.root.type === 'section' &&
       reset.root.type === 'section'
     ) {
       const originalCard = tree.root.children[3]
       const editedCard = edited.root.children[3]
+      const originCard = withOrigin.root.children[3]
       const resetCard = reset.root.children[3]
       assert.equal(originalCard?.type, 'card')
       assert.equal(editedCard?.type, 'card')
+      assert.equal(originCard?.type, 'card')
       assert.equal(resetCard?.type, 'card')
       if (
         originalCard?.type === 'card' &&
         editedCard?.type === 'card' &&
+        originCard?.type === 'card' &&
         resetCard?.type === 'card'
       ) {
         assert.equal(originalCard.hidden, undefined)
@@ -279,6 +294,15 @@ describe('tree editor operations', () => {
           translateY: -16,
           rotate: 12,
           scale: 1.2,
+          originX: 0,
+        })
+        assert.deepEqual(originCard.transform, {
+          translateX: 24,
+          translateY: -16,
+          rotate: 12,
+          scale: 1.2,
+          originX: 0,
+          originY: 100,
         })
         assert.equal(resetCard.hidden, undefined)
         assert.equal(resetCard.disabled, undefined)
