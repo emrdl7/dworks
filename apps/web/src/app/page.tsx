@@ -4203,9 +4203,9 @@ export default function HomePage() {
             ref={canvasScrollRef}
             className={`min-h-0 flex-1 overflow-auto overscroll-contain ${
               isPanning
-                ? 'cursor-grabbing select-none'
+                ? 'cursor-grabbing select-none [&_*]:!cursor-grabbing'
                 : isSpacePressed
-                  ? 'cursor-grab select-none'
+                  ? 'cursor-grab select-none [&_*]:!cursor-grab'
                   : ''
             }`}
             onMouseDown={(event) => {
