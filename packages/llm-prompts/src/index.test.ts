@@ -274,4 +274,26 @@ describe('llm-prompts examples', () => {
       'system prompt missing wireframe ban guidance',
     )
   })
+
+  it('SaaS example main has hero / features / pricing sections', () => {
+    const saas = GENERATE_TREE_EXAMPLES.find((ex) =>
+      ex.tree.root.id.startsWith('saas.'),
+    )
+    assert.ok(saas !== undefined, 'saas example missing')
+    const json = JSON.stringify(saas?.tree)
+    assert.ok(json.includes('"saas.hero"'), 'saas.hero missing')
+    assert.ok(json.includes('"saas.features"'), 'saas.features missing')
+    assert.ok(json.includes('"pricing.section"'), 'pricing.section missing')
+  })
+
+  it('Magazine example main has article + related grid', () => {
+    const magazine = GENERATE_TREE_EXAMPLES.find((ex) =>
+      ex.tree.root.id.startsWith('magazine.'),
+    )
+    assert.ok(magazine !== undefined, 'magazine example missing')
+    const json = JSON.stringify(magazine?.tree)
+    assert.ok(json.includes('"article.section"'), 'article.section missing')
+    assert.ok(json.includes('"magazine.related"'), 'magazine.related missing')
+    assert.ok(json.includes('"magazine.related.grid"'), 'magazine.related.grid missing')
+  })
 })
