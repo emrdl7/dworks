@@ -95,6 +95,11 @@
 - ✓ `m3-generate-export-batch` (`5a22b56`) — history 전체 한 .json batch (format 'dworks-generation-batch' v1). 단일과 format key 분리. richness 메타 자동 주입. test 7 추가
 - ✓ `m3-generate-richness-trend` (`2d5487c`) — chip group 위 inline SVG sparkline (W140 H28). 0.6 dashed 임계, 활성 강조, generations ≥ 2일 때만 표시
 - ✓ `m3-generate-trend-tooltip` (`368e084`) — trend 점에 native title hover + onClick 시 handleSelectGeneration 전환
+- ✓ `m3-generate-fixture-export-include-richness` (`ebd1ae0`) — fixture catalog .json에도 풍부도 메타 자동 주입. caller 주입 불필요(build 시점 즉시 계산). test 2 추가
+- ✓ `m3-generate-trend-immutable-marker` (`c1b8212`) — sparkline에서 immutable은 ◇ 마름모, pinned는 ● warm beige, mutable은 ● default. tooltip + legend
+- ✓ `m3-generate-richness-summary-card` (`964e1d8`) — sparkline 아래 평균/최고(라벨)/최저(라벨) 요약 카드
+- ✓ `m3-generate-fixture-dropdown-richness` (`1f7e76b`) — header "내 fixture" optgroup option 라벨에 풍부도 점수 표시
+- `m3-generate-image-ref-multi` — 다중 참고 이미지 (ImageReference[] schema 변경, llm-prompts/api/web persist 모두 갱신)
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
