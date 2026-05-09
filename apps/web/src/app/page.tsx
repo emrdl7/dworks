@@ -148,6 +148,7 @@ import {
   readPersistedGenerationState,
   writePersistedGenerationState,
 } from './generation-storage'
+import { computeRichnessReport } from './richness'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -1982,11 +1983,17 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-1">
                 {generations.map((entry) => {
                   const isActive = entry.id === activeGenerationId
+                  const richness = entry.immutable
+                    ? null
+                    : computeRichnessReport(entry.tree).score
                   return (
                     <button
                       key={entry.id}
                       type="button"
-                      title={entry.brief?.intent ?? '원본 fixture'}
+                      title={
+                        entry.brief?.intent ??
+                        (entry.immutable ? '원본 fixture' : '생성 결과')
+                      }
                       aria-pressed={isActive}
                       aria-disabled={compareMode || undefined}
                       disabled={compareMode}
@@ -1998,6 +2005,14 @@ export default function HomePage() {
                       onClick={() => handleSelectGeneration(entry.id)}
                     >
                       {entry.label}
+                      {richness !== null ? (
+                        <span
+                          className="ml-1 text-[10px] font-normal opacity-70"
+                          aria-label={`디자인 풍부도 ${richness.toFixed(2)}`}
+                        >
+                          {richness.toFixed(2)}
+                        </span>
+                      ) : null}
                     </button>
                   )
                 })}
