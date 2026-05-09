@@ -111,6 +111,10 @@
 - ✓ `m3-generate-image-ref-multi-prompt-include-merged` (`60eea35`) — llm-prompts에 mergeReferenceColors mirror + formatBriefAsUserPrompt 다중 시 통합 팔레트 line 자동 출력
 - ✓ `m3-generate-image-ref-multi-prompt-aspect-priority` (`7305ace`) — 다중 비율/팔레트 우선순위 규칙(첫 비율 hero / 통합 팔레트 = 주조). drift test 2 강화
 - ✓ `m3-generate-richness-trend-y-labels` (`581ca62`) — sparkline 좌측 1.0/0.5/0.0 라벨 column
+- ✓ `m3-generate-trend-click-target` (`f59d840`) — sparkline 점 r=6 invisible hit area, 4배 넓은 클릭 영역
+- ✓ `m3-generate-image-ref-multi-aspect-merge` (`90dbc88`) — 다중 비율 통합 추론 helper(가장 흔한 + ASPECT_PRIORITY) + UI/prompt 출력. test 6 추가
+- ✓ `m3-generate-richness-trend-empty-state` (`6f3d613`) — generations < 2 시 sparkline 자리 안내 메시지
+- ✓ `m3-generate-fixture-dropdown-richness-sort` (`24e671b`) — "내 fixture" 풍부도 desc 정렬
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
