@@ -12,7 +12,7 @@
 //   5. fontSizeVariety        — 고유 typography.fontSize 값 ≥ 3
 //   6. colorVariety           — 고유 color hex 값 ≥ 3
 //   7. hasImagery             — image 노드 ≥ 1
-//   8. hasShapeDepth          — shape.shadow !== 'none' 또는 radius ≥ 8 ≥ 1
+//   8. hasShapeDepth          — shape.shadow !== 'none' 또는 radius ≥ 8 인 노드 ≥ 1
 //
 // score = trueCount / 8 (0.0 슬롭 ~ 1.0 풍부).
 
