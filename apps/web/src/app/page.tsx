@@ -5367,10 +5367,13 @@ function NodeInspector({
     }
   }
 
-  const visibleControlledSectionTitles = getVisibleControlledSectionTitles(
+  const [activeTab, setActiveTab] = useState<InspectorTab>('design')
+  const activeTabSectionTitles = getInspectorTabSectionTitles(
+    activeTab,
     node.type,
+    isSelectedNodeContainer,
   )
-  const anyVisibleSectionOpen = visibleControlledSectionTitles.some(
+  const anyVisibleSectionOpen = activeTabSectionTitles.some(
     (title) => openSections[title] === true,
   )
 
@@ -5378,7 +5381,7 @@ function NodeInspector({
     setOpenSectionsByNode((prev) => {
       const current = prev[node.id] ?? {}
       const next: Record<string, boolean> = { ...current }
-      visibleControlledSectionTitles.forEach((title) => {
+      activeTabSectionTitles.forEach((title) => {
         next[title] = !anyVisibleSectionOpen
       })
       return { ...prev, [node.id]: next }
@@ -5387,8 +5390,8 @@ function NodeInspector({
 
   return (
     <section className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-[#e0e5de] px-5 py-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className="shrink-0 border-b border-[#e0e5de] px-5 pb-0 pt-4">
+        <div className="flex items-center justify-between gap-3 px-0">
           <h2 className="text-sm font-semibold">속성</h2>
           <button
             type="button"
@@ -5402,148 +5405,105 @@ function NodeInspector({
           </button>
         </div>
         <p className="mt-1 break-all text-xs text-[#647067]">{node.id}</p>
+        <div role="tablist" aria-label="속성 탭" className="-mx-5 mt-3 flex items-stretch border-t border-[#e0e5de] px-5">
+          {INSPECTOR_TABS.map((tab) => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                id={`inspector-tab-${tab.id}`}
+                aria-selected={isActive}
+                aria-controls={`inspector-tabpanel-${tab.id}`}
+                tabIndex={isActive ? 0 : -1}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative -mb-px flex-1 border-b-2 py-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
+                  isActive
+                    ? 'border-[#4f46e5] text-[#4f46e5]'
+                    : 'border-transparent text-[#647067] hover:text-[#1f2a25]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-        <NodeColorControls
-          node={node}
-          tree={tree}
-          colorPreset={colorPreset}
-          disclosure={bindSection('색상')}
-          onNodeColorChange={onNodeColorChange}
-          onNodeColorReset={onNodeColorReset}
-          onNodeMetaChange={onNodeMetaChange}
-        />
-
-        {node.type === 'text' ? (
+      <div
+        role="tabpanel"
+        id={`inspector-tabpanel-${activeTab}`}
+        aria-labelledby={`inspector-tab-${activeTab}`}
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
+      >
+        {activeTab === 'design' ? (
           <>
-            <InspectorDisclosure
-              title="내용"
-              defaultOpen={false}
-              {...bindSection('내용')}
-            >
-              <label className="block">
-                <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
-                <textarea
-                  className="mt-2 min-h-24 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-                  placeholder="텍스트 — **굵게**, *기울임*, [링크](URL)"
-                  value={node.content}
-                  onChange={(event) => onTextChange(node, event.target.value)}
-                />
-              </label>
-            </InspectorDisclosure>
-            <TypographyControls
+            <NodeColorControls
               node={node}
-              disclosure={bindSection('타이포그래피')}
-              onTypographyChange={onTextTypographyChange}
-              onTypographyReset={onTextTypographyReset}
-              registeredFonts={registeredFonts}
-              fontUsageCounts={fontUsageCounts}
-              fontRegistryMessage={fontRegistryMessage}
-              isFontRegistryBusy={isFontRegistryBusy}
-              onFontUpload={onFontUpload}
-              onFontDelete={onFontDelete}
-              onFontFamilyDelete={onFontFamilyDelete}
+              tree={tree}
+              colorPreset={colorPreset}
+              disclosure={bindSection('색상')}
+              onNodeColorChange={onNodeColorChange}
+              onNodeColorReset={onNodeColorReset}
+              onNodeMetaChange={onNodeMetaChange}
             />
-          </>
-        ) : null}
 
-        <LayoutControls
-          node={node}
-          disclosure={bindSection('레이아웃')}
-          onLayoutChange={onLayoutChange}
-          onLayoutReset={onLayoutReset}
-          onSpacingChange={onSpacingChange}
-        />
-
-        <SpacingControls
-          node={node}
-          disclosure={bindSection('간격')}
-          onSpacingChange={onSpacingChange}
-          onSpacingReset={onSpacingReset}
-        />
-
-        <ShapeControls
-          node={node}
-          disclosure={bindSection('모양')}
-          onShapeChange={onShapeChange}
-          onShapeReset={onShapeReset}
-        />
-
-        {node.type === 'button' ? (
-          <InspectorDisclosure title="내용" {...bindSection('내용')}>
-            <label className="block">
-              <span className="text-xs font-semibold text-[#4f5e56]">버튼 문구</span>
-              <input
-                className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-                value={node.label}
-                onChange={(event) => onButtonLabelChange(node, event.target.value)}
+            {node.type === 'text' ? (
+              <TypographyControls
+                node={node}
+                disclosure={bindSection('타이포그래피')}
+                onTypographyChange={onTextTypographyChange}
+                onTypographyReset={onTextTypographyReset}
+                registeredFonts={registeredFonts}
+                fontUsageCounts={fontUsageCounts}
+                fontRegistryMessage={fontRegistryMessage}
+                isFontRegistryBusy={isFontRegistryBusy}
+                onFontUpload={onFontUpload}
+                onFontDelete={onFontDelete}
+                onFontFamilyDelete={onFontFamilyDelete}
               />
-            </label>
-          </InspectorDisclosure>
-        ) : null}
+            ) : null}
 
-        {node.type === 'image' ? (
-          <>
-            <InspectorDisclosure title="이미지" {...bindSection('이미지')}>
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="text-xs font-semibold text-[#4f5e56]">
-                    이미지 주소
-                  </span>
-                  <input
-                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-                    value={node.src}
-                    onChange={(event) =>
-                      onImageChange(node, { src: event.target.value })
-                    }
-                  />
-                  {node.src.trim().length === 0 ? (
-                    <span className="mt-2 block text-xs text-[#647067]">
-                      이미지 슬롯 - 이미지 주소를 입력하세요.
-                    </span>
-                  ) : null}
-                </label>
-                <label className="block">
-                  <span className="text-xs font-semibold text-[#4f5e56]">
-                    대체 텍스트
-                  </span>
-                  <input
-                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-                    value={node.alt}
-                    onChange={(event) =>
-                      onImageChange(node, { alt: event.target.value })
-                    }
-                  />
-                  {node.alt.length === 0 ? (
-                    <span className="mt-2 block text-xs text-[#647067]">
-                      스크린리더가 이 이미지를 읽지 않습니다.
-                    </span>
-                  ) : null}
-                </label>
-              </div>
-            </InspectorDisclosure>
-            <ImageCompositionControls
+            <ShapeControls
               node={node}
-              disclosure={bindSection('이미지 구도')}
-              onImageChange={onImageChange}
+              disclosure={bindSection('모양')}
+              onShapeChange={onShapeChange}
+              onShapeReset={onShapeReset}
             />
           </>
         ) : null}
 
-        <InspectorDisclosure
-          title="변환"
-          description="이동, 회전, 크기"
-          {...bindSection('변환')}
-          onAction={() =>
-            onNodeMetaChange(
-              node,
-              { transform: undefined },
-              { mergeKey: getNodeColorMergeKey(node.id, 'meta.transform.reset') },
-            )
-          }
-          isActionDisabled={node.transform === undefined}
-        >
+        {activeTab === 'layout' ? (
+          <>
+            <LayoutControls
+              node={node}
+              disclosure={bindSection('레이아웃')}
+              onLayoutChange={onLayoutChange}
+              onLayoutReset={onLayoutReset}
+              onSpacingChange={onSpacingChange}
+            />
+
+            <SpacingControls
+              node={node}
+              disclosure={bindSection('간격')}
+              onSpacingChange={onSpacingChange}
+              onSpacingReset={onSpacingReset}
+            />
+
+            <InspectorDisclosure
+              title="변환"
+              description="이동, 회전, 크기"
+              {...bindSection('변환')}
+              onAction={() =>
+                onNodeMetaChange(
+                  node,
+                  { transform: undefined },
+                  { mergeKey: getNodeColorMergeKey(node.id, 'meta.transform.reset') },
+                )
+              }
+              isActionDisabled={node.transform === undefined}
+            >
           <div className="grid grid-cols-2 gap-2">
             <NodeTransformInput
               label="X 이동 (px)"
@@ -5734,23 +5694,107 @@ function NodeInspector({
               })}
             </div>
           </div>
-        </InspectorDisclosure>
+            </InspectorDisclosure>
+          </>
+        ) : null}
 
-        {isContainerNode(node) ? (
-          <InspectorDisclosure title="그룹" defaultOpen={false}>
-            <dl className="space-y-2 text-sm">
-              <InspectorRow label="하위 요소" value={String(node.children.length)} />
-              {'layoutIntent' in node && node.layoutIntent ? (
-                <InspectorRow
-                  label="배치"
-                  value={layoutIntentLabels[node.layoutIntent]}
+        {activeTab === 'content' ? (
+          <>
+            {node.type === 'text' ? (
+              <InspectorDisclosure
+                title="내용"
+                {...bindSection('내용')}
+              >
+                <label className="block">
+                  <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
+                  <textarea
+                    className="mt-2 min-h-24 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+                    placeholder="텍스트 — **굵게**, *기울임*, [링크](URL)"
+                    value={node.content}
+                    onChange={(event) => onTextChange(node, event.target.value)}
+                  />
+                </label>
+              </InspectorDisclosure>
+            ) : null}
+
+            {node.type === 'button' ? (
+              <InspectorDisclosure title="내용" {...bindSection('내용')}>
+                <label className="block">
+                  <span className="text-xs font-semibold text-[#4f5e56]">버튼 문구</span>
+                  <input
+                    className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+                    value={node.label}
+                    onChange={(event) => onButtonLabelChange(node, event.target.value)}
+                  />
+                </label>
+              </InspectorDisclosure>
+            ) : null}
+
+            {node.type === 'image' ? (
+              <>
+                <InspectorDisclosure title="이미지" {...bindSection('이미지')}>
+                  <div className="space-y-4">
+                    <label className="block">
+                      <span className="text-xs font-semibold text-[#4f5e56]">
+                        이미지 주소
+                      </span>
+                      <input
+                        className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+                        value={node.src}
+                        onChange={(event) =>
+                          onImageChange(node, { src: event.target.value })
+                        }
+                      />
+                      {node.src.trim().length === 0 ? (
+                        <span className="mt-2 block text-xs text-[#647067]">
+                          이미지 슬롯 - 이미지 주소를 입력하세요.
+                        </span>
+                      ) : null}
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-semibold text-[#4f5e56]">
+                        대체 텍스트
+                      </span>
+                      <input
+                        className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+                        value={node.alt}
+                        onChange={(event) =>
+                          onImageChange(node, { alt: event.target.value })
+                        }
+                      />
+                      {node.alt.length === 0 ? (
+                        <span className="mt-2 block text-xs text-[#647067]">
+                          스크린리더가 이 이미지를 읽지 않습니다.
+                        </span>
+                      ) : null}
+                    </label>
+                  </div>
+                </InspectorDisclosure>
+                <ImageCompositionControls
+                  node={node}
+                  disclosure={bindSection('이미지 구도')}
+                  onImageChange={onImageChange}
                 />
-              ) : null}
-              {'role' in node && node.role ? (
-                <InspectorRow label="역할" value={node.role} />
-              ) : null}
-            </dl>
-          </InspectorDisclosure>
+              </>
+            ) : null}
+
+            {isContainerNode(node) ? (
+              <InspectorDisclosure title="그룹" defaultOpen={false}>
+                <dl className="space-y-2 text-sm">
+                  <InspectorRow label="하위 요소" value={String(node.children.length)} />
+                  {'layoutIntent' in node && node.layoutIntent ? (
+                    <InspectorRow
+                      label="배치"
+                      value={layoutIntentLabels[node.layoutIntent]}
+                    />
+                  ) : null}
+                  {'role' in node && node.role ? (
+                    <InspectorRow label="역할" value={node.role} />
+                  ) : null}
+                </dl>
+              </InspectorDisclosure>
+            ) : null}
+          </>
         ) : null}
       </div>
     </section>
@@ -10878,29 +10922,43 @@ function computeInspectorSmartDefaults(
   return {}
 }
 
-const COMMON_INSPECTOR_CONTROLLED_SECTIONS = [
-  '표시',
-  '색상',
-  '레이아웃',
-  '간격',
-  '모양',
-  '구조',
-] as const
+// inspector 탭 — Figma 표준에 가까운 3분할(디자인/레이아웃/콘텐츠)
+type InspectorTab = 'design' | 'layout' | 'content'
 
-function getVisibleControlledSectionTitles(
+const INSPECTOR_TABS: Array<{ id: InspectorTab; label: string }> = [
+  { id: 'design', label: '디자인' },
+  { id: 'layout', label: '레이아웃' },
+  { id: 'content', label: '콘텐츠' },
+]
+
+// 활성 탭에서 노출되는 disclosure section 제목들. master collapse 토글 대상.
+function getInspectorTabSectionTitles(
+  tab: InspectorTab,
   nodeType: TreeNode['type'],
+  isContainer: boolean,
 ): string[] {
-  const sections: string[] = [...COMMON_INSPECTOR_CONTROLLED_SECTIONS]
-  if (nodeType === 'text') {
-    sections.push('내용', '타이포그래피')
+  if (tab === 'design') {
+    const out = ['색상']
+    if (nodeType === 'text') {
+      out.push('타이포그래피')
+    }
+    out.push('모양')
+    return out
   }
-  if (nodeType === 'button') {
-    sections.push('내용')
+  if (tab === 'layout') {
+    return ['레이아웃', '간격', '변환']
+  }
+  // content
+  if (nodeType === 'text' || nodeType === 'button') {
+    return ['내용']
   }
   if (nodeType === 'image') {
-    sections.push('이미지', '이미지 구도')
+    return ['이미지', '이미지 구도']
   }
-  return sections
+  if (isContainer) {
+    return ['그룹']
+  }
+  return []
 }
 
 type RGB = { r: number; g: number; b: number }
