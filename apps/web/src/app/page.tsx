@@ -856,10 +856,15 @@ export default function HomePage() {
   const [briefImageRefThumbnail, setBriefImageRefThumbnail] = useState<
     string | null
   >(null)
+  const [briefImageRefs, setBriefImageRefs] = useState<ImageReferenceSeed[]>([])
+  const [briefImageRefThumbnails, setBriefImageRefThumbnails] = useState<
+    string[]
+  >([])
   const [briefImageRefError, setBriefImageRefError] = useState<string | null>(
     null,
   )
   const [briefImageRefBusy, setBriefImageRefBusy] = useState(false)
+  const MAX_IMAGE_REFS = 3
   const [clarifyQuestions, setClarifyQuestions] = useState<ClarifyQuestionDto[]>(
     [],
   )
@@ -918,6 +923,19 @@ export default function HomePage() {
       setGenerateStage(persisted.clarify.stage)
       setBriefImageRef(persisted.brief.imageReference)
       setBriefImageRefThumbnail(persisted.brief.imageReferenceThumbnail)
+      // 신규 array 키가 있으면 그대로, 없으면 legacy 단일 키를 array[0]로 마이그레이션
+      const hydratedRefs =
+        persisted.brief.imageReferences ??
+        (persisted.brief.imageReference !== null
+          ? [persisted.brief.imageReference]
+          : [])
+      const hydratedThumbs =
+        persisted.brief.imageReferenceThumbnails ??
+        (persisted.brief.imageReferenceThumbnail !== null
+          ? [persisted.brief.imageReferenceThumbnail]
+          : [])
+      setBriefImageRefs(hydratedRefs)
+      setBriefImageRefThumbnails(hydratedThumbs)
       if (persisted.brief.autoRichnessRetry !== undefined) {
         setAutoRichnessRetry(persisted.brief.autoRichnessRetry)
       }
@@ -941,6 +959,12 @@ export default function HomePage() {
         questions: clarifyQuestions,
         imageReference: briefImageRef,
         imageReferenceThumbnail: briefImageRefThumbnail,
+        ...(briefImageRefs.length > 0
+          ? { imageReferences: briefImageRefs }
+          : {}),
+        ...(briefImageRefThumbnails.length > 0
+          ? { imageReferenceThumbnails: briefImageRefThumbnails }
+          : {}),
         autoRichnessRetry,
       },
       clarify: {
@@ -957,6 +981,8 @@ export default function HomePage() {
     briefNotes,
     briefImageRef,
     briefImageRefThumbnail,
+    briefImageRefs,
+    briefImageRefThumbnails,
     briefVariantCount,
     autoRichnessRetry,
     briefAnswers,
@@ -1289,8 +1315,13 @@ export default function HomePage() {
       briefImageRef !== null && briefImageRef.colors.length > 0
         ? briefImageRef
         : undefined
+    const validRefs = briefImageRefs.filter((ref) => ref.colors.length > 0)
     const imageReferences =
-      imageReference !== undefined ? [imageReference] : undefined
+      validRefs.length > 0
+        ? validRefs
+        : imageReference !== undefined
+          ? [imageReference]
+          : undefined
     if (generateStage === 'intent') {
       return {
         intent,
@@ -1322,43 +1353,85 @@ export default function HomePage() {
   }
 
   async function handleImageRefSelect(file: File): Promise<void> {
+    await handleImageRefAddFiles([file])
+  }
+
+  async function handleImageRefAddFiles(files: File[]): Promise<void> {
     const MAX_BYTES = 5 * 1024 * 1024
-    if (!file.type.startsWith('image/')) {
-      setBriefImageRefError('이미지 파일만 업로드할 수 있습니다.')
-      return
-    }
-    if (file.size > MAX_BYTES) {
-      setBriefImageRefError('파일 크기가 5MB를 초과합니다.')
+    const remaining = MAX_IMAGE_REFS - briefImageRefs.length
+    if (remaining <= 0) {
+      setBriefImageRefError(
+        `참고 이미지는 최대 ${MAX_IMAGE_REFS}장까지 추가할 수 있습니다.`,
+      )
       return
     }
     setBriefImageRefBusy(true)
     setBriefImageRefError(null)
-    try {
-      const dataUrl = await readFileAsDataUrl(file)
-      const { colors, aspectRatio } = await extractFromDataUrl(dataUrl)
-      if (colors.length === 0) {
-        setBriefImageRefError('이미지에서 색을 추출하지 못했습니다.')
-        return
+    const newRefs: ImageReferenceSeed[] = []
+    const newThumbs: string[] = []
+    const failures: string[] = []
+    for (const file of files.slice(0, remaining)) {
+      if (!file.type.startsWith('image/')) {
+        failures.push(`${file.name}: 이미지 파일이 아닙니다.`)
+        continue
       }
-      setBriefImageRef({
-        colors,
-        ...(aspectRatio !== null ? { aspectRatio } : {}),
-      })
-      setBriefImageRefThumbnail(dataUrl)
-    } catch (error) {
-      setBriefImageRefError(
-        error instanceof Error
-          ? `이미지를 처리할 수 없습니다 — ${error.message}`
-          : '이미지를 처리할 수 없습니다.',
-      )
-    } finally {
-      setBriefImageRefBusy(false)
+      if (file.size > MAX_BYTES) {
+        failures.push(`${file.name}: 5MB 초과`)
+        continue
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file)
+        const { colors, aspectRatio } = await extractFromDataUrl(dataUrl)
+        if (colors.length === 0) {
+          failures.push(`${file.name}: 색 추출 실패`)
+          continue
+        }
+        newRefs.push({
+          colors,
+          ...(aspectRatio !== null ? { aspectRatio } : {}),
+        })
+        newThumbs.push(dataUrl)
+      } catch (error) {
+        failures.push(
+          `${file.name}: ${error instanceof Error ? error.message : '처리 실패'}`,
+        )
+      }
     }
+    if (newRefs.length > 0) {
+      setBriefImageRefs((prev) => [...prev, ...newRefs])
+      setBriefImageRefThumbnails((prev) => [...prev, ...newThumbs])
+      // 단일 fallback state는 첫 ref와 동기화 (legacy persist 호환).
+      const firstRef = newRefs[0]
+      const firstThumb = newThumbs[0]
+      if (briefImageRef === null && firstRef !== undefined) {
+        setBriefImageRef(firstRef)
+        setBriefImageRefThumbnail(firstThumb ?? null)
+      }
+    }
+    if (failures.length > 0) {
+      setBriefImageRefError(`일부 이미지 추가 실패 — ${failures.join(' / ')}`)
+    }
+    setBriefImageRefBusy(false)
+  }
+
+  function handleImageRefRemoveAt(index: number): void {
+    setBriefImageRefs((prev) => prev.filter((_, i) => i !== index))
+    setBriefImageRefThumbnails((prev) => prev.filter((_, i) => i !== index))
+    // 단일 fallback도 동기화 — index 0을 지우면 legacy 단일도 비우기.
+    if (index === 0) {
+      const next = briefImageRefs[1]
+      const nextThumb = briefImageRefThumbnails[1]
+      setBriefImageRef(next ?? null)
+      setBriefImageRefThumbnail(nextThumb ?? null)
+    }
+    setBriefImageRefError(null)
   }
 
   function handleImageRefClear(): void {
     setBriefImageRef(null)
     setBriefImageRefThumbnail(null)
+    setBriefImageRefs([])
+    setBriefImageRefThumbnails([])
     setBriefImageRefError(null)
   }
 
@@ -3178,19 +3251,73 @@ export default function HomePage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#4f5e56]">
-                    참고 이미지 (선택)
+                    참고 이미지 (선택, {briefImageRefs.length}/{MAX_IMAGE_REFS})
                   </span>
-                  {briefImageRef !== null ? (
+                  {briefImageRefs.length > 0 ? (
                     <button
                       type="button"
                       className="text-[10px] text-[#7c8580] hover:text-[#1b7f72]"
                       onClick={handleImageRefClear}
                     >
-                      지우기
+                      모두 지우기
                     </button>
                   ) : null}
                 </div>
-                {briefImageRef === null ? (
+                {briefImageRefs.length > 0 ? (
+                  <div className="space-y-1">
+                    {briefImageRefs.map((ref, i) => {
+                      const thumb = briefImageRefThumbnails[i] ?? null
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 rounded-md border border-[#cbd6cf] bg-white p-2"
+                        >
+                          {thumb !== null ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={thumb}
+                              alt={`참고 이미지 ${i + 1}`}
+                              className="h-12 w-12 rounded object-cover"
+                            />
+                          ) : null}
+                          <div className="flex-1 space-y-1 text-[10px] text-[#4f5e56]">
+                            <div className="flex flex-wrap gap-1">
+                              {ref.colors.map((hex) => (
+                                <span
+                                  key={hex}
+                                  className="inline-flex items-center gap-1 rounded bg-[#f3efe8] px-1.5 py-0.5"
+                                  title={hex}
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className="inline-block h-2.5 w-2.5 rounded-full border border-[#cbd6cf]"
+                                    style={{ backgroundColor: hex }}
+                                  />
+                                  {hex}
+                                </span>
+                              ))}
+                            </div>
+                            {ref.aspectRatio !== undefined ? (
+                              <div className="text-[#7c8580]">
+                                비율 {ref.aspectRatio}
+                              </div>
+                            ) : null}
+                          </div>
+                          <button
+                            type="button"
+                            className="text-[10px] text-[#7c8580] hover:text-[#b03a2e]"
+                            onClick={() => handleImageRefRemoveAt(i)}
+                            title={`이미지 ${i + 1} 제거`}
+                            aria-label={`참고 이미지 ${i + 1} 제거`}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : null}
+                {briefImageRefs.length < MAX_IMAGE_REFS ? (
                   <label
                     className={`block rounded-md border border-dashed border-[#cbd6cf] bg-white px-3 py-2 text-center text-[11px] text-[#7c8580] ${
                       briefImageRefBusy || clarifyLoading || generateLoading
@@ -3200,58 +3327,27 @@ export default function HomePage() {
                   >
                     {briefImageRefBusy
                       ? '이미지 분석 중…'
-                      : '이미지 파일 선택 (5MB 이하)'}
+                      : briefImageRefs.length === 0
+                        ? '이미지 파일 선택 (최대 3장, 각 5MB 이하)'
+                        : '이미지 추가'}
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       className="sr-only"
                       disabled={
                         briefImageRefBusy || clarifyLoading || generateLoading
                       }
                       onChange={(event) => {
-                        const file = event.target.files?.[0]
+                        const files = Array.from(event.target.files ?? [])
                         event.target.value = ''
-                        if (file !== undefined) {
-                          void handleImageRefSelect(file)
+                        if (files.length > 0) {
+                          void handleImageRefAddFiles(files)
                         }
                       }}
                     />
                   </label>
-                ) : (
-                  <div className="flex items-center gap-2 rounded-md border border-[#cbd6cf] bg-white p-2">
-                    {briefImageRefThumbnail !== null ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={briefImageRefThumbnail}
-                        alt="참고 이미지 썸네일"
-                        className="h-12 w-12 rounded object-cover"
-                      />
-                    ) : null}
-                    <div className="flex-1 space-y-1 text-[10px] text-[#4f5e56]">
-                      <div className="flex flex-wrap gap-1">
-                        {briefImageRef.colors.map((hex) => (
-                          <span
-                            key={hex}
-                            className="inline-flex items-center gap-1 rounded bg-[#f3efe8] px-1.5 py-0.5"
-                            title={hex}
-                          >
-                            <span
-                              aria-hidden="true"
-                              className="inline-block h-2.5 w-2.5 rounded-full border border-[#cbd6cf]"
-                              style={{ backgroundColor: hex }}
-                            />
-                            {hex}
-                          </span>
-                        ))}
-                      </div>
-                      {briefImageRef.aspectRatio !== undefined ? (
-                        <div className="text-[#7c8580]">
-                          비율 {briefImageRef.aspectRatio}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                )}
+                ) : null}
                 {briefImageRefError !== null ? (
                   <div className="text-[10px] text-[#b03a2e]" role="alert">
                     {briefImageRefError}
