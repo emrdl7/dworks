@@ -14,10 +14,15 @@ const STORAGE_KEY = 'dworks:m3-generate:v1'
 
 class MemoryStorage {
   private store = new Map<string, string>()
+  failNextSet = false
   getItem(key: string): string | null {
     return this.store.has(key) ? (this.store.get(key) ?? null) : null
   }
   setItem(key: string, value: string): void {
+    if (this.failNextSet) {
+      this.failNextSet = false
+      throw new Error('QuotaExceeded')
+    }
     this.store.set(key, value)
   }
   removeItem(key: string): void {
@@ -256,5 +261,62 @@ describe('generation-storage', () => {
       'http://example.com/x.jpg'
     storage.setItem(STORAGE_KEY, JSON.stringify(corrupt))
     assert.equal(readPersistedGenerationState(), null)
+  })
+
+  it('QuotaExceeded fallback은 immutable + pinned generation을 보존하고 active를 보정한다', () => {
+    const tree = buildSampleState().generations[0]?.tree
+    assert.ok(tree)
+    const state = buildSampleState({
+      generations: [
+        {
+          id: 'gen-original',
+          label: '원본',
+          tree,
+          immutable: true,
+          brief: null,
+          questions: [],
+          clarifyTurns: [],
+          createdAt: 1,
+          latencyMs: null,
+          model: null,
+        },
+        {
+          id: 'gen-pinned',
+          label: '저장',
+          tree,
+          immutable: false,
+          pinned: true,
+          brief: { intent: '보존할 디자인' },
+          questions: [],
+          clarifyTurns: [],
+          createdAt: 2,
+          latencyMs: 120,
+          model: 'claude',
+        },
+        {
+          id: 'gen-transient',
+          label: '생성 2',
+          tree,
+          immutable: false,
+          brief: { intent: '잘려도 되는 디자인' },
+          questions: [],
+          clarifyTurns: [],
+          createdAt: 3,
+          latencyMs: 140,
+          model: 'codex',
+        },
+      ],
+      activeGenerationId: 'gen-transient',
+    })
+
+    storage.failNextSet = true
+    writePersistedGenerationState(state)
+
+    const loaded = readPersistedGenerationState()
+    assert.equal(loaded?.activeGenerationId, 'gen-original')
+    assert.deepEqual(
+      loaded?.generations.map((entry) => entry.id),
+      ['gen-original', 'gen-pinned'],
+    )
   })
 })

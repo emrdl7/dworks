@@ -3,7 +3,7 @@
 //
 // 주의:
 // - 'use client' 컴포넌트에서만 사용. SSR 환경에서는 typeof window 가드.
-// - QuotaExceeded 시 mutable generation들만 제거하고 immutable + brief는 유지.
+// - QuotaExceeded 시 보호 generation(immutable/pinned)만 유지하고 brief는 유지.
 // - schema mismatch / corrupt JSON 은 조용히 무시하고 default 상태로 시작.
 
 import { treeSchema, type Tree } from '@dworks/tree'
@@ -120,10 +120,19 @@ export function writePersistedGenerationState(
   try {
     window.localStorage.setItem(STORAGE_KEY, payload)
   } catch {
-    // QuotaExceeded 또는 보안 차단 시 mutable generations 줄여 한번 더 시도.
+    // QuotaExceeded 또는 보안 차단 시 보호 generations만 남겨 한번 더 시도.
+    const protectedGenerations = state.generations.filter(
+      (entry) => entry.immutable || entry.pinned === true,
+    )
+    const activeGenerationId = protectedGenerations.some(
+      (entry) => entry.id === state.activeGenerationId,
+    )
+      ? state.activeGenerationId
+      : (protectedGenerations[0]?.id ?? state.activeGenerationId)
     const trimmed: PersistedGenerationState = {
       ...state,
-      generations: state.generations.filter((entry) => entry.immutable),
+      generations: protectedGenerations,
+      activeGenerationId,
     }
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed))
