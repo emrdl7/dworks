@@ -832,7 +832,7 @@ ${GENERATE_EXAMPLES_BLOCK}
 - JSON 외 어떤 출력도 금지.
 - id는 트리 안에서 유일.
 - 비어 있는 컨테이너 (children 없음 / 빈 배열) 금지.
-- 사용자 요청이 모호하면 합리적 기본 (hero 또는 section + 1~3 child)으로 진행.
+- 사용자 요청이 모호하면 root section + banner/main/contentinfo 3자식의 풀 페이지 기본 구조로 진행.
 
 이제 사용자 입력을 받아 위 규칙에 따라 Tree JSON 하나만 반환한다.`
 
