@@ -5395,7 +5395,7 @@ function NodeInspector({
                 <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
                 <textarea
                   className="mt-2 min-h-24 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-                  placeholder="텍스트 내용"
+                  placeholder="텍스트 — **굵게**, *기울임*, [링크](URL)"
                   value={node.content}
                   onChange={(event) => onTextChange(node, event.target.value)}
                 />
