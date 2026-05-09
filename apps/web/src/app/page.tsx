@@ -2808,6 +2808,11 @@ export default function HomePage() {
               </div>
             </summary>
             <div className="space-y-3 px-4 pb-4">
+              {generations.length < 2 ? (
+                <div className="rounded-md border border-dashed border-[#e0e5de] bg-white px-3 py-2 text-[10px] text-[#9aa6a0]">
+                  생성을 추가하면 풍부도 추이를 표시합니다.
+                </div>
+              ) : null}
               {(() => {
                 if (generations.length < 2) return null
                 const scores = generations.map((entry) =>
