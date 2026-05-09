@@ -840,6 +840,9 @@ export default function HomePage() {
     if (intent.length === 0) {
       return null
     }
+    if (generateStage === 'intent') {
+      return { intent }
+    }
     const answers: BriefAnswer[] = []
     for (const question of clarifyQuestions) {
       const raw = briefAnswers[question.id]
