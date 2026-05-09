@@ -209,4 +209,69 @@ describe('llm-prompts examples', () => {
       }
     }
   })
+
+  it('every example uses typography.fontSize on at least one heading-1 (anti-wireframe)', () => {
+    function visit(node: unknown, found: { fontSize: boolean }): void {
+      if (node === null || typeof node !== 'object') return
+      const obj = node as Record<string, unknown>
+      const emphasis = obj.emphasis
+      const typography = obj.typography as
+        | { fontSize?: number }
+        | undefined
+      if (
+        emphasis === 'heading-1' &&
+        typography !== undefined &&
+        typeof typography.fontSize === 'number' &&
+        typography.fontSize >= 48
+      ) {
+        found.fontSize = true
+      }
+      const children = obj.children
+      if (Array.isArray(children)) {
+        for (const c of children) visit(c, found)
+      }
+    }
+    for (const example of GENERATE_TREE_EXAMPLES) {
+      const found = { fontSize: false }
+      visit(example.tree.root, found)
+      assert.ok(
+        found.fontSize,
+        `example "${example.intent}" has no heading-1 with fontSize >= 48 (would be wireframe-like)`,
+      )
+    }
+  })
+
+  it('every example uses shape.shadow on at least one node (visual depth)', () => {
+    function visit(node: unknown, found: { shadow: boolean }): void {
+      if (node === null || typeof node !== 'object') return
+      const obj = node as Record<string, unknown>
+      const shape = obj.shape as { shadow?: string } | undefined
+      if (
+        shape !== undefined &&
+        typeof shape.shadow === 'string' &&
+        shape.shadow !== 'none'
+      ) {
+        found.shadow = true
+      }
+      const children = obj.children
+      if (Array.isArray(children)) {
+        for (const c of children) visit(c, found)
+      }
+    }
+    for (const example of GENERATE_TREE_EXAMPLES) {
+      const found = { shadow: false }
+      visit(example.tree.root, found)
+      assert.ok(
+        found.shadow,
+        `example "${example.intent}" has no shape.shadow usage (visual depth missing)`,
+      )
+    }
+  })
+
+  it('GENERATE_TREE_SYSTEM_PROMPT bans wireframe output explicitly', () => {
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('와이어프레임'),
+      'system prompt missing wireframe ban guidance',
+    )
+  })
 })

@@ -487,20 +487,26 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
         editKind: 'structure',
         type: 'section',
         spacing: {
-          paddingTop: 80,
-          paddingBottom: 80,
-          paddingLeft: 24,
-          paddingRight: 24,
-          gap: 48,
+          paddingTop: 96,
+          paddingBottom: 96,
+          paddingLeft: 32,
+          paddingRight: 32,
+          gap: 56,
         },
         layout: { direction: 'column', align: 'center' },
+        color: { backgroundColor: '#f7f9fc' },
         children: [
           {
             id: 'pricing.title',
             editKind: 'text',
             type: 'text',
-            content: '팀에 맞는 요금제를 선택하세요',
+            content: '팀에 맞는 요금제',
             emphasis: 'heading-1',
+            typography: {
+              fontSize: 56,
+              fontWeight: '900',
+              lineHeight: 1.15,
+            },
           },
           {
             id: 'pricing.lead',
@@ -508,6 +514,8 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             type: 'text',
             content: '언제든지 업그레이드하거나 취소할 수 있습니다.',
             emphasis: 'body',
+            typography: { fontSize: 18, lineHeight: 1.6 },
+            color: { textColor: '#4f5868' },
           },
           {
             id: 'pricing.plans',
@@ -532,6 +540,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                   borderWidth: 1,
                   borderColor: '#dde3ec',
                 },
+                color: { backgroundColor: '#ffffff' },
                 children: [
                   {
                     id: 'pricing.plan.starter.name',
@@ -539,6 +548,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'text',
                     content: 'Starter',
                     emphasis: 'heading-2',
+                    typography: { fontSize: 26, fontWeight: '800' },
                   },
                   {
                     id: 'pricing.plan.starter.price',
@@ -546,6 +556,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'text',
                     content: '월 9,000원',
                     emphasis: 'heading-3',
+                    typography: { fontSize: 36, fontWeight: '900' },
                   },
                   {
                     id: 'pricing.plan.starter.cta',
@@ -553,6 +564,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'button',
                     label: '시작하기',
                     variant: 'secondary',
+                    shape: { radius: 12, shadow: 'md' },
                   },
                 ],
               },
@@ -565,13 +577,13 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                   textColor: '#ffffff',
                 },
                 spacing: {
-                  paddingTop: 32,
-                  paddingBottom: 32,
-                  paddingLeft: 24,
-                  paddingRight: 24,
-                  gap: 16,
+                  paddingTop: 40,
+                  paddingBottom: 40,
+                  paddingLeft: 28,
+                  paddingRight: 28,
+                  gap: 20,
                 },
-                shape: { radius: 16, shadow: 'lg' },
+                shape: { radius: 20, shadow: 'xl' },
                 children: [
                   {
                     id: 'pricing.plan.pro.name',
@@ -579,6 +591,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'text',
                     content: 'Pro',
                     emphasis: 'heading-2',
+                    typography: { fontSize: 28, fontWeight: '800' },
                   },
                   {
                     id: 'pricing.plan.pro.price',
@@ -586,6 +599,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'text',
                     content: '월 29,000원',
                     emphasis: 'heading-3',
+                    typography: { fontSize: 40, fontWeight: '900' },
                   },
                   {
                     id: 'pricing.plan.pro.cta',
@@ -593,6 +607,11 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'button',
                     label: '14일 무료 체험',
                     variant: 'primary',
+                    shape: { radius: 12, shadow: 'lg' },
+                    color: {
+                      backgroundColor: '#ffffff',
+                      textColor: '#0f4c75',
+                    },
                   },
                 ],
               },
@@ -612,6 +631,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                   borderWidth: 1,
                   borderColor: '#dde3ec',
                 },
+                color: { backgroundColor: '#ffffff' },
                 children: [
                   {
                     id: 'pricing.plan.enterprise.name',
@@ -619,6 +639,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'text',
                     content: 'Enterprise',
                     emphasis: 'heading-2',
+                    typography: { fontSize: 26, fontWeight: '800' },
                   },
                   {
                     id: 'pricing.plan.enterprise.price',
@@ -626,6 +647,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'text',
                     content: '맞춤 견적',
                     emphasis: 'heading-3',
+                    typography: { fontSize: 36, fontWeight: '900' },
                   },
                   {
                     id: 'pricing.plan.enterprise.cta',
@@ -633,6 +655,7 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                     type: 'button',
                     label: '문의하기',
                     variant: 'ghost',
+                    shape: { radius: 12 },
                   },
                 ],
               },
@@ -649,12 +672,13 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             role: 'contentinfo',
             layout: { direction: 'row', align: 'center', justify: 'between' },
             spacing: {
-              paddingTop: 24,
-              paddingRight: 32,
-              paddingBottom: 24,
-              paddingLeft: 32,
-              gap: 16,
+              paddingTop: 40,
+              paddingRight: 48,
+              paddingBottom: 40,
+              paddingLeft: 48,
+              gap: 24,
             },
+            color: { backgroundColor: '#0f1729', textColor: '#cdd5e0' },
             children: [
               {
                 id: 'saas.footer.copy',
@@ -777,53 +801,65 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
                 children: [
                   {
                     id: 'article.heading',
-            editKind: 'text',
-            type: 'text',
-            content: '제주의 가을, 오름 위를 걷다',
-            emphasis: 'heading-1',
-          },
-          {
-            id: 'article.byline',
-            editKind: 'text',
-            type: 'text',
-            content: '글·사진 김도현 · 6분 읽기',
-            emphasis: 'caption',
-          },
-          {
-            id: 'article.cover',
-            editKind: 'media',
-            type: 'image',
-            src: 'https://images.unsplash.com/photo-1505765050516-f72dcac9c60e',
-            alt: '제주 오름 정상에서 바라본 가을 하늘과 억새 풍경',
-            aspectRatio: 'wide',
-            shape: { radius: 12 },
-          },
-          {
-            id: 'article.intro',
-            editKind: 'text',
-            type: 'text',
-            content:
-              '바람이 차가워지면 제주의 오름은 다른 얼굴로 바뀐다. 억새가 은빛으로 출렁이고, 발 아래 도시는 안개에 잠긴다.',
-            emphasis: 'body',
-            typography: { lineHeight: 1.7 },
-          },
-          {
-            id: 'article.section1.title',
-            editKind: 'text',
-            type: 'text',
-            content: '새벽의 다랑쉬',
-            emphasis: 'heading-2',
-          },
-          {
-            id: 'article.section1.body',
-            editKind: 'text',
-            type: 'text',
-            content:
-              '동이 트기 전에 다랑쉬오름 입구에 도착했다. 분화구를 한 바퀴 도는 동안 능선이 점점 황금빛으로 물들었다.',
-            emphasis: 'body',
-            typography: { lineHeight: 1.7 },
-          },
-        ],
+                    editKind: 'text',
+                    type: 'text',
+                    content: '제주의 가을, 오름 위를 걷다',
+                    emphasis: 'heading-1',
+                    typography: {
+                      fontSize: 64,
+                      fontWeight: '900',
+                      lineHeight: 1.1,
+                    },
+                  },
+                  {
+                    id: 'article.byline',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '글·사진 김도현 · 6분 읽기',
+                    emphasis: 'caption',
+                    typography: { fontSize: 14 },
+                    color: { textColor: '#6b7280' },
+                  },
+                  {
+                    id: 'article.cover',
+                    editKind: 'media',
+                    type: 'image',
+                    src: 'https://images.unsplash.com/photo-1505765050516-f72dcac9c60e',
+                    alt: '제주 오름 정상에서 바라본 가을 하늘과 억새 풍경',
+                    aspectRatio: 'wide',
+                    shape: { radius: 16, shadow: 'lg' },
+                  },
+                  {
+                    id: 'article.intro',
+                    editKind: 'text',
+                    type: 'text',
+                    content:
+                      '바람이 차가워지면 제주의 오름은 다른 얼굴로 바뀐다. 억새가 은빛으로 출렁이고, 발 아래 도시는 안개에 잠긴다.',
+                    emphasis: 'body',
+                    typography: { fontSize: 20, lineHeight: 1.8 },
+                  },
+                  {
+                    id: 'article.section1.title',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '새벽의 다랑쉬',
+                    emphasis: 'heading-2',
+                    typography: {
+                      fontSize: 36,
+                      fontWeight: '800',
+                      lineHeight: 1.25,
+                    },
+                  },
+                  {
+                    id: 'article.section1.body',
+                    editKind: 'text',
+                    type: 'text',
+                    content:
+                      '동이 트기 전에 다랑쉬오름 입구에 도착했다. 분화구를 한 바퀴 도는 동안 능선이 점점 황금빛으로 물들었다.',
+                    emphasis: 'body',
+                    typography: { fontSize: 18, lineHeight: 1.8 },
+                  },
+                ],
               },
             ],
           },
@@ -834,19 +870,21 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             role: 'contentinfo',
             layout: { direction: 'row', align: 'center', justify: 'between' },
             spacing: {
-              paddingTop: 24,
-              paddingRight: 32,
-              paddingBottom: 24,
-              paddingLeft: 32,
-              gap: 16,
+              paddingTop: 40,
+              paddingRight: 48,
+              paddingBottom: 40,
+              paddingLeft: 48,
+              gap: 24,
             },
+            color: { backgroundColor: '#1f1c1a', textColor: '#e9e5dc' },
             children: [
               {
                 id: 'magazine.footer.copy',
                 editKind: 'text',
                 type: 'text',
-                content: '© 2026 오늘의 여행',
+                content: '© 2026 오늘의 여행 · 매주 금요일 새 글',
                 emphasis: 'caption',
+                typography: { fontSize: 14 },
               },
               {
                 id: 'magazine.footer.links',
