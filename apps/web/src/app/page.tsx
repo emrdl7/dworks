@@ -991,7 +991,6 @@ export default function HomePage() {
     [contextMenu, tree],
   )
   const layerItems = useMemo(() => flattenTree(tree.root), [tree])
-  const editableCount = useMemo(() => countEditableNodes(tree.root), [tree])
   const fontUsageCounts = useMemo(
     () => countTypographyFontUsage(tree.root),
     [tree],
@@ -2376,18 +2375,6 @@ export default function HomePage() {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-[#4f5e56]">
-            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-              루트 {tree.root.id}
-            </span>
-            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-              편집 가능 {editableCount}
-            </span>
-            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-              선택 {selectedNode.id}
-            </span>
-            <span className="rounded-full border border-[#c9d4cd] px-3 py-1">
-              색상 {colorPresetLabels[colorPreset]}
-            </span>
             <span
               className={`rounded-full border px-3 py-1 ${
                 contrastAuditSummary.total === 0
@@ -2397,6 +2384,7 @@ export default function HomePage() {
                     ? 'border-[#4f46e5] bg-[#eef8f6] text-[#4f46e5]'
                     : 'border-[#c9d4cd] bg-white text-[#4f5e56]'
               }`}
+              title="WCAG AA 대비 통과 노드 수"
             >
               대비 AA {contrastAuditSummary.passesAA}/
               {contrastAuditSummary.total}
