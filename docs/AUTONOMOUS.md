@@ -84,6 +84,8 @@
 - ✓ `m3-generate-eval-richness-min` (`19c583c`) — m3-eval `--min-richness 0.6` flag. CallResult에 richness + belowMinRichness 추가, summary에 "풍부도 임계" footer 섹션. test 5건
 - ✓ `m3-generate-history-pin` (`c67ca2d` r4 / `574ddc8` Codex r5) — chip ⭐ 토글로 좋은 generation을 max-trim에서 보호. immutable + pinned 둘 다 protected. inline-flex chip + 별 토글 UI. relabelGenerationHistory도 pinned 라벨 보존. PersistedGenerationEntry.pinned?: boolean (additive). Codex r5: QuotaExceeded fallback도 pinned 보호 + active 정합
 - ✓ `m3-generate-multi-import` (`d2faaa8`) — file input multiple + handleImportGenerationFiles(files: File[]). 부분 실패 reason 누적, 마지막 성공 entry로 active 전환
+- ✓ `m3-generate-fixture-from-active` (`1cb2192`) — 활성 디자인을 사용자 fixture로 등록, localStorage 'dworks:user-fixtures:v1' 별도 키. dropdown에 "기본"/"내 fixture" optgroup. handleSaveAsUserFixture(prompt) + handleDeleteUserFixture. 8 test
+- ✓ `m3-generate-history-rename` (`9ee5992`) — chip 더블클릭으로 사용자 라벨(30자 cap) 인라인 편집. Enter commit / Esc cancel / 빈 입력은 자동 라벨 복귀. PersistedGenerationEntry.userLabel?: optional
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
