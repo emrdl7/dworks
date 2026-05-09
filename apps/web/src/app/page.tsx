@@ -7333,7 +7333,10 @@ function NodeInspector({
     }
   }
 
-  const [activeTab, setActiveTab] = useState<InspectorTab>('design')
+  // 초기 default tab은 _콘텐츠_ — 캔버스에 보이는 내용과 inspector 내용 일치.
+  // 사용자가 디자인/레이아웃 탭을 명시적으로 선택하면, 다음 노드로 이동해도
+  // 그 선택을 유지(Figma 표준 — 작업 흐름 끊지 않음).
+  const [activeTab, setActiveTab] = useState<InspectorTab>(DEFAULT_INSPECTOR_TAB)
   const activeTabSectionTitles = getInspectorTabSectionTitles(
     activeTab,
     node.type,
@@ -12956,6 +12959,12 @@ const INSPECTOR_TABS: Array<{ id: InspectorTab; label: string }> = [
   { id: 'layout', label: '레이아웃' },
   { id: 'content', label: '콘텐츠' },
 ]
+
+// 노드 type 무관하게 _콘텐츠_ tab을 default로.
+// 사용자 mandate: 최초/선택 시 _캔버스에 보이는 내용_과 _우측 inspector 내용_이
+// 일치해야 함 (텍스트면 문구, 이미지면 src/alt, 컨테이너면 그룹 자식 정보).
+// '디자인'/'레이아웃'은 사용자가 명시적으로 선택해 들어가는 보조 탭.
+const DEFAULT_INSPECTOR_TAB: InspectorTab = 'content'
 
 // 활성 탭에서 노출되는 disclosure section 제목들. master collapse 토글 대상.
 function getInspectorTabSectionTitles(
