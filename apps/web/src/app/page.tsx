@@ -197,6 +197,14 @@ interface SubmittedDesignBrief {
 
 type GenerateStage = 'intent' | 'questions'
 
+type VariantCount = 1 | 2 | 3
+const VARIANT_COUNT_OPTIONS: VariantCount[] = [1, 2, 3]
+const VARIANT_DIVERSITY_HINTS: ReadonlyArray<string> = [
+  '변형 1: 구조와 정보 밀도가 균형 잡힌 안정형 레이아웃.',
+  '변형 2: 시각 강조와 헤드라인이 강한 임팩트형 레이아웃.',
+  '변형 3: 여백이 넓고 차분한 실무형 레이아웃.',
+]
+
 interface GenerationEntry {
   id: string
   label: string
@@ -699,6 +707,7 @@ export default function HomePage() {
   const [generateStage, setGenerateStage] = useState<GenerateStage>('intent')
   const [briefIntent, setBriefIntent] = useState('')
   const [briefNotes, setBriefNotes] = useState('')
+  const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
   const [clarifyQuestions, setClarifyQuestions] = useState<ClarifyQuestionDto[]>(
     [],
   )
@@ -866,6 +875,7 @@ export default function HomePage() {
     setBriefNotes('')
     setClarifyQuestions([])
     setBriefAnswers({})
+    setBriefVariantCount(1)
     setGenerateStage('intent')
   }
 
@@ -924,6 +934,46 @@ export default function HomePage() {
     )
   }
 
+  async function callGenerateOnce(
+    apiBase: string,
+    requestBrief: SubmittedDesignBrief,
+  ): Promise<
+    | { ok: true; tree: Tree; model: GenerationEntry['model']; latencyMs: number }
+    | { ok: false; reason: string }
+  > {
+    try {
+      const response = await fetch(`${apiBase}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief: requestBrief }),
+      })
+      const payload = (await response.json()) as
+        | { tree: Tree; model: GenerationEntry['model']; latencyMs: number }
+        | { error: string; message: string }
+      if (!response.ok) {
+        return {
+          ok: false,
+          reason:
+            'message' in payload ? payload.message : 'AI 생성에 실패했습니다.',
+        }
+      }
+      if (!('tree' in payload)) {
+        return { ok: false, reason: 'AI 응답이 비어 있습니다.' }
+      }
+      return {
+        ok: true,
+        tree: payload.tree,
+        model: payload.model ?? 'claude',
+        latencyMs: payload.latencyMs ?? 0,
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        reason: error instanceof Error ? error.message : 'AI 생성에 실패했습니다.',
+      }
+    }
+  }
+
   async function handleGenerateTree() {
     const submitted = buildSubmittedBrief()
     if (submitted === null || generateLoading) {
@@ -931,54 +981,91 @@ export default function HomePage() {
     }
     setGenerateLoading(true)
     setGenerateError(null)
+    const apiBase =
+      process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
+    const count = briefVariantCount
     try {
-      const apiBase =
-        process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
-      const response = await fetch(`${apiBase}/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief: submitted }),
-      })
-      const payload = (await response.json()) as
-        | { tree: Tree; model: GenerationEntry['model']; latencyMs: number }
-        | { error: string; message: string }
-      if (!response.ok) {
-        const message =
-          'message' in payload ? payload.message : 'AI 생성에 실패했습니다.'
-        setGenerateError(message)
+      const requests: Array<Promise<Awaited<ReturnType<typeof callGenerateOnce>>>> =
+        []
+      for (let i = 0; i < count; i++) {
+        const requestBrief: SubmittedDesignBrief =
+          count === 1
+            ? submitted
+            : {
+                ...submitted,
+                notes: [submitted.notes, VARIANT_DIVERSITY_HINTS[i] ?? '']
+                  .filter((part) => part !== undefined && part.trim().length > 0)
+                  .join('\n\n')
+                  .trim(),
+              }
+        requests.push(callGenerateOnce(apiBase, requestBrief))
+      }
+      const settled = await Promise.allSettled(requests)
+      const successes: Array<{
+        tree: Tree
+        model: GenerationEntry['model']
+        latencyMs: number
+      }> = []
+      const failures: string[] = []
+      for (const r of settled) {
+        if (r.status === 'fulfilled') {
+          if (r.value.ok) {
+            successes.push({
+              tree: r.value.tree,
+              model: r.value.model,
+              latencyMs: r.value.latencyMs,
+            })
+          } else {
+            failures.push(r.value.reason)
+          }
+        } else {
+          failures.push(
+            r.reason instanceof Error ? r.reason.message : String(r.reason),
+          )
+        }
+      }
+      if (successes.length === 0) {
+        const firstReason = failures[0] ?? 'AI 생성에 실패했습니다.'
+        setGenerateError(
+          count === 1 ? firstReason : `모든 변형 생성 실패: ${firstReason}`,
+        )
         return
       }
-      if (!('tree' in payload)) {
-        setGenerateError('AI 응답이 비어 있습니다.')
-        return
-      }
-      const nextTree = payload.tree
-      const nextSelectedId =
-        findFirstEditableNodeId(nextTree.root) ?? nextTree.root.id
       snapshotActiveGeneration(tree)
-      const newEntry: GenerationEntry = {
+      const now = Date.now()
+      const newEntries: GenerationEntry[] = successes.map((success) => ({
         id: createGenerationEntryId(),
         label: '',
-        tree: nextTree,
+        tree: success.tree,
         immutable: false,
         brief: submitted,
-        createdAt: Date.now(),
-        latencyMs: payload.latencyMs ?? null,
-        model: payload.model ?? 'claude',
-      }
+        createdAt: now,
+        latencyMs: success.latencyMs,
+        model: success.model,
+      }))
       setGenerations((entries) => {
-        const next = [...entries, newEntry].slice(-MAX_GENERATIONS)
+        const next = [...entries, ...newEntries].slice(-MAX_GENERATIONS)
         return next.map((entry, index) =>
           entry.immutable ? entry : { ...entry, label: `생성 ${index}` },
         )
       })
-      setActiveGenerationId(newEntry.id)
-      commitTreeEdit(nextTree, nextSelectedId)
+      const firstNew = newEntries[0]
+      if (firstNew !== undefined) {
+        const nextSelectedId =
+          findFirstEditableNodeId(firstNew.tree.root) ?? firstNew.tree.root.id
+        setActiveGenerationId(firstNew.id)
+        commitTreeEdit(firstNew.tree, nextSelectedId, {
+          skipGenerationSync: true,
+        })
+      }
+      if (failures.length > 0) {
+        setGenerateError(
+          `${count}개 중 ${successes.length}개 생성됨 (${failures.length}개 실패)`,
+        )
+      } else {
+        setGenerateError(null)
+      }
       resetBriefForm()
-    } catch (error) {
-      setGenerateError(
-        error instanceof Error ? error.message : 'AI 생성에 실패했습니다.',
-      )
     } finally {
       setGenerateLoading(false)
     }
@@ -1849,13 +1936,48 @@ export default function HomePage() {
                     />
                   </label>
 
+                  <div>
+                    <span className="text-[11px] font-semibold text-[#4f5e56]">
+                      변형 개수
+                    </span>
+                    <div className="mt-1 flex gap-1">
+                      {VARIANT_COUNT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          aria-pressed={briefVariantCount === opt}
+                          disabled={generateLoading}
+                          className={`rounded-md border px-3 py-1 text-[11px] transition ${
+                            briefVariantCount === opt
+                              ? 'border-[#1b7f72] bg-[#dff1ee] text-[#073d37]'
+                              : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                          }`}
+                          onClick={() => setBriefVariantCount(opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                    {briefVariantCount > 1 ? (
+                      <p className="mt-1 text-[10px] text-[#647067]">
+                        같은 브리프로 {briefVariantCount}개 변형을 동시 생성합니다.
+                      </p>
+                    ) : null}
+                  </div>
+
                   <button
                     type="button"
                     className="w-full rounded-md bg-[#1b7f72] px-3 py-2 text-xs font-semibold text-white hover:bg-[#15665b] disabled:opacity-50"
                     disabled={generateLoading}
                     onClick={() => void handleGenerateTree()}
                   >
-                    {generateLoading ? '생성 중…' : '디자인 생성'}
+                    {generateLoading
+                      ? briefVariantCount > 1
+                        ? `${briefVariantCount}개 생성 중…`
+                        : '생성 중…'
+                      : briefVariantCount > 1
+                        ? `디자인 ${briefVariantCount}개 생성`
+                        : '디자인 생성'}
                   </button>
                 </>
               )}
