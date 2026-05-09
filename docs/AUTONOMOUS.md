@@ -166,6 +166,30 @@
 - §11.6 정지 조건은 그대로 유지 (라운드 6 / 동일 미해결 2회 / page.tsx 5회 / ff-only / mandate 외).
 - ABSORB 시점은 자체 판단 (사용자 지시로 일시 건너뛰기 가능). 5회 도달 시 정지 조건 적용.
 
+### 2026-05-09 가속 §6 병렬 흐름 (사용자 지시)
+
+> 사용자: "그냥 클로드가 큰 덩어리 하나씩 구축하고, 그거에 대한 검증 및 수정을 코덱스가 맡아서 하는 게 어때... 한쪽이 일하고 한쪽이 대기하고가 아니라 동시에 뭔가를 하도록"
+
+기존 round 1 → r2 → r4 → r5 직렬 사이클은 watcher 알림 사이마다 한쪽이 idle. 두 사람이 동시에 흐르도록 정책 강화.
+
+**Claude 측**:
+1. **큰 덩어리 round 4 직접**: 사용자 mandate 안 명백한 후속(이전 토픽의 자연스러운 다음 단계)은 round 1 docs 생략하고 `feat:` commit으로 직접 구현 가능. 합의가 필요한 미묘한 결정만 round 1을 짧게(15줄 이내) 발행.
+2. **commit 직후 즉시 다음 진입**: round 4 commit 마치면 _즉시_ 다음 큰 덩어리 작업 시작. 직전 토픽의 Codex r5 fix는 watcher가 알리면 그때 처리. 대기 X.
+3. **여러 토픽 동시 진행 OK**: 가속 §4 병렬 토픽의 강화. 토픽 A round 4 commit → 토픽 B round 4 commit → 그 사이에 Codex가 A에 r5 fix 보내면 watcher 알림 받아 흡수.
+
+**Codex 측**:
+1. **검증/수정 자유**: 직전 Claude commit을 받으면 직접 `fix:` 또는 `test:` 또는 `refactor:` commit으로 보강. round 5 docs 없이 commit만으로 OK.
+2. **Claude의 다음 commit 와도 정합 유지**: 새 commit이 직전 토픽 검증 중 도착해도 동시 처리 — 한 토픽 끝낸 후 다음 토픽으로.
+3. **검증 외 작업 가능**: Claude가 작업 중인 영역과 _다른 영역_(test 인프라 / lint config / 작은 한글화 등)을 자체 진행 가능. mandate 안.
+
+**ABSORB 시점**:
+- 한 토픽이 r4 + r5 모두 받은 시점 또는 r4 + Codex가 r5 추가 조치 없음 명시한 시점.
+- 여러 토픽이 동시에 close 상태면 함께 한 ABSORB commit으로 묶어도 OK.
+
+**안전장치는 그대로**: 정지 조건(라운드 6 / page.tsx 5회 / mandate 외 등) 변경 없음. round 1을 생략한 토픽도 page.tsx 카운터는 동일 적용.
+
+이 정책은 dworks 자율 모드 _기본_으로 즉시 적용. 다음 commit부터 양쪽 모두 §6 흐름.
+
 ## 정지 조건 (`COLLABORATION.md` §11.6)
 
 1. 한 토픽에서 라운드 6 도달 (`>= 6`)
