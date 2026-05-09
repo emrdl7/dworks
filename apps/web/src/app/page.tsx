@@ -2409,6 +2409,17 @@ export default function HomePage() {
         handleDuplicateSelected()
         return
       }
+      // Cmd/Ctrl+↑/↓ — 형제 노드 사이 reorder
+      if (meta && event.key === 'ArrowUp') {
+        event.preventDefault()
+        handleMoveSelected('up')
+        return
+      }
+      if (meta && event.key === 'ArrowDown') {
+        event.preventDefault()
+        handleMoveSelected('down')
+        return
+      }
       // Delete/Backspace — delete selected (root는 무시)
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault()
@@ -3742,6 +3753,8 @@ export default function HomePage() {
                 { keys: ['⌘', 'Z'], label: '실행 취소' },
                 { keys: ['⌘', '⇧', 'Z'], label: '다시 실행' },
                 { keys: ['⌘', 'D'], label: '복제' },
+                { keys: ['⌘', '↑'], label: '위로 이동' },
+                { keys: ['⌘', '↓'], label: '아래로 이동' },
                 { keys: ['Delete'], label: '삭제' },
                 { keys: ['Esc'], label: '선택 해제' },
                 { keys: ['?'], label: '이 도움말 토글' },
@@ -4054,10 +4067,18 @@ function NodeContextMenu({
           {node.id}
         </span>
       </div>
-      <ContextMenuButton disabled={!canMoveUp} onClick={onMoveUp}>
+      <ContextMenuButton
+        disabled={!canMoveUp}
+        onClick={onMoveUp}
+        shortcut="⌘↑"
+      >
         위로 이동
       </ContextMenuButton>
-      <ContextMenuButton disabled={!canMoveDown} onClick={onMoveDown}>
+      <ContextMenuButton
+        disabled={!canMoveDown}
+        onClick={onMoveDown}
+        shortcut="⌘↓"
+      >
         아래로 이동
       </ContextMenuButton>
       <ContextMenuButton
@@ -4607,12 +4628,14 @@ function CanvasNodeToolbar({ nodeId }: { nodeId: string }) {
     >
       <CanvasToolbarButton
         ariaLabel="위로 이동"
+        shortcut="⌘↑"
         disabled={!canMoveUp}
         icon={ArrowUp}
         onClick={onMoveUp}
       />
       <CanvasToolbarButton
         ariaLabel="아래로 이동"
+        shortcut="⌘↓"
         disabled={!canMoveDown}
         icon={ArrowDown}
         onClick={onMoveDown}
