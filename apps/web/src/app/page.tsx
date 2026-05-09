@@ -4101,6 +4101,35 @@ export default function HomePage() {
             </div>
           )}
           </div>
+          {compareMode ? null : (
+            <div className="flex h-7 shrink-0 items-center justify-between gap-3 border-t border-[#2a2e35] bg-[#16181c] px-4 text-[11px] text-[#5b6069]">
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="tabular-nums text-[#898d97]">
+                  {Math.round(canvasZoom * 100)}%
+                </span>
+                <span aria-hidden="true">·</span>
+                <span className="tabular-nums">
+                  {selectedViewportPreset.width}px {selectedViewportPreset.label}
+                </span>
+                {canvasGridSize > 0 ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="tabular-nums">grid {canvasGridSize}px</span>
+                  </>
+                ) : null}
+              </div>
+              <div className="flex min-w-0 shrink items-center gap-2">
+                {additionalSelectedNodeIds.size > 0 ? (
+                  <span className="text-[#a5b4fc]">
+                    +{additionalSelectedNodeIds.size}개 선택
+                  </span>
+                ) : null}
+                <span className="truncate font-mono text-[10px]" title={selectedNodeId}>
+                  {selectedNodeId === tree.root.id ? '— root —' : selectedNodeId}
+                </span>
+              </div>
+            </div>
+          )}
         </section>
 
         {compareMode ? null : (
