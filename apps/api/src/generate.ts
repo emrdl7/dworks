@@ -200,6 +200,14 @@ export async function handleGenerate(
 
   const treeParse = treeSchema.safeParse(json)
   if (!treeParse.success) {
+    if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
+      console.error(
+        '[dworks-api] schema-failure issues:',
+        JSON.stringify(treeParse.error.issues.slice(0, 8), null, 2),
+      )
+      const head = JSON.stringify(json).slice(0, 1500)
+      console.error('[dworks-api] schema-failure raw json (head):', head)
+    }
     return {
       status: 422,
       body: {
