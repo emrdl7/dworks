@@ -3563,7 +3563,6 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
 
   return (
     <div className="flex items-center gap-2 text-xs text-[#4f5e56]">
-      <span className="font-semibold">화면</span>
       <div
         role="group"
         aria-label="캔버스 화면 폭"
