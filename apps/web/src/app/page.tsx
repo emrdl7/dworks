@@ -2582,6 +2582,45 @@ export default function HomePage() {
     setCanvasZoom(next)
   }
 
+  // 선택 노드를 화면에 fit + 중앙 (Figma ⌘2)
+  function handleZoomToSelection(): void {
+    const el = canvasScrollRef.current
+    if (!el) return
+    const nodeEl = el.querySelector<HTMLElement>(
+      `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
+    )
+    if (!nodeEl) return
+    const nodeRect = nodeEl.getBoundingClientRect()
+    const containerRect = el.getBoundingClientRect()
+    if (nodeRect.width <= 0 || nodeRect.height <= 0) return
+    // 현재 zoom 기준 logical 크기·위치
+    const nodeLogicalWidth = nodeRect.width / canvasZoom
+    const nodeLogicalHeight = nodeRect.height / canvasZoom
+    const nodeLogicalLeft =
+      (nodeRect.left - containerRect.left + el.scrollLeft) / canvasZoom
+    const nodeLogicalTop =
+      (nodeRect.top - containerRect.top + el.scrollTop) / canvasZoom
+    // 노드를 80px 패딩 두고 화면에 fit하는 zoom
+    const padding = 80
+    const widthScale = (containerRect.width - padding) / nodeLogicalWidth
+    const heightScale = (containerRect.height - padding) / nodeLogicalHeight
+    const targetScale = Math.min(widthScale, heightScale)
+    const newZoom = Math.max(
+      0.25,
+      Math.min(2, Math.round(targetScale * 100) / 100),
+    )
+    // 노드 중심을 화면 중심에 맞추는 scroll
+    pendingDirectScrollRef.current = {
+      left:
+        newZoom * (nodeLogicalLeft + nodeLogicalWidth / 2) -
+        containerRect.width / 2,
+      top:
+        newZoom * (nodeLogicalTop + nodeLogicalHeight / 2) -
+        containerRect.height / 2,
+    }
+    setCanvasZoom(newZoom)
+  }
+
   // 글로벌 키보드 shortcut — input/textarea/contenteditable에서는 비활성
   useEffect(() => {
     function isEditableTarget(el: EventTarget | null): boolean {
@@ -2674,6 +2713,12 @@ export default function HomePage() {
       if (meta && event.key === '1') {
         event.preventDefault()
         handleCanvasFit()
+        return
+      }
+      // ⌘2 — zoom to selection (선택 노드를 화면 중앙에 fit)
+      if (meta && event.key === '2') {
+        event.preventDefault()
+        handleZoomToSelection()
         return
       }
       // ⌘+ / ⌘= — 줌 인 (= 키도 받음, shift 없는 + 입력 호환)
@@ -2769,6 +2814,8 @@ export default function HomePage() {
     oldScrollTop: number
     oldZoom: number
   } | null>(null)
+  // zoom-to-selection 같은 직접 scroll 지정용
+  const pendingDirectScrollRef = useRef<{ left: number; top: number } | null>(null)
 
   // 캔버스 트랙패드/⌘+wheel 줌 — passive:false로 native attach (preventDefault 위해)
   useEffect(() => {
@@ -2807,17 +2854,26 @@ export default function HomePage() {
     }
   }, [])
 
-  // canvasZoom 변경 후 cursor anchor 적용 — DOM 갱신 후 scroll 보정
+  // canvasZoom 변경 후 scroll 보정 — DOM 갱신 후 적용
+  // 1) cursor anchor (트랙패드 pinch): 커서 아래 점이 그대로
+  // 2) direct scroll (zoom-to-selection): 절대 좌표 지정
   useEffect(() => {
-    const anchor = pendingZoomAnchorRef.current
-    if (!anchor) return
     const el = canvasScrollRef.current
     if (!el) return
-    const ratio = canvasZoom / anchor.oldZoom
-    // 새 scrollLeft = (이전 scroll + cursor offset) × 줌 비 - cursor offset
-    el.scrollLeft = (anchor.oldScrollLeft + anchor.cursorX) * ratio - anchor.cursorX
-    el.scrollTop = (anchor.oldScrollTop + anchor.cursorY) * ratio - anchor.cursorY
-    pendingZoomAnchorRef.current = null
+    const anchor = pendingZoomAnchorRef.current
+    if (anchor) {
+      const ratio = canvasZoom / anchor.oldZoom
+      el.scrollLeft = (anchor.oldScrollLeft + anchor.cursorX) * ratio - anchor.cursorX
+      el.scrollTop = (anchor.oldScrollTop + anchor.cursorY) * ratio - anchor.cursorY
+      pendingZoomAnchorRef.current = null
+      return
+    }
+    const direct = pendingDirectScrollRef.current
+    if (direct) {
+      el.scrollLeft = direct.left
+      el.scrollTop = direct.top
+      pendingDirectScrollRef.current = null
+    }
   }, [canvasZoom])
 
   return (
@@ -4307,6 +4363,7 @@ export default function HomePage() {
                     { keys: ['⌘', '-'], label: '줌 아웃 10%' },
                     { keys: ['⌘', '0'], label: '줌 100% 리셋' },
                     { keys: ['⌘', '1'], label: '화면에 맞춤 (fit to screen)' },
+                    { keys: ['⌘', '2'], label: '선택 노드를 화면 중앙에 fit' },
                   ],
                 },
                 {
