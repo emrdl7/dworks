@@ -55,56 +55,174 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
     tree: {
       version: '1',
       root: {
-        id: 'landing.hero',
+        id: 'cafe.page',
         editKind: 'structure',
-        type: 'hero',
-        color: {
-          backgroundGradient: {
-            from: '#fff5e8',
-            to: '#f0c891',
-            direction: 'to-bottom-right',
-          },
-        },
-        spacing: {
-          paddingTop: 96,
-          paddingBottom: 96,
-          paddingLeft: 32,
-          paddingRight: 32,
-          gap: 24,
-        },
-        shape: { radius: 24 },
-        layout: { align: 'center' },
+        type: 'section',
+        layout: { direction: 'column' },
         children: [
           {
-            id: 'hero.title',
-            editKind: 'text',
-            type: 'text',
-            content: '도시의 숨결, 한 잔의 여유',
-            emphasis: 'heading-1',
+            id: 'cafe.header',
+            editKind: 'structure',
+            type: 'section',
+            role: 'banner',
+            layout: { direction: 'row', align: 'center', justify: 'between' },
+            spacing: {
+              paddingTop: 16,
+              paddingRight: 32,
+              paddingBottom: 16,
+              paddingLeft: 32,
+              gap: 24,
+            },
+            responsive: { mobile: '햄버거 메뉴로 nav 접고 로고만 노출' },
+            children: [
+              {
+                id: 'cafe.header.logo',
+                editKind: 'text',
+                type: 'text',
+                content: '도시카페',
+                emphasis: 'heading-3',
+                contentRole: 'heading',
+              },
+              {
+                id: 'cafe.header.nav',
+                editKind: 'structure',
+                type: 'section',
+                layout: { direction: 'row', align: 'center' },
+                spacing: { gap: 24 },
+                children: [
+                  {
+                    id: 'cafe.header.nav.menu',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '메뉴',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'cafe.header.nav.brand',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '브랜드',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'cafe.header.nav.location',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '매장',
+                    contentRole: 'label',
+                  },
+                ],
+              },
+            ],
           },
           {
-            id: 'hero.subtitle',
-            editKind: 'text',
-            type: 'text',
-            content: '직접 로스팅한 원두로 매일 아침을 깨웁니다.',
-            emphasis: 'body',
+            id: 'cafe.main',
+            editKind: 'structure',
+            type: 'section',
+            role: 'main',
+            children: [
+              {
+                id: 'landing.hero',
+                editKind: 'structure',
+                type: 'hero',
+                color: {
+                  backgroundGradient: {
+                    from: '#fff5e8',
+                    to: '#f0c891',
+                    direction: 'to-bottom-right',
+                  },
+                },
+                spacing: {
+                  paddingTop: 96,
+                  paddingBottom: 96,
+                  paddingLeft: 32,
+                  paddingRight: 32,
+                  gap: 24,
+                },
+                shape: { radius: 24 },
+                layout: { align: 'center' },
+                responsive: { mobile: 'image 아래로 stack, padding 축소' },
+                children: [
+                  {
+                    id: 'hero.title',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '도시의 숨결, 한 잔의 여유',
+                    emphasis: 'heading-1',
+                  },
+                  {
+                    id: 'hero.subtitle',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '직접 로스팅한 원두로 매일 아침을 깨웁니다.',
+                    emphasis: 'body',
+                  },
+                  {
+                    id: 'hero.image',
+                    editKind: 'media',
+                    type: 'image',
+                    src: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085',
+                    alt: '원목 테이블 위 따뜻한 라떼 한 잔',
+                    aspectRatio: 'wide',
+                    shape: { radius: 16 },
+                  },
+                  {
+                    id: 'hero.cta',
+                    editKind: 'text',
+                    type: 'button',
+                    label: '메뉴 보기',
+                    variant: 'primary',
+                    shape: { radius: 32, shadow: 'sm' },
+                  },
+                ],
+              },
+            ],
           },
           {
-            id: 'hero.image',
-            editKind: 'media',
-            type: 'image',
-            src: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085',
-            alt: '원목 테이블 위 따뜻한 라떼 한 잔',
-            aspectRatio: 'wide',
-            shape: { radius: 16 },
-          },
-          {
-            id: 'hero.cta',
-            editKind: 'text',
-            type: 'button',
-            label: '메뉴 보기',
-            variant: 'primary',
-            shape: { radius: 32, shadow: 'sm' },
+            id: 'cafe.footer',
+            editKind: 'structure',
+            type: 'section',
+            role: 'contentinfo',
+            layout: { direction: 'row', align: 'center', justify: 'between' },
+            spacing: {
+              paddingTop: 24,
+              paddingRight: 32,
+              paddingBottom: 24,
+              paddingLeft: 32,
+              gap: 16,
+            },
+            children: [
+              {
+                id: 'cafe.footer.copy',
+                editKind: 'text',
+                type: 'text',
+                content: '© 2026 도시카페',
+                emphasis: 'caption',
+              },
+              {
+                id: 'cafe.footer.links',
+                editKind: 'structure',
+                type: 'section',
+                layout: { direction: 'row' },
+                spacing: { gap: 16 },
+                children: [
+                  {
+                    id: 'cafe.footer.privacy',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '개인정보처리방침',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'cafe.footer.contact',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '문의',
+                    contentRole: 'label',
+                  },
+                ],
+              },
+            ],
           },
         ],
       },
@@ -115,6 +233,80 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
     tree: {
       version: '1',
       root: {
+        id: 'saas.page',
+        editKind: 'structure',
+        type: 'section',
+        layout: { direction: 'column' },
+        children: [
+          {
+            id: 'saas.header',
+            editKind: 'structure',
+            type: 'section',
+            role: 'banner',
+            layout: { direction: 'row', align: 'center', justify: 'between' },
+            spacing: {
+              paddingTop: 16,
+              paddingRight: 32,
+              paddingBottom: 16,
+              paddingLeft: 32,
+              gap: 24,
+            },
+            responsive: { mobile: '햄버거 메뉴로 nav 접음' },
+            children: [
+              {
+                id: 'saas.header.logo',
+                editKind: 'text',
+                type: 'text',
+                content: 'Dworks',
+                emphasis: 'heading-3',
+                contentRole: 'heading',
+              },
+              {
+                id: 'saas.header.nav',
+                editKind: 'structure',
+                type: 'section',
+                layout: { direction: 'row', align: 'center' },
+                spacing: { gap: 24 },
+                children: [
+                  {
+                    id: 'saas.header.nav.product',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '제품',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'saas.header.nav.pricing',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '가격',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'saas.header.nav.docs',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '문서',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'saas.header.nav.login',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '로그인',
+                    contentRole: 'label',
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'saas.main',
+            editKind: 'structure',
+            type: 'section',
+            role: 'main',
+            children: [
+      {
         id: 'pricing.section',
         editKind: 'structure',
         type: 'section',
@@ -272,6 +464,56 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
           },
         ],
       },
+            ],
+          },
+          {
+            id: 'saas.footer',
+            editKind: 'structure',
+            type: 'section',
+            role: 'contentinfo',
+            layout: { direction: 'row', align: 'center', justify: 'between' },
+            spacing: {
+              paddingTop: 24,
+              paddingRight: 32,
+              paddingBottom: 24,
+              paddingLeft: 32,
+              gap: 16,
+            },
+            children: [
+              {
+                id: 'saas.footer.copy',
+                editKind: 'text',
+                type: 'text',
+                content: '© 2026 Dworks. All rights reserved.',
+                emphasis: 'caption',
+              },
+              {
+                id: 'saas.footer.links',
+                editKind: 'structure',
+                type: 'section',
+                layout: { direction: 'row' },
+                spacing: { gap: 16 },
+                children: [
+                  {
+                    id: 'saas.footer.privacy',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '개인정보처리방침',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'saas.footer.terms',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '이용약관',
+                    contentRole: 'label',
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     },
   },
   {
@@ -279,20 +521,86 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
     tree: {
       version: '1',
       root: {
-        id: 'article.section',
+        id: 'magazine.page',
         editKind: 'structure',
         type: 'section',
-        spacing: {
-          paddingTop: 64,
-          paddingBottom: 64,
-          paddingLeft: 24,
-          paddingRight: 24,
-          gap: 24,
-        },
         layout: { direction: 'column' },
         children: [
           {
-            id: 'article.heading',
+            id: 'magazine.header',
+            editKind: 'structure',
+            type: 'section',
+            role: 'banner',
+            layout: { direction: 'row', align: 'center', justify: 'between' },
+            spacing: {
+              paddingTop: 16,
+              paddingRight: 32,
+              paddingBottom: 16,
+              paddingLeft: 32,
+              gap: 24,
+            },
+            children: [
+              {
+                id: 'magazine.header.logo',
+                editKind: 'text',
+                type: 'text',
+                content: '오늘의 여행',
+                emphasis: 'heading-3',
+                contentRole: 'heading',
+              },
+              {
+                id: 'magazine.header.nav',
+                editKind: 'structure',
+                type: 'section',
+                layout: { direction: 'row' },
+                spacing: { gap: 24 },
+                children: [
+                  {
+                    id: 'magazine.header.nav.essay',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '에세이',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'magazine.header.nav.guide',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '가이드',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'magazine.header.nav.photo',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '사진',
+                    contentRole: 'label',
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: 'magazine.main',
+            editKind: 'structure',
+            type: 'section',
+            role: 'main',
+            children: [
+              {
+                id: 'article.section',
+                editKind: 'structure',
+                type: 'section',
+                spacing: {
+                  paddingTop: 64,
+                  paddingBottom: 64,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  gap: 24,
+                },
+                layout: { direction: 'column' },
+                children: [
+                  {
+                    id: 'article.heading',
             editKind: 'text',
             type: 'text',
             content: '제주의 가을, 오름 위를 걷다',
@@ -338,6 +646,56 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
               '동이 트기 전에 다랑쉬오름 입구에 도착했다. 분화구를 한 바퀴 도는 동안 능선이 점점 황금빛으로 물들었다.',
             emphasis: 'body',
             typography: { lineHeight: 1.7 },
+          },
+        ],
+              },
+            ],
+          },
+          {
+            id: 'magazine.footer',
+            editKind: 'structure',
+            type: 'section',
+            role: 'contentinfo',
+            layout: { direction: 'row', align: 'center', justify: 'between' },
+            spacing: {
+              paddingTop: 24,
+              paddingRight: 32,
+              paddingBottom: 24,
+              paddingLeft: 32,
+              gap: 16,
+            },
+            children: [
+              {
+                id: 'magazine.footer.copy',
+                editKind: 'text',
+                type: 'text',
+                content: '© 2026 오늘의 여행',
+                emphasis: 'caption',
+              },
+              {
+                id: 'magazine.footer.links',
+                editKind: 'structure',
+                type: 'section',
+                layout: { direction: 'row' },
+                spacing: { gap: 16 },
+                children: [
+                  {
+                    id: 'magazine.footer.about',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '소개',
+                    contentRole: 'label',
+                  },
+                  {
+                    id: 'magazine.footer.subscribe',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '뉴스레터',
+                    contentRole: 'label',
+                  },
+                ],
+              },
+            ],
           },
         ],
       },
@@ -430,6 +788,28 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - **의도**: 페이지 목적 (필수, 가장 중요).
 - **추가 질문 답변**: \`- 질문 라벨: 답변\` 목록. 답변은 단일 문자열 또는 ', '로 결합된 다중 선택. 의도와 답변을 종합해 root 노드 종류 / children 구성 / content 디테일 결정.
 - **브랜드 / 참조 메모**: brand voice / 참조 자료.
+
+## 페이지 기본 구조
+
+기본 출력은 _풀 페이지_다. root는 \`section\`이고 다음 3 자식을 둔다:
+
+- \`section role="banner"\` (헤더): \`layout.direction='row'\`, 로고 text + 1차 nav text 3~5. 각 nav text는 \`contentRole='label'\`.
+- \`section role="main"\` (메인): hero / pricing / article 등 핵심 콘텐츠를 감싼다. 이 section의 자식이 도메인 시그니처를 담는다.
+- \`section role="contentinfo"\` (푸터): 카피라이트 + 보조 링크 2~3개. 각 링크 text는 \`contentRole='label'\`.
+
+단편 출력 예외: 사용자가 _명시적으로_ "hero만", "카드만"처럼 부분만 요청한 경우만 root를 hero/card 단독으로 둔다. 일반 "페이지" 의도는 풀 페이지로 응답한다.
+
+\`responsive\` prop은 헤더/메인의 layout이 viewport별로 어떻게 적응할지 한국어 의도 메모(예: \`{ "mobile": "햄버거 메뉴로 nav 접음" }\`). 의도 _힌트_만 — 실제 렌더 분기는 시스템이 처리.
+
+## 2026 디자인 트렌드 가이드
+
+- **Bold typography hero**: hero 첫 화면에 \`emphasis="heading-1"\` 텍스트가 강한 메시지를 전달. typography 자체가 시각적 hook.
+- **Ample whitespace**: hero/main section의 \`spacing.padding\` ≥ 80, 섹션 간 \`spacing.gap\` ≥ 48. 정보 밀도 낮추고 호흡 확보.
+- **Single clear CTA per hero**: 1차 CTA 하나 — \`variant='primary'\`. 보조는 \`ghost\`.
+- **Neutral base + accent pops**: 배경은 흑백/그레이 또는 soft tone. \`accentColor\` 1~2개로 강조. 화려한 그라디언트 X (subtle gradient OK).
+- **Mobile-first 의도**: \`layout.direction\`은 column 우선, gap으로 호흡. 헤더만 row + responsive로 mobile 적응 의도 명시.
+
+피할 패턴(AI 슬롭): 모든 카드 같은 그라디언트, 이모지 장식, 좌측 강조 막대 카드, 모든 섹션 동일 padding.
 
 ## 답변 → 스타일 매핑 가이드
 

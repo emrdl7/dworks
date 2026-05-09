@@ -175,4 +175,38 @@ describe('llm-prompts examples', () => {
       )
     }
   })
+
+  it('GENERATE_TREE_SYSTEM_PROMPT includes 페이지 기본 구조 and 2026 디자인 트렌드 가이드', () => {
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('## 페이지 기본 구조'),
+      '페이지 기본 구조 header missing',
+    )
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('## 2026 디자인 트렌드 가이드'),
+      '2026 트렌드 header missing',
+    )
+  })
+
+  it('every example has root section with banner/main/contentinfo role children', () => {
+    for (const example of GENERATE_TREE_EXAMPLES) {
+      const root = example.tree.root as {
+        type?: string
+        children?: Array<{ type?: string; role?: string }>
+      }
+      assert.equal(
+        root.type,
+        'section',
+        `example "${example.intent}" root is not section`,
+      )
+      const roles = (root.children ?? [])
+        .map((c) => c.role)
+        .filter((r): r is string => typeof r === 'string')
+      for (const required of ['banner', 'main', 'contentinfo']) {
+        assert.ok(
+          roles.includes(required),
+          `example "${example.intent}" missing role: ${required}`,
+        )
+      }
+    }
+  })
 })
