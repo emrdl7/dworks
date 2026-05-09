@@ -231,3 +231,46 @@ describe('fixture-export adopt', () => {
     assert.equal(adopted[0]?.name, '카페 베이스')
   })
 })
+
+describe('fixture-export catalog summary', () => {
+  it('build payload는 catalog summary count + 풍부도 stats 자동 계산', () => {
+    const payload = buildFixtureExportPayload(sampleFixtures, new Date())
+    assert.equal(payload.summary?.count, 2)
+    assert.ok(payload.summary?.avgRichness !== null)
+    assert.ok(payload.summary?.maxRichness !== null)
+    assert.ok(payload.summary?.minRichness !== null)
+    if (
+      payload.summary?.maxRichness !== null &&
+      payload.summary?.minRichness !== null
+    ) {
+      const max = payload.summary?.maxRichness ?? 0
+      const min = payload.summary?.minRichness ?? 0
+      assert.ok(max >= min)
+    }
+  })
+
+  it('빈 catalog은 stats null', () => {
+    const payload = buildFixtureExportPayload([], new Date())
+    assert.equal(payload.summary?.count, 0)
+    assert.equal(payload.summary?.avgRichness, null)
+    assert.equal(payload.summary?.maxRichness, null)
+    assert.equal(payload.summary?.minRichness, null)
+  })
+
+  it('summary score 범위 외 거부', () => {
+    const text = JSON.stringify({
+      format: 'dworks-fixtures',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      fixtures: [],
+      summary: {
+        count: 0,
+        avgRichness: 1.5,
+        maxRichness: null,
+        minRichness: null,
+      },
+    })
+    const result = parseFixtureImportPayload(text)
+    assert.equal(result.ok, false)
+  })
+})
