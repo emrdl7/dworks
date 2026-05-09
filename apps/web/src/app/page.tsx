@@ -156,6 +156,7 @@ import {
 import {
   createUserFixtureId,
   readUserFixtures,
+  renameUserFixture,
   sanitizeUserFixtureName,
   writeUserFixtures,
   type UserFixture,
@@ -1155,6 +1156,23 @@ export default function HomePage() {
     if (selectedFixtureId === fixtureId) {
       handleFixtureChange(defaultTreeFixture.id)
     }
+  }
+
+  function handleRenameUserFixture(fixtureId: string): void {
+    const target = userFixtures.find((fixture) => fixture.id === fixtureId)
+    if (target === undefined) return
+    const next = window.prompt(
+      'fixture 이름을 변경합니다 (40자 이내).',
+      target.name,
+    )
+    if (next === null) return
+    const sanitized = sanitizeUserFixtureName(next)
+    if (sanitized.length === 0) {
+      setGenerateError('fixture 이름이 비어 있습니다.')
+      return
+    }
+    setUserFixtures((prev) => renameUserFixture(prev, fixtureId, sanitized))
+    setGenerateError(null)
   }
 
   function handleExportUserFixtures(): void {
@@ -2698,14 +2716,24 @@ export default function HomePage() {
                 </button>
                 {userFixtures.find((fx) => fx.id === selectedFixtureId) !==
                 undefined ? (
-                  <button
-                    type="button"
-                    className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb]"
-                    onClick={() => handleDeleteUserFixture(selectedFixtureId)}
-                    title="현재 선택된 사용자 fixture를 삭제합니다."
-                  >
-                    fixture 삭제
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]"
+                      onClick={() => handleRenameUserFixture(selectedFixtureId)}
+                      title="현재 선택된 사용자 fixture의 이름을 변경합니다."
+                    >
+                      fixture 이름 변경
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb]"
+                      onClick={() => handleDeleteUserFixture(selectedFixtureId)}
+                      title="현재 선택된 사용자 fixture를 삭제합니다."
+                    >
+                      fixture 삭제
+                    </button>
+                  </>
                 ) : null}
                 <button
                   type="button"

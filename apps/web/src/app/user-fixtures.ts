@@ -92,6 +92,24 @@ export function sanitizeUserFixtureName(name: string): string {
   return name.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME_LENGTH)
 }
 
+// 단일 fixture의 name만 교체한 새 배열 반환. 일치 id 없으면 원본 그대로.
+// sanitize는 caller 책임 — 빈 문자열 들어오면 변경 없이 원본 유지.
+export function renameUserFixture(
+  fixtures: UserFixture[],
+  fixtureId: string,
+  nextName: string,
+): UserFixture[] {
+  if (nextName.length === 0) return fixtures
+  let changed = false
+  const next = fixtures.map((fixture) => {
+    if (fixture.id !== fixtureId) return fixture
+    if (fixture.name === nextName) return fixture
+    changed = true
+    return { ...fixture, name: nextName }
+  })
+  return changed ? next : fixtures
+}
+
 function validateFixture(raw: unknown): UserFixture | null {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
     return null

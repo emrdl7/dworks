@@ -8,6 +8,7 @@ import type { Tree } from '@dworks/tree'
 import {
   clearUserFixtures,
   readUserFixtures,
+  renameUserFixture,
   sanitizeUserFixtureName,
   writeUserFixtures,
   type UserFixture,
@@ -114,5 +115,32 @@ describe('user-fixtures', () => {
     assert.equal(sanitizeUserFixtureName('   카페   베이스   '), '카페 베이스')
     const long = 'a'.repeat(80)
     assert.equal(sanitizeUserFixtureName(long).length, 40)
+  })
+
+  it('renameUserFixture는 일치 id의 name만 교체한 새 배열 반환', () => {
+    const other: UserFixture = { ...sampleFixture, id: 'user-2', name: '다른 fixture' }
+    const list = [sampleFixture, other]
+    const next = renameUserFixture(list, 'user-1', '카페 시즌2')
+    assert.notEqual(next, list)
+    assert.equal(next[0]?.name, '카페 시즌2')
+    assert.equal(next[1], other)
+  })
+
+  it('renameUserFixture는 빈 이름이면 원본 그대로', () => {
+    const list = [sampleFixture]
+    const next = renameUserFixture(list, 'user-1', '')
+    assert.equal(next, list)
+  })
+
+  it('renameUserFixture는 id 미일치면 원본 그대로 (참조 동일)', () => {
+    const list = [sampleFixture]
+    const next = renameUserFixture(list, 'user-missing', '새 이름')
+    assert.equal(next, list)
+  })
+
+  it('renameUserFixture는 같은 이름이면 원본 그대로', () => {
+    const list = [sampleFixture]
+    const next = renameUserFixture(list, 'user-1', sampleFixture.name)
+    assert.equal(next, list)
   })
 })
