@@ -40,10 +40,12 @@ import {
   ArrowUpRight,
   Columns2,
   Copy,
+  Eye,
   EyeOff,
   GripVertical,
   FormInput,
   Lock,
+  Unlock,
   Image as ImageIcon,
   LayoutGrid,
   List,
@@ -3343,7 +3345,7 @@ export default function HomePage() {
                     </span>
                   ) : null}
                   <div
-                    className={`flex items-center gap-1 rounded-md pr-2 text-sm transition ${
+                    className={`group/layer-row flex items-center gap-1 rounded-md pr-2 text-sm transition ${
                       node.id === selectedNodeId
                         ? 'bg-[#dff1ee] text-[#073d37]'
                         : hoveredNodeId === node.id
@@ -3407,33 +3409,64 @@ export default function HomePage() {
                         {highlightSearchMatch(node.id, layerQuery)}
                       </span>
                     </button>
-                    {(() => {
-                      const stateIcons = getNodeLayerStateIcons(node)
-                      if (stateIcons.length === 0) return null
-                      return (
-                        <span className="flex shrink-0 items-center gap-1">
-                          {stateIcons.map(({ icon: StateIcon, label }) => (
-                            <button
-                              key={label}
-                              type="button"
-                              title={`${label} 해제`}
-                              aria-label={`${label} 해제`}
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                if (label === '숨김') {
-                                  handleToggleNodeVisibility(node)
-                                } else if (label === '선택 제외') {
-                                  handleToggleNodeCanvasSelection(node)
-                                }
-                              }}
-                              className="inline-flex h-5 w-5 items-center justify-center rounded border border-[#d5b56c] bg-[#fff8df] text-[#6b4b00] transition hover:border-[#4f46e5] hover:text-[#4f46e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
-                            >
-                              <StateIcon size={11} aria-hidden="true" />
-                            </button>
-                          ))}
-                        </span>
-                      )
-                    })()}
+                    <span className="flex shrink-0 items-center gap-1">
+                      {/* visibility */}
+                      {node.hidden === true ? (
+                        <button
+                          type="button"
+                          title="숨김 해제"
+                          aria-label="숨김 해제"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleToggleNodeVisibility(node)
+                          }}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded border border-[#d5b56c] bg-[#fff8df] text-[#6b4b00] transition hover:border-[#4f46e5] hover:text-[#4f46e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
+                        >
+                          <EyeOff size={11} aria-hidden="true" />
+                        </button>
+                      ) : !isRoot ? (
+                        <button
+                          type="button"
+                          title="숨기기"
+                          aria-label="숨기기"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleToggleNodeVisibility(node)
+                          }}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded text-[#9aa49d] opacity-0 transition hover:bg-white hover:text-[#4f5e56] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5] focus-visible:opacity-100 group-hover/layer-row:opacity-100"
+                        >
+                          <Eye size={11} aria-hidden="true" />
+                        </button>
+                      ) : null}
+                      {/* selection */}
+                      {node.pointerEvents === 'none' ? (
+                        <button
+                          type="button"
+                          title="선택 제외 해제"
+                          aria-label="선택 제외 해제"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleToggleNodeCanvasSelection(node)
+                          }}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded border border-[#d5b56c] bg-[#fff8df] text-[#6b4b00] transition hover:border-[#4f46e5] hover:text-[#4f46e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
+                        >
+                          <Lock size={11} aria-hidden="true" />
+                        </button>
+                      ) : !isRoot ? (
+                        <button
+                          type="button"
+                          title="선택에서 제외"
+                          aria-label="선택에서 제외"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleToggleNodeCanvasSelection(node)
+                          }}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded text-[#9aa49d] opacity-0 transition hover:bg-white hover:text-[#4f5e56] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5] focus-visible:opacity-100 group-hover/layer-row:opacity-100"
+                        >
+                          <Unlock size={11} aria-hidden="true" />
+                        </button>
+                      ) : null}
+                    </span>
                   </div>
                 </div>
               )
@@ -4843,18 +4876,6 @@ function highlightSearchMatch(text: string, query: string): ReactNode {
   )
 }
 
-function getNodeLayerStateIcons(
-  node: TreeNode,
-): Array<{ icon: LucideIcon; label: string }> {
-  const out: Array<{ icon: LucideIcon; label: string }> = []
-  if (node.hidden === true) {
-    out.push({ icon: EyeOff, label: '숨김' })
-  }
-  if (node.pointerEvents === 'none') {
-    out.push({ icon: Lock, label: '선택 제외' })
-  }
-  return out
-}
 
 function TextPreview({
   accentColorStyle,
