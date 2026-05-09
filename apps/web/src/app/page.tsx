@@ -3788,7 +3788,7 @@ export default function HomePage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="shortcut-help-title"
-            className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-[#2a2e35] bg-[#16181c] p-5 shadow-2xl"
+            className="fixed bottom-6 right-6 z-50 w-80 rounded-lg border border-[#2a2e35] bg-[#1d2025] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
             style={{ animation: 'dw-fade-up 200ms ease-out both' }}
           >
             <div className="mb-3 flex items-center justify-between">
@@ -3922,8 +3922,8 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
               aria-pressed={isSelected}
               className={`min-w-16 rounded px-3 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
                 isSelected
-                  ? 'bg-[#16181c] text-[#a5b4fc] shadow-sm'
-                  : 'text-[#898d97] hover:bg-[#1d2025]/70'
+                  ? 'bg-[#2a2e35] text-[#ebecef] shadow-[0_1px_2px_rgba(0,0,0,0.3)]'
+                  : 'text-[#898d97] hover:bg-[#2a2e35]/50 hover:text-[#c5c8cf]'
               }`}
               onClick={() => onChange(viewport)}
             >
@@ -4105,7 +4105,7 @@ function NodeContextMenu({
       ref={menuRef}
       role="menu"
       aria-label={`${node.id} 컨텍스트 메뉴`}
-      className="fixed z-50 min-w-56 rounded-md border border-[#2a2e35] bg-[#16181c] p-1 shadow-xl"
+      className="fixed z-50 min-w-56 rounded-md border border-[#2a2e35] bg-[#1d2025] p-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
       style={{
         left: position.x,
         top: position.y,
@@ -4682,7 +4682,7 @@ function CanvasNodeToolbar({ nodeId }: { nodeId: string }) {
     <div
       role="toolbar"
       aria-label="선택 노드 툴바"
-      className="pointer-events-auto absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded-md border border-[#2a2e35] bg-[#16181c] px-1 py-0.5 shadow-md"
+      className="pointer-events-auto absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded-md border border-[#2a2e35] bg-[#1d2025] px-1 py-0.5 shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
       onClick={(event) => event.stopPropagation()}
       onContextMenu={(event) => event.stopPropagation()}
     >
