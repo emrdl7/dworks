@@ -1595,7 +1595,7 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - **GenZ / playful / 활기 옵션**: \`hero\` background에 vivid gradient(coral~orange, electric blue~purple, mint~lime 등) + 큰 fontSize 72~96 + 강한 shadow. 회색 안전 디자인 회피.
 - **B2B / SaaS / 전문 옵션**: 흰/oat(#f8f5ef) 또는 deep navy(#0f172a~#1e293b) bg + 작은 radius(4~8) + crisp typography(fontSize 정확, lineHeight 1.5) + 데이터 강조 컴포넌트.
 
-피할 패턴(AI 슬롭, 즉시 거부): 텍스트 박스만 있는 hero, 모든 카드 동일 그라디언트, 이모지 장식, 좌측 강조 막대 카드, 모든 섹션 동일 padding, fontSize 명시 없이 emphasis만 박은 typography, 회색 캔버스에 텍스트만.
+피할 패턴(AI 슬롭, 즉시 거부): 텍스트 박스만 있는 hero, 모든 카드 동일 그라디언트, 이모지 장식, 좌측 강조 막대 카드, 모든 섹션 동일 padding, fontSize 명시 없이 emphasis만 박은 typography, 회색 캔버스에 텍스트만, 다크 bg에 어두운 text(대비 위반), 흰 bg에 옅은 회색 text(가독 위반), 모든 섹션 동일 backgroundColor(시각 위계 부재), nav만 있고 hero 섹션 부재.
 
 ## 참고 이미지 활용 가이드
 
