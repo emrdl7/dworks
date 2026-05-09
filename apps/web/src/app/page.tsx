@@ -39,6 +39,8 @@ import {
   Copy,
   GripVertical,
   Move,
+  PanelLeft,
+  PanelRight,
   PanelTop,
   Plus,
   Redo2,
@@ -788,6 +790,9 @@ export default function HomePage() {
     () => generations[0]?.id ?? 'original',
   )
   const [compareMode, setCompareMode] = useState(false)
+  // 좁은 화면 drawer 토글 — md 이상은 grid 컬럼으로 표시되고, 미만에서는 fixed overlay로 띄움
+  const [briefDrawerOpen, setBriefDrawerOpen] = useState(false)
+  const [inspectorDrawerOpen, setInspectorDrawerOpen] = useState(false)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -2273,6 +2278,15 @@ export default function HomePage() {
     <main className="flex h-screen flex-col overflow-hidden bg-[#f5f7f4] text-[#18211d]">
       <header className="flex h-14 items-center justify-between border-b border-[#d7ddd2] bg-white px-5">
         <div className="flex items-center gap-4">
+          <button
+            type="button"
+            aria-label={briefDrawerOpen ? '브리프 패널 닫기' : '브리프 패널 열기'}
+            aria-pressed={briefDrawerOpen}
+            onClick={() => setBriefDrawerOpen((v) => !v)}
+            className="-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5] hover:text-[#4f46e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] md:hidden"
+          >
+            <PanelLeft size={16} />
+          </button>
           <DworksLogo />
           <label className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#4f5e56]">예제</span>
@@ -2341,6 +2355,17 @@ export default function HomePage() {
               {contrastAuditSummary.total}
             </span>
           </div>
+          {compareMode ? null : (
+            <button
+              type="button"
+              aria-label={inspectorDrawerOpen ? '속성 패널 닫기' : '속성 패널 열기'}
+              aria-pressed={inspectorDrawerOpen}
+              onClick={() => setInspectorDrawerOpen((v) => !v)}
+              className="-mr-1 inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5] hover:text-[#4f46e5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] xl:hidden"
+            >
+              <PanelRight size={16} />
+            </button>
+          )}
         </div>
       </header>
 
@@ -2351,7 +2376,22 @@ export default function HomePage() {
             : 'grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_360px]'
         }`}
       >
-        <aside className="hidden min-h-0 flex-col border-r border-[#d7ddd2] bg-[#fbfcfa] md:flex">
+        {briefDrawerOpen ? (
+          <button
+            type="button"
+            aria-label="브리프 패널 닫기"
+            onClick={() => setBriefDrawerOpen(false)}
+            className="fixed inset-0 z-40 cursor-default bg-black/40 md:hidden"
+          />
+        ) : null}
+        <aside
+          aria-label="AI 디자인 브리프 패널"
+          className={`min-h-0 flex-col border-r border-[#d7ddd2] bg-[#fbfcfa] md:static md:z-auto md:flex md:w-auto md:shadow-none ${
+            briefDrawerOpen
+              ? 'fixed inset-y-0 left-0 z-50 flex w-[280px] shadow-xl'
+              : 'hidden'
+          }`}
+        >
           <details
             open
             className="border-b border-[#e0e5de] [&_summary]:cursor-pointer"
@@ -3107,7 +3147,23 @@ export default function HomePage() {
         </section>
 
         {compareMode ? null : (
-        <aside className="hidden min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white xl:block">
+        <>
+        {inspectorDrawerOpen ? (
+          <button
+            type="button"
+            aria-label="속성 패널 닫기"
+            onClick={() => setInspectorDrawerOpen(false)}
+            className="fixed inset-0 z-40 cursor-default bg-black/40 xl:hidden"
+          />
+        ) : null}
+        <aside
+          aria-label="속성 패널"
+          className={`min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white xl:static xl:z-auto xl:block xl:w-auto xl:shadow-none ${
+            inspectorDrawerOpen
+              ? 'fixed inset-y-0 right-0 z-50 block w-[360px] shadow-xl'
+              : 'hidden'
+          }`}
+        >
           <NodeInspector
             node={selectedNode}
             tree={tree}
@@ -3135,6 +3191,7 @@ export default function HomePage() {
             colorPreset={colorPreset}
           />
         </aside>
+        </>
         )}
       </div>
       {contextMenu && contextMenuNode && contextMenuStructureInfo ? (
