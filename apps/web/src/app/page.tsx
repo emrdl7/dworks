@@ -4041,6 +4041,13 @@ export default function HomePage() {
                   ],
                 },
                 {
+                  category: '다중 선택 (레이어)',
+                  items: [
+                    { keys: ['⇧', 'click'], label: '레이어 추가/해제' },
+                    { keys: ['⌘', 'click'], label: '레이어 추가/해제 (대체)' },
+                  ],
+                },
+                {
                   category: '선택 / 도움말',
                   items: [
                     { keys: ['Esc'], label: '선택 해제 / 닫기' },
