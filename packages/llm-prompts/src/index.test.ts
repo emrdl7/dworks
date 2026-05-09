@@ -368,6 +368,21 @@ describe('llm-prompts examples', () => {
     assert.ok(!out.includes('#aabbcc'))
   })
 
+  it('GENERATE_TREE_SYSTEM_PROMPT includes 참고 이미지 활용 가이드', () => {
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('## 참고 이미지 활용 가이드'),
+      '참고 이미지 활용 가이드 헤더 누락',
+    )
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('다중 이미지면'),
+      '다중 이미지 종합 가이드 누락',
+    )
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('의도(intent)가 충돌하면 의도를 우선'),
+      '의도 우선 규칙 누락',
+    )
+  })
+
   it('GENERATE_TREE_SYSTEM_PROMPT includes 풍부도 8 신호 자체 점검 체크리스트', () => {
     assert.ok(
       GENERATE_TREE_SYSTEM_PROMPT.includes('## 풍부도 8 신호 자체 점검'),
