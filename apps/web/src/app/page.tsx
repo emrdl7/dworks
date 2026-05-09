@@ -6546,7 +6546,7 @@ function NodeInspector({
               })
               .catch(() => {})
           }}
-          className="mt-0.5 block w-full break-all text-left text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] data-[copied=true]:text-[#a5b4fc]"
+          className="mt-0.5 -mx-1 block w-[calc(100%+0.5rem)] break-all rounded px-1 py-0.5 text-left text-[11px] transition-colors hover:bg-[#1d2025] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] data-[copied=true]:text-[#a5b4fc]"
           data-copied={nodeIdCopied || undefined}
           style={{ color: nodeIdCopied ? undefined : '#5b6069' }}
         >
