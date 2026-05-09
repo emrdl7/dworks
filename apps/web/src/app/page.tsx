@@ -161,6 +161,12 @@ import {
   type UserFixture,
 } from './user-fixtures'
 import {
+  adoptImportedFixtures,
+  buildFixtureExportFilename,
+  buildFixtureExportPayload,
+  parseFixtureImportPayload,
+} from './fixture-export'
+import {
   computeRichnessReport,
   formatRichnessScore,
   type RichnessReport,
@@ -1149,6 +1155,75 @@ export default function HomePage() {
     if (selectedFixtureId === fixtureId) {
       handleFixtureChange(defaultTreeFixture.id)
     }
+  }
+
+  function handleExportUserFixtures(): void {
+    if (userFixtures.length === 0) {
+      setGenerateError('내보낼 사용자 fixture가 없습니다.')
+      return
+    }
+    const exportedAt = new Date()
+    const payload = buildFixtureExportPayload(userFixtures, exportedAt)
+    const filename = buildFixtureExportFilename(exportedAt)
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    })
+    const href = URL.createObjectURL(blob)
+    try {
+      const anchor = document.createElement('a')
+      anchor.href = href
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+    } finally {
+      URL.revokeObjectURL(href)
+    }
+    setGenerateError(null)
+  }
+
+  async function handleImportUserFixtureFiles(files: File[]): Promise<void> {
+    const adopted: UserFixture[] = []
+    const failures: string[] = []
+    for (const file of files) {
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        failures.push(`${file.name}: JSON 파일이 아닙니다.`)
+        continue
+      }
+      let text: string
+      try {
+        text = await file.text()
+      } catch (error) {
+        failures.push(
+          `${file.name}: ${error instanceof Error ? error.message : '읽기 실패'}`,
+        )
+        continue
+      }
+      const result = parseFixtureImportPayload(text)
+      if (!result.ok) {
+        failures.push(`${file.name}: ${result.reason}`)
+        continue
+      }
+      if (result.payload.fixtures.length === 0) {
+        failures.push(`${file.name}: fixture가 비어 있습니다.`)
+        continue
+      }
+      adopted.push(...adoptImportedFixtures(result.payload.fixtures))
+    }
+    if (adopted.length === 0) {
+      setGenerateError(
+        failures.length > 0
+          ? `fixture 가져오기 실패 — ${failures.join(' / ')}`
+          : '가져올 fixture가 없습니다.',
+      )
+      return
+    }
+    setUserFixtures((prev) => [...prev, ...adopted])
+    setGenerateError(
+      failures.length > 0
+        ? `${adopted.length}개 가져옴, 일부 실패 — ${failures.join(' / ')}`
+        : null,
+    )
   }
 
   function collectCurrentAnswers(): BriefAnswer[] {
@@ -2632,6 +2707,31 @@ export default function HomePage() {
                     fixture 삭제
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
+                  onClick={handleExportUserFixtures}
+                  disabled={userFixtures.length === 0}
+                  title="저장된 사용자 fixture 전체를 JSON 파일로 내보냅니다."
+                >
+                  fixture 내보내기
+                </button>
+                <label className="cursor-pointer rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]">
+                  fixture 가져오기
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    multiple
+                    className="hidden"
+                    onChange={(event) => {
+                      const files = Array.from(event.target.files ?? [])
+                      event.target.value = ''
+                      if (files.length > 0) {
+                        void handleImportUserFixtureFiles(files)
+                      }
+                    }}
+                  />
+                </label>
               </div>
 
               {(() => {
