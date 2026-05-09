@@ -5,6 +5,7 @@ import type { Tree } from '@dworks/tree'
 
 import {
   applyEditSequence,
+  changeLeafNodeType,
   deleteNode,
   duplicateNode,
   moveNode,
@@ -1018,3 +1019,88 @@ describe('tree editor operations', () => {
     )
   })
 })
+
+describe('changeLeafNodeType', () => {
+  it('text → image: alt = old.content, src = "", base props 보존', () => {
+    const tree = fixtureTree()
+    const next = changeLeafNodeType(tree, 'landing.title', 'image')
+    const headline = findById(next.root, 'landing.title')
+    assert.equal(headline?.type, 'image')
+    if (headline?.type === 'image') {
+      assert.equal(headline.alt, 'Dworks')
+      assert.equal(headline.src, '')
+      assert.equal(headline.editKind, 'text')
+    }
+  })
+
+  it('text → button: label = old.content', () => {
+    const tree = fixtureTree()
+    const next = changeLeafNodeType(tree, 'landing.title', 'button')
+    const headline = findById(next.root, 'landing.title')
+    assert.equal(headline?.type, 'button')
+    if (headline?.type === 'button') {
+      assert.equal(headline.label, 'Dworks')
+    }
+  })
+
+  it('button → text: content = old.label', () => {
+    const tree = fixtureTree()
+    const next = changeLeafNodeType(tree, 'landing.cta', 'text')
+    const cta = findById(next.root, 'landing.cta')
+    assert.equal(cta?.type, 'text')
+    if (cta?.type === 'text') {
+      assert.equal(cta.content, '시작하기')
+    }
+  })
+
+  it('button → image: alt = old.label, src = ""', () => {
+    const tree = fixtureTree()
+    const next = changeLeafNodeType(tree, 'landing.cta', 'image')
+    const cta = findById(next.root, 'landing.cta')
+    assert.equal(cta?.type, 'image')
+    if (cta?.type === 'image') {
+      assert.equal(cta.alt, '시작하기')
+      assert.equal(cta.src, '')
+    }
+  })
+
+  it('container 노드는 변경되지 않음', () => {
+    const tree = fixtureTree()
+    const next = changeLeafNodeType(tree, 'landing', 'image')
+    assert.equal(next.root.type, 'section')
+    assert.equal(next.root, tree.root)
+  })
+
+  it('같은 type으로 변경 시 원본 그대로', () => {
+    const tree = fixtureTree()
+    const next = changeLeafNodeType(tree, 'landing.title', 'text')
+    const headline = findById(next.root, 'landing.title')
+    assert.equal(headline?.type, 'text')
+    if (headline?.type === 'text') {
+      assert.equal(headline.content, 'Dworks')
+    }
+  })
+
+  it('미일치 nodeId는 트리 그대로', () => {
+    const tree = fixtureTree()
+    const next = changeLeafNodeType(tree, 'unknown', 'image')
+    assert.deepEqual(next, tree)
+  })
+})
+
+function findById(node: import('@dworks/tree').TreeNode, id: string): import('@dworks/tree').TreeNode | null {
+  if (node.id === id) return node
+  if (
+    node.type === 'section' ||
+    node.type === 'hero' ||
+    node.type === 'card' ||
+    node.type === 'list' ||
+    node.type === 'form'
+  ) {
+    for (const child of node.children) {
+      const found = findById(child, id)
+      if (found !== null) return found
+    }
+  }
+  return null
+}

@@ -237,6 +237,118 @@ export function deleteNode(tree: Tree, nodeId: string): Tree {
   return applyEditOperation(tree, { type: 'deleteNode', nodeId })
 }
 
+// leaf 노드(text/button/image) 간 type 변경. 위치/위계와 base props(spacing/shape/color/
+// layout/transition/transform/cursor 등)는 보존, semantic 내용은 가능한 한 캐리오버한다.
+//   text → image: alt = old.content, src = ''
+//   text → button: label = old.content
+//   image → text: content = old.alt
+//   image → button: label = old.alt
+//   button → text: content = old.label
+//   button → image: alt = old.label, src = ''
+// container 노드(section/hero/card/list/form)는 변환 대상 X — children 처리 어려움.
+// 같은 type이면 원본 그대로 반환.
+export type LeafNodeType = 'text' | 'button' | 'image'
+
+export function changeLeafNodeType(
+  tree: Tree,
+  nodeId: string,
+  nextType: LeafNodeType,
+): Tree {
+  return { ...tree, root: walkAndConvertLeaf(tree.root, nodeId, nextType) }
+}
+
+function walkAndConvertLeaf(
+  node: TreeNode,
+  nodeId: string,
+  nextType: LeafNodeType,
+): TreeNode {
+  if (node.id === nodeId) {
+    if (
+      node.type === 'text' ||
+      node.type === 'button' ||
+      node.type === 'image'
+    ) {
+      return convertLeafNode(node, nextType)
+    }
+    return node
+  }
+  if (
+    node.type === 'section' ||
+    node.type === 'hero' ||
+    node.type === 'card' ||
+    node.type === 'list' ||
+    node.type === 'form'
+  ) {
+    return {
+      ...node,
+      children: node.children.map((child) =>
+        walkAndConvertLeaf(child, nodeId, nextType),
+      ),
+    }
+  }
+  return node
+}
+
+function convertLeafNode(
+  node: Extract<TreeNode, { type: 'text' | 'button' | 'image' }>,
+  nextType: LeafNodeType,
+): TreeNode {
+  if (node.type === nextType) return node
+
+  // base props 추출 — 모든 leaf 노드 공통.
+  const {
+    id,
+    editKind,
+    hidden,
+    disabled,
+    opacity,
+    pointerEvents,
+    responsive,
+    styleTokens,
+    spacing,
+    shape,
+    color,
+    layout,
+    transition,
+    transform,
+    cursor,
+  } = node
+  const base = {
+    id,
+    editKind,
+    ...(hidden !== undefined ? { hidden } : {}),
+    ...(disabled !== undefined ? { disabled } : {}),
+    ...(opacity !== undefined ? { opacity } : {}),
+    ...(pointerEvents !== undefined ? { pointerEvents } : {}),
+    responsive,
+    ...(styleTokens !== undefined ? { styleTokens } : {}),
+    ...(spacing !== undefined ? { spacing } : {}),
+    ...(shape !== undefined ? { shape } : {}),
+    ...(color !== undefined ? { color } : {}),
+    ...(layout !== undefined ? { layout } : {}),
+    ...(transition !== undefined ? { transition } : {}),
+    ...(transform !== undefined ? { transform } : {}),
+    ...(cursor !== undefined ? { cursor } : {}),
+  }
+
+  // semantic 캐리오버.
+  const semantic =
+    node.type === 'text'
+      ? node.content
+      : node.type === 'button'
+        ? node.label
+        : node.alt
+
+  if (nextType === 'text') {
+    return { ...base, type: 'text', content: semantic }
+  }
+  if (nextType === 'button') {
+    return { ...base, type: 'button', label: semantic }
+  }
+  // image
+  return { ...base, type: 'image', src: '', alt: semantic }
+}
+
 export function updateStyleTokens(
   tree: Tree,
   patch: Partial<StyleTokens>,

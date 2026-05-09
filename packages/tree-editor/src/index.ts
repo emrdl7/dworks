@@ -4,6 +4,7 @@
 export {
   applyEditOperation,
   applyEditSequence,
+  changeLeafNodeType,
   deleteNode,
   duplicateNode,
   moveNode,
@@ -23,6 +24,7 @@ export type {
   DeleteNodeOperation,
   DuplicateNodeOperation,
   EditOperation,
+  LeafNodeType,
   MoveNodeOperation,
   UpdateButtonLabelOperation,
   UpdateColorOperation,

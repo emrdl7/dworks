@@ -102,8 +102,10 @@ import {
   type Typography,
 } from '@dworks/tree'
 import {
+  changeLeafNodeType,
   deleteNode,
   duplicateNode,
+  type LeafNodeType,
   moveNode,
   type NodeMetaPatch,
   updateColor,
@@ -2280,6 +2282,12 @@ export default function HomePage() {
     closeContextMenu()
   }
 
+  function handleChangeLeafType(nodeId: string, nextType: LeafNodeType) {
+    const next = changeLeafNodeType(tree, nodeId, nextType)
+    commitTreeEdit(next, nodeId)
+    closeContextMenu()
+  }
+
   function handleToggleNodeCanvasSelection(node: TreeNode) {
     handleNodeMetaChange(node, {
       pointerEvents: node.pointerEvents === 'none' ? undefined : 'none',
@@ -3194,6 +3202,9 @@ export default function HomePage() {
           node={contextMenuNode}
           position={contextMenu}
           structureInfo={contextMenuStructureInfo}
+          onChangeLeafType={(nextType) =>
+            handleChangeLeafType(contextMenuNode.id, nextType)
+          }
           onClose={closeContextMenu}
           onDelete={() => handleDeleteNode(contextMenuNode.id)}
           onDuplicate={() => handleDuplicateNode(contextMenuNode.id)}
@@ -3301,6 +3312,7 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
 
 interface NodeContextMenuProps {
   node: TreeNode
+  onChangeLeafType: (nextType: LeafNodeType) => void
   onClose: () => void
   onDelete: () => void
   onDuplicate: () => void
@@ -3314,6 +3326,7 @@ interface NodeContextMenuProps {
 
 function NodeContextMenu({
   node,
+  onChangeLeafType,
   onClose,
   onDelete,
   onDuplicate,
@@ -3435,6 +3448,29 @@ function NodeContextMenu({
       >
         캔버스에서 선택
       </ContextMenuButton>
+      {node.type === 'text' || node.type === 'button' || node.type === 'image' ? (
+        <>
+          <div className="my-1 h-px bg-[#e0e5de]" role="separator" />
+          <ContextMenuButton
+            disabled={node.type === 'text'}
+            onClick={() => onChangeLeafType('text')}
+          >
+            텍스트로 변경
+          </ContextMenuButton>
+          <ContextMenuButton
+            disabled={node.type === 'image'}
+            onClick={() => onChangeLeafType('image')}
+          >
+            이미지로 변경
+          </ContextMenuButton>
+          <ContextMenuButton
+            disabled={node.type === 'button'}
+            onClick={() => onChangeLeafType('button')}
+          >
+            버튼으로 변경
+          </ContextMenuButton>
+        </>
+      ) : null}
     </div>
   )
 }
