@@ -765,6 +765,18 @@ export default function HomePage() {
     findFirstEditableNodeId(defaultTreeFixture.tree.root) ??
       defaultTreeFixture.tree.root.id,
   )
+  // 추가 선택 노드 (Shift/Cmd+click) — primary는 selectedNodeId, 나머지는 여기.
+  // selectedNodeId 변경 시 자동으로 비워진다(useEffect).
+  const [additionalSelectedNodeIds, setAdditionalSelectedNodeIds] = useState<
+    Set<string>
+  >(new Set())
+  useEffect(() => {
+    setAdditionalSelectedNodeIds(new Set())
+  }, [selectedNodeId])
+  const allSelectedNodeIds = useMemo(
+    () => new Set<string>([selectedNodeId, ...additionalSelectedNodeIds]),
+    [selectedNodeId, additionalSelectedNodeIds],
+  )
   const [historyPast, setHistoryPast] = useState<Tree[]>([])
   const [historyFuture, setHistoryFuture] = useState<Tree[]>([])
   const [registeredFonts, setRegisteredFonts] = useState<RegisteredFontSummary[]>([])
