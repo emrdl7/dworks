@@ -107,6 +107,10 @@
 - ✓ `m3-generate-image-ref-multi-ui` (`5fe82eb`) — 좌측 패널 다중 슬롯 (MAX_IMAGE_REFS=3). 썸네일 grid + 개별 ✕ + file input multiple. legacy single state도 동기화 + persist 자동 마이그레이션
 - ✓ `m3-generate-image-ref-multi-export-import` (`26d8127`) — export .json에 imageReferences 보존(1~3장 검증). 단일 + batch 둘 다. test 2 추가
 - ✓ `m3-generate-image-ref-multi-prompt-rich` (`ef05d8a`) — system prompt에 "## 참고 이미지 활용 가이드" 5 규칙(시드/넓은 팔레트/비율 반영/raw hex X/intent 우선). drift test 1
+- ✓ `m3-generate-image-ref-multi-color-merge` (`685e64a`) — mergeImageReferenceColors helper(가중 합산). 다중 시 "통합 팔레트 (N색)" 카드 UI. test 5
+- ✓ `m3-generate-image-ref-multi-prompt-include-merged` (`60eea35`) — llm-prompts에 mergeReferenceColors mirror + formatBriefAsUserPrompt 다중 시 통합 팔레트 line 자동 출력
+- ✓ `m3-generate-image-ref-multi-prompt-aspect-priority` (`7305ace`) — 다중 비율/팔레트 우선순위 규칙(첫 비율 hero / 통합 팔레트 = 주조). drift test 2 강화
+- ✓ `m3-generate-richness-trend-y-labels` (`581ca62`) — sparkline 좌측 1.0/0.5/0.0 라벨 column
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
