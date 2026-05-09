@@ -3916,7 +3916,7 @@ export default function HomePage() {
                 aria-label="닫기"
                 ref={shortcutHelpCloseRef}
                 onClick={() => setShortcutHelpOpen(false)}
-                className="inline-flex h-6 w-6 items-center justify-center rounded text-[#898d97] hover:bg-[#1d2025] hover:text-[#ebecef] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1]"
+                className="inline-flex h-6 w-6 items-center justify-center rounded text-[#898d97] hover:bg-[#2a2e35] hover:text-[#ebecef] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1]"
               >
                 <X size={14} />
               </button>
