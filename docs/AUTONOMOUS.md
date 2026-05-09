@@ -122,6 +122,12 @@
 - ✗ 좌측 패널 PoC scope 외 6 버튼 revert (`47ae809`) — 히스토리 정리 / batch export+import / fixture catalog export+import / fixture 이름 변경 제거. 311 line deletion
 - ✓ UI 색·폼 통일 (`b824663`) — primary 청록 → indigo-600, destructive 베이지 → red, 좌측 폼 사이즈 → 우측 inspector 표준 정합
 - ✓ 헤더 메타 chip 4 제거 (`72e1d01`) — 루트/편집가능/선택/색상 제거, 대비 AA만 유지
+- ✓ inspector 늘어놓기 정리 (`e4b3227` + `3b5605e` + `cba0dea`) — context menu 중복 3 영역(기본 정보/표시/구조) + "문서 스타일"(StyleControls 캔버스 색상 프리셋) 제거. 텍스트 마크다운 hint span 제거하되 placeholder는 살림
+- ✓ `m3-edit-change-leaf-type` (`995f356`) — leaf 노드(text/button/image) 간 type 변경 (예: 로고 자리 text → image). context menu에 3 항목 추가, base props 보존, semantic 캐리오버. tree-editor test 7
+- ✓ 페이지 자체 스크롤바 차단 (`176afc6`) — main h-screen overflow-hidden + html/body overflow:hidden 안전망
+- ✓ dev 서버 .next 캐시 stale 자동 감지 (`933cd55`) — preflight.mjs로 stale manifest 감지 + 자동 정리. dev:fresh / clean / preflight script 추가
+- ✓ **0.1.0 release** (`21fe923`) — 모든 workspace package 0.0.1 → 0.1.0
+- ✓ `m3-canvas-zoom` (`f47beee`) — 헤더에 −/%/+ 캔버스 확대/축소 컨트롤. 7 단계(0.25~2.0) + 100% reset. 작은 모니터 대응
 
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
