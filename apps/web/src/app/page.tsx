@@ -4097,7 +4097,19 @@ export default function HomePage() {
                       type="button"
                       data-layer-row-main
                       data-layer-node-id={node.id}
-                      title={nodeTypeLabels[node.type]}
+                      title={(() => {
+                        const typeLabel = nodeTypeLabels[node.type]
+                        if (node.type === 'text') {
+                          return `${typeLabel} — ${node.content.slice(0, 80)}`
+                        }
+                        if (node.type === 'button') {
+                          return `${typeLabel} — ${node.label}`
+                        }
+                        if (node.type === 'image') {
+                          return `${typeLabel} — ${node.alt || '(alt 없음)'}`
+                        }
+                        return typeLabel
+                      })()}
                       className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#6366f1]"
                       onClick={(event) => {
                         // Shift = 범위 선택 (primary~target)
