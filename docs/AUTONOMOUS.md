@@ -99,6 +99,10 @@
 - ✓ `m3-generate-trend-immutable-marker` (`c1b8212`) — sparkline에서 immutable은 ◇ 마름모, pinned는 ● warm beige, mutable은 ● default. tooltip + legend
 - ✓ `m3-generate-richness-summary-card` (`964e1d8`) — sparkline 아래 평균/최고(라벨)/최저(라벨) 요약 카드
 - ✓ `m3-generate-fixture-dropdown-richness` (`1f7e76b`) — header "내 fixture" optgroup option 라벨에 풍부도 점수 표시
+- ✓ `m3-generate-batch-export-richness-summary` (`cd1fa1e`) — batch .json catalog-level 풍부도 요약 메타(count/avg/max/min). test 3 추가
+- ✓ `m3-generate-fixture-export-catalog-summary` (`de4e950`) — fixture catalog .json catalog-level 요약 메타(같은 형식). test 3 추가
+- ✓ `m3-generate-fixture-builtin-richness` (`b8ed657`) — header "기본" optgroup option 라벨에도 풍부도 점수 표시
+- ✓ `m3-generate-richness-summary-active-position` (`8646dcc`) — summary card 두 번째 줄에 활성 entry 위치 표시("활성 0.X — 평균 ±0.Y 위/아래/수준")
 - `m3-generate-image-ref-multi` — 다중 참고 이미지 (ImageReference[] schema 변경, llm-prompts/api/web persist 모두 갱신)
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
