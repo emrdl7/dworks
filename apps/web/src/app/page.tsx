@@ -871,6 +871,68 @@ export default function HomePage() {
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
+  const [isUIPrefsHydrated, setIsUIPrefsHydrated] = useState(false)
+
+  // UI 환경설정 hydration — 마운트 1회. 마지막 세션의 grid/zoom/viewport/leftPanelTab 복원.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('dw:uiPrefs:v1')
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          canvasGridVisible?: boolean
+          canvasZoom?: number
+          responsiveViewport?: ResponsiveViewport
+          leftPanelTab?: 'brief' | 'layers'
+        }
+        if (typeof saved.canvasGridVisible === 'boolean') {
+          setCanvasGridVisible(saved.canvasGridVisible)
+        }
+        if (
+          typeof saved.canvasZoom === 'number' &&
+          saved.canvasZoom >= 0.25 &&
+          saved.canvasZoom <= 2
+        ) {
+          setCanvasZoom(saved.canvasZoom)
+        }
+        if (
+          saved.responsiveViewport === 'desktop' ||
+          saved.responsiveViewport === 'tablet' ||
+          saved.responsiveViewport === 'mobile'
+        ) {
+          setResponsiveViewport(saved.responsiveViewport)
+        }
+        if (saved.leftPanelTab === 'brief' || saved.leftPanelTab === 'layers') {
+          setLeftPanelTab(saved.leftPanelTab)
+        }
+      }
+    } catch {
+      // localStorage 접근 실패는 무시 — default 상태 유지
+    }
+    setIsUIPrefsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isUIPrefsHydrated) return
+    try {
+      window.localStorage.setItem(
+        'dw:uiPrefs:v1',
+        JSON.stringify({
+          canvasGridVisible,
+          canvasZoom,
+          responsiveViewport,
+          leftPanelTab,
+        }),
+      )
+    } catch {
+      // quota / 보안 모드 등은 무시
+    }
+  }, [
+    isUIPrefsHydrated,
+    canvasGridVisible,
+    canvasZoom,
+    responsiveViewport,
+    leftPanelTab,
+  ])
 
   useEffect(() => {
     // 마운트 1회 — localStorage 복원으로 새로고침 후 생성 결과물 휘발 방지.
