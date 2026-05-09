@@ -278,6 +278,7 @@ interface GenerationEntry {
   label: string
   tree: Tree
   immutable: boolean
+  pinned?: boolean
   brief: SubmittedDesignBrief | null
   questions: ClarifyQuestionDto[]
   clarifyTurns: ClarifyTurn[]
@@ -1586,6 +1587,15 @@ export default function HomePage() {
     await runRichnessRetry(active)
   }
 
+  function handleToggleGenerationPin(targetId: string): void {
+    setGenerations((entries) =>
+      entries.map((entry) => {
+        if (entry.id !== targetId || entry.immutable) return entry
+        return { ...entry, pinned: !(entry.pinned === true) }
+      }),
+    )
+  }
+
   function handleSelectGeneration(targetId: string) {
     if (targetId === activeGenerationId || generateLoading) return
     const target = generations.find((entry) => entry.id === targetId)
@@ -2334,6 +2344,7 @@ export default function HomePage() {
               <div className="flex flex-wrap gap-1">
                 {generations.map((entry) => {
                   const isActive = entry.id === activeGenerationId
+                  const isPinned = entry.pinned === true
                   const richness = entry.immutable
                     ? null
                     : computeRichnessReport(entry.tree).score
@@ -2343,39 +2354,69 @@ export default function HomePage() {
                     entry.brief?.intent ??
                     (entry.immutable ? '원본 fixture' : '생성 결과')
                   return (
-                    <button
-                      key={entry.id}
-                      type="button"
-                      title={
-                        formattedRichness === null
-                          ? generationTitle
-                          : `${generationTitle} · 디자인 풍부도 ${formattedRichness}`
-                      }
-                      aria-label={
-                        formattedRichness === null
-                          ? entry.label
-                          : `${entry.label} 디자인 풍부도 ${formattedRichness}`
-                      }
-                      aria-pressed={isActive}
-                      aria-disabled={compareMode || undefined}
-                      disabled={compareMode}
-                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50 ${
-                        isActive
-                          ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
-                          : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
-                      }`}
-                      onClick={() => handleSelectGeneration(entry.id)}
-                    >
-                      {entry.label}
-                      {formattedRichness !== null ? (
-                        <span
-                          className="ml-1 text-[10px] font-normal opacity-70"
-                          aria-hidden="true"
+                    <span key={entry.id} className="inline-flex items-center">
+                      <button
+                        type="button"
+                        title={
+                          formattedRichness === null
+                            ? generationTitle
+                            : `${generationTitle} · 디자인 풍부도 ${formattedRichness}`
+                        }
+                        aria-label={
+                          formattedRichness === null
+                            ? entry.label
+                            : `${entry.label} 디자인 풍부도 ${formattedRichness}`
+                        }
+                        aria-pressed={isActive}
+                        aria-disabled={compareMode || undefined}
+                        disabled={compareMode}
+                        className={`${
+                          entry.immutable
+                            ? 'rounded-full'
+                            : 'rounded-l-full rounded-r-none'
+                        } border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50 ${
+                          isActive
+                            ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
+                            : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                        }`}
+                        onClick={() => handleSelectGeneration(entry.id)}
+                      >
+                        {entry.label}
+                        {formattedRichness !== null ? (
+                          <span
+                            className="ml-1 text-[10px] font-normal opacity-70"
+                            aria-hidden="true"
+                          >
+                            {formattedRichness}
+                          </span>
+                        ) : null}
+                      </button>
+                      {!entry.immutable ? (
+                        <button
+                          type="button"
+                          title={
+                            isPinned
+                              ? '고정 해제 — 새 생성으로 밀려날 수 있습니다'
+                              : '고정 — 새 생성으로 밀려나지 않게 보호'
+                          }
+                          aria-label={
+                            isPinned
+                              ? `${entry.label} 고정 해제`
+                              : `${entry.label} 고정`
+                          }
+                          aria-pressed={isPinned}
+                          disabled={compareMode}
+                          className={`rounded-r-full rounded-l-none border border-l-0 px-1.5 py-1 text-[12px] leading-none transition disabled:opacity-50 ${
+                            isPinned
+                              ? 'border-[#c8a473] bg-[#fcf6ec] text-[#7c5a2a]'
+                              : 'border-[#cbd6cf] bg-white text-[#9aa6a0] hover:border-[#c8a473] hover:text-[#7c5a2a]'
+                          }`}
+                          onClick={() => handleToggleGenerationPin(entry.id)}
                         >
-                          {formattedRichness}
-                        </span>
+                          {isPinned ? '★' : '☆'}
+                        </button>
                       ) : null}
-                    </button>
+                    </span>
                   )
                 })}
               </div>

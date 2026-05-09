@@ -1,5 +1,6 @@
 export interface GenerationHistoryEntry {
   immutable: boolean
+  pinned?: boolean
   label: string
 }
 
@@ -37,6 +38,10 @@ export function buildVariantRequestBrief<T extends object>(
   }
 }
 
+function isProtected(entry: GenerationHistoryEntry): boolean {
+  return entry.immutable || entry.pinned === true
+}
+
 export function appendGenerationHistoryEntries<T extends GenerationHistoryEntry>(
   entries: readonly T[],
   newEntries: readonly T[],
@@ -48,12 +53,12 @@ export function appendGenerationHistoryEntries<T extends GenerationHistoryEntry>
 
   const combined = [...entries, ...newEntries]
   const protectedEntries = combined
-    .filter((entry) => entry.immutable)
+    .filter((entry) => isProtected(entry))
     .slice(0, maxEntries)
   const mutableLimit = maxEntries - protectedEntries.length
   const recentMutableEntries =
     mutableLimit > 0
-      ? combined.filter((entry) => !entry.immutable).slice(-mutableLimit)
+      ? combined.filter((entry) => !isProtected(entry)).slice(-mutableLimit)
       : []
 
   return relabelGenerationHistory([...protectedEntries, ...recentMutableEntries])
@@ -63,6 +68,6 @@ export function relabelGenerationHistory<T extends GenerationHistoryEntry>(
   entries: readonly T[],
 ): T[] {
   return entries.map((entry, index) =>
-    entry.immutable ? entry : ({ ...entry, label: `생성 ${index}` } as T),
+    isProtected(entry) ? entry : ({ ...entry, label: `생성 ${index}` } as T),
   )
 }

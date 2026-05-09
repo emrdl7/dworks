@@ -10,11 +10,16 @@ import {
 interface TestEntry {
   id: string
   immutable: boolean
+  pinned?: boolean
   label: string
 }
 
 function entry(id: string, immutable = false): TestEntry {
   return { id, immutable, label: id }
+}
+
+function pinnedEntry(id: string): TestEntry {
+  return { id, immutable: false, pinned: true, label: id }
 }
 
 describe('generation history', () => {
@@ -67,5 +72,41 @@ describe('generation history', () => {
     const submitted = { intent: '관광 코스 랜딩' }
 
     assert.equal(buildVariantRequestBrief(submitted, 0, 1), submitted)
+  })
+
+  it('protects pinned entries from max-history trim alongside immutable baseline', () => {
+    const entries = [
+      entry('original', true),
+      pinnedEntry('keep-this'),
+      entry('old-1'),
+      entry('old-2'),
+      entry('old-3'),
+      entry('old-4'),
+    ]
+    const next = appendGenerationHistoryEntries(
+      entries,
+      [entry('new-1'), entry('new-2'), entry('new-3')],
+      6,
+    )
+
+    // 2 protected (original + pinned keep-this) + 4 most recent mutables = 6
+    assert.deepEqual(
+      next.map((item) => item.id),
+      ['original', 'keep-this', 'old-4', 'new-1', 'new-2', 'new-3'],
+    )
+    assert.ok(next.some((item) => item.id === 'keep-this'))
+    assert.ok(next.some((item) => item.id === 'original'))
+  })
+
+  it('does not relabel pinned entries by index', () => {
+    const next = relabelGenerationHistory([
+      entry('original', true),
+      pinnedEntry('starred'),
+      entry('mutable'),
+    ])
+
+    assert.equal(next[0]?.label, 'original')
+    assert.equal(next[1]?.label, 'starred')
+    assert.equal(next[2]?.label, '생성 2')
   })
 })

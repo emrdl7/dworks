@@ -44,6 +44,7 @@ export interface PersistedGenerationEntry {
   label: string
   tree: Tree
   immutable: boolean
+  pinned?: boolean
   brief: {
     intent: string
     answers?: PersistedBriefAnswer[]
@@ -334,11 +335,18 @@ function validateGenerationEntry(
     model = raw.model
   }
 
+  let pinned: boolean | undefined
+  if (raw.pinned !== undefined) {
+    if (typeof raw.pinned !== 'boolean') return null
+    pinned = raw.pinned
+  }
+
   return {
     id,
     label,
     tree: treeParse.data,
     immutable,
+    ...(pinned !== undefined ? { pinned } : {}),
     brief,
     questions,
     clarifyTurns,
