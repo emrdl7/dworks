@@ -830,6 +830,8 @@ export default function HomePage() {
     () => ({ hoveredNodeId, setHoveredNodeId }),
     [hoveredNodeId],
   )
+  // 레이어 트리 검색 — node.id 부분 일치 필터
+  const [layerQuery, setLayerQuery] = useState('')
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -988,6 +990,16 @@ export default function HomePage() {
     () => flattenTree(tree.root, collapsedLayerNodeIds),
     [tree, collapsedLayerNodeIds],
   )
+
+  const filteredLayerItems = useMemo(() => {
+    const q = layerQuery.trim().toLowerCase()
+    if (q === '') return layerItems
+    // 검색 시에는 collapsed 무시(전체 트리 평탄화 후 매치) — 결과 가독성 우선
+    const allItems = flattenTree(tree.root)
+    return allItems.filter((item) =>
+      item.node.id.toLowerCase().includes(q),
+    )
+  }, [layerItems, layerQuery, tree])
 
   function toggleLayerCollapse(nodeId: string): void {
     setCollapsedLayerNodeIds((prev) => {
@@ -2542,7 +2554,7 @@ export default function HomePage() {
           >
             {([
               { id: 'brief' as const, label: '브리프', count: generations.length },
-              { id: 'layers' as const, label: '레이어', count: layerItems.length },
+              { id: 'layers' as const, label: '레이어', count: filteredLayerItems.length },
             ]).map((tab) => {
               const isActive = leftPanelTab === tab.id
               return (
@@ -3180,8 +3192,25 @@ export default function HomePage() {
             aria-labelledby="left-panel-tab-layers"
             className="flex min-h-0 flex-1 flex-col"
           >
+          <div className="shrink-0 border-b border-[#e0e5de] px-2 py-2">
+            <input
+              type="search"
+              value={layerQuery}
+              onChange={(event) => setLayerQuery(event.target.value)}
+              placeholder="레이어 검색"
+              aria-label="레이어 검색"
+              className="h-8 w-full rounded-md border border-[#cbd6cf] bg-white px-2.5 text-xs text-[#18211d] outline-none placeholder:text-[#9aa49d] focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+            />
+          </div>
+          {filteredLayerItems.length === 0 ? (
+            <p className="px-4 py-6 text-center text-xs text-[#9aa49d]">
+              {layerQuery.trim() === ''
+                ? '레이어가 없습니다.'
+                : `"${layerQuery}"에 일치하는 레이어가 없습니다.`}
+            </p>
+          ) : null}
           <nav className="flex-1 overflow-auto p-2">
-            {layerItems.map(({ node, depth }) => {
+            {filteredLayerItems.map(({ node, depth }) => {
               const structureInfo = getStructureInfo(tree, node.id)
               const isRoot = structureInfo.isRoot
               const dropPosition =
