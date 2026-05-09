@@ -2339,6 +2339,14 @@ export default function HomePage() {
         handleDeleteSelected()
         return
       }
+      // Esc — 선택 해제(root로 되돌림)
+      if (event.key === 'Escape') {
+        if (selectedNodeId !== tree.root.id) {
+          event.preventDefault()
+          setSelectedNodeId(tree.root.id)
+        }
+        return
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
