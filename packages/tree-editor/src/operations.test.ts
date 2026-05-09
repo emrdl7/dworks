@@ -146,6 +146,20 @@ describe('tree editor operations', () => {
             blur: 22,
             color: '#123456',
           },
+          dropShadows: [
+            {
+              offsetX: -6,
+              offsetY: 12,
+              blur: 16,
+              color: '#223344',
+            },
+            {
+              offsetX: 14,
+              offsetY: -8,
+              blur: 18,
+              color: '#334455',
+            },
+          ],
         },
       },
     })
@@ -167,6 +181,20 @@ describe('tree editor operations', () => {
             blur: 24,
             color: '#654321',
           },
+          dropShadows: [
+            {
+              offsetX: -8,
+              offsetY: 14,
+              blur: 20,
+              color: '#445566',
+            },
+            {
+              offsetX: 16,
+              offsetY: -10,
+              blur: 22,
+              color: '#556677',
+            },
+          ],
         },
       },
     })
@@ -220,6 +248,20 @@ describe('tree editor operations', () => {
               blur: 22,
               color: '#123456',
             },
+            dropShadows: [
+              {
+                offsetX: -6,
+                offsetY: 12,
+                blur: 16,
+                color: '#223344',
+              },
+              {
+                offsetX: 14,
+                offsetY: -8,
+                blur: 18,
+                color: '#334455',
+              },
+            ],
           },
         })
         assert.deepEqual(retintedVisual.presentation, {
@@ -241,6 +283,20 @@ describe('tree editor operations', () => {
               blur: 24,
               color: '#654321',
             },
+            dropShadows: [
+              {
+                offsetX: -8,
+                offsetY: 14,
+                blur: 20,
+                color: '#445566',
+              },
+              {
+                offsetX: 16,
+                offsetY: -10,
+                blur: 22,
+                color: '#556677',
+              },
+            ],
           },
         })
         assert.equal(resetVisual.aspectRatio, undefined)

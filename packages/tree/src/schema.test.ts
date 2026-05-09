@@ -1214,6 +1214,20 @@ describe('tree schema', () => {
             blur: 18,
             color: '#112233',
           },
+          dropShadows: [
+            {
+              offsetX: -4,
+              offsetY: 8,
+              blur: 12,
+              color: '#223344',
+            },
+            {
+              offsetX: 10,
+              offsetY: -6,
+              blur: 16,
+              color: '#334455',
+            },
+          ],
         },
         overlayGradient: {
           type: 'radial',
@@ -1248,6 +1262,20 @@ describe('tree schema', () => {
             blur: 18,
             color: '#112233',
           },
+          dropShadows: [
+            {
+              offsetX: -4,
+              offsetY: 8,
+              blur: 12,
+              color: '#223344',
+            },
+            {
+              offsetX: 10,
+              offsetY: -6,
+              blur: 16,
+              color: '#334455',
+            },
+          ],
         },
         overlayGradient: {
           type: 'radial',
@@ -1380,6 +1408,42 @@ describe('tree schema', () => {
               blur: 51,
               color: '#000000',
             },
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-drop-shadows-count',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: {
+          filter: {
+            dropShadows: [
+              { offsetX: 0, offsetY: 4, blur: 6, color: '#000000' },
+              { offsetX: 1, offsetY: 5, blur: 7, color: '#111111' },
+              { offsetX: 2, offsetY: 6, blur: 8, color: '#222222' },
+            ],
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'bad-image-filter-drop-shadows-entry',
+        type: 'image',
+        editKind: 'media',
+        src: '',
+        alt: '',
+        presentation: {
+          filter: {
+            dropShadows: [
+              { offsetX: 0, offsetY: 4, blur: 6, color: 'black' },
+            ],
           },
         },
       }),

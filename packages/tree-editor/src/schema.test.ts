@@ -302,6 +302,20 @@ describe('edit-operation schema', () => {
             blur: 20,
             color: '#123456',
           },
+          dropShadows: [
+            {
+              offsetX: -6,
+              offsetY: 10,
+              blur: 14,
+              color: '#234567',
+            },
+            {
+              offsetX: 12,
+              offsetY: -8,
+              blur: 18,
+              color: '#345678',
+            },
+          ],
         },
       },
     })
@@ -332,6 +346,20 @@ describe('edit-operation schema', () => {
             blur: 20,
             color: '#123456',
           },
+          dropShadows: [
+            {
+              offsetX: -6,
+              offsetY: 10,
+              blur: 14,
+              color: '#234567',
+            },
+            {
+              offsetX: 12,
+              offsetY: -8,
+              blur: 18,
+              color: '#345678',
+            },
+          ],
         },
       })
     }
@@ -497,6 +525,36 @@ describe('edit-operation schema', () => {
               blur: 20,
               color: 'black',
             },
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: {
+          filter: {
+            dropShadows: [
+              { offsetX: 0, offsetY: 4, blur: 6, color: '#000000' },
+              { offsetX: 1, offsetY: 5, blur: 7, color: '#111111' },
+              { offsetX: 2, offsetY: 6, blur: 8, color: '#222222' },
+            ],
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateImage',
+        nodeId: 'hero.visual',
+        presentation: {
+          filter: {
+            dropShadows: [
+              { offsetX: 0, offsetY: 4, blur: 6, color: 'black' },
+            ],
           },
         },
       }),
