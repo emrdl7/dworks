@@ -72,6 +72,39 @@ export function mergeReferenceColors(
     .map(([hex]) => hex)
 }
 
+const ASPECT_PRIORITY: ImageReference['aspectRatio'][] = [
+  'wide',
+  'landscape',
+  'portrait',
+  'square',
+]
+
+/**
+ * 다중 참고 이미지의 aspectRatio를 통합 추론 — 가장 흔한 것, 동수면 wide > landscape > portrait > square.
+ * apps/web/image-color.ts의 mergeImageReferenceAspect와 동일 알고리즘.
+ */
+export function mergeReferenceAspect(
+  refs: ReadonlyArray<{ aspectRatio?: ImageReference['aspectRatio'] }>,
+): ImageReference['aspectRatio'] {
+  const counts = new Map<NonNullable<ImageReference['aspectRatio']>, number>()
+  for (const ref of refs) {
+    if (ref.aspectRatio === undefined) continue
+    counts.set(ref.aspectRatio, (counts.get(ref.aspectRatio) ?? 0) + 1)
+  }
+  if (counts.size === 0) return undefined
+  let best: ImageReference['aspectRatio']
+  let bestCount = 0
+  for (const kind of ASPECT_PRIORITY) {
+    if (kind === undefined) continue
+    const c = counts.get(kind) ?? 0
+    if (c > bestCount) {
+      best = kind
+      bestCount = c
+    }
+  }
+  return best
+}
+
 /**
  * Brief 객체를 LLM user prompt 문자열로 직렬화.
  */
@@ -119,6 +152,10 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
     const merged = mergeReferenceColors(refs, 5)
     if (merged.length > 0) {
       lines.push(`- 통합 팔레트(빈도 가중): ${merged.join(', ')}`)
+    }
+    const mergedAspect = mergeReferenceAspect(refs)
+    if (mergedAspect !== undefined) {
+      lines.push(`- 통합 비율(빈도 가중): ${mergedAspect}`)
     }
     lines.push(
       '  (여러 참고 이미지의 색감/비율을 종합한 시드. 그대로 베끼지 말고 디자인 팔레트의 영감 자료로 활용. raw hex 강제 X)',

@@ -179,6 +179,7 @@ import {
 } from './richness'
 import {
   extractDominantColors,
+  mergeImageReferenceAspect,
   mergeImageReferenceColors,
   pickAspectRatio,
 } from './image-color'
@@ -3376,14 +3377,22 @@ export default function HomePage() {
                 {briefImageRefs.length > 1
                   ? (() => {
                       const merged = mergeImageReferenceColors(briefImageRefs, 5)
-                      if (merged.length === 0) return null
+                      const mergedAspect =
+                        mergeImageReferenceAspect(briefImageRefs)
+                      if (merged.length === 0 && mergedAspect === undefined)
+                        return null
                       return (
                         <div
                           className="rounded-md border border-[#e0e5de] bg-white px-2 py-1.5 text-[10px] text-[#647067]"
                           aria-label="통합 팔레트"
                         >
-                          <div className="mb-1 font-semibold text-[#4f5e56]">
-                            통합 팔레트 ({merged.length}색)
+                          <div className="mb-1 flex items-center justify-between font-semibold text-[#4f5e56]">
+                            <span>통합 팔레트 ({merged.length}색)</span>
+                            {mergedAspect !== undefined ? (
+                              <span className="text-[#7c8580]">
+                                비율 {mergedAspect}
+                              </span>
+                            ) : null}
                           </div>
                           <div className="flex flex-wrap gap-1">
                             {merged.map((hex) => (

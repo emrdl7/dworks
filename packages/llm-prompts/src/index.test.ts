@@ -362,6 +362,29 @@ describe('llm-prompts examples', () => {
     assert.ok(out.includes('#aabbcc'))
   })
 
+  it('formatBriefAsUserPrompt — 다중 참고 이미지 비율이 있으면 통합 비율 line 출력', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReferences: [
+        { colors: ['#aabbcc'], aspectRatio: 'wide' },
+        { colors: ['#ddeeff'], aspectRatio: 'wide' },
+        { colors: ['#112233'], aspectRatio: 'portrait' },
+      ],
+    })
+    assert.ok(out.includes('통합 비율(빈도 가중): wide'))
+  })
+
+  it('formatBriefAsUserPrompt — 다중 참고 이미지 비율이 모두 undefined면 통합 비율 line 미출력', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReferences: [
+        { colors: ['#aabbcc'] },
+        { colors: ['#ddeeff'] },
+      ],
+    })
+    assert.ok(!out.includes('통합 비율'))
+  })
+
   it('formatBriefAsUserPrompt — legacy imageReference fallback (imageReferences 없을 때)', () => {
     const out = formatBriefAsUserPrompt({
       intent: '카페',

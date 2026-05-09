@@ -115,3 +115,35 @@ export function mergeImageReferenceColors(
     .slice(0, maxColors)
     .map(([hex]) => hex)
 }
+
+type AspectRatioKind = 'square' | 'landscape' | 'portrait' | 'wide'
+const ASPECT_RATIO_PRIORITY: AspectRatioKind[] = [
+  'wide',
+  'landscape',
+  'portrait',
+  'square',
+]
+
+// 다중 image-ref의 aspectRatio를 통합 추론.
+// 가장 흔한 것 → 동수면 ASPECT_RATIO_PRIORITY 순(wide > landscape > portrait > square 확장적 비율 우선).
+// 모든 ref이 aspectRatio undefined면 undefined 반환.
+export function mergeImageReferenceAspect(
+  refs: ReadonlyArray<{ aspectRatio?: AspectRatioKind }>,
+): AspectRatioKind | undefined {
+  const counts = new Map<AspectRatioKind, number>()
+  for (const ref of refs) {
+    if (ref.aspectRatio === undefined) continue
+    counts.set(ref.aspectRatio, (counts.get(ref.aspectRatio) ?? 0) + 1)
+  }
+  if (counts.size === 0) return undefined
+  let best: AspectRatioKind | undefined
+  let bestCount = 0
+  for (const kind of ASPECT_RATIO_PRIORITY) {
+    const c = counts.get(kind) ?? 0
+    if (c > bestCount) {
+      best = kind
+      bestCount = c
+    }
+  }
+  return best
+}

@@ -5,6 +5,7 @@ import { describe, it } from 'node:test'
 
 import {
   extractDominantColors,
+  mergeImageReferenceAspect,
   mergeImageReferenceColors,
   pickAspectRatio,
 } from './image-color.js'
@@ -145,5 +146,50 @@ describe('mergeImageReferenceColors', () => {
       3,
     )
     assert.equal(merged.length, 3)
+  })
+})
+
+describe('mergeImageReferenceAspect', () => {
+  it('모두 동일하면 그대로', () => {
+    assert.equal(
+      mergeImageReferenceAspect([
+        { aspectRatio: 'wide' },
+        { aspectRatio: 'wide' },
+      ]),
+      'wide',
+    )
+  })
+
+  it('가장 흔한 것 우선', () => {
+    assert.equal(
+      mergeImageReferenceAspect([
+        { aspectRatio: 'portrait' },
+        { aspectRatio: 'landscape' },
+        { aspectRatio: 'landscape' },
+      ]),
+      'landscape',
+    )
+  })
+
+  it('동수면 wide > landscape > portrait > square 우선순위', () => {
+    assert.equal(
+      mergeImageReferenceAspect([
+        { aspectRatio: 'portrait' },
+        { aspectRatio: 'wide' },
+      ]),
+      'wide',
+    )
+    assert.equal(
+      mergeImageReferenceAspect([
+        { aspectRatio: 'landscape' },
+        { aspectRatio: 'square' },
+      ]),
+      'landscape',
+    )
+  })
+
+  it('모든 ref이 aspectRatio undefined면 undefined', () => {
+    assert.equal(mergeImageReferenceAspect([{}, {}]), undefined)
+    assert.equal(mergeImageReferenceAspect([]), undefined)
   })
 })
