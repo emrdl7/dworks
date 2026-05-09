@@ -2834,6 +2834,7 @@ export default function HomePage() {
             return next
           })
         },
+        isPanActive: isSpacePressed || isPanning,
       }}
     >
     <CanvasHoverContext.Provider value={canvasHoverValue}>
@@ -4820,11 +4821,14 @@ interface CanvasSelectionContextValue {
   primarySelectedId: string
   allSelectedIds: ReadonlySet<string>
   toggleAdditional: (id: string) => void
+  // 캔버스 panning 활성 시 노드 click을 무시 (Space drag 시 selection 변경 방지)
+  isPanActive: boolean
 }
 const CanvasSelectionContext = createContext<CanvasSelectionContextValue>({
   primarySelectedId: '',
   allSelectedIds: new Set(),
   toggleAdditional: () => {},
+  isPanActive: false,
 })
 
 interface CanvasNodeProps {
@@ -5497,6 +5501,8 @@ function SelectableNode({
       }}
       onClick={(event) => {
         event.stopPropagation()
+        // Space drag로 panning 시작했으면 click 무시 (selection 변경 방지)
+        if (selectionCtx.isPanActive) return
         selectNode({
           shift: event.shiftKey,
           meta: event.metaKey || event.ctrlKey,
