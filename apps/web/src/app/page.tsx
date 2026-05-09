@@ -47,10 +47,12 @@ import {
   Rows2,
   Square,
   StretchHorizontal,
+  Menu,
   StretchVertical,
   Trash2,
   Undo2,
   WrapText,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -2789,6 +2791,18 @@ function CanvasNode({
 
   switch (node.type) {
     case 'section': {
+      if (node.role === 'banner' && viewport === 'mobile') {
+        return (
+          <MobileBannerSection
+            node={node}
+            selectedNodeId={selectedNodeId}
+            onSelect={onSelect}
+            inheritedTextColor={effectiveTextColor}
+            boxStyle={boxStyle}
+            childLayoutStyle={childLayoutStyle}
+          />
+        )
+      }
       if (hasLayoutOverride(node.layout)) {
         return (
           <SelectableNode
@@ -3203,6 +3217,82 @@ function CanvasToolbarButton({
     >
       <Icon aria-hidden="true" className="h-3.5 w-3.5" />
     </button>
+  )
+}
+
+interface MobileBannerSectionProps {
+  node: Extract<TreeNode, { type: 'section' }>
+  selectedNodeId: string
+  onSelect: (nodeId: string) => void
+  inheritedTextColor?: string
+  boxStyle?: CSSProperties
+  childLayoutStyle?: CSSProperties
+}
+
+function MobileBannerSection({
+  node,
+  selectedNodeId,
+  onSelect,
+  inheritedTextColor,
+  boxStyle,
+  childLayoutStyle,
+}: MobileBannerSectionProps) {
+  const [open, setOpen] = useState(false)
+  const readOnly = useContext(CanvasReadOnlyContext)
+  const [firstChild, ...restChildren] = node.children
+
+  return (
+    <SelectableNode
+      node={node}
+      selectedNodeId={selectedNodeId}
+      onSelect={onSelect}
+    >
+      <section
+        className="flex flex-col gap-3 p-4"
+        style={mergeStyles(boxStyle, childLayoutStyle)}
+      >
+        <div className="flex items-center justify-between gap-3">
+          {firstChild ? (
+            <CanvasNode
+              node={firstChild}
+              inheritedTextColor={inheritedTextColor}
+              selectedNodeId={selectedNodeId}
+              onSelect={onSelect}
+            />
+          ) : (
+            <span />
+          )}
+          {restChildren.length > 0 ? (
+            <button
+              type="button"
+              aria-label={open ? '메뉴 닫기' : '메뉴 열기'}
+              aria-expanded={open}
+              disabled={readOnly}
+              onClick={(event) => {
+                event.stopPropagation()
+                setOpen((v) => !v)
+              }}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-current/30"
+            >
+              {open ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          ) : null}
+        </div>
+        {open && restChildren.length > 0 ? (
+          <div className="flex flex-col gap-3" style={childLayoutStyle}>
+            {restChildren.map((child) => (
+              <CanvasNode
+                key={child.id}
+                node={child}
+                inheritedTextColor={inheritedTextColor}
+                selectedNodeId={selectedNodeId}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        ) : null}
+      </section>
+    </SelectableNode>
   )
 }
 
