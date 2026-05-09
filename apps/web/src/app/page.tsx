@@ -4219,7 +4219,7 @@ export default function HomePage() {
               }}
             >
               <div
-                className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)] shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-12px_rgba(0,0,0,0.6)]"
+                className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)] shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-12px_rgba(0,0,0,0.6)] transition-[width] duration-200 ease-out motion-reduce:transition-none"
                 style={{
                   ...canvasStyle,
                   width: selectedViewportPreset.width,
