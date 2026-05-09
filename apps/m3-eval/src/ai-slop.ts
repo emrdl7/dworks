@@ -1,27 +1,36 @@
 // 디자인 풍부도(= 1 - AI 슬롭) 정량 측정.
 //
-// system prompt visual-richness 가이드(heading-1 fontSize 강제, 다양한 색, 이미지 사용,
-// shape.shadow/radius로 깊이) 흡수 여부를 자동 신호 5개로 측정한다.
+// system prompt visual-richness 가이드(페이지 랜드마크, main 다중 섹션,
+// display급 heading-1, CTA, 다양한 색, 이미지 사용, shape.shadow/radius 깊이)
+// 흡수 여부를 자동 신호 8개로 측정한다.
 //
-// 신호 5종(각 boolean):
-//   1. hasHeadingOne          — emphasis 'heading-1' 노드 ≥ 1
-//   2. fontSizeVariety        — 고유 typography.fontSize 값 ≥ 3
-//   3. colorVariety           — 고유 color hex(소문자 정규화) 값 ≥ 3
-//   4. hasImagery             — image 노드 ≥ 1
-//   5. hasShapeDepth          — shape.shadow !== 'none' 또는 radius ≥ 8 인 노드 ≥ 1
+// 신호 8종(각 boolean):
+//   1. hasPageLandmarks       — banner/main/contentinfo role 모두 존재
+//   2. hasMainMultiSection    — main 직접 하위에 section/hero 2개 이상
+//   3. hasDisplayHeadingOne   — heading-1 + fontSize ≥ 48
+//   4. hasCallToAction        — button 또는 contentRole 'cta' 노드 ≥ 1
+//   5. fontSizeVariety        — 고유 typography.fontSize 값 ≥ 3
+//   6. colorVariety           — 고유 color hex(소문자 정규화) 값 ≥ 3
+//   7. hasImagery             — image 노드 ≥ 1
+//   8. hasShapeDepth          — shape.shadow !== 'none' 또는 radius ≥ 8 인 노드 ≥ 1
 //
-// richness = trueCount / 5  (0.0 ~ 1.0). 1.0 = 슬롭 신호 0개.
+// richness = trueCount / 8  (0.0 ~ 1.0). 1.0 = 슬롭 신호 0개.
 
 import type { Tree, TreeNode } from '@dworks/tree'
 
 export interface SlopReport {
-  hasHeadingOne: boolean
+  hasPageLandmarks: boolean
+  hasMainMultiSection: boolean
+  hasDisplayHeadingOne: boolean
+  hasCallToAction: boolean
   fontSizeVariety: boolean
   colorVariety: boolean
   hasImagery: boolean
   hasShapeDepth: boolean
   richness: number
 }
+
+const SIGNAL_COUNT = 8
 
 const COLOR_KEYS = [
   'backgroundColor',
@@ -50,7 +59,10 @@ function visit(node: TreeNode, fn: (n: TreeNode) => void): void {
 }
 
 export function computeSlopReport(tree: Tree): SlopReport {
-  let headingOne = false
+  const landmarkRoles = new Set<string>()
+  let mainMultiSection = false
+  let displayHeadingOne = false
+  let callToAction = false
   const fontSizes = new Set<number>()
   const colors = new Set<string>()
   let imageCount = 0
@@ -59,7 +71,22 @@ export function computeSlopReport(tree: Tree): SlopReport {
   visit(tree.root, (n) => {
     const node = n as unknown as Record<string, unknown>
 
-    if (node.emphasis === 'heading-1') headingOne = true
+    if (typeof node.role === 'string') {
+      landmarkRoles.add(node.role)
+    }
+
+    if (node.role === 'main' && isContainer(n)) {
+      const directSectionCount = n.children.filter((child) => {
+        return child.type === 'section' || child.type === 'hero'
+      }).length
+      if (directSectionCount >= 2) {
+        mainMultiSection = true
+      }
+    }
+
+    if (node.type === 'button' || node.contentRole === 'cta') {
+      callToAction = true
+    }
     if (node.type === 'image') imageCount += 1
 
     const typography = node.typography as { fontSize?: unknown } | undefined
@@ -69,6 +96,9 @@ export function computeSlopReport(tree: Tree): SlopReport {
       Number.isFinite(typography.fontSize)
     ) {
       fontSizes.add(typography.fontSize)
+      if (node.emphasis === 'heading-1' && typography.fontSize >= 48) {
+        displayHeadingOne = true
+      }
     }
 
     const color = node.color as Record<string, unknown> | undefined
@@ -93,14 +123,20 @@ export function computeSlopReport(tree: Tree): SlopReport {
   })
 
   const signals = {
-    hasHeadingOne: headingOne,
+    hasPageLandmarks:
+      landmarkRoles.has('banner') &&
+      landmarkRoles.has('main') &&
+      landmarkRoles.has('contentinfo'),
+    hasMainMultiSection: mainMultiSection,
+    hasDisplayHeadingOne: displayHeadingOne,
+    hasCallToAction: callToAction,
     fontSizeVariety: fontSizes.size >= 3,
     colorVariety: colors.size >= 3,
     hasImagery: imageCount >= 1,
     hasShapeDepth: shapeDepth,
   }
   const trueCount = Object.values(signals).filter(Boolean).length
-  const richness = trueCount / 5
+  const richness = trueCount / SIGNAL_COUNT
   return { ...signals, richness }
 }
 

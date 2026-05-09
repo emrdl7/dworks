@@ -170,7 +170,7 @@ export function renderSummaryMarkdown(
     }
     lines.push('')
     lines.push(
-      '> 풍부도 0.0(슬롭) ~ 1.0(풍부) — heading-1/fontSize 다양성/색 다양성/이미지/shape 깊이 5신호 평균.',
+      '> 풍부도 0.0(슬롭) ~ 1.0(풍부) — 랜드마크 구조/main 다중 섹션/display H1/CTA/fontSize 다양성/색 다양성/이미지/shape 깊이 8신호 평균.',
     )
     lines.push('')
   }
