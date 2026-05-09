@@ -574,12 +574,12 @@ const spacingModeIcons: Record<SpacingMode, LucideIcon> = {
   axis: Move,
   sides: PanelTop,
 }
-const responsiveViewportPresets = {
-  mobile: { label: '모바일', width: 375 },
-  tablet: { label: '태블릿', width: 768 },
-  desktop: { label: '데스크톱', width: 1200 },
-} as const
-type ResponsiveViewport = keyof typeof responsiveViewportPresets
+import {
+  responsiveViewportPresets,
+  resolveResponsiveLayout,
+  resolveResponsiveSpacing,
+  type ResponsiveViewport,
+} from './responsive.js'
 const responsiveViewportOptions: ResponsiveViewport[] = [
   'mobile',
   'tablet',
@@ -2348,6 +2348,7 @@ export default function HomePage() {
               <VariantCompareGrid
                 generations={generations}
                 activeGenerationId={activeGenerationId}
+                viewport={responsiveViewport}
                 viewportWidth={selectedViewportPreset.width}
                 canvasStyle={canvasStyle}
                 disabled={generateLoading}
@@ -2374,22 +2375,24 @@ export default function HomePage() {
                   width: selectedViewportPreset.width,
                 }}
               >
-                <CanvasToolbarContext.Provider
-                  value={{
-                    selectedNodeId,
-                    selectedStructureInfo,
-                    onMoveUp: () => handleMoveSelected('up'),
-                    onMoveDown: () => handleMoveSelected('down'),
-                    onDuplicate: handleDuplicateSelected,
-                    onDelete: handleDeleteSelected,
-                  }}
-                >
-                  <CanvasNode
-                    node={tree.root}
-                    selectedNodeId={selectedNodeId}
-                    onSelect={setSelectedNodeId}
-                  />
-                </CanvasToolbarContext.Provider>
+                <CanvasViewportContext.Provider value={responsiveViewport}>
+                  <CanvasToolbarContext.Provider
+                    value={{
+                      selectedNodeId,
+                      selectedStructureInfo,
+                      onMoveUp: () => handleMoveSelected('up'),
+                      onMoveDown: () => handleMoveSelected('down'),
+                      onDuplicate: handleDuplicateSelected,
+                      onDelete: handleDeleteSelected,
+                    }}
+                  >
+                    <CanvasNode
+                      node={tree.root}
+                      selectedNodeId={selectedNodeId}
+                      onSelect={setSelectedNodeId}
+                    />
+                  </CanvasToolbarContext.Provider>
+                </CanvasViewportContext.Provider>
               </div>
             </div>
           )}
@@ -2732,6 +2735,7 @@ function getContextMenuItems(menu: HTMLDivElement | null): HTMLButtonElement[] {
 }
 
 const CanvasReadOnlyContext = createContext(false)
+const CanvasViewportContext = createContext<ResponsiveViewport>('desktop')
 
 interface CanvasNodeProps {
   inheritedTextColor?: string
@@ -2746,13 +2750,17 @@ function CanvasNode({
   selectedNodeId,
   onSelect,
 }: CanvasNodeProps) {
+  const viewport = useContext(CanvasViewportContext)
+
   if (node.hidden === true) {
     return null
   }
 
-  const boxSpacingStyle = getBoxSpacingStyle(node.spacing)
-  const gapSpacingStyle = getGapSpacingStyle(node.spacing)
-  const containerSpacingStyle = getContainerSpacingStyle(node.spacing)
+  const resolvedSpacing = resolveResponsiveSpacing(node.spacing, viewport)
+  const resolvedLayout = resolveResponsiveLayout(node.layout, viewport)
+  const boxSpacingStyle = getBoxSpacingStyle(resolvedSpacing)
+  const gapSpacingStyle = getGapSpacingStyle(resolvedSpacing)
+  const containerSpacingStyle = getContainerSpacingStyle(resolvedSpacing)
   const shapeStyle = getShapeStyle(node.shape)
   const colorStyle = getColorStyle(node.color, inheritedTextColor)
   const accentBackgroundStyle = getAccentBackgroundStyle(node.color)
@@ -2766,7 +2774,7 @@ function CanvasNode({
   const disabledBackgroundStyle = getDisabledBackgroundStyle(node.color)
   const disabledTextStyle = getDisabledTextStyle(node.color)
   const transitionStyle = getTransitionStyle(node.transition)
-  const layoutStyle = getLayoutStyle(node.layout)
+  const layoutStyle = getLayoutStyle(resolvedLayout)
   const effectiveTextColor =
     node.color?.textColor !== undefined || inheritedTextColor !== undefined
       ? getCssColorWithOpacity(
@@ -2819,7 +2827,12 @@ function CanvasNode({
               />
             ) : null}
             {node.layoutIntent === 'grid' ? (
-              <div className="grid grid-cols-3 gap-8" style={gapSpacingStyle}>
+              <div
+                className={`grid ${
+                  viewport === 'mobile' ? 'grid-cols-1' : 'grid-cols-3'
+                } gap-8`}
+                style={gapSpacingStyle}
+              >
                 {remainingChildren.map((child) => (
                   <CanvasNode
                     key={child.id}
@@ -2882,7 +2895,9 @@ function CanvasNode({
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <section
             className={`grid min-h-[420px] gap-10 bg-[var(--dw-hero-surface)] p-12 text-[var(--dw-hero-text)] ${
-              hasImage ? 'grid-cols-[1.05fr_0.95fr]' : 'grid-cols-1'
+              hasImage && viewport !== 'mobile'
+                ? 'grid-cols-[1.05fr_0.95fr]'
+                : 'grid-cols-1'
             }`}
             style={containerStyle}
           >
@@ -10743,6 +10758,7 @@ function hexToRgba(hex: string, alpha: number): string {
 interface VariantCompareGridProps {
   generations: GenerationEntry[]
   activeGenerationId: string
+  viewport: ResponsiveViewport
   viewportWidth: number
   canvasStyle: CSSProperties
   disabled: boolean
@@ -10752,6 +10768,7 @@ interface VariantCompareGridProps {
 function VariantCompareGrid({
   generations,
   activeGenerationId,
+  viewport,
   viewportWidth,
   canvasStyle,
   disabled,
@@ -10765,6 +10782,7 @@ function VariantCompareGrid({
           entry={entry}
           fallbackLabel={entry.immutable ? '원본' : `변형 ${index}`}
           isActive={entry.id === activeGenerationId}
+          viewport={viewport}
           viewportWidth={viewportWidth}
           canvasStyle={canvasStyle}
           disabled={disabled}
@@ -10779,6 +10797,7 @@ interface MiniGenerationCanvasProps {
   entry: GenerationEntry
   fallbackLabel: string
   isActive: boolean
+  viewport: ResponsiveViewport
   viewportWidth: number
   canvasStyle: CSSProperties
   disabled: boolean
@@ -10792,6 +10811,7 @@ function MiniGenerationCanvas({
   entry,
   fallbackLabel,
   isActive,
+  viewport,
   viewportWidth,
   canvasStyle,
   disabled,
@@ -10847,11 +10867,13 @@ function MiniGenerationCanvas({
           }}
         >
           <CanvasReadOnlyContext.Provider value={true}>
-            <CanvasNode
-              node={entry.tree.root}
-              selectedNodeId=""
-              onSelect={() => {}}
-            />
+            <CanvasViewportContext.Provider value={viewport}>
+              <CanvasNode
+                node={entry.tree.root}
+                selectedNodeId=""
+                onSelect={() => {}}
+              />
+            </CanvasViewportContext.Provider>
           </CanvasReadOnlyContext.Provider>
         </div>
       </div>
