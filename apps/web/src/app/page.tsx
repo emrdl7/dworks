@@ -3978,7 +3978,7 @@ function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
       <button
         type="button"
         aria-label="축소"
-        className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#898d97] hover:bg-[#1d2025] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1]"
+        className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#c5c8cf] hover:bg-[#2a2e35] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1]"
         onClick={() => step(-1)}
         disabled={value <= minZoom}
       >
@@ -3987,7 +3987,7 @@ function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
       <button
         type="button"
         aria-label="100%로 재설정"
-        className="min-w-14 px-2 text-xs font-semibold text-[#898d97] hover:bg-[#1d2025]"
+        className="min-w-14 px-2 text-xs font-semibold tabular-nums text-[#ebecef] hover:bg-[#2a2e35]"
         onClick={() => onChange(1)}
         title="100%로 재설정"
       >
@@ -3996,7 +3996,7 @@ function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
       <button
         type="button"
         aria-label="확대"
-        className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#898d97] hover:bg-[#1d2025] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1]"
+        className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#c5c8cf] hover:bg-[#2a2e35] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1]"
         onClick={() => step(1)}
         disabled={value >= maxZoom}
       >
@@ -4221,7 +4221,7 @@ function ContextMenuButton({
   const toneClass =
     tone === 'danger'
       ? 'text-[#fca5a5] hover:bg-[#3a1717] focus-visible:bg-[#3a1717]'
-      : 'text-[#c5c8cf] hover:bg-[#1e1f3a] focus-visible:bg-[#1e1f3a]'
+      : 'text-[#c5c8cf] hover:bg-[#2a2e35] focus-visible:bg-[#2a2e35]'
 
   return (
     <button
@@ -4737,7 +4737,7 @@ function CanvasToolbarButton({
   const toneClass =
     tone === 'danger'
       ? 'text-[#fca5a5] hover:bg-[#3a1717] focus-visible:bg-[#3a1717]'
-      : 'text-[#c5c8cf] hover:bg-[#1e1f3a] focus-visible:bg-[#1e1f3a]'
+      : 'text-[#c5c8cf] hover:bg-[#2a2e35] focus-visible:bg-[#2a2e35]'
 
   return (
     <button
