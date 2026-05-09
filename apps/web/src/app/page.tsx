@@ -209,6 +209,7 @@ interface GenerationEntry {
   tree: Tree
   immutable: boolean
   brief: SubmittedDesignBrief | null
+  questions: ClarifyQuestionDto[]
   createdAt: number
   latencyMs: number | null
   model: 'claude' | 'codex' | 'gemini' | null
@@ -229,6 +230,7 @@ function createOriginalEntry(tree: Tree): GenerationEntry {
     tree,
     immutable: true,
     brief: null,
+    questions: [],
     createdAt: Date.now(),
     latencyMs: null,
     model: null,
@@ -868,15 +870,6 @@ export default function HomePage() {
     }
   }
 
-  function resetBriefForm() {
-    setBriefIntent('')
-    setBriefNotes('')
-    setClarifyQuestions([])
-    setBriefAnswers({})
-    setBriefVariantCount(1)
-    setGenerateStage('intent')
-  }
-
   async function handleAskQuestions() {
     const intent = briefIntent.trim()
     if (intent.length === 0 || clarifyLoading) return
@@ -1028,6 +1021,7 @@ export default function HomePage() {
         tree: success.tree,
         immutable: false,
         brief: submitted,
+        questions: clarifyQuestions,
         createdAt: now,
         latencyMs: success.latencyMs,
         model: success.model,
@@ -1055,7 +1049,6 @@ export default function HomePage() {
       } else {
         setGenerateError(null)
       }
-      resetBriefForm()
     } finally {
       setGenerateLoading(false)
     }
@@ -1073,6 +1066,29 @@ export default function HomePage() {
       ),
     )
     setActiveGenerationId(target.id)
+
+    if (target.brief === null) {
+      setBriefIntent('')
+      setBriefNotes('')
+      setClarifyQuestions([])
+      setBriefAnswers({})
+      setGenerateStage('intent')
+      setGenerateError(null)
+    } else {
+      const restoredQuestions = target.questions ?? []
+      setBriefIntent(target.brief.intent)
+      setBriefNotes(target.brief.notes ?? '')
+      setClarifyQuestions(restoredQuestions)
+      const restoredAnswers: Record<string, string | string[]> = {}
+      for (const a of target.brief.answers ?? []) {
+        restoredAnswers[a.questionId] = Array.isArray(a.answer)
+          ? [...a.answer]
+          : a.answer
+      }
+      setBriefAnswers(restoredAnswers)
+      setGenerateStage(restoredQuestions.length === 0 ? 'intent' : 'questions')
+    }
+
     const nextSelectedId =
       findFirstEditableNodeId(target.tree.root) ?? target.tree.root.id
     commitTreeEdit(target.tree, nextSelectedId, { skipGenerationSync: true })
@@ -1800,6 +1816,12 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
+                  {generations.find((e) => e.id === activeGenerationId)?.brief !=
+                  null ? (
+                    <p className="text-[10px] text-[#647067]">
+                      선택한 디자인의 답변
+                    </p>
+                  ) : null}
                   <div className="rounded-md border border-[#e0e5de] bg-[#f8faf9] p-2">
                     <div className="mb-1 flex items-center justify-between">
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-[#4f5e56]">
