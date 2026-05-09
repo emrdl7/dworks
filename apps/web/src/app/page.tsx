@@ -4264,11 +4264,25 @@ export default function HomePage() {
                     <span className="tabular-nums">grid {canvasGridSize}px</span>
                   </>
                 ) : null}
+                {isSpacePressed ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="text-[#a5b4fc]">Space → drag로 panning</span>
+                  </>
+                ) : null}
               </div>
               <div className="flex min-w-0 shrink items-center gap-2">
                 {additionalSelectedNodeIds.size > 0 ? (
                   <span className="text-[#a5b4fc]">
                     +{additionalSelectedNodeIds.size}개 선택
+                  </span>
+                ) : null}
+                {hoveredNodeId !== null && hoveredNodeId !== selectedNodeId ? (
+                  <span
+                    className="hidden truncate font-mono text-[10px] text-[#5b6069]/80 sm:inline"
+                    title={`hover: ${hoveredNodeId}`}
+                  >
+                    ↳ {hoveredNodeId}
                   </span>
                 ) : null}
                 <span className="truncate font-mono text-[10px]" title={selectedNodeId}>
