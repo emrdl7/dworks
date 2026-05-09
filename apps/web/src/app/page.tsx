@@ -3558,6 +3558,21 @@ export default function HomePage() {
                           <Unlock size={11} aria-hidden="true" />
                         </button>
                       ) : null}
+                      {/* container에는 hover 시 quick add 버튼 노출 */}
+                      {isContainer ? (
+                        <button
+                          type="button"
+                          title="텍스트 자식 추가"
+                          aria-label={`${node.id}에 텍스트 자식 추가`}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            handleAddLeafChild(node.id, 'text')
+                          }}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded text-[#5b6069] opacity-0 transition hover:bg-[#16181c] hover:text-[#a5b4fc] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#6366f1] focus-visible:opacity-100 group-hover/layer-row:opacity-100"
+                        >
+                          <Plus size={11} aria-hidden="true" />
+                        </button>
+                      ) : null}
                     </span>
                   </div>
                 </div>
