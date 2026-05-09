@@ -3191,7 +3191,7 @@ export default function HomePage() {
               }}
             >
               <div
-                className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
+                className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)] shadow-[0_1px_2px_rgba(15,23,21,0.04),0_8px_24px_-12px_rgba(15,23,21,0.18)]"
                 style={{
                   ...canvasStyle,
                   width: selectedViewportPreset.width,
