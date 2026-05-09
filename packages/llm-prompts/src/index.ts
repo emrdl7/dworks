@@ -120,59 +120,233 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             editKind: 'structure',
             type: 'section',
             role: 'main',
+            layout: { direction: 'column' },
+            spacing: { gap: 64 },
             children: [
               {
-                id: 'landing.hero',
+                id: 'cafe.hero',
                 editKind: 'structure',
                 type: 'hero',
                 color: {
                   backgroundGradient: {
-                    from: '#fff5e8',
-                    to: '#f0c891',
+                    from: '#fff1dc',
+                    to: '#e89b50',
                     direction: 'to-bottom-right',
                   },
+                  textColor: '#3a2718',
                 },
                 spacing: {
-                  paddingTop: 96,
-                  paddingBottom: 96,
-                  paddingLeft: 32,
-                  paddingRight: 32,
-                  gap: 24,
+                  paddingTop: 120,
+                  paddingBottom: 120,
+                  paddingLeft: 48,
+                  paddingRight: 48,
+                  gap: 32,
                 },
-                shape: { radius: 24 },
                 layout: { align: 'center' },
                 responsive: { mobile: 'image 아래로 stack, padding 축소' },
                 children: [
                   {
-                    id: 'hero.title',
+                    id: 'cafe.hero.title',
                     editKind: 'text',
                     type: 'text',
-                    content: '도시의 숨결, 한 잔의 여유',
+                    content: '도시의 숨결,\n한 잔의 여유',
                     emphasis: 'heading-1',
+                    typography: {
+                      fontSize: 72,
+                      fontWeight: '900',
+                      lineHeight: 1.1,
+                    },
                   },
                   {
-                    id: 'hero.subtitle',
+                    id: 'cafe.hero.subtitle',
                     editKind: 'text',
                     type: 'text',
-                    content: '직접 로스팅한 원두로 매일 아침을 깨웁니다.',
+                    content:
+                      '직접 로스팅한 원두로 매일 아침을 깨우는 동네 카페. 천천히 머물고, 깊게 음미하세요.',
                     emphasis: 'body',
+                    typography: { fontSize: 20, lineHeight: 1.6 },
                   },
                   {
-                    id: 'hero.image',
+                    id: 'cafe.hero.image',
                     editKind: 'media',
                     type: 'image',
                     src: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085',
                     alt: '원목 테이블 위 따뜻한 라떼 한 잔',
                     aspectRatio: 'wide',
-                    shape: { radius: 16 },
+                    shape: { radius: 24, shadow: 'xl' },
                   },
                   {
-                    id: 'hero.cta',
+                    id: 'cafe.hero.cta',
                     editKind: 'text',
                     type: 'button',
-                    label: '메뉴 보기',
+                    label: '오늘의 메뉴 보기',
                     variant: 'primary',
-                    shape: { radius: 32, shadow: 'sm' },
+                    shape: { radius: 36, shadow: 'lg' },
+                    color: {
+                      backgroundColor: '#3a2718',
+                      textColor: '#fff1dc',
+                    },
+                  },
+                ],
+              },
+              {
+                id: 'cafe.menu',
+                editKind: 'structure',
+                type: 'section',
+                spacing: {
+                  paddingTop: 96,
+                  paddingBottom: 96,
+                  paddingLeft: 48,
+                  paddingRight: 48,
+                  gap: 48,
+                },
+                layout: { direction: 'column', align: 'center' },
+                children: [
+                  {
+                    id: 'cafe.menu.title',
+                    editKind: 'text',
+                    type: 'text',
+                    content: '오늘의 시그니처',
+                    emphasis: 'heading-2',
+                    typography: { fontSize: 48, fontWeight: '800' },
+                  },
+                  {
+                    id: 'cafe.menu.list',
+                    editKind: 'structure',
+                    type: 'section',
+                    spacing: { gap: 32 },
+                    layout: { direction: 'row', align: 'stretch' },
+                    children: [
+                      {
+                        id: 'cafe.menu.card.1',
+                        editKind: 'structure',
+                        type: 'card',
+                        spacing: { paddingBottom: 24, gap: 16 },
+                        shape: { radius: 20, shadow: 'lg' },
+                        color: { backgroundColor: '#ffffff' },
+                        children: [
+                          {
+                            id: 'cafe.menu.card.1.image',
+                            editKind: 'media',
+                            type: 'image',
+                            src: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31',
+                            alt: '갓 내린 에스프레소 잔',
+                            aspectRatio: 'square',
+                          },
+                          {
+                            id: 'cafe.menu.card.1.name',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '에스프레소 콘 파나',
+                            emphasis: 'heading-3',
+                            typography: { fontSize: 22, fontWeight: '700' },
+                          },
+                          {
+                            id: 'cafe.menu.card.1.desc',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '갓 내린 에스프레소 위에 부드러운 휘핑',
+                            emphasis: 'caption',
+                            typography: { lineHeight: 1.55 },
+                          },
+                          {
+                            id: 'cafe.menu.card.1.price',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '5,500원',
+                            emphasis: 'heading-3',
+                            typography: { fontSize: 20, fontWeight: '800' },
+                            color: { textColor: '#a5471f' },
+                          },
+                        ],
+                      },
+                      {
+                        id: 'cafe.menu.card.2',
+                        editKind: 'structure',
+                        type: 'card',
+                        spacing: { paddingBottom: 24, gap: 16 },
+                        shape: { radius: 20, shadow: 'lg' },
+                        color: { backgroundColor: '#ffffff' },
+                        children: [
+                          {
+                            id: 'cafe.menu.card.2.image',
+                            editKind: 'media',
+                            type: 'image',
+                            src: 'https://images.unsplash.com/photo-1572442388796-11668a67e53d',
+                            alt: '풍성한 거품의 라떼 한 잔',
+                            aspectRatio: 'square',
+                          },
+                          {
+                            id: 'cafe.menu.card.2.name',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '시즌 바닐라 라떼',
+                            emphasis: 'heading-3',
+                            typography: { fontSize: 22, fontWeight: '700' },
+                          },
+                          {
+                            id: 'cafe.menu.card.2.desc',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '마다가스카르 바닐라 빈으로 만든 시즌 한정',
+                            emphasis: 'caption',
+                            typography: { lineHeight: 1.55 },
+                          },
+                          {
+                            id: 'cafe.menu.card.2.price',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '6,800원',
+                            emphasis: 'heading-3',
+                            typography: { fontSize: 20, fontWeight: '800' },
+                            color: { textColor: '#a5471f' },
+                          },
+                        ],
+                      },
+                      {
+                        id: 'cafe.menu.card.3',
+                        editKind: 'structure',
+                        type: 'card',
+                        spacing: { paddingBottom: 24, gap: 16 },
+                        shape: { radius: 20, shadow: 'lg' },
+                        color: { backgroundColor: '#ffffff' },
+                        children: [
+                          {
+                            id: 'cafe.menu.card.3.image',
+                            editKind: 'media',
+                            type: 'image',
+                            src: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93',
+                            alt: '가을빛 디저트 플레이트',
+                            aspectRatio: 'square',
+                          },
+                          {
+                            id: 'cafe.menu.card.3.name',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '계절 무화과 타르트',
+                            emphasis: 'heading-3',
+                            typography: { fontSize: 22, fontWeight: '700' },
+                          },
+                          {
+                            id: 'cafe.menu.card.3.desc',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '제주 무화과를 올린 손수 만든 타르트',
+                            emphasis: 'caption',
+                            typography: { lineHeight: 1.55 },
+                          },
+                          {
+                            id: 'cafe.menu.card.3.price',
+                            editKind: 'text',
+                            type: 'text',
+                            content: '8,200원',
+                            emphasis: 'heading-3',
+                            typography: { fontSize: 20, fontWeight: '800' },
+                            color: { textColor: '#a5471f' },
+                          },
+                        ],
+                      },
+                    ],
                   },
                 ],
               },
@@ -185,19 +359,21 @@ export const GENERATE_TREE_EXAMPLES: ReadonlyArray<{
             role: 'contentinfo',
             layout: { direction: 'row', align: 'center', justify: 'between' },
             spacing: {
-              paddingTop: 24,
-              paddingRight: 32,
-              paddingBottom: 24,
-              paddingLeft: 32,
-              gap: 16,
+              paddingTop: 40,
+              paddingRight: 48,
+              paddingBottom: 40,
+              paddingLeft: 48,
+              gap: 24,
             },
+            color: { backgroundColor: '#3a2718', textColor: '#fff1dc' },
             children: [
               {
                 id: 'cafe.footer.copy',
                 editKind: 'text',
                 type: 'text',
-                content: '© 2026 도시카페',
+                content: '© 2026 도시카페 — 매일 아침 7시 오픈',
                 emphasis: 'caption',
+                typography: { fontSize: 14 },
               },
               {
                 id: 'cafe.footer.links',
@@ -801,15 +977,20 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 
 \`responsive\` prop은 헤더/메인의 layout이 viewport별로 어떻게 적응할지 한국어 의도 메모(예: \`{ "mobile": "햄버거 메뉴로 nav 접음" }\`). 의도 _힌트_만 — 실제 렌더 분기는 시스템이 처리.
 
-## 2026 디자인 트렌드 가이드
+## 2026 디자인 트렌드 가이드 (와이어프레임 금지)
 
-- **Bold typography hero**: hero 첫 화면에 \`emphasis="heading-1"\` 텍스트가 강한 메시지를 전달. typography 자체가 시각적 hook.
-- **Ample whitespace**: hero/main section의 \`spacing.padding\` ≥ 80, 섹션 간 \`spacing.gap\` ≥ 48. 정보 밀도 낮추고 호흡 확보.
-- **Single clear CTA per hero**: 1차 CTA 하나 — \`variant='primary'\`. 보조는 \`ghost\`.
-- **Neutral base + accent pops**: 배경은 흑백/그레이 또는 soft tone. \`accentColor\` 1~2개로 강조. 화려한 그라디언트 X (subtle gradient OK).
-- **Mobile-first 의도**: \`layout.direction\`은 column 우선, gap으로 호흡. 헤더만 row + responsive로 mobile 적응 의도 명시.
+**절대 규칙**: 출력은 _완성된 디자인_이지 와이어프레임이 아니다. 텍스트 박스만 있는 plain section은 금지. 모든 hero/section/card/footer는 색감/typography/이미지/그림자 중 _최소 2개_가 명확히 보이게 만든다.
 
-피할 패턴(AI 슬롭): 모든 카드 같은 그라디언트, 이모지 장식, 좌측 강조 막대 카드, 모든 섹션 동일 padding.
+- **Bold typography hero**: hero \`heading-1\` 텍스트는 \`typography.fontSize\` 56~80 + \`fontWeight\` 700~900 명시. body는 fontSize 16~20 + lineHeight 1.55~1.7. 큰 typography 자체가 시각적 hook.
+- **Section 다양화**: 한 페이지는 보통 5~8 섹션 — hero / 핵심 가치 또는 메뉴 카드 / 이미지 gallery 또는 product preview / customer logos 또는 social proof / pricing 또는 features / testimonials / closing CTA / footer. 단일 hero 페이지 금지.
+- **이미지 풍부**: hero 외에도 menu/product/gallery/about 섹션에 이미지 활용. unsplash 등 안정적 URL.
+- **색감 강함**: hero/CTA/footer 중 하나 이상에 \`color.backgroundColor\` 또는 \`backgroundGradient\` 명시. 회색 배경에 텍스트만은 와이어프레임.
+- **Shadow 적극**: 핵심 CTA 버튼 \`shape.shadow\`=\`md\`/\`lg\`, 강조 카드 \`lg\`/\`xl\`, hero 핵심 시각 요소 \`xl\`. \`none\` 남발 금지.
+- **Generous spacing**: hero \`spacing.padding\` ≥ 96, 섹션 간 \`spacing.gap\` ≥ 64. 정보 밀도 낮추고 호흡.
+- **Single primary CTA per hero**: 1차 CTA 하나 \`variant='primary'\` + \`shape.radius\` 24~48 + \`shadow\`=\`md\`. 보조 ghost.
+- **Mobile-first 의도**: \`layout.direction\`은 column 우선. 헤더만 row + responsive로 mobile 적응.
+
+피할 패턴(AI 슬롭, 즉시 거부): 텍스트 박스만 있는 hero, 모든 카드 동일 그라디언트, 이모지 장식, 좌측 강조 막대 카드, 모든 섹션 동일 padding, fontSize 명시 없이 emphasis만 박은 typography, 회색 캔버스에 텍스트만.
 
 ## 답변 → 스타일 매핑 가이드
 
