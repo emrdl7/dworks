@@ -144,6 +144,10 @@ import {
   buildVariantRequestBrief,
   type VariantCount,
 } from './generation-history'
+import {
+  readPersistedGenerationState,
+  writePersistedGenerationState,
+} from './generation-storage'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -736,6 +740,80 @@ export default function HomePage() {
   )
   const [compareMode, setCompareMode] = useState(false)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
+  const hydratedRef = useRef(false)
+
+  useEffect(() => {
+    // 마운트 1회 — localStorage 복원으로 새로고침 후 생성 결과물 휘발 방지.
+    const persisted = readPersistedGenerationState()
+    if (persisted !== null) {
+      const fixture = getTreeFixture(persisted.fixtureId) ?? defaultTreeFixture
+      const restoredGenerations = persisted.generations as GenerationEntry[]
+      const activeId =
+        restoredGenerations.find((entry) => entry.id === persisted.activeGenerationId)
+          ?.id ?? restoredGenerations[0]?.id
+      const activeEntry = restoredGenerations.find((entry) => entry.id === activeId)
+
+      setSelectedFixtureId(fixture.id)
+      setGenerations(restoredGenerations)
+      if (activeId !== undefined) {
+        setActiveGenerationId(activeId)
+      }
+      if (activeEntry !== undefined) {
+        setTree(activeEntry.tree)
+        setSelectedNodeId(
+          findFirstEditableNodeId(activeEntry.tree.root) ?? activeEntry.tree.root.id,
+        )
+        setHistoryPast([])
+        setHistoryFuture([])
+        lastHistoryMergeRef.current = null
+      }
+
+      setBriefIntent(persisted.brief.intent)
+      setBriefNotes(persisted.brief.notes)
+      setBriefVariantCount(persisted.brief.variantCount)
+      setBriefAnswers(persisted.brief.answers)
+      setClarifyQuestions(persisted.brief.questions as ClarifyQuestionDto[])
+      setClarifyTurns(persisted.clarify.turns as ClarifyTurn[])
+      setClarifyComplete(persisted.clarify.complete)
+      setGenerateStage(persisted.clarify.stage)
+    }
+    hydratedRef.current = true
+  }, [])
+
+  useEffect(() => {
+    // 변경 시 localStorage 동기화 — hydrate 전 write는 skip해 default 상태로 덮어쓰지 않는다.
+    if (!hydratedRef.current) return
+    writePersistedGenerationState({
+      version: 1,
+      fixtureId: selectedFixtureId,
+      generations,
+      activeGenerationId,
+      brief: {
+        intent: briefIntent,
+        notes: briefNotes,
+        variantCount: briefVariantCount,
+        answers: briefAnswers,
+        questions: clarifyQuestions,
+      },
+      clarify: {
+        turns: clarifyTurns,
+        complete: clarifyComplete,
+        stage: generateStage,
+      },
+    })
+  }, [
+    selectedFixtureId,
+    generations,
+    activeGenerationId,
+    briefIntent,
+    briefNotes,
+    briefVariantCount,
+    briefAnswers,
+    clarifyQuestions,
+    clarifyTurns,
+    clarifyComplete,
+    generateStage,
+  ])
 
   useEffect(() => {
     if (compareMode && generations.length < 2) {
