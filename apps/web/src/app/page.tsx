@@ -4056,10 +4056,10 @@ export default function HomePage() {
                   ],
                 },
                 {
-                  category: '다중 선택 (레이어)',
+                  category: '다중 선택',
                   items: [
-                    { keys: ['⇧', 'click'], label: '레이어 추가/해제' },
-                    { keys: ['⌘', 'click'], label: '레이어 추가/해제 (대체)' },
+                    { keys: ['⇧', 'click'], label: '노드 추가/해제 (레이어·캔버스)' },
+                    { keys: ['⌘', 'click'], label: '노드 추가/해제 (대체)' },
                   ],
                 },
                 {
