@@ -48,7 +48,7 @@
 - ✓ `m3-generate-mvp` (`24d5517` / `28d8f38` / `eb60396`) — POST /generate Claude CLI 단일, 헤더 한 줄 prompt UI
 - ✓ `m3-generate-brief` (`fd5aa88`) — 좌측 패널 + 5필드 brief + 생성 히스토리 (clarify에 의해 5필드 UI 교체, API stepping stone)
 - ✓ `m3-generate-clarify` (`d6d84cc` r4 / `e873a6d` r5 통합) — POST /clarify (적응형 질문 3~6) + brief 재정의 (answers) + Stage 1/2 web UI + "의도만으로 바로 생성" fallback
-- 🔄 `m3-generate-fallback` (r1 `5c07a26`만) — clarify 흡수 후 r4 재개 (request body 변경 반영 필요)
+- ✓ `m3-generate-fallback` (`eb6aada` r4 / `c312aba` r5) — LlmProvider chain (claude/codex/gemini) + resolveProviderChain env + callLlmChain 순회. /generate + /clarify 모두 적용. parse/schema 실패는 fallback 안 함
 
 **M3 후속 후보**:
 - `m3-generate-codex-adapter` — Codex CLI 어댑터 envelope 정밀 매핑
