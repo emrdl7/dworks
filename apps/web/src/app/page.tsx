@@ -2769,26 +2769,55 @@ export default function HomePage() {
                       {points.map((p, i) => {
                         const entry = generations[i]
                         const label = entry?.userLabel ?? entry?.label ?? ''
+                        const isImmutable = entry?.immutable === true
+                        const isPinned = entry?.pinned === true
+                        const isActive = i === activeIndex
+                        const fill = isActive
+                          ? '#1b7f72'
+                          : isImmutable
+                            ? '#9aa6a0'
+                            : isPinned
+                              ? '#c8a473'
+                              : '#7c8a82'
+                        const onClick = (): void => {
+                          if (entry !== undefined) {
+                            handleSelectGeneration(entry.id)
+                          }
+                        }
+                        const title = `${label} — ${p.score.toFixed(2)}${
+                          isImmutable ? ' (원본)' : isPinned ? ' (★ 고정)' : ''
+                        }`
+                        if (isImmutable) {
+                          const r = isActive ? 2.6 : 1.8
+                          const d = `M${p.x},${p.y - r} L${p.x + r},${p.y} L${p.x},${p.y + r} L${p.x - r},${p.y} Z`
+                          return (
+                            <path
+                              key={i}
+                              d={d}
+                              fill={fill}
+                              style={{ cursor: 'pointer' }}
+                              onClick={onClick}
+                            >
+                              <title>{title}</title>
+                            </path>
+                          )
+                        }
                         return (
                           <circle
                             key={i}
                             cx={p.x}
                             cy={p.y}
-                            r={i === activeIndex ? 2.6 : 1.6}
-                            fill={i === activeIndex ? '#1b7f72' : '#7c8a82'}
+                            r={isActive ? 2.6 : 1.6}
+                            fill={fill}
                             style={{ cursor: 'pointer' }}
-                            onClick={() => {
-                              if (entry !== undefined) {
-                                handleSelectGeneration(entry.id)
-                              }
-                            }}
+                            onClick={onClick}
                           >
-                            <title>{`${label} — ${p.score.toFixed(2)}`}</title>
+                            <title>{title}</title>
                           </circle>
                         )
                       })}
                     </svg>
-                    <span>풍부도 추이 (점선 = 0.6 임계, 점 클릭 = 선택)</span>
+                    <span>풍부도 추이 (◇ 원본 / ★ 고정 / ● mutable, 점 클릭 = 선택)</span>
                   </div>
                 )
               })()}
