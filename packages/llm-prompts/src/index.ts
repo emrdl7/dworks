@@ -431,6 +431,18 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - **추가 질문 답변**: \`- 질문 라벨: 답변\` 목록. 답변은 단일 문자열 또는 ', '로 결합된 다중 선택. 의도와 답변을 종합해 root 노드 종류 / children 구성 / content 디테일 결정.
 - **브랜드 / 참조 메모**: brand voice / 참조 자료.
 
+## 답변 → 스타일 매핑 가이드
+
+답변의 감성/톤 키워드를 \`color\` / \`spacing\` / \`shape\` / \`layout\` / \`typography\` prop에 일관되게 반영한다. 색 계열만 제시 — raw hex는 자유롭게 고른다.
+
+- **차분 / 절제 / 신뢰**: cool muted palette, 큰 \`typography.lineHeight\`(≥1.6), 작은 \`shape.shadow\`(\`sm\`), 큰 \`spacing.padding\`으로 호흡.
+- **활기 / 임팩트 / 강조**: warm accent palette, 큰 \`spacing.gap\`, 진한 \`shape.shadow\`(\`lg\`/\`xl\`), \`shape.radius\` 12~24.
+- **친근 / 따뜻 / 부드러움**: warm \`color.backgroundGradient\`, soft \`shape.radius\`(16~32), 큰 \`spacing.padding\`, \`typography.lineHeight\` ≥ 1.6.
+- **전문 / 정확 / 깔끔**: 흑백 가까운 palette, sharp \`shape.radius\`(4~8), 명확한 \`layout.direction='column'\`, 절제된 \`typography.lineHeight\`(~1.5).
+- **프리미엄 / 고급**: deep premium palette, generous \`spacing.padding\`(≥64), subtle \`shape.shadow\`(\`sm\`), \`layout.align='center'\`.
+
+답변에 톤 키워드가 없거나 모호하면 강제 매핑하지 않고 도메인 시그니처 기본 스타일을 적용한다. 복합 톤("전문적이지만 친근한")은 주 톤 1개를 우선하고, 보조 톤은 1~2개 prop으로만 약하게 반영한다.
+
 ## 예시 (도메인 다양화)
 
 ${GENERATE_EXAMPLES_BLOCK}

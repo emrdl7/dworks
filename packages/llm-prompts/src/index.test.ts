@@ -155,4 +155,24 @@ describe('llm-prompts examples', () => {
       )
     }
   })
+
+  it('GENERATE_TREE_SYSTEM_PROMPT includes 답변 → 스타일 매핑 가이드 with all 5 tone labels', () => {
+    assert.ok(
+      GENERATE_TREE_SYSTEM_PROMPT.includes('## 답변 → 스타일 매핑 가이드'),
+      'mapping guide header missing',
+    )
+    const toneLabels = [
+      '차분 / 절제 / 신뢰',
+      '활기 / 임팩트 / 강조',
+      '친근 / 따뜻 / 부드러움',
+      '전문 / 정확 / 깔끔',
+      '프리미엄 / 고급',
+    ]
+    for (const label of toneLabels) {
+      assert.ok(
+        GENERATE_TREE_SYSTEM_PROMPT.includes(label),
+        `mapping guide missing tone label: ${label}`,
+      )
+    }
+  })
 })
