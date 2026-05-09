@@ -2887,33 +2887,40 @@ export default function HomePage() {
                         const title = `${label} — ${p.score.toFixed(2)}${
                           isImmutable ? ' (원본)' : isPinned ? ' (★ 고정)' : ''
                         }`
-                        if (isImmutable) {
-                          const r = isActive ? 2.6 : 1.8
-                          const d = `M${p.x},${p.y - r} L${p.x + r},${p.y} L${p.x},${p.y + r} L${p.x - r},${p.y} Z`
-                          return (
-                            <path
-                              key={i}
-                              d={d}
-                              fill={fill}
-                              style={{ cursor: 'pointer' }}
-                              onClick={onClick}
-                            >
-                              <title>{title}</title>
-                            </path>
-                          )
-                        }
-                        return (
+                        const visualMarker = isImmutable ? (
+                          (() => {
+                            const r = isActive ? 2.6 : 1.8
+                            const d = `M${p.x},${p.y - r} L${p.x + r},${p.y} L${p.x},${p.y + r} L${p.x - r},${p.y} Z`
+                            return (
+                              <path
+                                d={d}
+                                fill={fill}
+                                pointerEvents="none"
+                              />
+                            )
+                          })()
+                        ) : (
                           <circle
-                            key={i}
                             cx={p.x}
                             cy={p.y}
                             r={isActive ? 2.6 : 1.6}
                             fill={fill}
-                            style={{ cursor: 'pointer' }}
-                            onClick={onClick}
-                          >
-                            <title>{title}</title>
-                          </circle>
+                            pointerEvents="none"
+                          />
+                        )
+                        return (
+                          <g key={i} style={{ cursor: 'pointer' }} onClick={onClick}>
+                            {/* invisible hit area — 점이 작아도 손쉽게 클릭 / hover */}
+                            <circle
+                              cx={p.x}
+                              cy={p.y}
+                              r={6}
+                              fill="transparent"
+                            >
+                              <title>{title}</title>
+                            </circle>
+                            {visualMarker}
+                          </g>
                         )
                       })}
                     </svg>
