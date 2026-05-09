@@ -2443,11 +2443,8 @@ export default function HomePage() {
             aria-labelledby="left-panel-tab-brief"
             className="flex min-h-0 flex-1 flex-col overflow-y-auto"
           >
-          <details
-            open
-            className="border-b border-[#e0e5de] [&_summary]:cursor-pointer"
-          >
-            <summary className="flex items-center justify-between px-4 py-3">
+          <div className="border-b border-[#e0e5de]">
+            <div className="flex items-center justify-between px-4 py-3">
               <h2 className="text-sm font-semibold text-[#4f46e5]">AI 디자인</h2>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-[#647067]">
@@ -2473,7 +2470,7 @@ export default function HomePage() {
                   </button>
                 ) : null}
               </div>
-            </summary>
+            </div>
             <div className="space-y-3 px-4 pb-4">
               <div className="flex flex-wrap gap-1">
                 {generations.map((entry) => {
@@ -3004,7 +3001,7 @@ export default function HomePage() {
                 </p>
               ) : null}
             </div>
-          </details>
+          </div>
           </div>
           ) : null}
           {leftPanelTab === 'layers' ? (
