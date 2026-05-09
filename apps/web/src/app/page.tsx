@@ -4329,7 +4329,11 @@ function SelectableNode({
       onKeyDown={handleKeyDown}
     >
       {isSelected ? (
-        <span className="pointer-events-none absolute -top-3 left-2 z-10 rounded bg-[var(--dw-accent)] px-2 py-1 text-[11px] font-semibold text-[var(--dw-accent-text)]">
+        <span className="pointer-events-none absolute -top-3 left-2 z-10 inline-flex items-center gap-1 rounded bg-[var(--dw-accent)] px-2 py-1 text-[11px] font-semibold text-[var(--dw-accent-text)]">
+          {(() => {
+            const Icon = nodeTypeIcons[node.type]
+            return <Icon aria-hidden="true" size={11} />
+          })()}
           {nodeTypeLabels[node.type]}
         </span>
       ) : null}
