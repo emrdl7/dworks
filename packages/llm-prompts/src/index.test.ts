@@ -13,6 +13,7 @@ import {
   CLARIFY_QUESTIONS_SYSTEM_PROMPT,
   GENERATE_TREE_EXAMPLES,
   GENERATE_TREE_SYSTEM_PROMPT,
+  formatBriefAsUserPrompt,
 } from './index.js'
 
 const clarifyQuestionSchema = z
@@ -295,5 +296,33 @@ describe('llm-prompts examples', () => {
     assert.ok(json.includes('"article.section"'), 'article.section missing')
     assert.ok(json.includes('"magazine.related"'), 'magazine.related missing')
     assert.ok(json.includes('"magazine.related.grid"'), 'magazine.related.grid missing')
+  })
+
+  it('formatBriefAsUserPrompt omits 참고 이미지 시드 when imageReference is undefined', () => {
+    const out = formatBriefAsUserPrompt({ intent: '카페 랜딩' })
+    assert.ok(!out.includes('참고 이미지 시드'))
+  })
+
+  it('formatBriefAsUserPrompt serializes imageReference with colors and aspectRatio', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페 랜딩',
+      imageReference: {
+        colors: ['#0b1220', '#22d3ee', '#f8fafc'],
+        aspectRatio: 'wide',
+      },
+    })
+    assert.ok(out.includes('### 참고 이미지 시드'))
+    assert.ok(out.includes('주요 색: #0b1220, #22d3ee, #f8fafc'))
+    assert.ok(out.includes('화면 비율: wide'))
+    assert.ok(out.includes('시드로 활용'))
+  })
+
+  it('formatBriefAsUserPrompt skips aspectRatio line when undefined', () => {
+    const out = formatBriefAsUserPrompt({
+      intent: '카페',
+      imageReference: { colors: ['#000000'] },
+    })
+    assert.ok(out.includes('주요 색: #000000'))
+    assert.ok(!out.includes('화면 비율'))
   })
 })

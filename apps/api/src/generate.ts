@@ -25,10 +25,18 @@ export const briefAnswerSchema = z.object({
 })
 export type BriefAnswer = z.infer<typeof briefAnswerSchema>
 
+const hex6Schema = z.string().regex(/^#[0-9a-fA-F]{6}$/)
+export const imageReferenceSchema = z.object({
+  colors: z.array(hex6Schema).min(1).max(5),
+  aspectRatio: z.enum(['square', 'landscape', 'portrait', 'wide']).optional(),
+})
+export type ImageReference = z.infer<typeof imageReferenceSchema>
+
 export const briefSchema = z.object({
   intent: z.string().trim().min(1).max(500),
   answers: z.array(briefAnswerSchema).max(6).optional(),
   notes: z.string().trim().max(300).optional(),
+  imageReference: imageReferenceSchema.optional(),
 })
 export type GenerateBrief = z.infer<typeof briefSchema>
 

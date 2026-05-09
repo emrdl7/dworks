@@ -14,10 +14,22 @@ export interface BriefAnswer {
   answer: string | string[]
 }
 
+/**
+ * 사용자 참고 이미지에서 추출한 색감/비율 시드.
+ * vision-LLM 미사용 PoC에서도 텍스트 시그널로 LLM에 전달된다.
+ */
+export interface ImageReference {
+  /** 빈도 상위 hex 색 3~5개 (소문자 #rrggbb). */
+  colors: string[]
+  /** 'square' | 'landscape' | 'portrait' | 'wide' 중 가장 가까운 비율. */
+  aspectRatio?: 'square' | 'landscape' | 'portrait' | 'wide'
+}
+
 export interface DesignBrief {
   intent: string
   answers?: BriefAnswer[]
   notes?: string
+  imageReference?: ImageReference
 }
 
 /**
@@ -39,6 +51,19 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
   }
   if (brief.notes !== undefined && brief.notes.trim().length > 0) {
     lines.push('', `### 브랜드 / 참조 메모`, brief.notes.trim())
+  }
+  if (
+    brief.imageReference !== undefined &&
+    brief.imageReference.colors.length > 0
+  ) {
+    lines.push('', `### 참고 이미지 시드`)
+    lines.push(`- 주요 색: ${brief.imageReference.colors.join(', ')}`)
+    if (brief.imageReference.aspectRatio !== undefined) {
+      lines.push(`- 화면 비율: ${brief.imageReference.aspectRatio}`)
+    }
+    lines.push(
+      '  (참고 이미지에서 추출. 그대로 베끼지 말고 디자인 팔레트의 시드로 활용. raw hex 강제 X)',
+    )
   }
   lines.push('', '위 브리프에 맞춰 dworks Tree JSON 하나를 반환한다.')
   return lines.join('\n')

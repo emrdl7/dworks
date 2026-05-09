@@ -153,6 +153,7 @@ import {
   formatRichnessScore,
   type RichnessReport,
 } from './richness'
+import { extractDominantColors, pickAspectRatio } from './image-color'
 
 type RichnessSignalKey = keyof Omit<RichnessReport, 'score'>
 
@@ -230,10 +231,16 @@ interface BriefAnswer {
   answer: string | string[]
 }
 
+interface ImageReferenceSeed {
+  colors: string[]
+  aspectRatio?: 'square' | 'landscape' | 'portrait' | 'wide'
+}
+
 interface SubmittedDesignBrief {
   intent: string
   answers?: BriefAnswer[]
   notes?: string
+  imageReference?: ImageReferenceSeed
 }
 
 interface ClarifyTurn {
@@ -262,6 +269,64 @@ let generationCounter = 0
 function createGenerationEntryId(): string {
   generationCounter += 1
   return `gen-${Date.now().toString(36)}-${generationCounter}`
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result
+      if (typeof result === 'string') {
+        resolve(result)
+      } else {
+        reject(new Error('FileReader가 data URL을 반환하지 않았습니다.'))
+      }
+    }
+    reader.onerror = () => reject(reader.error ?? new Error('읽기 실패'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function extractFromDataUrl(dataUrl: string): Promise<{
+  colors: string[]
+  aspectRatio: 'square' | 'landscape' | 'portrait' | 'wide' | null
+  width: number
+  height: number
+}> {
+  const image = await loadImage(dataUrl)
+  const naturalWidth = image.naturalWidth
+  const naturalHeight = image.naturalHeight
+  const aspectRatio = pickAspectRatio(naturalWidth, naturalHeight)
+  const MAX_DIM = 200
+  const scale = Math.min(
+    1,
+    MAX_DIM / Math.max(naturalWidth, naturalHeight, 1),
+  )
+  const drawWidth = Math.max(1, Math.round(naturalWidth * scale))
+  const drawHeight = Math.max(1, Math.round(naturalHeight * scale))
+  const canvas = document.createElement('canvas')
+  canvas.width = drawWidth
+  canvas.height = drawHeight
+  const ctx = canvas.getContext('2d')
+  if (ctx === null) {
+    throw new Error('canvas 2d context를 얻을 수 없습니다.')
+  }
+  ctx.drawImage(image, 0, 0, drawWidth, drawHeight)
+  const imageData = ctx.getImageData(0, 0, drawWidth, drawHeight)
+  const colors = extractDominantColors(
+    { data: imageData.data, width: drawWidth, height: drawHeight },
+    5,
+  )
+  return { colors, aspectRatio, width: naturalWidth, height: naturalHeight }
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('이미지 디코드 실패'))
+    image.src = src
+  })
 }
 
 function createOriginalEntry(tree: Tree): GenerationEntry {
@@ -750,6 +815,16 @@ export default function HomePage() {
   const [briefIntent, setBriefIntent] = useState('')
   const [briefNotes, setBriefNotes] = useState('')
   const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
+  const [briefImageRef, setBriefImageRef] = useState<ImageReferenceSeed | null>(
+    null,
+  )
+  const [briefImageRefThumbnail, setBriefImageRefThumbnail] = useState<
+    string | null
+  >(null)
+  const [briefImageRefError, setBriefImageRefError] = useState<string | null>(
+    null,
+  )
+  const [briefImageRefBusy, setBriefImageRefBusy] = useState(false)
   const [clarifyQuestions, setClarifyQuestions] = useState<ClarifyQuestionDto[]>(
     [],
   )
@@ -960,6 +1035,7 @@ export default function HomePage() {
     setClarifyTurns([])
     setClarifyComplete(false)
     setGenerateStage('intent')
+    handleImageRefClear()
     setSelectedNodeId(
       findFirstEditableNodeId(nextFixture.tree.root) ?? nextFixture.tree.root.id,
     )
@@ -995,8 +1071,15 @@ export default function HomePage() {
     if (intent.length === 0) {
       return null
     }
+    const imageReference =
+      briefImageRef !== null && briefImageRef.colors.length > 0
+        ? briefImageRef
+        : undefined
     if (generateStage === 'intent') {
-      return { intent }
+      return {
+        intent,
+        ...(imageReference !== undefined ? { imageReference } : {}),
+      }
     }
     const answerMap = new Map<string, BriefAnswer>()
     for (const turn of clarifyTurns) {
@@ -1018,7 +1101,53 @@ export default function HomePage() {
       intent,
       ...(answers.length > 0 ? { answers } : {}),
       ...(notes !== undefined ? { notes } : {}),
+      ...(imageReference !== undefined ? { imageReference } : {}),
     }
+  }
+
+  async function handleImageRefSelect(file: File): Promise<void> {
+    const MAX_BYTES = 5 * 1024 * 1024
+    if (!file.type.startsWith('image/')) {
+      setBriefImageRefError('이미지 파일만 업로드할 수 있습니다.')
+      return
+    }
+    if (file.size > MAX_BYTES) {
+      setBriefImageRefError('파일 크기가 5MB를 초과합니다.')
+      return
+    }
+    setBriefImageRefBusy(true)
+    setBriefImageRefError(null)
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      const { colors, aspectRatio, width, height } = await extractFromDataUrl(
+        dataUrl,
+      )
+      if (colors.length === 0) {
+        setBriefImageRefError('이미지에서 색을 추출하지 못했습니다.')
+        return
+      }
+      setBriefImageRef({
+        colors,
+        ...(aspectRatio !== null ? { aspectRatio } : {}),
+      })
+      setBriefImageRefThumbnail(dataUrl)
+      void width
+      void height
+    } catch (error) {
+      setBriefImageRefError(
+        error instanceof Error
+          ? `이미지를 처리할 수 없습니다 — ${error.message}`
+          : '이미지를 처리할 수 없습니다.',
+      )
+    } finally {
+      setBriefImageRefBusy(false)
+    }
+  }
+
+  function handleImageRefClear(): void {
+    setBriefImageRef(null)
+    setBriefImageRefThumbnail(null)
+    setBriefImageRefError(null)
   }
 
   async function handleAskQuestions() {
@@ -2089,6 +2218,82 @@ export default function HomePage() {
                   </div>
                 )
               })()}
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-[#4f5e56]">
+                    참고 이미지 (선택)
+                  </span>
+                  {briefImageRef !== null ? (
+                    <button
+                      type="button"
+                      className="text-[10px] text-[#7c8580] hover:text-[#1b7f72]"
+                      onClick={handleImageRefClear}
+                    >
+                      지우기
+                    </button>
+                  ) : null}
+                </div>
+                {briefImageRef === null ? (
+                  <label className="block cursor-pointer rounded-md border border-dashed border-[#cbd6cf] bg-white px-3 py-2 text-center text-[11px] text-[#7c8580] hover:border-[#1b7f72] hover:text-[#1b7f72]">
+                    {briefImageRefBusy
+                      ? '이미지 분석 중…'
+                      : '이미지 파일 선택 (5MB 이하)'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={briefImageRefBusy}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0]
+                        event.target.value = ''
+                        if (file !== undefined) {
+                          void handleImageRefSelect(file)
+                        }
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-md border border-[#cbd6cf] bg-white p-2">
+                    {briefImageRefThumbnail !== null ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={briefImageRefThumbnail}
+                        alt="참고 이미지 썸네일"
+                        className="h-12 w-12 rounded object-cover"
+                      />
+                    ) : null}
+                    <div className="flex-1 space-y-1 text-[10px] text-[#4f5e56]">
+                      <div className="flex flex-wrap gap-1">
+                        {briefImageRef.colors.map((hex) => (
+                          <span
+                            key={hex}
+                            className="inline-flex items-center gap-1 rounded bg-[#f3efe8] px-1.5 py-0.5"
+                            title={hex}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="inline-block h-2.5 w-2.5 rounded-full border border-[#cbd6cf]"
+                              style={{ backgroundColor: hex }}
+                            />
+                            {hex}
+                          </span>
+                        ))}
+                      </div>
+                      {briefImageRef.aspectRatio !== undefined ? (
+                        <div className="text-[#7c8580]">
+                          비율 {briefImageRef.aspectRatio}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                )}
+                {briefImageRefError !== null ? (
+                  <div className="text-[10px] text-[#b03a2e]" role="alert">
+                    {briefImageRefError}
+                  </div>
+                ) : null}
+              </div>
 
               {generateStage === 'intent' ? (
                 <>
