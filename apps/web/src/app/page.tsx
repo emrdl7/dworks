@@ -841,6 +841,30 @@ export default function HomePage() {
   )
   // 레이어 트리 검색 — node.id 부분 일치 필터
   const [layerQuery, setLayerQuery] = useState('')
+
+  // 선택된 노드를 레이어 트리에서 _보이게_ — 조상 collapse 해제 + 자동 scroll
+  useEffect(() => {
+    if (selectedNodeId === tree.root.id) return
+    const ancestors = getAncestorChain(tree, selectedNodeId)
+    if (ancestors.length === 0) return
+    setCollapsedLayerNodeIds((prev) => {
+      let changed = false
+      const next = new Set(prev)
+      for (const id of ancestors) {
+        if (next.delete(id)) changed = true
+      }
+      return changed ? next : prev
+    })
+  }, [selectedNodeId, tree])
+
+  useEffect(() => {
+    if (leftPanelTab !== 'layers') return
+    if (selectedNodeId === tree.root.id) return
+    const row = document.querySelector<HTMLElement>(
+      `[data-layer-row-main][data-layer-node-id="${CSS.escape(selectedNodeId)}"]`,
+    )
+    row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selectedNodeId, tree.root.id, leftPanelTab])
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
