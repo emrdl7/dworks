@@ -1,0 +1,80 @@
+{
+  "intents": [
+    {
+      "id": "cafe-landing-basic",
+      "domain": "landing",
+      "brief": {
+        "intent": "도시형 카페 랜딩 페이지 — 시그니처 메뉴와 매장 분위기를 보여주고 메뉴 보기 / 위치 확인 행동을 유도"
+      }
+    },
+    {
+      "id": "saas-pricing-3plans",
+      "domain": "pricing",
+      "brief": {
+        "intent": "팀 협업 SaaS의 가격제 페이지, Starter / Pro / Enterprise 3가지 플랜 비교, 무료 체험 강조",
+        "answers": [
+          {
+            "questionId": "q1",
+            "questionLabel": "강조할 플랜은 무엇인가요?",
+            "answer": "Pro"
+          }
+        ]
+      }
+    },
+    {
+      "id": "blog-travel-article",
+      "domain": "blog",
+      "brief": {
+        "intent": "여행 매거진의 긴 본문 블로그 글, 사진과 단락 본문이 번갈아 나오는 구조"
+      }
+    },
+    {
+      "id": "hotel-booking-landing",
+      "domain": "landing",
+      "brief": {
+        "intent": "도시 호텔 예약 랜딩 페이지, 가족 여행객 대상, 차분한 럭셔리 톤",
+        "answers": [
+          {
+            "questionId": "q1",
+            "questionLabel": "주요 CTA는?",
+            "answer": "예약하기"
+          },
+          {
+            "questionId": "q2",
+            "questionLabel": "강조할 콘텐츠",
+            "answer": ["프리미엄 객실", "주변 명소"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "portfolio-designer",
+      "domain": "portfolio",
+      "brief": {
+        "intent": "프리랜스 디자이너의 포트폴리오 페이지, 대표 작업 3개와 자기소개, 연락처"
+      }
+    },
+    {
+      "id": "docs-product",
+      "domain": "docs",
+      "brief": {
+        "intent": "오픈소스 라이브러리의 시작하기 문서 페이지, 설치 / 첫 예제 / 다음 단계"
+      }
+    },
+    {
+      "id": "about-startup",
+      "domain": "about",
+      "brief": {
+        "intent": "스타트업의 회사 소개 페이지, 미션 / 팀 / 채용 안내",
+        "notes": "친근하지만 전문적인 톤"
+      }
+    },
+    {
+      "id": "ecommerce-product",
+      "domain": "ecommerce",
+      "brief": {
+        "intent": "수공예 도자기 브랜드의 단일 상품 페이지, 제품 사진과 스토리 + 구매 버튼"
+      }
+    }
+  ]
+}
