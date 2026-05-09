@@ -2475,7 +2475,30 @@ export default function HomePage() {
               : 'hidden'
           }`}
         >
-          <div role="tablist" aria-label="좌측 패널" className="flex shrink-0 items-stretch border-b border-[#e0e5de] bg-white">
+          <div
+            role="tablist"
+            aria-label="좌측 패널"
+            onKeyDown={(event) => {
+              if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+                return
+              }
+              event.preventDefault()
+              const ids: Array<'brief' | 'layers'> = ['brief', 'layers']
+              const idx = ids.indexOf(leftPanelTab)
+              const nextIdx =
+                event.key === 'ArrowRight'
+                  ? (idx + 1) % ids.length
+                  : (idx - 1 + ids.length) % ids.length
+              const nextId = ids[nextIdx]
+              if (!nextId) return
+              setLeftPanelTab(nextId)
+              const nextEl = event.currentTarget.querySelector<HTMLElement>(
+                `#left-panel-tab-${nextId}`,
+              )
+              nextEl?.focus()
+            }}
+            className="flex shrink-0 items-stretch border-b border-[#e0e5de] bg-white"
+          >
             {([
               { id: 'brief' as const, label: '브리프', count: generations.length },
               { id: 'layers' as const, label: '레이어', count: layerItems.length },
@@ -5645,7 +5668,30 @@ function NodeInspector({
           </button>
         </div>
         <p className="mt-0.5 break-all text-[11px] text-[#9aa49d]">{node.id}</p>
-        <div role="tablist" aria-label="속성 탭" className="-mx-5 mt-3 flex items-stretch border-t border-[#e0e5de] px-5">
+        <div
+          role="tablist"
+          aria-label="속성 탭"
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
+              return
+            }
+            event.preventDefault()
+            const ids = INSPECTOR_TABS.map((t) => t.id)
+            const idx = ids.indexOf(activeTab)
+            const nextIdx =
+              event.key === 'ArrowRight'
+                ? (idx + 1) % ids.length
+                : (idx - 1 + ids.length) % ids.length
+            const nextId = ids[nextIdx]
+            if (!nextId) return
+            setActiveTab(nextId)
+            const nextEl = event.currentTarget.querySelector<HTMLElement>(
+              `#inspector-tab-${nextId}`,
+            )
+            nextEl?.focus()
+          }}
+          className="-mx-5 mt-3 flex items-stretch border-t border-[#e0e5de] px-5"
+        >
           {INSPECTOR_TABS.map((tab) => {
             const isActive = activeTab === tab.id
             return (
