@@ -40,8 +40,10 @@ import {
   ArrowUpRight,
   Columns2,
   Copy,
+  EyeOff,
   GripVertical,
   FormInput,
+  Lock,
   Image as ImageIcon,
   LayoutGrid,
   List,
@@ -3322,14 +3324,18 @@ export default function HomePage() {
                       />
                       <span className="min-w-0 flex-1 truncate">{node.id}</span>
                       <span className="flex shrink-0 items-center gap-1">
-                        {getNodeLayerStateChips(node).map((chip) => (
-                          <span
-                            key={chip}
-                            className="rounded border border-[#d5b56c] bg-[#fff8df] px-1.5 py-0.5 text-[11px] font-semibold text-[#6b4b00]"
-                          >
-                            {chip}
-                          </span>
-                        ))}
+                        {getNodeLayerStateIcons(node).map(
+                          ({ icon: StateIcon, label }) => (
+                            <span
+                              key={label}
+                              title={label}
+                              aria-label={label}
+                              className="inline-flex h-5 w-5 items-center justify-center rounded border border-[#d5b56c] bg-[#fff8df] text-[#6b4b00]"
+                            >
+                              <StateIcon size={11} aria-hidden="true" />
+                            </span>
+                          ),
+                        )}
                       </span>
                     </button>
                   </div>
@@ -4694,18 +4700,17 @@ function SelectableNode({
   )
 }
 
-function getNodeLayerStateChips(node: TreeNode): string[] {
-  const chips: string[] = []
-
+function getNodeLayerStateIcons(
+  node: TreeNode,
+): Array<{ icon: LucideIcon; label: string }> {
+  const out: Array<{ icon: LucideIcon; label: string }> = []
   if (node.hidden === true) {
-    chips.push('숨김')
+    out.push({ icon: EyeOff, label: '숨김' })
   }
-
   if (node.pointerEvents === 'none') {
-    chips.push('선택 제외')
+    out.push({ icon: Lock, label: '선택 제외' })
   }
-
-  return chips
+  return out
 }
 
 function TextPreview({
