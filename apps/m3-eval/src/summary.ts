@@ -149,7 +149,7 @@ export function renderSummaryMarkdown(
     for (const row of summary.byIntent) {
       lines.push(renderIntentRow(row.intentId, row.bucket, row.diversityScore))
     }
-    if (!manifest.args.live) {
+    if (!manifest.args.live && manifest.args.repeat >= 2) {
       lines.push('')
       lines.push('> dry-run은 deterministic이라 구조 다양성 0.00이 정상.')
     }

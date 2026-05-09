@@ -134,6 +134,16 @@ describe('summarizeCalls', () => {
     assert.ok(md.includes('dry-run은 deterministic'))
   })
 
+  it('dry-run repeat 1 markdown does not include deterministic 0.00 note', () => {
+    const summary = summarizeCalls(calls, intents)
+    const md = renderSummaryMarkdown(summary, {
+      runId: 'r',
+      ranAt: '2026-05-09T00:00:00.000Z',
+      args: { fixturesPath: 'f.json', live: false, repeat: 1 },
+    })
+    assert.ok(!md.includes('dry-run은 deterministic'))
+  })
+
   it('live markdown does not include dry-run note', () => {
     const summary = summarizeCalls(calls, intents)
     const md = renderSummaryMarkdown(summary, {
