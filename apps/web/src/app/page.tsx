@@ -787,6 +787,16 @@ export default function HomePage() {
   const [responsiveViewport, setResponsiveViewport] =
     useState<ResponsiveViewport>('desktop')
   const [canvasZoom, setCanvasZoom] = useState(1)
+  // 캔버스 panning(스페이스+드래그) 상태
+  const [isSpacePressed, setIsSpacePressed] = useState(false)
+  const [isPanning, setIsPanning] = useState(false)
+  const canvasScrollRef = useRef<HTMLDivElement | null>(null)
+  const panStateRef = useRef<{
+    startX: number
+    startY: number
+    scrollLeft: number
+    scrollTop: number
+  } | null>(null)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [layerDrag, setLayerDrag] = useState<LayerDragState | null>(null)
   const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
@@ -2658,6 +2668,80 @@ export default function HomePage() {
     allSelectedNodeIds,
   ])
 
+  // 캔버스 스페이스+드래그 panning — Figma/Sketch 표준
+  // (Space 누른 채로 캔버스 드래그 → 패닝, 또는 마우스 가운데 버튼)
+  useEffect(() => {
+    function isEditableTarget(el: EventTarget | null): boolean {
+      if (!(el instanceof HTMLElement)) return false
+      const tag = el.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+      if (el.isContentEditable) return true
+      return false
+    }
+    function onSpaceDown(event: globalThis.KeyboardEvent) {
+      if (event.code !== 'Space') return
+      if (isEditableTarget(event.target)) return
+      // 반복 keydown 무시 (계속 누르면 한번만 토글)
+      if (event.repeat) return
+      event.preventDefault()
+      setIsSpacePressed(true)
+    }
+    function onSpaceUp(event: globalThis.KeyboardEvent) {
+      if (event.code !== 'Space') return
+      setIsSpacePressed(false)
+    }
+    window.addEventListener('keydown', onSpaceDown)
+    window.addEventListener('keyup', onSpaceUp)
+    return () => {
+      window.removeEventListener('keydown', onSpaceDown)
+      window.removeEventListener('keyup', onSpaceUp)
+    }
+  }, [])
+
+  // 캔버스 panning mouse move/up — 패닝 활성 시만 listen
+  useEffect(() => {
+    if (!isPanning) return
+    function onMove(event: MouseEvent) {
+      const el = canvasScrollRef.current
+      const state = panStateRef.current
+      if (!el || !state) return
+      el.scrollLeft = state.scrollLeft - (event.clientX - state.startX)
+      el.scrollTop = state.scrollTop - (event.clientY - state.startY)
+    }
+    function onUp() {
+      setIsPanning(false)
+      panStateRef.current = null
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [isPanning])
+
+  // 캔버스 트랙패드/⌘+wheel 줌 — passive:false로 native attach (preventDefault 위해)
+  useEffect(() => {
+    const el = canvasScrollRef.current
+    if (!el) return
+    function onWheel(event: WheelEvent) {
+      // ctrlKey: 트랙패드 pinch는 브라우저가 ctrl+wheel로 변환
+      // metaKey: ⌘+휠 사용자 명시 줌
+      if (!event.ctrlKey && !event.metaKey) return
+      event.preventDefault()
+      // delta 한 단계당 약 5% — 부드러운 줌
+      const factor = Math.exp(-event.deltaY * 0.005)
+      setCanvasZoom((prev) => {
+        const next = prev * factor
+        return Math.max(0.25, Math.min(2, Math.round(next * 100) / 100))
+      })
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+    }
+  }, [])
+
   return (
     <CanvasSelectionContext.Provider
       value={{
@@ -3784,8 +3868,32 @@ export default function HomePage() {
             </div>
           )}
           <div
-            className="min-h-0 flex-1 overflow-auto"
+            ref={canvasScrollRef}
+            className={`min-h-0 flex-1 overflow-auto ${
+              isPanning
+                ? 'cursor-grabbing select-none'
+                : isSpacePressed
+                  ? 'cursor-grab select-none'
+                  : ''
+            }`}
+            onMouseDown={(event) => {
+              // 스페이스+드래그 또는 가운데 버튼(button=1) → 패닝
+              const isMiddleButton = event.button === 1
+              if (!isSpacePressed && !isMiddleButton) return
+              event.preventDefault()
+              const el = canvasScrollRef.current
+              if (!el) return
+              setIsPanning(true)
+              panStateRef.current = {
+                startX: event.clientX,
+                startY: event.clientY,
+                scrollLeft: el.scrollLeft,
+                scrollTop: el.scrollTop,
+              }
+            }}
             onClick={(event) => {
+              // 패닝 중이면 클릭 무시 (드래그 끝난 mouseup이 click을 발생시킬 수 있음)
+              if (isPanning || isSpacePressed) return
               // CanvasNode들은 stopPropagation 처리되므로 여기까지 도달하면 빈 영역 클릭.
               // 단 toolbar 등 별도 영역은 형제 노드라 여기에 안 들어옴.
               if (compareMode) return
