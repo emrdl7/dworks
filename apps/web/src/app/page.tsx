@@ -2620,15 +2620,25 @@ export default function HomePage() {
             }
             const failing = total - passes
             return (
-              <span
-                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[#a3741f] bg-[#3a2e0a] px-2 text-xs font-semibold text-[#fbbf24]"
-                title={`WCAG AA 대비 미통과 ${failing}/${total}`}
+              <button
+                type="button"
+                title={`WCAG AA 대비 미통과 ${failing}/${total} — 첫 미통과 텍스트로 이동`}
+                onClick={() => {
+                  const failingId = findFirstContrastFailNodeId(
+                    tree,
+                    colorPreset,
+                  )
+                  if (failingId !== null) {
+                    setSelectedNodeId(failingId)
+                  }
+                }}
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[#a3741f] bg-[#3a2e0a] px-2 text-xs font-semibold text-[#fbbf24] transition-colors hover:bg-[#4a3812] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fbbf24]"
               >
                 <AlertTriangle aria-hidden="true" size={13} />
                 <span>
                   대비 {passes}/{total}
                 </span>
-              </span>
+              </button>
             )
           })()}
           <button
@@ -12221,6 +12231,19 @@ function computeContrastAuditSummary(
     }
   })
   return summary
+}
+
+function findFirstContrastFailNodeId(
+  tree: Tree,
+  colorPreset: ColorPreset,
+): string | null {
+  for (const textNode of collectTextNodes(tree.root)) {
+    const result = computeTextContrast(tree, textNode, colorPreset)
+    if (result !== null && !result.passesAA) {
+      return textNode.id
+    }
+  }
+  return null
 }
 
 function collectTextNodes(node: TreeNode): TextNode[] {
