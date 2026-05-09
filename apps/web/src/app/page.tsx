@@ -117,6 +117,7 @@ import {
   addContainerChild,
   addLeafChild,
   type ContainerNodeType,
+  changeContainerNodeType,
   changeLeafNodeType,
   deleteNode,
   duplicateNode,
@@ -2441,6 +2442,15 @@ export default function HomePage() {
     closeContextMenu()
   }
 
+  function handleChangeContainerType(
+    nodeId: string,
+    nextType: ContainerNodeType,
+  ) {
+    const next = changeContainerNodeType(tree, nodeId, nextType)
+    commitTreeEdit(next, nodeId)
+    closeContextMenu()
+  }
+
   function handleToggleNodeCanvasSelection(node: TreeNode) {
     handleNodeMetaChange(node, {
       pointerEvents: node.pointerEvents === 'none' ? undefined : 'none',
@@ -3828,6 +3838,9 @@ export default function HomePage() {
           onAddContainerChild={(containerType) =>
             handleAddContainerChild(contextMenuNode.id, containerType)
           }
+          onChangeContainerType={(nextType) =>
+            handleChangeContainerType(contextMenuNode.id, nextType)
+          }
           onChangeLeafType={(nextType) =>
             handleChangeLeafType(contextMenuNode.id, nextType)
           }
@@ -4077,6 +4090,7 @@ interface NodeContextMenuProps {
   node: TreeNode
   onAddLeafChild: (childType: LeafNodeType) => void
   onAddContainerChild: (containerType: ContainerNodeType) => void
+  onChangeContainerType: (nextType: ContainerNodeType) => void
   onChangeLeafType: (nextType: LeafNodeType) => void
   onClose: () => void
   onDelete: () => void
@@ -4093,6 +4107,7 @@ function NodeContextMenu({
   node,
   onAddLeafChild,
   onAddContainerChild,
+  onChangeContainerType,
   onChangeLeafType,
   onClose,
   onDelete,
@@ -4291,6 +4306,25 @@ function NodeContextMenu({
           </ContextMenuButton>
           <ContextMenuButton onClick={() => onAddContainerChild('list')}>
             목록 그룹 추가
+          </ContextMenuButton>
+          <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
+          <ContextMenuButton
+            disabled={node.type === 'section'}
+            onClick={() => onChangeContainerType('section')}
+          >
+            섹션으로 변경
+          </ContextMenuButton>
+          <ContextMenuButton
+            disabled={node.type === 'card'}
+            onClick={() => onChangeContainerType('card')}
+          >
+            카드로 변경
+          </ContextMenuButton>
+          <ContextMenuButton
+            disabled={node.type === 'list'}
+            onClick={() => onChangeContainerType('list')}
+          >
+            목록으로 변경
           </ContextMenuButton>
         </>
       ) : null}

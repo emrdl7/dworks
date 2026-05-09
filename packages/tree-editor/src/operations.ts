@@ -277,6 +277,85 @@ export function addContainerChild(
   return { ...tree, root }
 }
 
+// 컨테이너 노드 type 변경 (section ↔ card ↔ list 등). children 보존, 공통 props
+// 보존, type별 특수 props(예: section.role)는 drop.
+export function changeContainerNodeType(
+  tree: Tree,
+  nodeId: string,
+  nextType: ContainerNodeType,
+): Tree {
+  return { ...tree, root: walkAndConvertContainer(tree.root, nodeId, nextType) }
+}
+
+function walkAndConvertContainer(
+  node: TreeNode,
+  nodeId: string,
+  nextType: ContainerNodeType,
+): TreeNode {
+  if (node.id === nodeId) {
+    if (
+      node.type !== 'section' &&
+      node.type !== 'hero' &&
+      node.type !== 'card' &&
+      node.type !== 'list' &&
+      node.type !== 'form'
+    ) {
+      return node
+    }
+    if (node.type === nextType) return node
+    const {
+      id,
+      editKind,
+      hidden,
+      opacity,
+      pointerEvents,
+      responsive,
+      styleTokens,
+      spacing,
+      shape,
+      color,
+      layout,
+      transition,
+      transform,
+      cursor,
+      children,
+    } = node
+    return {
+      id,
+      editKind,
+      type: nextType,
+      children,
+      ...(hidden !== undefined ? { hidden } : {}),
+      ...(opacity !== undefined ? { opacity } : {}),
+      ...(pointerEvents !== undefined ? { pointerEvents } : {}),
+      ...(responsive !== undefined ? { responsive } : {}),
+      ...(styleTokens !== undefined ? { styleTokens } : {}),
+      ...(spacing !== undefined ? { spacing } : {}),
+      ...(shape !== undefined ? { shape } : {}),
+      ...(color !== undefined ? { color } : {}),
+      ...(layout !== undefined ? { layout } : {}),
+      ...(transition !== undefined ? { transition } : {}),
+      ...(transform !== undefined ? { transform } : {}),
+      ...(cursor !== undefined ? { cursor } : {}),
+    } as TreeNode
+  }
+  if (
+    node.type === 'section' ||
+    node.type === 'hero' ||
+    node.type === 'card' ||
+    node.type === 'list' ||
+    node.type === 'form'
+  ) {
+    return {
+      ...node,
+      children: node.children.map((child) =>
+        walkAndConvertContainer(child, nodeId, nextType),
+      ),
+    }
+  }
+  return node
+}
+
 // 컨테이너 노드의 마지막 자식으로 leaf 노드 추가. 사용자 mandate: _노드 수동 추가_.
 // LLM 의존을 줄이기 위한 free-form 편집 진입점.
 export function addLeafChild(

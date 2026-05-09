@@ -6,6 +6,7 @@ export {
   addLeafChild,
   applyEditOperation,
   applyEditSequence,
+  changeContainerNodeType,
   changeLeafNodeType,
   deleteNode,
   duplicateNode,
