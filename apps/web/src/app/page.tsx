@@ -38,7 +38,11 @@ import {
   Columns2,
   Copy,
   GripVertical,
+  FormInput,
+  Image as ImageIcon,
   LayoutGrid,
+  List,
+  MousePointer,
   Move,
   PanelLeft,
   PanelRight,
@@ -47,7 +51,9 @@ import {
   Redo2,
   Rows2,
   Square,
+  SquareStack,
   StretchHorizontal,
+  Type,
   Menu,
   StretchVertical,
   Trash2,
@@ -337,6 +343,17 @@ const nodeTypeLabels: Record<TreeNode['type'], string> = {
   card: '카드',
   list: '목록',
   form: '폼',
+}
+
+const nodeTypeIcons: Record<TreeNode['type'], LucideIcon> = {
+  text: Type,
+  button: MousePointer,
+  image: ImageIcon,
+  section: PanelTop,
+  hero: SquareStack,
+  card: Square,
+  list: List,
+  form: FormInput,
 }
 
 const imageAspectRatioLabels = {
@@ -3006,6 +3023,7 @@ export default function HomePage() {
                   ? layerDropTarget.position
                   : null
               const isDragging = layerDrag?.nodeId === node.id
+              const NodeTypeIcon = nodeTypeIcons[node.type]
 
               return (
                 <div
@@ -3056,11 +3074,17 @@ export default function HomePage() {
                     </button>
                     <button
                       type="button"
-                      className="flex min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
+                      title={nodeTypeLabels[node.type]}
+                      className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
                       onClick={() => setSelectedNodeId(node.id)}
                       onKeyDown={(event) => openKeyboardContextMenu(node.id, event)}
                     >
-                      <span className="min-w-0 truncate">{node.id}</span>
+                      <NodeTypeIcon
+                        aria-hidden="true"
+                        size={13}
+                        className="shrink-0 text-[#647067]"
+                      />
+                      <span className="min-w-0 flex-1 truncate">{node.id}</span>
                       <span className="flex shrink-0 items-center gap-1">
                         {getNodeLayerStateChips(node).map((chip) => (
                           <span
@@ -3070,9 +3094,6 @@ export default function HomePage() {
                             {chip}
                           </span>
                         ))}
-                        <span className="rounded border border-[#cfd8d2] bg-white px-1.5 py-0.5 text-[11px] text-[#647067]">
-                          {nodeTypeLabels[node.type]}
-                        </span>
                       </span>
                     </button>
                   </div>
