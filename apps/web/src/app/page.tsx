@@ -4373,6 +4373,12 @@ function NodeContextMenu({
           <ContextMenuButton onClick={() => onAddContainerChild('list')}>
             목록 그룹 추가
           </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddContainerChild('hero')}>
+            히어로 그룹 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddContainerChild('form')}>
+            폼 그룹 추가
+          </ContextMenuButton>
           <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
           <ContextMenuButton
             disabled={node.type === 'section'}
