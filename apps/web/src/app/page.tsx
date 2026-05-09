@@ -171,47 +171,7 @@ import {
   buildFixtureExportPayload,
   parseFixtureImportPayload,
 } from './fixture-export'
-import {
-  RICHNESS_SIGNAL_KEYS,
-  computeRichnessReport,
-  formatRichnessScore,
-  type RichnessSignalKey,
-} from './richness'
-import {
-  extractDominantColors,
-  mergeImageReferenceAspect,
-  mergeImageReferenceColors,
-  pickAspectRatio,
-} from './image-color'
-
-const RICHNESS_SIGNAL_LABELS: Record<RichnessSignalKey, string> = {
-  hasPageLandmarks: '랜드마크 부족 (banner/main/contentinfo)',
-  hasMainMultiSection: 'main 단일 섹션',
-  hasDisplayHeadingOne: '헤딩 작음 (≥48px 권장)',
-  hasCallToAction: 'CTA 부재',
-  fontSizeVariety: '글자 크기 단조로움',
-  colorVariety: '색 다양성 부족',
-  hasImagery: '이미지 부재',
-  hasShapeDepth: 'shape 깊이 부재',
-}
-
-const RICHNESS_RETRY_HINTS: Record<RichnessSignalKey, string> = {
-  hasPageLandmarks:
-    '루트는 section 하나로 감싸고 banner/main/contentinfo role 3 자식을 모두 포함한다.',
-  hasMainMultiSection: 'main 안에 의미 있는 section/hero를 2개 이상 둔다.',
-  hasDisplayHeadingOne:
-    '대표 heading-1 텍스트는 typography.fontSize 48 이상으로 디스플레이 크기를 명시한다.',
-  hasCallToAction:
-    '명확한 CTA 버튼(button 노드)이나 contentRole "cta" 텍스트를 한 곳 이상 둔다.',
-  fontSizeVariety:
-    'typography.fontSize 값을 최소 3종(예: 디스플레이 / 본문 / 캡션) 사용해 위계를 만든다.',
-  colorVariety:
-    '단조로운 회색 톤 대신 강조 색을 더해 고유 hex 색을 3개 이상 사용한다.',
-  hasImagery:
-    '관련 사진 또는 일러스트 image 노드를 한 곳 이상 포함한다(plausible https URL 사용).',
-  hasShapeDepth:
-    '카드/이미지에 shape.shadow 또는 radius ≥ 8을 적용해 시각 깊이를 부여한다.',
-}
+import { extractDominantColors, pickAspectRatio } from './image-color'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -851,7 +811,6 @@ export default function HomePage() {
   const [briefIntent, setBriefIntent] = useState('')
   const [briefNotes, setBriefNotes] = useState('')
   const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
-  const [autoRichnessRetry, setAutoRichnessRetry] = useState(false)
   const [userFixtures, setUserFixtures] = useState<UserFixture[]>([])
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null)
   const [editingLabelDraft, setEditingLabelDraft] = useState('')
@@ -941,9 +900,6 @@ export default function HomePage() {
           : [])
       setBriefImageRefs(hydratedRefs)
       setBriefImageRefThumbnails(hydratedThumbs)
-      if (persisted.brief.autoRichnessRetry !== undefined) {
-        setAutoRichnessRetry(persisted.brief.autoRichnessRetry)
-      }
     }
     setIsGenerationStateHydrated(true)
   }, [])
@@ -970,7 +926,6 @@ export default function HomePage() {
         ...(briefImageRefThumbnails.length > 0
           ? { imageReferenceThumbnails: briefImageRefThumbnails }
           : {}),
-        autoRichnessRetry,
       },
       clarify: {
         turns: clarifyTurns,
@@ -989,7 +944,6 @@ export default function HomePage() {
     briefImageRefs,
     briefImageRefThumbnails,
     briefVariantCount,
-    autoRichnessRetry,
     briefAnswers,
     clarifyQuestions,
     clarifyTurns,
@@ -1444,9 +1398,6 @@ export default function HomePage() {
     const active = generations.find((entry) => entry.id === activeGenerationId)
     if (active === undefined) return
     const exportedAt = new Date()
-    const richness = active.immutable
-      ? undefined
-      : computeRichnessReport(active.tree)
     const payload = buildExportPayload(
       {
         tree: active.tree,
@@ -1456,7 +1407,6 @@ export default function HomePage() {
         clarifyTurns: active.clarifyTurns,
         model: active.model,
         latencyMs: active.latencyMs,
-        ...(richness !== undefined ? { richness } : {}),
       },
       exportedAt,
     )
@@ -1551,21 +1501,15 @@ export default function HomePage() {
       return
     }
     const exportedAt = new Date()
-    const sources = generations.map((entry) => {
-      const richness = entry.immutable
-        ? undefined
-        : computeRichnessReport(entry.tree)
-      return {
-        tree: entry.tree,
-        label: entry.label,
-        brief: entry.brief,
-        questions: entry.questions,
-        clarifyTurns: entry.clarifyTurns,
-        model: entry.model,
-        latencyMs: entry.latencyMs,
-        ...(richness !== undefined ? { richness } : {}),
-      }
-    })
+    const sources = generations.map((entry) => ({
+      tree: entry.tree,
+      label: entry.label,
+      brief: entry.brief,
+      questions: entry.questions,
+      clarifyTurns: entry.clarifyTurns,
+      model: entry.model,
+      latencyMs: entry.latencyMs,
+    }))
     const payload = buildExportBatchPayload(sources, exportedAt)
     const filename = buildExportBatchFilename(exportedAt)
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
@@ -1882,88 +1826,9 @@ export default function HomePage() {
       } else {
         setGenerateError(null)
       }
-      if (
-        autoRichnessRetry &&
-        firstNew !== undefined &&
-        computeRichnessReport(firstNew.tree).score < 0.6
-      ) {
-        await runRichnessRetry(firstNew)
-      }
     } finally {
       setGenerateLoading(false)
     }
-  }
-
-  async function runRichnessRetry(
-    sourceEntry: GenerationEntry,
-  ): Promise<void> {
-    const baseBrief = sourceEntry.brief
-    if (baseBrief === null) {
-      setGenerateError('생성 brief가 없는 항목은 다시 시도할 수 없습니다.')
-      return
-    }
-    const report = computeRichnessReport(sourceEntry.tree)
-    const missing = RICHNESS_SIGNAL_KEYS.filter((key) => report[key] === false)
-    if (missing.length === 0) return
-
-    const hints = missing.map((key) => `- ${RICHNESS_RETRY_HINTS[key]}`).join('\n')
-    const baseNotes = baseBrief.notes?.trim() ?? ''
-    const augmentedNotes = [
-      baseNotes.length > 0 ? baseNotes : null,
-      `자동 보강 힌트:\n${hints}`,
-    ]
-      .filter((part): part is string => part !== null)
-      .join('\n\n')
-      .slice(0, 300)
-
-    const retryBrief: SubmittedDesignBrief = {
-      ...baseBrief,
-      notes: augmentedNotes,
-    }
-
-    setGenerateLoading(true)
-    setGenerateError(null)
-    const apiBase =
-      process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
-    try {
-      const result = await callGenerateOnce(apiBase, retryBrief)
-      if (!result.ok) {
-        setGenerateError(`다시 시도 실패 — ${result.reason}`)
-        return
-      }
-      snapshotActiveGeneration(tree)
-      const newEntry: GenerationEntry = {
-        id: createGenerationEntryId(),
-        label: '',
-        tree: result.tree,
-        immutable: false,
-        brief: retryBrief,
-        questions: sourceEntry.questions,
-        clarifyTurns: sourceEntry.clarifyTurns,
-        createdAt: Date.now(),
-        latencyMs: result.latencyMs,
-        model: result.model,
-      }
-      setGenerations((entries) =>
-        appendGenerationHistoryEntries(entries, [newEntry], MAX_GENERATIONS),
-      )
-      const nextSelectedId =
-        findFirstEditableNodeId(newEntry.tree.root) ?? newEntry.tree.root.id
-      setActiveGenerationId(newEntry.id)
-      setCompareMode(false)
-      commitTreeEdit(newEntry.tree, nextSelectedId, {
-        skipGenerationSync: true,
-      })
-    } finally {
-      setGenerateLoading(false)
-    }
-  }
-
-  async function handleRetryWithRichnessHints(): Promise<void> {
-    if (generateLoading) return
-    const active = generations.find((entry) => entry.id === activeGenerationId)
-    if (active === undefined || active.immutable) return
-    await runRichnessRetry(active)
   }
 
   function handleToggleGenerationPin(targetId: string): void {
@@ -2691,30 +2556,21 @@ export default function HomePage() {
               onChange={(event) => handleFixtureChange(event.target.value)}
             >
               <optgroup label="기본">
-                {treeFixtures.map((fixture) => {
-                  const score = computeRichnessReport(fixture.tree).score
-                  return (
-                    <option
-                      key={fixture.id}
-                      title={fixture.description}
-                      value={fixture.id}
-                    >
-                      {fixture.name} · {score.toFixed(2)}
-                    </option>
-                  )
-                })}
+                {treeFixtures.map((fixture) => (
+                  <option
+                    key={fixture.id}
+                    title={fixture.description}
+                    value={fixture.id}
+                  >
+                    {fixture.name}
+                  </option>
+                ))}
               </optgroup>
               {userFixtures.length > 0 ? (
-                <optgroup label="내 fixture (풍부도 순)">
-                  {[...userFixtures]
-                    .map((fixture) => ({
-                      fixture,
-                      score: computeRichnessReport(fixture.tree).score,
-                    }))
-                    .sort((a, b) => b.score - a.score)
-                    .map(({ fixture, score }) => (
+                <optgroup label="내 fixture">
+                  {userFixtures.map((fixture) => (
                       <option key={fixture.id} value={fixture.id}>
-                        {fixture.name} · {score.toFixed(2)}
+                        {fixture.name}
                       </option>
                     ))}
                 </optgroup>
@@ -2811,201 +2667,12 @@ export default function HomePage() {
               </div>
             </summary>
             <div className="space-y-3 px-4 pb-4">
-              {generations.length < 2 ? (
-                <div className="rounded-md border border-dashed border-[#e0e5de] bg-white px-3 py-2 text-[10px] text-[#9aa6a0]">
-                  생성을 추가하면 풍부도 추이를 표시합니다.
-                </div>
-              ) : null}
-              {(() => {
-                if (generations.length < 2) return null
-                const scores = generations.map((entry) =>
-                  computeRichnessReport(entry.tree).score,
-                )
-                const W = 140
-                const H = 28
-                const PAD_X = 4
-                const PAD_Y = 3
-                const stepX =
-                  scores.length > 1
-                    ? (W - PAD_X * 2) / (scores.length - 1)
-                    : 0
-                const points = scores.map((score, i) => {
-                  const x = PAD_X + stepX * i
-                  const y = PAD_Y + (1 - score) * (H - PAD_Y * 2)
-                  return { x, y, score }
-                })
-                const path = points
-                  .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
-                  .join(' ')
-                const activeIndex = generations.findIndex(
-                  (entry) => entry.id === activeGenerationId,
-                )
-                return (
-                  <div
-                    className="flex items-center gap-2 text-[10px] text-[#647067]"
-                    aria-label="히스토리 풍부도 추이"
-                  >
-                    <div
-                      className="flex flex-col justify-between text-[8px] font-mono leading-none text-[#9aa6a0]"
-                      style={{ height: H }}
-                      aria-hidden="true"
-                    >
-                      <span>1.0</span>
-                      <span>0.5</span>
-                      <span>0.0</span>
-                    </div>
-                    <svg
-                      width={W}
-                      height={H}
-                      viewBox={`0 0 ${W} ${H}`}
-                      className="rounded border border-[#e0e5de] bg-white"
-                      aria-hidden="true"
-                    >
-                      <line
-                        x1={PAD_X}
-                        y1={PAD_Y + 0.4 * (H - PAD_Y * 2)}
-                        x2={W - PAD_X}
-                        y2={PAD_Y + 0.4 * (H - PAD_Y * 2)}
-                        stroke="#e0e5de"
-                        strokeDasharray="2 2"
-                      />
-                      <path
-                        d={path}
-                        fill="none"
-                        stroke="#1b7f72"
-                        strokeWidth={1.2}
-                      />
-                      {points.map((p, i) => {
-                        const entry = generations[i]
-                        const label = entry?.userLabel ?? entry?.label ?? ''
-                        const isImmutable = entry?.immutable === true
-                        const isPinned = entry?.pinned === true
-                        const isActive = i === activeIndex
-                        const fill = isActive
-                          ? '#1b7f72'
-                          : isImmutable
-                            ? '#9aa6a0'
-                            : isPinned
-                              ? '#c8a473'
-                              : '#7c8a82'
-                        const onClick = (): void => {
-                          if (entry !== undefined) {
-                            handleSelectGeneration(entry.id)
-                          }
-                        }
-                        const title = `${label} — ${p.score.toFixed(2)}${
-                          isImmutable ? ' (원본)' : isPinned ? ' (★ 고정)' : ''
-                        }`
-                        const visualMarker = isImmutable ? (
-                          (() => {
-                            const r = isActive ? 2.6 : 1.8
-                            const d = `M${p.x},${p.y - r} L${p.x + r},${p.y} L${p.x},${p.y + r} L${p.x - r},${p.y} Z`
-                            return (
-                              <path
-                                d={d}
-                                fill={fill}
-                                pointerEvents="none"
-                              />
-                            )
-                          })()
-                        ) : (
-                          <circle
-                            cx={p.x}
-                            cy={p.y}
-                            r={isActive ? 2.6 : 1.6}
-                            fill={fill}
-                            pointerEvents="none"
-                          />
-                        )
-                        return (
-                          <g key={i} style={{ cursor: 'pointer' }} onClick={onClick}>
-                            {/* invisible hit area — 점이 작아도 손쉽게 클릭 / hover */}
-                            <circle
-                              cx={p.x}
-                              cy={p.y}
-                              r={6}
-                              fill="transparent"
-                            >
-                              <title>{title}</title>
-                            </circle>
-                            {visualMarker}
-                          </g>
-                        )
-                      })}
-                    </svg>
-                    <span>풍부도 추이 (◇ 원본 / ★ 고정 / ● mutable, 점 클릭 = 선택)</span>
-                  </div>
-                )
-              })()}
-              {(() => {
-                if (generations.length < 2) return null
-                const scored = generations.map((entry) => ({
-                  entry,
-                  score: computeRichnessReport(entry.tree).score,
-                }))
-                const total = scored.reduce((sum, s) => sum + s.score, 0)
-                const avg = total / scored.length
-                const max = scored.reduce((best, cur) =>
-                  cur.score > best.score ? cur : best,
-                )
-                const min = scored.reduce((worst, cur) =>
-                  cur.score < worst.score ? cur : worst,
-                )
-                const active = scored.find(
-                  (s) => s.entry.id === activeGenerationId,
-                )
-                let activePosition: string | null = null
-                if (active !== undefined) {
-                  const diff = active.score - avg
-                  const absDiff = Math.abs(diff)
-                  if (absDiff < 0.05) {
-                    activePosition = '평균 수준'
-                  } else if (diff > 0) {
-                    activePosition = `평균 +${absDiff.toFixed(2)} 위`
-                  } else {
-                    activePosition = `평균 −${absDiff.toFixed(2)} 아래`
-                  }
-                }
-                return (
-                  <div className="rounded-md border border-[#e0e5de] bg-white px-3 py-1.5 text-[10px] text-[#647067]">
-                    <div>
-                      평균{' '}
-                      <span className="font-semibold text-[#1b7f72]">
-                        {avg.toFixed(2)}
-                      </span>{' '}
-                      · 최고{' '}
-                      <span className="font-semibold text-[#1b7f72]">
-                        {max.score.toFixed(2)}
-                      </span>{' '}
-                      ({max.entry.userLabel ?? max.entry.label}) · 최저{' '}
-                      <span className="font-semibold text-[#7c5a2a]">
-                        {min.score.toFixed(2)}
-                      </span>{' '}
-                      ({min.entry.userLabel ?? min.entry.label})
-                    </div>
-                    {active !== undefined && activePosition !== null ? (
-                      <div className="mt-0.5">
-                        활성{' '}
-                        <span className="font-semibold text-[#1b7f72]">
-                          {active.score.toFixed(2)}
-                        </span>{' '}
-                        — {activePosition}
-                      </div>
-                    ) : null}
-                  </div>
-                )
-              })()}
               <div className="flex flex-wrap gap-1">
                 {generations.map((entry) => {
                   const isActive = entry.id === activeGenerationId
                   const isPinned = entry.pinned === true
                   const isEditing = editingLabelId === entry.id
                   const displayLabel = entry.userLabel ?? entry.label
-                  const richness = entry.immutable
-                    ? null
-                    : computeRichnessReport(entry.tree).score
-                  const formattedRichness =
-                    richness === null ? null : formatRichnessScore(richness)
                   const generationTitle =
                     entry.brief?.intent ??
                     (entry.immutable ? '원본 fixture' : '생성 결과')
@@ -3037,16 +2704,8 @@ export default function HomePage() {
                       ) : (
                         <button
                           type="button"
-                          title={
-                            formattedRichness === null
-                              ? `${generationTitle} (더블클릭으로 이름 변경)`
-                              : `${generationTitle} · 디자인 풍부도 ${formattedRichness} (더블클릭으로 이름 변경)`
-                          }
-                          aria-label={
-                            formattedRichness === null
-                              ? displayLabel
-                              : `${displayLabel} 디자인 풍부도 ${formattedRichness}`
-                          }
+                          title={`${generationTitle} (더블클릭으로 이름 변경)`}
+                          aria-label={displayLabel}
                           aria-pressed={isActive}
                           aria-disabled={compareMode || undefined}
                           disabled={compareMode}
@@ -3063,14 +2722,6 @@ export default function HomePage() {
                           onDoubleClick={() => handleStartLabelEdit(entry)}
                         >
                           {displayLabel}
-                          {formattedRichness !== null ? (
-                            <span
-                              className="ml-1 text-[10px] font-normal opacity-70"
-                              aria-hidden="true"
-                            >
-                              {formattedRichness}
-                            </span>
-                          ) : null}
                         </button>
                       )}
                       {!entry.immutable ? (
@@ -3226,57 +2877,6 @@ export default function HomePage() {
                 </label>
               </div>
 
-              {(() => {
-                const activeEntry = generations.find(
-                  (entry) => entry.id === activeGenerationId,
-                )
-                if (
-                  activeEntry === undefined ||
-                  activeEntry.immutable
-                ) {
-                  return null
-                }
-                const report = computeRichnessReport(activeEntry.tree)
-                const missing = RICHNESS_SIGNAL_KEYS.filter(
-                  (key) => report[key] === false,
-                )
-                if (missing.length === 0) return null
-                return (
-                  <div
-                    className="rounded-md border border-[#e7d6c1] bg-[#fcf6ec] px-3 py-2 text-[11px] text-[#7c5a2a]"
-                    role="note"
-                    aria-label="디자인 풍부도 경고"
-                  >
-                    <div className="mb-1 font-semibold">
-                      풍부도 부족 신호 ({missing.length}/8)
-                    </div>
-                    <ul className="ml-3 list-disc space-y-1">
-                      {missing.map((key) => (
-                        <li key={key}>
-                          <span className="font-semibold">
-                            {RICHNESS_SIGNAL_LABELS[key]}
-                          </span>
-                          <span className="mt-0.5 block text-[10px] font-normal leading-snug opacity-80">
-                            {RICHNESS_RETRY_HINTS[key]}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    {activeEntry.brief !== null ? (
-                      <button
-                        type="button"
-                        className="mt-2 rounded-md border border-[#c8a473] bg-white px-2 py-1 text-[10px] font-semibold text-[#7c5a2a] hover:bg-[#fff7eb] disabled:opacity-50"
-                        onClick={() => void handleRetryWithRichnessHints()}
-                        disabled={generateLoading}
-                        title="부족 신호를 brief.notes에 자동 hint로 추가해 한 번 더 LLM에 요청합니다."
-                      >
-                        {generateLoading ? '다시 시도 중…' : '이 신호로 다시 시도'}
-                      </button>
-                    ) : null}
-                  </div>
-                )
-              })()}
-
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#4f5e56]">
@@ -3382,46 +2982,6 @@ export default function HomePage() {
                     {briefImageRefError}
                   </div>
                 ) : null}
-                {briefImageRefs.length > 1
-                  ? (() => {
-                      const merged = mergeImageReferenceColors(briefImageRefs, 5)
-                      const mergedAspect =
-                        mergeImageReferenceAspect(briefImageRefs)
-                      if (merged.length === 0 && mergedAspect === undefined)
-                        return null
-                      return (
-                        <div
-                          className="rounded-md border border-[#e0e5de] bg-white px-2 py-1.5 text-[10px] text-[#647067]"
-                          aria-label="통합 팔레트"
-                        >
-                          <div className="mb-1 flex items-center justify-between font-semibold text-[#4f5e56]">
-                            <span>통합 팔레트 ({merged.length}색)</span>
-                            {mergedAspect !== undefined ? (
-                              <span className="text-[#7c8580]">
-                                비율 {mergedAspect}
-                              </span>
-                            ) : null}
-                          </div>
-                          <div className="flex flex-wrap gap-1">
-                            {merged.map((hex) => (
-                              <span
-                                key={hex}
-                                className="inline-flex items-center gap-1 rounded bg-[#f3efe8] px-1.5 py-0.5"
-                                title={hex}
-                              >
-                                <span
-                                  aria-hidden="true"
-                                  className="inline-block h-2.5 w-2.5 rounded-full border border-[#cbd6cf]"
-                                  style={{ backgroundColor: hex }}
-                                />
-                                {hex}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )
-                    })()
-                  : null}
               </div>
 
               {generateStage === 'intent' ? (
@@ -3683,18 +3243,6 @@ export default function HomePage() {
                       </p>
                     ) : null}
                   </div>
-
-                  <label className="flex items-center gap-2 text-[11px] text-[#4f5e56]">
-                    <input
-                      type="checkbox"
-                      checked={autoRichnessRetry}
-                      disabled={generateLoading}
-                      onChange={(event) =>
-                        setAutoRichnessRetry(event.target.checked)
-                      }
-                    />
-                    낮은 풍부도(&lt; 0.6) 시 자동 재시도
-                  </label>
 
                   <button
                     type="button"
