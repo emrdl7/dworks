@@ -2821,6 +2821,38 @@ export default function HomePage() {
                   </div>
                 )
               })()}
+              {(() => {
+                if (generations.length < 2) return null
+                const scored = generations.map((entry) => ({
+                  entry,
+                  score: computeRichnessReport(entry.tree).score,
+                }))
+                const total = scored.reduce((sum, s) => sum + s.score, 0)
+                const avg = total / scored.length
+                const max = scored.reduce((best, cur) =>
+                  cur.score > best.score ? cur : best,
+                )
+                const min = scored.reduce((worst, cur) =>
+                  cur.score < worst.score ? cur : worst,
+                )
+                return (
+                  <div className="rounded-md border border-[#e0e5de] bg-white px-3 py-1.5 text-[10px] text-[#647067]">
+                    평균{' '}
+                    <span className="font-semibold text-[#1b7f72]">
+                      {avg.toFixed(2)}
+                    </span>{' '}
+                    · 최고{' '}
+                    <span className="font-semibold text-[#1b7f72]">
+                      {max.score.toFixed(2)}
+                    </span>{' '}
+                    ({max.entry.userLabel ?? max.entry.label}) · 최저{' '}
+                    <span className="font-semibold text-[#7c5a2a]">
+                      {min.score.toFixed(2)}
+                    </span>{' '}
+                    ({min.entry.userLabel ?? min.entry.label})
+                  </div>
+                )
+              })()}
               <div className="flex flex-wrap gap-1">
                 {generations.map((entry) => {
                   const isActive = entry.id === activeGenerationId
