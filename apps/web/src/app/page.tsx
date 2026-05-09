@@ -2617,11 +2617,14 @@ export default function HomePage() {
               </optgroup>
               {userFixtures.length > 0 ? (
                 <optgroup label="내 fixture">
-                  {userFixtures.map((fixture) => (
-                    <option key={fixture.id} value={fixture.id}>
-                      {fixture.name}
-                    </option>
-                  ))}
+                  {userFixtures.map((fixture) => {
+                    const score = computeRichnessReport(fixture.tree).score
+                    return (
+                      <option key={fixture.id} value={fixture.id}>
+                        {fixture.name} · {score.toFixed(2)}
+                      </option>
+                    )
+                  })}
                 </optgroup>
               ) : null}
             </select>
