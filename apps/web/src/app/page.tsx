@@ -3380,7 +3380,9 @@ export default function HomePage() {
                         size={13}
                         className="shrink-0 text-[#647067]"
                       />
-                      <span className="min-w-0 flex-1 truncate">{node.id}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {highlightSearchMatch(node.id, layerQuery)}
+                      </span>
                     </button>
                     {(() => {
                       const stateIcons = getNodeLayerStateIcons(node)
@@ -4799,6 +4801,22 @@ function SelectableNode({
       {isSelected ? <CanvasNodeToolbar nodeId={node.id} /> : null}
       {children}
     </div>
+  )
+}
+
+function highlightSearchMatch(text: string, query: string): ReactNode {
+  const trimmed = query.trim()
+  if (trimmed === '') return text
+  const idx = text.toLowerCase().indexOf(trimmed.toLowerCase())
+  if (idx < 0) return text
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="rounded-sm bg-[#fff8df] px-0.5 text-[#6b4b00]">
+        {text.slice(idx, idx + trimmed.length)}
+      </mark>
+      {text.slice(idx + trimmed.length)}
+    </>
   )
 }
 
