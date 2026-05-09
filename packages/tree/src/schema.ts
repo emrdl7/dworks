@@ -230,6 +230,8 @@ export const NODE_TRANSITION_TIMING_IDS = [
   'ease-out',
   'ease-in-out',
   'custom',
+  'step-start',
+  'step-end',
 ] as const
 export const nodeTransitionTimingSchema = z.enum(NODE_TRANSITION_TIMING_IDS)
 export type NodeTransitionTiming = z.infer<typeof nodeTransitionTimingSchema>

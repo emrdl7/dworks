@@ -300,6 +300,8 @@ const nodeTransitionTimingLabels: Record<NodeTransitionTiming, string> = {
   'ease-out': '끝 가속',
   'ease-in-out': '양쪽 가속',
   custom: '사용자 지정',
+  'step-start': '즉시',
+  'step-end': '도약',
 }
 
 const layoutDirectionLabels: Record<LayoutDirection, string> = {
