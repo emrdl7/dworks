@@ -38,6 +38,7 @@ import {
   Columns2,
   Copy,
   GripVertical,
+  LayoutGrid,
   Move,
   PanelLeft,
   PanelRight,
@@ -795,6 +796,8 @@ export default function HomePage() {
   const [inspectorDrawerOpen, setInspectorDrawerOpen] = useState(false)
   // 좌측 패널 탭 — 브리프/레이어 풀 높이 전환
   const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
+  // 캔버스 grid — 디자인 정밀도용 16px 격자 토글
+  const [canvasGridVisible, setCanvasGridVisible] = useState(false)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -3090,6 +3093,22 @@ export default function HomePage() {
               />
               <span className="h-4 w-px bg-[#dde3df]" aria-hidden="true" />
               <CanvasZoomControl value={canvasZoom} onChange={setCanvasZoom} />
+              <span className="h-4 w-px bg-[#dde3df]" aria-hidden="true" />
+              <button
+                type="button"
+                aria-label={canvasGridVisible ? '그리드 숨기기' : '그리드 표시'}
+                aria-pressed={canvasGridVisible}
+                title="16px 그리드"
+                onClick={() => setCanvasGridVisible((v) => !v)}
+                className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
+                  canvasGridVisible
+                    ? 'border-[#4f46e5] bg-[#eef0ff] text-[#4f46e5]'
+                    : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#4f46e5] hover:text-[#4f46e5]'
+                }`}
+              >
+                <LayoutGrid size={13} aria-hidden="true" />
+                <span>그리드</span>
+              </button>
             </div>
           )}
           <div
@@ -3162,6 +3181,13 @@ export default function HomePage() {
               className="px-8 py-8"
               style={{
                 minWidth: selectedViewportPreset.width * canvasZoom + 64,
+                ...(canvasGridVisible
+                  ? {
+                      backgroundImage:
+                        'linear-gradient(to right, rgba(15,23,21,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,21,0.08) 1px, transparent 1px)',
+                      backgroundSize: '16px 16px',
+                    }
+                  : {}),
               }}
             >
               <div
