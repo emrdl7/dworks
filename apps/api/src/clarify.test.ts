@@ -164,7 +164,7 @@ describe('handleClarify', () => {
 
     const result = await handleClarify(
       { intent: '응답이 느린 질문 생성' },
-      { spawnImpl: spawn, timeoutMs: 1 },
+      { spawnImpl: spawn, timeoutMs: 1, providerChain: ['claude'] },
     )
 
     assert.equal(result.status, 502)

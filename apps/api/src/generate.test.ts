@@ -193,7 +193,7 @@ describe('handleGenerate', () => {
 
     const result = await handleGenerate(
       { prompt: '응답이 느린 랜딩 페이지 생성' },
-      { spawnImpl: spawn, timeoutMs: 1 },
+      { spawnImpl: spawn, timeoutMs: 1, providerChain: ['claude'] },
     )
 
     assert.equal(result.status, 502)

@@ -5,7 +5,12 @@ import { z } from 'zod'
 
 import { CLARIFY_QUESTIONS_SYSTEM_PROMPT } from '@dworks/llm-prompts'
 
-import { callClaudeCli, type SpawnLike } from './llm.js'
+import {
+  callLlmChain,
+  resolveProviderChain,
+  type LlmProvider,
+  type SpawnLike,
+} from './llm.js'
 
 export const clarifyRequestSchema = z.object({
   intent: z.string().trim().min(1).max(500),
@@ -48,7 +53,7 @@ export interface ClarifySuccess {
   status: 200
   body: {
     questions: ClarifyQuestion[]
-    model: 'claude'
+    model: LlmProvider
     latencyMs: number
   }
 }
@@ -67,6 +72,7 @@ export interface ClarifyDeps {
   spawnImpl?: SpawnLike
   command?: string
   timeoutMs?: number
+  providerChain?: readonly LlmProvider[]
 }
 
 /**
@@ -87,7 +93,19 @@ export async function handleClarify(
     }
   }
 
-  const cliResult = await callClaudeCli({
+  const chain = deps.providerChain ?? resolveProviderChain()
+  if (chain.length === 0) {
+    return {
+      status: 502,
+      body: {
+        error: 'cli-unavailable',
+        message: 'LLM provider chain이 비어 있습니다.',
+      },
+    }
+  }
+
+  const { final } = await callLlmChain({
+    chain,
     systemPrompt: CLARIFY_QUESTIONS_SYSTEM_PROMPT,
     userPrompt: parsed.data.intent,
     spawnImpl: deps.spawnImpl,
@@ -95,8 +113,9 @@ export async function handleClarify(
     timeoutMs: deps.timeoutMs,
   })
 
-  if (!cliResult.ok) {
-    if (cliResult.kind === 'timeout') {
+  if (final === null || !final.result.ok) {
+    const lastKind = final?.result.ok === false ? final.result.kind : undefined
+    if (lastKind === 'timeout') {
       return {
         status: 502,
         body: {
@@ -105,12 +124,12 @@ export async function handleClarify(
         },
       }
     }
-    if (cliResult.kind === 'spawn-error') {
+    if (lastKind === 'spawn-error') {
       return {
         status: 502,
         body: {
           error: 'cli-unavailable',
-          message: 'Claude CLI를 실행할 수 없습니다.',
+          message: 'LLM CLI를 실행할 수 없습니다.',
         },
       }
     }
@@ -125,7 +144,7 @@ export async function handleClarify(
 
   let json: unknown
   try {
-    json = JSON.parse(cliResult.stdout)
+    json = JSON.parse(final.result.stdout)
   } catch {
     return {
       status: 422,
@@ -151,8 +170,8 @@ export async function handleClarify(
     status: 200,
     body: {
       questions: responseParse.data.questions,
-      model: 'claude',
-      latencyMs: cliResult.latencyMs,
+      model: final.provider,
+      latencyMs: final.result.latencyMs,
     },
   }
 }

@@ -9,7 +9,12 @@ import {
 } from '@dworks/llm-prompts'
 import { treeSchema, type Tree } from '@dworks/tree'
 
-import { callClaudeCli, type SpawnLike } from './llm.js'
+import {
+  callLlmChain,
+  resolveProviderChain,
+  type LlmProvider,
+  type SpawnLike,
+} from './llm.js'
 
 export const briefAnswerSchema = z.object({
   questionId: z.string().min(1).max(40),
@@ -52,7 +57,7 @@ export interface GenerateSuccess {
   status: 200
   body: {
     tree: Tree
-    model: 'claude'
+    model: LlmProvider
     latencyMs: number
   }
 }
@@ -79,6 +84,7 @@ export interface GenerateDeps {
   spawnImpl?: SpawnLike
   command?: string
   timeoutMs?: number
+  providerChain?: readonly LlmProvider[]
 }
 
 /**
@@ -107,7 +113,19 @@ export async function handleGenerate(
     }
   }
 
-  const cliResult = await callClaudeCli({
+  const chain = deps.providerChain ?? resolveProviderChain()
+  if (chain.length === 0) {
+    return {
+      status: 502,
+      body: {
+        error: 'cli-unavailable',
+        message: 'LLM provider chain이 비어 있습니다.',
+      },
+    }
+  }
+
+  const { final } = await callLlmChain({
+    chain,
     systemPrompt: GENERATE_TREE_SYSTEM_PROMPT,
     userPrompt: formatBriefAsUserPrompt(resolved.brief),
     spawnImpl: deps.spawnImpl,
@@ -115,8 +133,9 @@ export async function handleGenerate(
     timeoutMs: deps.timeoutMs,
   })
 
-  if (!cliResult.ok) {
-    if (cliResult.kind === 'timeout') {
+  if (final === null || !final.result.ok) {
+    const lastKind = final?.result.ok === false ? final.result.kind : undefined
+    if (lastKind === 'timeout') {
       return {
         status: 502,
         body: {
@@ -125,12 +144,12 @@ export async function handleGenerate(
         },
       }
     }
-    if (cliResult.kind === 'spawn-error') {
+    if (lastKind === 'spawn-error') {
       return {
         status: 502,
         body: {
           error: 'cli-unavailable',
-          message: 'Claude CLI를 실행할 수 없습니다.',
+          message: 'LLM CLI를 실행할 수 없습니다.',
         },
       }
     }
@@ -145,7 +164,7 @@ export async function handleGenerate(
 
   let json: unknown
   try {
-    json = JSON.parse(cliResult.stdout)
+    json = JSON.parse(final.result.stdout)
   } catch {
     return {
       status: 422,
@@ -171,8 +190,8 @@ export async function handleGenerate(
     status: 200,
     body: {
       tree: treeParse.data,
-      model: 'claude',
-      latencyMs: cliResult.latencyMs,
+      model: final.provider,
+      latencyMs: final.result.latencyMs,
     },
   }
 }
