@@ -173,6 +173,24 @@ const RICHNESS_SIGNAL_LABELS: Record<RichnessSignalKey, string> = {
   hasShapeDepth: 'shape 깊이 부재',
 }
 
+const RICHNESS_RETRY_HINTS: Record<RichnessSignalKey, string> = {
+  hasPageLandmarks:
+    '루트는 section 하나로 감싸고 banner/main/contentinfo role 3 자식을 모두 포함한다.',
+  hasMainMultiSection: 'main 안에 의미 있는 section/hero를 2개 이상 둔다.',
+  hasDisplayHeadingOne:
+    '대표 heading-1 텍스트는 typography.fontSize 48 이상으로 디스플레이 크기를 명시한다.',
+  hasCallToAction:
+    '명확한 CTA 버튼(button 노드)이나 contentRole "cta" 텍스트를 한 곳 이상 둔다.',
+  fontSizeVariety:
+    'typography.fontSize 값을 최소 3종(예: 디스플레이 / 본문 / 캡션) 사용해 위계를 만든다.',
+  colorVariety:
+    '단조로운 회색 톤 대신 강조 색을 더해 고유 hex 색을 3개 이상 사용한다.',
+  hasImagery:
+    '관련 사진 또는 일러스트 image 노드를 한 곳 이상 포함한다(plausible https URL 사용).',
+  hasShapeDepth:
+    '카드/이미지에 shape.shadow 또는 radius ≥ 8을 적용해 시각 깊이를 부여한다.',
+}
+
 const RICHNESS_SIGNAL_KEYS: RichnessSignalKey[] = [
   'hasPageLandmarks',
   'hasMainMultiSection',
@@ -1483,6 +1501,72 @@ export default function HomePage() {
     }
   }
 
+  async function handleRetryWithRichnessHints(): Promise<void> {
+    if (generateLoading) return
+    const active = generations.find((entry) => entry.id === activeGenerationId)
+    if (active === undefined || active.immutable) return
+    const baseBrief = active.brief
+    if (baseBrief === null) {
+      setGenerateError('생성 brief가 없는 항목은 다시 시도할 수 없습니다.')
+      return
+    }
+    const report = computeRichnessReport(active.tree)
+    const missing = RICHNESS_SIGNAL_KEYS.filter((key) => report[key] === false)
+    if (missing.length === 0) return
+
+    const hints = missing.map((key) => `- ${RICHNESS_RETRY_HINTS[key]}`).join('\n')
+    const baseNotes = baseBrief.notes?.trim() ?? ''
+    const augmentedNotes = [
+      baseNotes.length > 0 ? baseNotes : null,
+      `자동 보강 힌트:\n${hints}`,
+    ]
+      .filter((part): part is string => part !== null)
+      .join('\n\n')
+      .slice(0, 300)
+
+    const retryBrief: SubmittedDesignBrief = {
+      ...baseBrief,
+      notes: augmentedNotes,
+    }
+
+    setGenerateLoading(true)
+    setGenerateError(null)
+    const apiBase =
+      process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
+    try {
+      const result = await callGenerateOnce(apiBase, retryBrief)
+      if (!result.ok) {
+        setGenerateError(`다시 시도 실패 — ${result.reason}`)
+        return
+      }
+      snapshotActiveGeneration(tree)
+      const newEntry: GenerationEntry = {
+        id: createGenerationEntryId(),
+        label: '',
+        tree: result.tree,
+        immutable: false,
+        brief: retryBrief,
+        questions: active.questions,
+        clarifyTurns: active.clarifyTurns,
+        createdAt: Date.now(),
+        latencyMs: result.latencyMs,
+        model: result.model,
+      }
+      setGenerations((entries) =>
+        appendGenerationHistoryEntries(entries, [newEntry], MAX_GENERATIONS),
+      )
+      const nextSelectedId =
+        findFirstEditableNodeId(newEntry.tree.root) ?? newEntry.tree.root.id
+      setActiveGenerationId(newEntry.id)
+      setCompareMode(false)
+      commitTreeEdit(newEntry.tree, nextSelectedId, {
+        skipGenerationSync: true,
+      })
+    } finally {
+      setGenerateLoading(false)
+    }
+  }
+
   function handleSelectGeneration(targetId: string) {
     if (targetId === activeGenerationId || generateLoading) return
     const target = generations.find((entry) => entry.id === targetId)
@@ -2333,6 +2417,17 @@ export default function HomePage() {
                         <li key={key}>{RICHNESS_SIGNAL_LABELS[key]}</li>
                       ))}
                     </ul>
+                    {activeEntry.brief !== null ? (
+                      <button
+                        type="button"
+                        className="mt-2 rounded-md border border-[#c8a473] bg-white px-2 py-1 text-[10px] font-semibold text-[#7c5a2a] hover:bg-[#fff7eb] disabled:opacity-50"
+                        onClick={() => void handleRetryWithRichnessHints()}
+                        disabled={generateLoading}
+                        title="부족 신호를 brief.notes에 자동 hint로 추가해 한 번 더 LLM에 요청합니다."
+                      >
+                        {generateLoading ? '다시 시도 중…' : '이 신호로 다시 시도'}
+                      </button>
+                    ) : null}
                   </div>
                 )
               })()}
