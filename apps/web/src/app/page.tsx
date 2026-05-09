@@ -5374,16 +5374,6 @@ function NodeInspector({
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
-        <InspectorDisclosure title="기본 정보" defaultOpen={false}>
-          <MetadataGrid node={node} />
-        </InspectorDisclosure>
-
-        <NodeVisibilityControls
-          node={node}
-          disclosure={bindSection('표시')}
-          onNodeMetaChange={onNodeMetaChange}
-        />
-
         <StyleControls
           colorPreset={colorPreset}
           onColorPresetChange={onColorPresetChange}
@@ -5409,16 +5399,11 @@ function NodeInspector({
               <label className="block">
                 <span className="text-xs font-semibold text-[#4f5e56]">문구</span>
                 <textarea
-                  className="mt-2 min-h-32 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-                  placeholder="내용을 입력하세요. 마크다운으로 **굵게**, *기울임*, [링크](URL)를 사용할 수 있습니다."
+                  className="mt-2 min-h-24 w-full resize-y rounded-md border border-[#cbd6cf] bg-white p-3 text-sm leading-6 outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
+                  placeholder="텍스트 내용"
                   value={node.content}
                   onChange={(event) => onTextChange(node, event.target.value)}
                 />
-                <span className="mt-2 block text-xs leading-5 text-[#647067]">
-                  굵게 <code className="font-mono">**텍스트**</code> / 기울임{' '}
-                  <code className="font-mono">*텍스트*</code> / 링크{' '}
-                  <code className="font-mono">[텍스트](URL)</code>
-                </span>
               </label>
             </InspectorDisclosure>
             <TypographyControls
@@ -5519,15 +5504,6 @@ function NodeInspector({
             />
           </>
         ) : null}
-
-        <StructureControls
-          info={structureInfo}
-          disclosure={bindSection('구조')}
-          onMoveUp={onMoveUp}
-          onMoveDown={onMoveDown}
-          onDuplicate={onDuplicate}
-          onDelete={onDelete}
-        />
 
         <InspectorDisclosure
           title="변환"
