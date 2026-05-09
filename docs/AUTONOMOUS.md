@@ -56,8 +56,8 @@
 
 **M3 후속 후보**:
 - `m3-generate-gemini-adapter` — Gemini CLI 어댑터
-- `m3-generate-prompt-style` — examples에 스타일 prop 노출 (prompt-uplift 후속, eval 기반 튜닝)
-- `m3-generate-eval-diversity` — 트리 유사도 score (variant diversity 측정)
+- ✓ `m3-generate-prompt-style` (`f98a6e2` r4) — examples 3개에 도메인 시그니처(카페 따뜻한 그라디언트 / SaaS pro card accent / 블로그 절제 lineHeight), system prompt 정책 완화, drift 방지 test 3건. examples block 1.34×
+- ✓ `m3-generate-eval-diversity` (`1de372e` r4 / `4b98f10` r5) — m3-eval에 multiset Jaccard 기반 구조 다양성 score, summary `구조 다양성` 컬럼 + dry-run 메모, in-memory tree 누적
 - `m3-generate-eval-judge` — LLM-as-judge 정성 점수
 - `m3-generate-variant-grid` — 변형들 동시 비교 grid UI
 - `m3-generate-clarify-loop` — multi-turn clarify (답변 부족 시 추가 질문)
