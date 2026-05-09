@@ -3195,9 +3195,7 @@ export default function HomePage() {
             onMoveUp={() => handleMoveSelected('up')}
             onMoveDown={() => handleMoveSelected('down')}
             onDuplicate={handleDuplicateSelected}
-            onDelete={handleDeleteSelected}
             colorPreset={colorPreset}
-            onColorPresetChange={handleColorPresetChange}
           />
         </aside>
         )}
@@ -5368,8 +5366,6 @@ interface NodeInspectorProps {
   onMoveUp: () => void
   onMoveDown: () => void
   onDuplicate: () => void
-  onDelete: () => void
-  onColorPresetChange: (colorPreset: ColorPreset) => void
 }
 
 function NodeInspector({
@@ -5401,8 +5397,6 @@ function NodeInspector({
   onMoveUp,
   onMoveDown,
   onDuplicate,
-  onDelete,
-  onColorPresetChange,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
   const [openSectionsByNode, setOpenSectionsByNode] = useState<
@@ -5834,11 +5828,6 @@ function NodeInspector({
   )
 }
 
-interface StyleControlsProps {
-  colorPreset: ColorPreset
-  onColorPresetChange: (colorPreset: ColorPreset) => void
-}
-
 interface InspectorDisclosureControl {
   onOpenChange: (next: boolean) => void
   open: boolean
@@ -5935,201 +5924,6 @@ function DisclosureChevron() {
         strokeWidth="2"
       />
     </svg>
-  )
-}
-
-function StyleControls({
-  colorPreset,
-  onColorPresetChange,
-}: StyleControlsProps) {
-  return (
-    <InspectorDisclosure
-      title="문서 스타일"
-      description="캔버스 전체 색상"
-      defaultOpen={false}
-      summaryEnd={
-        <span className="rounded-full border border-[#c9d4cd] bg-white px-2 py-1 text-xs font-semibold text-[#4f5e56]">
-          {colorPresetLabels[colorPreset]}
-        </span>
-      }
-    >
-      <div className="grid grid-cols-5 gap-2">
-        {COLOR_PRESET_IDS.map((presetId) => {
-          const colors = COLOR_PRESETS[presetId]
-          const isSelected = presetId === colorPreset
-
-          return (
-            <button
-              key={presetId}
-              type="button"
-              aria-label={`${colorPresetLabels[presetId]} 색상 프리셋`}
-              aria-pressed={isSelected}
-              className={`h-11 rounded-md border bg-white p-1 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
-                isSelected
-                  ? 'border-[#4f46e5] shadow-[0_0_0_2px_rgba(27,127,114,0.18)]'
-                  : 'border-[#c9d4cd] hover:border-[#8c9a91]'
-              }`}
-              title={colorPresetLabels[presetId]}
-              onClick={() => onColorPresetChange(presetId)}
-            >
-              <span className="flex h-full overflow-hidden rounded">
-                <span
-                  className="w-2/3"
-                  style={{ backgroundColor: colors.surface }}
-                />
-                <span
-                  className="w-1/3"
-                  style={{ backgroundColor: colors.accent }}
-                />
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </InspectorDisclosure>
-  )
-}
-
-interface NodeVisibilityControlsProps {
-  disclosure?: InspectorDisclosureControl
-  node: TreeNode
-  onNodeMetaChange: (
-    node: TreeNode,
-    patch: NodeMetaPatch,
-    options?: CommitTreeEditOptions,
-  ) => void
-}
-
-function NodeVisibilityControls({
-  disclosure,
-  node,
-  onNodeMetaChange,
-}: NodeVisibilityControlsProps) {
-  const isVisible = node.hidden !== true
-  const isCanvasSelectable = node.pointerEvents !== 'none'
-  const isResetDisabled = node.hidden === undefined && node.pointerEvents === undefined
-
-  function updateVisibility(nextVisible: boolean) {
-    onNodeMetaChange(
-      node,
-      {
-        hidden: nextVisible ? undefined : true,
-      },
-      { mergeKey: getNodeColorMergeKey(node.id, 'meta.hidden') },
-    )
-  }
-
-  function updateCanvasSelection(nextSelectable: boolean) {
-    onNodeMetaChange(
-      node,
-      {
-        pointerEvents: nextSelectable ? undefined : 'none',
-      },
-      { mergeKey: getNodeColorMergeKey(node.id, 'meta.pointerEvents') },
-    )
-  }
-
-  function resetVisibility() {
-    onNodeMetaChange(node, {
-      hidden: undefined,
-      pointerEvents: undefined,
-    })
-  }
-
-  return (
-    <InspectorDisclosure
-      title="표시"
-      description={
-        isVisible
-          ? isCanvasSelectable
-            ? '표시 · 선택 가능'
-            : '표시 · 선택 제외'
-          : '숨김'
-      }
-      onAction={resetVisibility}
-      isActionDisabled={isResetDisabled}
-      {...disclosure}
-    >
-      <div className="space-y-3">
-        <VisibilitySwitch
-          checked={isVisible}
-          label="캔버스에 표시"
-          onChange={updateVisibility}
-        />
-        <VisibilitySwitch
-          checked={isCanvasSelectable}
-          disabled={!isVisible}
-          label="캔버스에서 선택"
-          onChange={updateCanvasSelection}
-        />
-        <label className="block">
-          <span className="text-xs font-semibold text-[#4f5e56]">커서</span>
-          <select
-            className="mt-2 h-10 w-full rounded-md border border-[#cbd6cf] bg-white px-3 text-sm font-semibold text-[#26312b] outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
-            value={node.cursor ?? ''}
-            onChange={(event) => {
-              const raw = event.target.value
-              onNodeMetaChange(
-                node,
-                {
-                  cursor:
-                    raw === '' ? undefined : (raw as NodeCursor),
-                },
-                { mergeKey: getNodeColorMergeKey(node.id, 'meta.cursor') },
-              )
-            }}
-          >
-            <option value="">자동</option>
-            {NODE_CURSOR_IDS.map((cursorId) => (
-              <option key={cursorId} value={cursorId}>
-                {nodeCursorLabels[cursorId]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    </InspectorDisclosure>
-  )
-}
-
-interface VisibilitySwitchProps {
-  checked: boolean
-  disabled?: boolean
-  label: string
-  onChange: (checked: boolean) => void
-}
-
-function VisibilitySwitch({
-  checked,
-  disabled = false,
-  label,
-  onChange,
-}: VisibilitySwitchProps) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      className="flex min-h-11 w-full items-center justify-between gap-3 rounded-md border border-[#d7ddd2] bg-white px-3 text-left transition hover:bg-[#eef8f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-    >
-      <span className="text-sm font-semibold text-[#26312b]">{label}</span>
-      <span className="flex items-center gap-2 text-xs font-semibold text-[#4f5e56]">
-        {checked ? '켬' : '끔'}
-        <span
-          className={`flex h-6 w-11 items-center rounded-full p-0.5 transition ${
-            checked ? 'bg-[#4f46e5]' : 'bg-[#c9d4cd]'
-          }`}
-        >
-          <span
-            className={`h-5 w-5 rounded-full bg-white shadow-sm transition ${
-              checked ? 'translate-x-5' : 'translate-x-0'
-            }`}
-          />
-        </span>
-      </span>
-    </button>
   )
 }
 
@@ -10531,147 +10325,6 @@ function IconToggleButton({
   )
 }
 
-interface StructureControlsProps {
-  disclosure?: InspectorDisclosureControl
-  info: StructureInfo
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onDuplicate: () => void
-  onDelete: () => void
-}
-
-function StructureControls({
-  disclosure,
-  info,
-  onMoveUp,
-  onMoveDown,
-  onDuplicate,
-  onDelete,
-}: StructureControlsProps) {
-  const canMoveUp = !info.isRoot && (info.index ?? 0) > 0
-  const canMoveDown =
-    !info.isRoot && (info.index ?? 0) < (info.siblingCount ?? 0) - 1
-  const canEditStructure = !info.isRoot
-
-  return (
-    <InspectorDisclosure
-      title="구조"
-      defaultOpen={false}
-      {...disclosure}
-      summaryEnd={
-        info.parentId ? (
-          <span className="max-w-36 truncate text-xs text-[#647067]">
-            상위 {info.parentId}
-          </span>
-        ) : null
-      }
-    >
-      <div className="grid grid-cols-2 gap-2">
-        <InspectorActionButton
-          ariaLabel="위로 이동"
-          disabled={!canMoveUp}
-          icon={ChevronUp}
-          onClick={onMoveUp}
-        />
-        <InspectorActionButton
-          ariaLabel="아래로 이동"
-          disabled={!canMoveDown}
-          icon={ChevronDown}
-          onClick={onMoveDown}
-        />
-        <InspectorActionButton
-          ariaLabel="복제"
-          disabled={!canEditStructure}
-          icon={Copy}
-          onClick={onDuplicate}
-        />
-        <InspectorActionButton
-          ariaLabel="삭제"
-          disabled={!canEditStructure}
-          icon={Trash2}
-          tone="danger"
-          onClick={onDelete}
-        />
-      </div>
-      {info.isRoot ? (
-        <p className="mt-3 text-xs text-[#647067]">
-          루트는 이동/삭제할 수 없습니다.
-        </p>
-      ) : null}
-    </InspectorDisclosure>
-  )
-}
-
-interface InspectorActionButtonProps {
-  ariaLabel: string
-  disabled: boolean
-  icon: LucideIcon
-  onClick: () => void
-  tone?: 'neutral' | 'danger'
-}
-
-function InspectorActionButton({
-  ariaLabel,
-  disabled,
-  icon: Icon,
-  onClick,
-  tone = 'neutral',
-}: InspectorActionButtonProps) {
-  const toneClass =
-    tone === 'danger'
-      ? 'hover:border-[#a04545] hover:text-[#7a1f1f] focus-visible:border-[#a04545] focus-visible:text-[#7a1f1f]'
-      : 'hover:bg-[#eef3ed]'
-
-  return (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      title={ariaLabel}
-      className={`flex h-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#c9d4cd] disabled:hover:bg-white disabled:hover:text-[#26312b] ${toneClass}`}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      <Icon aria-hidden="true" className="h-4 w-4" strokeWidth={2} />
-    </button>
-  )
-}
-
-function MetadataGrid({ node }: { node: TreeNode }) {
-  return (
-    <dl className="grid grid-cols-2 gap-3 text-sm">
-      <InspectorMetric label="노드 유형" value={nodeTypeLabels[node.type]} />
-      <InspectorMetric label="편집 유형" value={editKindLabels[node.editKind]} />
-      {'contentRole' in node && node.contentRole ? (
-        <InspectorMetric
-          label="역할"
-          value={contentRoleLabels[node.contentRole]}
-        />
-      ) : null}
-      {node.type === 'button' && node.variant ? (
-        <InspectorMetric label="버튼 종류" value={buttonVariantLabels[node.variant]} />
-      ) : null}
-      {node.type === 'list' && node.variant ? (
-        <InspectorMetric label="목록 종류" value={listVariantLabels[node.variant]} />
-      ) : null}
-      {'aspectRatio' in node && node.aspectRatio ? (
-        <InspectorMetric
-          label="이미지 비율"
-          value={imageAspectRatioLabels[node.aspectRatio]}
-        />
-      ) : null}
-    </dl>
-  )
-}
-
-function InspectorMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-[#d7ddd2] bg-[#fbfcfa] p-3">
-      <dt className="text-[11px] font-semibold uppercase text-[#647067]">{label}</dt>
-      <dd className="mt-1 break-words text-sm font-medium text-[#1d2923]">{value}</dd>
-    </div>
-  )
-}
-
 function InspectorRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-3">
@@ -10710,15 +10363,6 @@ function flattenTree(node: TreeNode, depth = 0): LayerItem[] {
     ...current,
     ...node.children.flatMap((child) => flattenTree(child, depth + 1)),
   ]
-}
-
-function countEditableNodes(node: TreeNode): number {
-  const current = isEditableNode(node) ? 1 : 0
-  if (!isContainerNode(node)) {
-    return current
-  }
-
-  return current + node.children.reduce((sum, child) => sum + countEditableNodes(child), 0)
 }
 
 function countTypographyFontUsage(
