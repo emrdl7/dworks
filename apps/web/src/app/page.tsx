@@ -787,6 +787,11 @@ export default function HomePage() {
   const [responsiveViewport, setResponsiveViewport] =
     useState<ResponsiveViewport>('desktop')
   const [canvasZoom, setCanvasZoom] = useState(1)
+  // 선택 노드 logical 크기 (status bar 표시용) — DOM 측정 후 업데이트
+  const [selectedNodeSize, setSelectedNodeSize] = useState<{
+    width: number
+    height: number
+  } | null>(null)
   // 캔버스 panning(스페이스+드래그) 상태
   const [isSpacePressed, setIsSpacePressed] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
@@ -906,6 +911,38 @@ export default function HomePage() {
     )
     row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [selectedNodeId, tree.root.id, leftPanelTab])
+
+  // 선택 노드의 logical (zoom 무관) 크기를 status bar용으로 측정
+  useEffect(() => {
+    function measure(): void {
+      if (selectedNodeId === '') {
+        setSelectedNodeSize(null)
+        return
+      }
+      const el = document.querySelector<HTMLElement>(
+        `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
+      )
+      if (!el) {
+        setSelectedNodeSize(null)
+        return
+      }
+      const rect = el.getBoundingClientRect()
+      // CSS zoom이 적용되므로 logical = visual / zoom
+      const z = canvasZoom > 0 ? canvasZoom : 1
+      setSelectedNodeSize({
+        width: Math.round(rect.width / z),
+        height: Math.round(rect.height / z),
+      })
+    }
+    measure()
+    // 캔버스 사이즈/zoom 변경에도 다시 측정
+    const ro = new ResizeObserver(() => measure())
+    const el = document.querySelector<HTMLElement>(
+      `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
+    )
+    if (el) ro.observe(el)
+    return () => ro.disconnect()
+  }, [selectedNodeId, tree, canvasZoom, responsiveViewport])
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -4340,6 +4377,14 @@ export default function HomePage() {
                 {additionalSelectedNodeIds.size > 0 ? (
                   <span className="text-[#a5b4fc]">
                     +{additionalSelectedNodeIds.size}개 선택
+                  </span>
+                ) : null}
+                {selectedNodeSize !== null && selectedNodeId !== tree.root.id ? (
+                  <span
+                    className="hidden tabular-nums text-[10px] text-[#898d97] sm:inline"
+                    title={`logical 크기: ${selectedNodeSize.width}×${selectedNodeSize.height} px (zoom 무관)`}
+                  >
+                    {selectedNodeSize.width}×{selectedNodeSize.height}
                   </span>
                 ) : null}
                 {hoveredNodeId !== null && hoveredNodeId !== selectedNodeId ? (
