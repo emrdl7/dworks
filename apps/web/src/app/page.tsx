@@ -2335,10 +2335,12 @@ function SelectableNode({
   const isSelected = node.id === selectedNodeId
   const isCanvasSelectable = node.pointerEvents !== 'none'
   const transformStyle = getTransformStyle(node.transform)
+  const transitionStyle = getTransitionStyle(node.transition)
   const nodeMetaStyle: CSSProperties = {
     pointerEvents: isCanvasSelectable ? 'auto' : 'none',
     ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
     ...(node.cursor === undefined ? {} : { cursor: node.cursor }),
+    ...(transitionStyle ?? {}),
     ...(transformStyle ?? {}),
   }
 

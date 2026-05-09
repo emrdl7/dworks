@@ -222,6 +222,12 @@ describe('tree editor operations', () => {
         duration: 240,
         timing: 'ease-in-out',
       },
+      transform: {
+        translateX: 24,
+        translateY: -16,
+        rotate: 12,
+        scale: 1.2,
+      },
     })
     const reset = updateNodeMeta(edited, 'landing.card', {
       hidden: undefined,
@@ -230,6 +236,7 @@ describe('tree editor operations', () => {
       pointerEvents: undefined,
       cursor: undefined,
       transition: undefined,
+      transform: undefined,
     })
 
     assert.equal(tree.root.type, 'section')
@@ -257,6 +264,7 @@ describe('tree editor operations', () => {
         assert.equal(originalCard.pointerEvents, undefined)
         assert.equal(originalCard.cursor, undefined)
         assert.equal(originalCard.transition, undefined)
+        assert.equal(originalCard.transform, undefined)
         assert.equal(editedCard.hidden, true)
         assert.equal(editedCard.disabled, true)
         assert.equal(editedCard.opacity, 0.42)
@@ -266,12 +274,19 @@ describe('tree editor operations', () => {
           duration: 240,
           timing: 'ease-in-out',
         })
+        assert.deepEqual(editedCard.transform, {
+          translateX: 24,
+          translateY: -16,
+          rotate: 12,
+          scale: 1.2,
+        })
         assert.equal(resetCard.hidden, undefined)
         assert.equal(resetCard.disabled, undefined)
         assert.equal(resetCard.opacity, undefined)
         assert.equal(resetCard.pointerEvents, undefined)
         assert.equal(resetCard.cursor, undefined)
         assert.equal(resetCard.transition, undefined)
+        assert.equal(resetCard.transform, undefined)
       }
     }
   })

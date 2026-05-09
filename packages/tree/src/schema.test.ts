@@ -84,6 +84,12 @@ describe('tree schema', () => {
         duration: 240,
         timing: 'ease-out',
       },
+      transform: {
+        translateX: 24,
+        translateY: -12,
+        rotate: 8,
+        scale: 1.1,
+      },
       children: [],
     })
 
@@ -94,6 +100,12 @@ describe('tree schema', () => {
       assert.equal(parsed.cursor, 'help')
       assert.equal(parsed.transition?.duration, 240)
       assert.equal(parsed.transition?.timing, 'ease-out')
+      assert.deepEqual(parsed.transform, {
+        translateX: 24,
+        translateY: -12,
+        rotate: 8,
+        scale: 1.1,
+      })
     }
   })
 
@@ -681,6 +693,30 @@ describe('tree schema', () => {
             color: '#000000',
             opacity: 1.2,
           },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transform: {
+          translateX: 201,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transform: {
+          scale: 0.49,
         },
         children: [],
       }),

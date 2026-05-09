@@ -172,6 +172,12 @@ describe('edit-operation schema', () => {
           duration: 240,
           timing: 'ease-in',
         },
+        transform: {
+          translateX: 32,
+          translateY: -20,
+          rotate: -15,
+          scale: 0.9,
+        },
       },
     })
 
@@ -185,6 +191,12 @@ describe('edit-operation schema', () => {
       assert.equal(op.patch.cursor, 'pointer')
       assert.equal(op.patch.transition?.duration, 240)
       assert.equal(op.patch.transition?.timing, 'ease-in')
+      assert.deepEqual(op.patch.transform, {
+        translateX: 32,
+        translateY: -20,
+        rotate: -15,
+        scale: 0.9,
+      })
     }
   })
 
@@ -614,6 +626,30 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           disabled: 'true',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transform: {
+            rotate: 361,
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transform: {
+            scale: 2.01,
+          },
         },
       }),
     )
