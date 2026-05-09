@@ -2622,7 +2622,7 @@ export default function HomePage() {
           aria-hidden={!briefDrawerOpen}
           tabIndex={briefDrawerOpen ? 0 : -1}
           onClick={() => setBriefDrawerOpen(false)}
-          className={`fixed inset-0 z-40 cursor-default bg-black/40 transition-opacity duration-200 ease-out md:hidden ${
+          className={`fixed inset-0 z-40 cursor-default bg-black/60 transition-opacity duration-200 ease-out md:hidden ${
             briefDrawerOpen
               ? 'pointer-events-auto opacity-100'
               : 'pointer-events-none opacity-0'
@@ -3711,7 +3711,7 @@ export default function HomePage() {
           aria-hidden={!inspectorDrawerOpen}
           tabIndex={inspectorDrawerOpen ? 0 : -1}
           onClick={() => setInspectorDrawerOpen(false)}
-          className={`fixed inset-0 z-40 cursor-default bg-black/40 transition-opacity duration-200 ease-out xl:hidden ${
+          className={`fixed inset-0 z-40 cursor-default bg-black/60 transition-opacity duration-200 ease-out xl:hidden ${
             inspectorDrawerOpen
               ? 'pointer-events-auto opacity-100'
               : 'pointer-events-none opacity-0'
@@ -3781,7 +3781,7 @@ export default function HomePage() {
             type="button"
             aria-label="단축키 도움말 닫기"
             onClick={() => setShortcutHelpOpen(false)}
-            className="fixed inset-0 z-40 cursor-default bg-black/30"
+            className="fixed inset-0 z-40 cursor-default bg-black/60"
             style={{ animation: 'dw-fade-in 180ms ease-out both' }}
           />
           <div
