@@ -142,6 +142,7 @@ import {
   VARIANT_COUNT_OPTIONS,
   appendGenerationHistoryEntries,
   buildVariantRequestBrief,
+  clearMutableEntries,
   type VariantCount,
 } from './generation-history'
 import {
@@ -1786,6 +1787,44 @@ export default function HomePage() {
     )
   }
 
+  function handleClearMutableHistory(): void {
+    const removable = generations.filter(
+      (entry) => !entry.immutable && entry.pinned !== true,
+    )
+    if (removable.length === 0) {
+      setGenerateError('정리할 mutable 생성이 없습니다.')
+      return
+    }
+    const ok = window.confirm(
+      `보호되지 않은 ${removable.length}개의 생성을 정리합니다. immutable과 ★ 고정은 유지됩니다. 계속할까요?`,
+    )
+    if (!ok) return
+    setGenerations((entries) => clearMutableEntries(entries))
+    setCompareMode(false)
+    const activeIsRemovable =
+      generations.find((entry) => entry.id === activeGenerationId)
+        ?.immutable === false &&
+      generations.find((entry) => entry.id === activeGenerationId)?.pinned !==
+        true
+    if (activeIsRemovable) {
+      const protectedFirst = generations.find(
+        (entry) => entry.immutable || entry.pinned === true,
+      )
+      if (protectedFirst !== undefined) {
+        setActiveGenerationId(protectedFirst.id)
+        setTree(protectedFirst.tree)
+        setSelectedNodeId(
+          findFirstEditableNodeId(protectedFirst.tree.root) ??
+            protectedFirst.tree.root.id,
+        )
+        setHistoryPast([])
+        setHistoryFuture([])
+        lastHistoryMergeRef.current = null
+      }
+    }
+    setGenerateError(null)
+  }
+
   function handleStartLabelEdit(entry: GenerationEntry): void {
     if (entry.immutable) return
     setEditingLabelId(entry.id)
@@ -2680,6 +2719,22 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                {(() => {
+                  const removableCount = generations.filter(
+                    (entry) => !entry.immutable && entry.pinned !== true,
+                  ).length
+                  return (
+                    <button
+                      type="button"
+                      className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb] disabled:opacity-40"
+                      onClick={handleClearMutableHistory}
+                      disabled={removableCount === 0 || compareMode}
+                      title="immutable과 ★ 고정된 생성은 유지하고 나머지 mutable 생성을 일괄 정리합니다."
+                    >
+                      히스토리 정리{removableCount > 0 ? ` (${removableCount})` : ''}
+                    </button>
+                  )
+                })()}
                 <button
                   type="button"
                   className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"

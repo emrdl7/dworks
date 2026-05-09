@@ -71,3 +71,10 @@ export function relabelGenerationHistory<T extends GenerationHistoryEntry>(
     isProtected(entry) ? entry : ({ ...entry, label: `생성 ${index}` } as T),
   )
 }
+
+// mutable & non-pinned entry만 제거. immutable과 pinned는 보호. relabel로 라벨 정리.
+export function clearMutableEntries<T extends GenerationHistoryEntry>(
+  entries: readonly T[],
+): T[] {
+  return relabelGenerationHistory(entries.filter((entry) => isProtected(entry)))
+}

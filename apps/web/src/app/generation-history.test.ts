@@ -4,6 +4,7 @@ import { describe, it } from 'node:test'
 import {
   appendGenerationHistoryEntries,
   buildVariantRequestBrief,
+  clearMutableEntries,
   relabelGenerationHistory,
 } from './generation-history.js'
 
@@ -108,5 +109,38 @@ describe('generation history', () => {
     assert.equal(next[0]?.label, 'original')
     assert.equal(next[1]?.label, 'starred')
     assert.equal(next[2]?.label, '생성 2')
+  })
+
+  it('clearMutableEntries는 mutable 제거하고 protected만 남긴다', () => {
+    const next = clearMutableEntries([
+      entry('original', true),
+      entry('mutable-1'),
+      pinnedEntry('starred'),
+      entry('mutable-2'),
+    ])
+
+    assert.deepEqual(
+      next.map((item) => item.id),
+      ['original', 'starred'],
+    )
+    assert.equal(next[0]?.label, 'original')
+    assert.equal(next[1]?.label, 'starred')
+  })
+
+  it('clearMutableEntries는 전부 protected면 그대로 (id 순서 유지)', () => {
+    const next = clearMutableEntries([
+      entry('original', true),
+      pinnedEntry('starred'),
+    ])
+
+    assert.deepEqual(
+      next.map((item) => item.id),
+      ['original', 'starred'],
+    )
+  })
+
+  it('clearMutableEntries는 전부 mutable면 빈 배열', () => {
+    const next = clearMutableEntries([entry('m1'), entry('m2'), entry('m3')])
+    assert.deepEqual(next, [])
   })
 })
