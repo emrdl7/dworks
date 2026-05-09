@@ -793,6 +793,7 @@ export default function HomePage() {
   const [isFontRegistryBusy, setIsFontRegistryBusy] = useState(false)
   const [responsiveViewport, setResponsiveViewport] =
     useState<ResponsiveViewport>('desktop')
+  const [canvasZoom, setCanvasZoom] = useState(1)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [layerDrag, setLayerDrag] = useState<LayerDragState | null>(null)
   const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
@@ -2368,6 +2369,7 @@ export default function HomePage() {
             value={responsiveViewport}
             onChange={setResponsiveViewport}
           />
+          <CanvasZoomControl value={canvasZoom} onChange={setCanvasZoom} />
           <div className="flex items-center gap-1">
             <HistoryButton
               ariaLabel="실행 취소"
@@ -3128,13 +3130,16 @@ export default function HomePage() {
           ) : (
             <div
               className="px-8 py-8"
-              style={{ minWidth: selectedViewportPreset.width + 64 }}
+              style={{
+                minWidth: selectedViewportPreset.width * canvasZoom + 64,
+              }}
             >
               <div
                 className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)]"
                 style={{
                   ...canvasStyle,
                   width: selectedViewportPreset.width,
+                  zoom: canvasZoom,
                 }}
               >
                 <CanvasViewportContext.Provider value={responsiveViewport}>
@@ -3306,6 +3311,73 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
       <span className="rounded-full border border-[#c9d4cd] bg-white px-3 py-1 font-semibold text-[#26312b]">
         {selectedPreset.width}px
       </span>
+    </div>
+  )
+}
+
+const CANVAS_ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2] as const
+
+interface CanvasZoomControlProps {
+  value: number
+  onChange: (next: number) => void
+}
+
+function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
+  function step(direction: 1 | -1): void {
+    const idx = CANVAS_ZOOM_LEVELS.findIndex((z) => z === value)
+    if (idx < 0) {
+      // 현재 값이 preset 밖이면 가장 가까운 preset으로 우선 정렬
+      const nearest = CANVAS_ZOOM_LEVELS.reduce((best, z) =>
+        Math.abs(z - value) < Math.abs(best - value) ? z : best,
+      )
+      onChange(nearest)
+      return
+    }
+    const nextIdx = Math.max(
+      0,
+      Math.min(CANVAS_ZOOM_LEVELS.length - 1, idx + direction),
+    )
+    const nextValue = CANVAS_ZOOM_LEVELS[nextIdx]
+    if (nextValue !== undefined) onChange(nextValue)
+  }
+
+  const percent = Math.round(value * 100)
+  const minZoom = CANVAS_ZOOM_LEVELS[0] ?? 0.25
+  const maxZoom = CANVAS_ZOOM_LEVELS[CANVAS_ZOOM_LEVELS.length - 1] ?? 2
+
+  return (
+    <div
+      role="group"
+      aria-label="캔버스 확대/축소"
+      className="flex h-9 items-center rounded-md border border-[#c9d4cd] bg-white"
+    >
+      <button
+        type="button"
+        aria-label="축소"
+        className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#4f5e56] hover:bg-[#eef3ed] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4f46e5]"
+        onClick={() => step(-1)}
+        disabled={value <= minZoom}
+      >
+        −
+      </button>
+      <button
+        type="button"
+        aria-label="100%로 재설정"
+        className="min-w-14 px-2 text-xs font-semibold text-[#4f5e56] hover:bg-[#eef3ed]"
+        onClick={() => onChange(1)}
+        title="100%로 재설정"
+      >
+        {percent}%
+      </button>
+      <button
+        type="button"
+        aria-label="확대"
+        className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#4f5e56] hover:bg-[#eef3ed] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#4f46e5]"
+        onClick={() => step(1)}
+        disabled={value >= maxZoom}
+      >
+        +
+      </button>
     </div>
   )
 }
