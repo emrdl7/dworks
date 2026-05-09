@@ -2773,11 +2773,11 @@ export default function HomePage() {
       >
         <button
           type="button"
-          aria-label="브리프 패널 닫기"
+          aria-label="브리프 패널 닫기 (overlay 클릭)"
           aria-hidden={!briefDrawerOpen}
           tabIndex={briefDrawerOpen ? 0 : -1}
           onClick={() => setBriefDrawerOpen(false)}
-          className={`fixed inset-0 z-40 cursor-default bg-black/60 transition-opacity duration-200 ease-out md:hidden ${
+          className={`fixed inset-x-0 bottom-0 top-14 z-40 cursor-default bg-black/60 transition-opacity duration-200 ease-out md:hidden ${
             briefDrawerOpen
               ? 'pointer-events-auto opacity-100'
               : 'pointer-events-none opacity-0'
@@ -2786,7 +2786,7 @@ export default function HomePage() {
         <aside
           aria-label="AI 디자인 브리프 패널"
           aria-hidden={!briefDrawerOpen}
-          className={`fixed inset-y-0 left-0 z-50 flex min-h-0 w-[280px] flex-col border-r border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out md:static md:z-auto md:w-auto md:translate-x-0 md:shadow-none md:transition-none ${
+          className={`fixed bottom-0 left-0 top-14 z-40 flex min-h-0 w-[280px] flex-col border-r border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out md:static md:z-auto md:w-auto md:translate-x-0 md:shadow-none md:transition-none ${
             briefDrawerOpen
               ? 'translate-x-0'
               : '-translate-x-full md:translate-x-0'
@@ -3916,11 +3916,11 @@ export default function HomePage() {
         <>
         <button
           type="button"
-          aria-label="속성 패널 닫기"
+          aria-label="속성 패널 닫기 (overlay 클릭)"
           aria-hidden={!inspectorDrawerOpen}
           tabIndex={inspectorDrawerOpen ? 0 : -1}
           onClick={() => setInspectorDrawerOpen(false)}
-          className={`fixed inset-0 z-40 cursor-default bg-black/60 transition-opacity duration-200 ease-out xl:hidden ${
+          className={`fixed inset-x-0 bottom-0 top-14 z-40 cursor-default bg-black/60 transition-opacity duration-200 ease-out xl:hidden ${
             inspectorDrawerOpen
               ? 'pointer-events-auto opacity-100'
               : 'pointer-events-none opacity-0'
@@ -3929,7 +3929,7 @@ export default function HomePage() {
         <aside
           aria-label="속성 패널"
           aria-hidden={!inspectorDrawerOpen}
-          className={`fixed inset-y-0 right-0 z-50 block min-h-0 w-[360px] overflow-hidden border-l border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out xl:static xl:z-auto xl:block xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
+          className={`fixed bottom-0 right-0 top-14 z-40 block min-h-0 w-[360px] overflow-hidden border-l border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out xl:static xl:z-auto xl:block xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
             inspectorDrawerOpen
               ? 'translate-x-0'
               : 'translate-x-full xl:translate-x-0'
