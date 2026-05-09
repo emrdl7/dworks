@@ -2609,11 +2609,18 @@ export default function HomePage() {
               onChange={(event) => handleFixtureChange(event.target.value)}
             >
               <optgroup label="기본">
-                {treeFixtures.map((fixture) => (
-                  <option key={fixture.id} title={fixture.description} value={fixture.id}>
-                    {fixture.name}
-                  </option>
-                ))}
+                {treeFixtures.map((fixture) => {
+                  const score = computeRichnessReport(fixture.tree).score
+                  return (
+                    <option
+                      key={fixture.id}
+                      title={fixture.description}
+                      value={fixture.id}
+                    >
+                      {fixture.name} · {score.toFixed(2)}
+                    </option>
+                  )
+                })}
               </optgroup>
               {userFixtures.length > 0 ? (
                 <optgroup label="내 fixture">
