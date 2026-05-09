@@ -2716,6 +2716,70 @@ export default function HomePage() {
               </div>
             </summary>
             <div className="space-y-3 px-4 pb-4">
+              {(() => {
+                if (generations.length < 2) return null
+                const scores = generations.map((entry) =>
+                  computeRichnessReport(entry.tree).score,
+                )
+                const W = 140
+                const H = 28
+                const PAD_X = 4
+                const PAD_Y = 3
+                const stepX =
+                  scores.length > 1
+                    ? (W - PAD_X * 2) / (scores.length - 1)
+                    : 0
+                const points = scores.map((score, i) => {
+                  const x = PAD_X + stepX * i
+                  const y = PAD_Y + (1 - score) * (H - PAD_Y * 2)
+                  return { x, y, score }
+                })
+                const path = points
+                  .map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`)
+                  .join(' ')
+                const activeIndex = generations.findIndex(
+                  (entry) => entry.id === activeGenerationId,
+                )
+                return (
+                  <div
+                    className="flex items-center gap-2 text-[10px] text-[#647067]"
+                    aria-label="히스토리 풍부도 추이"
+                  >
+                    <svg
+                      width={W}
+                      height={H}
+                      viewBox={`0 0 ${W} ${H}`}
+                      className="rounded border border-[#e0e5de] bg-white"
+                      aria-hidden="true"
+                    >
+                      <line
+                        x1={PAD_X}
+                        y1={PAD_Y + 0.4 * (H - PAD_Y * 2)}
+                        x2={W - PAD_X}
+                        y2={PAD_Y + 0.4 * (H - PAD_Y * 2)}
+                        stroke="#e0e5de"
+                        strokeDasharray="2 2"
+                      />
+                      <path
+                        d={path}
+                        fill="none"
+                        stroke="#1b7f72"
+                        strokeWidth={1.2}
+                      />
+                      {points.map((p, i) => (
+                        <circle
+                          key={i}
+                          cx={p.x}
+                          cy={p.y}
+                          r={i === activeIndex ? 2.6 : 1.6}
+                          fill={i === activeIndex ? '#1b7f72' : '#7c8a82'}
+                        />
+                      ))}
+                    </svg>
+                    <span>풍부도 추이 (점선 = 0.6 임계)</span>
+                  </div>
+                )
+              })()}
               <div className="flex flex-wrap gap-1">
                 {generations.map((entry) => {
                   const isActive = entry.id === activeGenerationId
