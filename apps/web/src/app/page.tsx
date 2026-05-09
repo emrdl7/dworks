@@ -25,6 +25,7 @@ import {
   AlignLeft,
   AlignRight,
   AlignVerticalJustifyCenter,
+  AlertTriangle,
   AlignVerticalJustifyEnd,
   AlignVerticalJustifyStart,
   ArrowDown,
@@ -35,6 +36,7 @@ import {
   ArrowUp,
   ArrowUpLeft,
   ArrowUpRight,
+  CheckCircle2,
   Columns2,
   Copy,
   GripVertical,
@@ -2406,22 +2408,36 @@ export default function HomePage() {
               onClick={handleRedo}
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[#4f5e56]">
-            <span
-              className={`rounded-full border px-3 py-1 ${
-                contrastAuditSummary.total === 0
-                  ? 'border-[#dde3df] bg-white text-[#9aa49d]'
-                  : contrastAuditSummary.passesAA ===
-                      contrastAuditSummary.total
-                    ? 'border-[#4f46e5] bg-[#eef8f6] text-[#4f46e5]'
-                    : 'border-[#c9d4cd] bg-white text-[#4f5e56]'
-              }`}
-              title="WCAG AA 대비 통과 노드 수"
-            >
-              대비 AA {contrastAuditSummary.passesAA}/
-              {contrastAuditSummary.total}
-            </span>
-          </div>
+          {(() => {
+            const total = contrastAuditSummary.total
+            const passes = contrastAuditSummary.passesAA
+            const isAllPass = total > 0 && passes === total
+            const isEmpty = total === 0
+            const StatusIcon = isEmpty
+              ? null
+              : isAllPass
+                ? CheckCircle2
+                : AlertTriangle
+            return (
+              <span
+                className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold ${
+                  isEmpty
+                    ? 'border-[#dde3df] bg-white text-[#9aa49d]'
+                    : isAllPass
+                      ? 'border-[#4f46e5] bg-[#eef8f6] text-[#4f46e5]'
+                      : 'border-[#d5b56c] bg-[#fff8df] text-[#6b4b00]'
+                }`}
+                title={`WCAG AA 대비 통과 ${passes}/${total}`}
+              >
+                {StatusIcon ? (
+                  <StatusIcon aria-hidden="true" size={13} />
+                ) : null}
+                <span>
+                  AA {passes}/{total}
+                </span>
+              </span>
+            )
+          })()}
           {compareMode ? null : (
             <button
               type="button"
