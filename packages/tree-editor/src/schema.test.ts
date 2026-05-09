@@ -218,6 +218,45 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateNodeMeta operation with step transition timing', () => {
+    const stepStart = editOperationSchema.parse({
+      type: 'updateNodeMeta',
+      nodeId: 'hero.card',
+      patch: {
+        transition: {
+          duration: 0,
+          timing: 'step-start',
+        },
+      },
+    })
+    const stepEnd = editOperationSchema.parse({
+      type: 'updateNodeMeta',
+      nodeId: 'hero.card',
+      patch: {
+        transition: {
+          duration: 180,
+          timing: 'step-end',
+        },
+      },
+    })
+
+    assert.equal(stepStart.type, 'updateNodeMeta')
+    assert.equal(stepEnd.type, 'updateNodeMeta')
+    if (
+      stepStart.type === 'updateNodeMeta' &&
+      stepEnd.type === 'updateNodeMeta'
+    ) {
+      assert.deepEqual(stepStart.patch.transition, {
+        duration: 0,
+        timing: 'step-start',
+      })
+      assert.deepEqual(stepEnd.patch.transition, {
+        duration: 180,
+        timing: 'step-end',
+      })
+    }
+  })
+
   it('parses updateButtonLabel operation', () => {
     const op = editOperationSchema.parse({
       type: 'updateButtonLabel',

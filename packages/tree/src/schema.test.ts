@@ -129,6 +129,42 @@ describe('tree schema', () => {
     }
   })
 
+  it('parses step transition timing keywords', () => {
+    const stepStart = treeNodeSchema.parse({
+      id: 'landing.step-start-card',
+      type: 'card',
+      editKind: 'structure',
+      transition: {
+        duration: 0,
+        timing: 'step-start',
+      },
+      children: [],
+    })
+    const stepEnd = treeNodeSchema.parse({
+      id: 'landing.step-end-card',
+      type: 'card',
+      editKind: 'structure',
+      transition: {
+        duration: 180,
+        timing: 'step-end',
+      },
+      children: [],
+    })
+
+    assert.equal(stepStart.type, 'card')
+    assert.equal(stepEnd.type, 'card')
+    if (stepStart.type === 'card' && stepEnd.type === 'card') {
+      assert.deepEqual(stepStart.transition, {
+        duration: 0,
+        timing: 'step-start',
+      })
+      assert.deepEqual(stepEnd.transition, {
+        duration: 180,
+        timing: 'step-end',
+      })
+    }
+  })
+
   it('rejects invalid common node pointer event metadata', () => {
     assert.throws(() =>
       treeNodeSchema.parse({

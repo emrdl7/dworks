@@ -290,6 +290,18 @@ describe('tree editor operations', () => {
         originY: 100,
       },
     })
+    const stepped = updateNodeMeta(edited, 'landing.card', {
+      transition: {
+        duration: 180,
+        timing: 'step-end',
+        cubicBezier: {
+          x1: 0.2,
+          y1: -0.3,
+          x2: 0.8,
+          y2: 1.3,
+        },
+      },
+    })
     const reset = updateNodeMeta(edited, 'landing.card', {
       hidden: undefined,
       disabled: undefined,
@@ -307,20 +319,24 @@ describe('tree editor operations', () => {
       tree.root.type === 'section' &&
       edited.root.type === 'section' &&
       withOrigin.root.type === 'section' &&
+      stepped.root.type === 'section' &&
       reset.root.type === 'section'
     ) {
       const originalCard = tree.root.children[3]
       const editedCard = edited.root.children[3]
       const originCard = withOrigin.root.children[3]
+      const steppedCard = stepped.root.children[3]
       const resetCard = reset.root.children[3]
       assert.equal(originalCard?.type, 'card')
       assert.equal(editedCard?.type, 'card')
       assert.equal(originCard?.type, 'card')
+      assert.equal(steppedCard?.type, 'card')
       assert.equal(resetCard?.type, 'card')
       if (
         originalCard?.type === 'card' &&
         editedCard?.type === 'card' &&
         originCard?.type === 'card' &&
+        steppedCard?.type === 'card' &&
         resetCard?.type === 'card'
       ) {
         assert.equal(originalCard.hidden, undefined)
@@ -363,6 +379,16 @@ describe('tree editor operations', () => {
           skewY: 6,
           originX: 0,
           originY: 100,
+        })
+        assert.deepEqual(steppedCard.transition, {
+          duration: 180,
+          timing: 'step-end',
+          cubicBezier: {
+            x1: 0.2,
+            y1: -0.3,
+            x2: 0.8,
+            y2: 1.3,
+          },
         })
         assert.equal(resetCard.hidden, undefined)
         assert.equal(resetCard.disabled, undefined)
