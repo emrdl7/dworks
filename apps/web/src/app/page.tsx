@@ -8098,7 +8098,7 @@ function NodeColorControls({
           <label className="flex items-center gap-2 text-xs font-semibold text-[#898d97]">
             <input
               type="checkbox"
-              className="h-4 w-4 cursor-pointer accent-[#4f46e5]"
+              className="h-4 w-4 cursor-pointer accent-[#6366f1]"
               checked={node.disabled === true}
               onChange={(event) =>
                 onNodeMetaChange(
@@ -8373,7 +8373,7 @@ function ConicGeometryInput({
       />
       <input
         type="range"
-        className="mt-2 w-full accent-[#4f46e5]"
+        className="mt-2 w-full accent-[#6366f1]"
         min={min}
         max={max}
         step={1}
@@ -8923,7 +8923,7 @@ function TypographyControls({
       <label className="mt-3 block">
         <span className="text-xs font-semibold text-[#898d97]">크기 슬라이더</span>
         <input
-          className="mt-2 w-full accent-[#4f46e5]"
+          className="mt-2 w-full accent-[#6366f1]"
           type="range"
           min={8}
           max={120}
@@ -10158,7 +10158,7 @@ function ShapeControls({
                     <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#898d97]">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer accent-[#4f46e5]"
+                        className="h-4 w-4 cursor-pointer accent-[#6366f1]"
                         checked={customShadow.inset === true}
                         onChange={(event) =>
                           updateCustomShadowInset(index, event.target.checked)
@@ -10916,7 +10916,7 @@ function ImageCompositionControls({
         <label className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#898d97]">
           <input
             type="checkbox"
-            className="h-4 w-4 cursor-pointer accent-[#4f46e5]"
+            className="h-4 w-4 cursor-pointer accent-[#6366f1]"
             checked={presentation.filter?.dropShadow !== undefined}
             onChange={(event) => toggleImageDropShadow(event.target.checked)}
           />
@@ -11172,7 +11172,7 @@ function OpacityControl({
       <label className="mt-2 block">
         <span className="sr-only">{label} 슬라이더</span>
         <input
-          className="w-full accent-[#4f46e5] disabled:cursor-not-allowed"
+          className="w-full accent-[#6366f1] disabled:cursor-not-allowed"
           type="range"
           min={0}
           max={100}
