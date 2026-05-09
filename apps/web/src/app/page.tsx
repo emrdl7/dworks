@@ -6172,7 +6172,16 @@ function NodeInspector({
             {anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'}
           </button>
         </div>
-        <p className="mt-0.5 break-all text-[11px] text-[#9aa49d]">{node.id}</p>
+        <button
+          type="button"
+          title="ID 복사"
+          onClick={() => {
+            void navigator.clipboard.writeText(node.id).catch(() => {})
+          }}
+          className="mt-0.5 block w-full break-all text-left text-[11px] text-[#9aa49d] transition-colors hover:text-[#4f5e56] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
+        >
+          {node.id}
+        </button>
         <div
           role="tablist"
           aria-label="속성 탭"
