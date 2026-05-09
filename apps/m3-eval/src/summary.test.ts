@@ -22,6 +22,8 @@ const calls: CallResult[] = [
     modelLatencyMs: 80,
     treeNodeCount: 4,
     treeDepth: 2,
+    richness: 0.5,
+    belowMinRichness: false,
     message: null,
   },
   {
@@ -34,6 +36,8 @@ const calls: CallResult[] = [
     modelLatencyMs: null,
     treeNodeCount: null,
     treeDepth: null,
+    richness: null,
+    belowMinRichness: null,
     message: 'schema 실패',
   },
   {
@@ -46,6 +50,8 @@ const calls: CallResult[] = [
     modelLatencyMs: 250,
     treeNodeCount: 9,
     treeDepth: 3,
+    richness: 0.4,
+    belowMinRichness: true,
     message: null,
   },
 ]
@@ -129,6 +135,33 @@ describe('summarizeCalls', () => {
     for (const row of summary.byIntent) {
       assert.equal(row.slopRichness, null)
     }
+  })
+
+  it('belowMinRichness counter + footer 렌더 (--min-richness 적용 시)', () => {
+    const summary = summarizeCalls(calls, intents)
+    assert.equal(summary.overall.belowMinRichness, 1)
+    const md = renderSummaryMarkdown(summary, {
+      runId: 'r',
+      ranAt: '2026-05-09T00:00:00.000Z',
+      args: {
+        fixturesPath: 'f.json',
+        live: true,
+        repeat: 1,
+        minRichness: 0.6,
+      },
+    })
+    assert.ok(md.includes('## 풍부도 임계 (--min-richness 0.60)'))
+    assert.ok(md.includes('미달 호출: 1 / 3'))
+  })
+
+  it('--min-richness 미설정이면 풍부도 임계 footer 미렌더', () => {
+    const summary = summarizeCalls(calls, intents)
+    const md = renderSummaryMarkdown(summary, {
+      runId: 'r',
+      ranAt: '2026-05-09T00:00:00.000Z',
+      args: { fixturesPath: 'f.json', live: true, repeat: 1 },
+    })
+    assert.ok(!md.includes('풍부도 임계'))
   })
 
   it('slopRichness is propagated and rendered with 풍부도 column', () => {

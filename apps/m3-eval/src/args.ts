@@ -9,9 +9,11 @@ export interface M3EvalArgs {
   outDir: string | null
   providers: string[] | null
   live: boolean
+  minRichness: number | null
 }
 
 const POSITIVE_INT = z.number().int().min(1).max(50)
+const RICHNESS_RANGE = z.number().min(0).max(1)
 const PROVIDER_IDS = ['claude', 'codex', 'gemini'] as const
 const PROVIDER_SET = new Set<string>(PROVIDER_IDS)
 
@@ -54,6 +56,17 @@ export function parseM3EvalArgs(argv: readonly string[]): M3EvalArgs {
       ? null
       : parseProviders(providersRaw)
 
+  let minRichness: number | null = null
+  const minRichnessRaw = map.get('min-richness')
+  if (minRichnessRaw !== undefined) {
+    const parsed = Number(minRichnessRaw)
+    const result = RICHNESS_RANGE.safeParse(parsed)
+    if (!result.success) {
+      throw new M3EvalArgsError('--min-richness는 0.0~1.0 범위 숫자여야 합니다.')
+    }
+    minRichness = result.data
+  }
+
   return {
     fixturesPath,
     repeat: repeatParse.data,
@@ -61,6 +74,7 @@ export function parseM3EvalArgs(argv: readonly string[]): M3EvalArgs {
     outDir: map.get('out') ?? null,
     providers,
     live: flags.has('live'),
+    minRichness,
   }
 }
 

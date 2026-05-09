@@ -11,7 +11,7 @@ import { treeSchema, type Tree } from '@dworks/tree'
 import type { M3EvalArgs } from './args.js'
 import { computeTreeStats } from './tree-stats.js'
 import { computeDiversity } from './diversity.js'
-import { averageSlopRichness } from './ai-slop.js'
+import { averageSlopRichness, computeSlopReport } from './ai-slop.js'
 import { renderSummaryMarkdown, summarizeCalls } from './summary.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -37,6 +37,8 @@ export interface CallResult {
   modelLatencyMs: number | null
   treeNodeCount: number | null
   treeDepth: number | null
+  richness: number | null
+  belowMinRichness: boolean | null
   message: string | null
 }
 
@@ -268,6 +270,12 @@ export async function runM3Eval(
       })
       const stats =
         result.tree !== null ? computeTreeStats(result.tree.root) : null
+      const richness =
+        result.tree !== null ? computeSlopReport(result.tree).richness : null
+      const belowMinRichness =
+        richness !== null && args.minRichness !== null
+          ? richness < args.minRichness
+          : null
       calls.push({
         intentId: intent.id,
         repeatIndex: r,
@@ -278,6 +286,8 @@ export async function runM3Eval(
         modelLatencyMs: result.modelLatencyMs,
         treeNodeCount: stats?.nodeCount ?? null,
         treeDepth: stats?.depth ?? null,
+        richness,
+        belowMinRichness,
         message: result.message,
       })
       if (result.status === 'ok' && result.tree !== null) {
@@ -307,6 +317,7 @@ export async function runM3Eval(
       repeat: args.repeat,
       providers: args.providers,
       live: args.live,
+      minRichness: args.minRichness,
     },
     fixtureCount: fixtures.intents.length,
     callCount: calls.length,

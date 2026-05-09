@@ -47,6 +47,7 @@ describe('runM3Eval', () => {
         outDir: '/tmp/m3-eval-test',
         providers: null,
         live: false,
+        minRichness: null,
       },
       {
         loadFixtures: async () => fixtures,
@@ -84,6 +85,7 @@ describe('runM3Eval', () => {
         outDir: '/tmp/m3-eval-test-2',
         providers: null,
         live: true,
+        minRichness: null,
       },
       {
         loadFixtures: async () => fixtures,
@@ -116,6 +118,7 @@ describe('runM3Eval', () => {
         outDir: '/tmp/m3-eval-test-providers',
         providers: ['codex'],
         live: true,
+        minRichness: null,
       },
       {
         loadFixtures: async () => fixtures,
@@ -143,6 +146,7 @@ describe('runM3Eval', () => {
         outDir: '/tmp/m3-eval-test-diversity',
         providers: null,
         live: false,
+        minRichness: null,
       },
       {
         loadFixtures: async () => fixtures,
@@ -189,6 +193,7 @@ describe('runM3Eval', () => {
         outDir: '/tmp/m3-eval-test-mixed',
         providers: null,
         live: true,
+        minRichness: null,
       },
       {
         loadFixtures: async () => fixtures,
@@ -220,6 +225,7 @@ describe('runM3Eval', () => {
         outDir: '/tmp/m3-eval-test-3',
         providers: null,
         live: true,
+        minRichness: null,
       },
       {
         loadFixtures: async () => fixtures,

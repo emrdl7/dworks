@@ -66,4 +66,32 @@ describe('parseM3EvalArgs', () => {
       (err: unknown) => err instanceof M3EvalArgsError,
     )
   })
+
+  it('parses --min-richness 0.6', () => {
+    const args = parseM3EvalArgs([
+      '--fixtures',
+      'f.json',
+      '--min-richness',
+      '0.6',
+    ])
+    assert.equal(args.minRichness, 0.6)
+  })
+
+  it('default minRichness is null', () => {
+    const args = parseM3EvalArgs(['--fixtures', 'f.json'])
+    assert.equal(args.minRichness, null)
+  })
+
+  it('rejects --min-richness outside 0..1', () => {
+    assert.throws(
+      () =>
+        parseM3EvalArgs([
+          '--fixtures',
+          'f.json',
+          '--min-richness',
+          '1.5',
+        ]),
+      (err: unknown) => err instanceof M3EvalArgsError,
+    )
+  })
 })

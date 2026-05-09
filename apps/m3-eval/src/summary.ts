@@ -11,6 +11,7 @@ export interface BucketSummary {
   requestLatencyP95: number | null
   modelLatencyP50: number | null
   modelLatencyP95: number | null
+  belowMinRichness: number
 }
 
 export interface IntentSummary {
@@ -63,6 +64,7 @@ function bucketize(rows: CallResult[]): BucketSummary {
     .map((r) => r.modelLatencyMs)
     .filter((v): v is number => v !== null)
     .sort((a, b) => a - b)
+  const belowMinRichness = rows.filter((r) => r.belowMinRichness === true).length
   return {
     total,
     success,
@@ -72,6 +74,7 @@ function bucketize(rows: CallResult[]): BucketSummary {
     requestLatencyP95: percentile(requestLatencies, 95),
     modelLatencyP50: percentile(modelLatencies, 50),
     modelLatencyP95: percentile(modelLatencies, 95),
+    belowMinRichness,
   }
 }
 
@@ -137,7 +140,16 @@ function renderIntentRow(
 
 export function renderSummaryMarkdown(
   summary: EvalSummary,
-  manifest: { runId: string; ranAt: string; args: { fixturesPath: string; live: boolean; repeat: number } },
+  manifest: {
+    runId: string
+    ranAt: string
+    args: {
+      fixturesPath: string
+      live: boolean
+      repeat: number
+      minRichness?: number | null
+    }
+  },
 ): string {
   const lines: string[] = []
   lines.push(`# m3-eval run ${manifest.runId}`, '')
@@ -181,6 +193,17 @@ export function renderSummaryMarkdown(
       lines.push(renderBucketRow(row.provider, row.bucket))
     }
     lines.push('')
+  }
+
+  const minRichness = manifest.args.minRichness
+  if (typeof minRichness === 'number') {
+    const below = summary.overall.belowMinRichness
+    lines.push(
+      `## 풍부도 임계 (--min-richness ${minRichness.toFixed(2)})`,
+      '',
+      `- 미달 호출: ${below} / ${summary.overall.total}`,
+      '',
+    )
   }
 
   lines.push('## 실패 분포 (전체)', '')
