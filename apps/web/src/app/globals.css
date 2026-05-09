@@ -9,6 +9,13 @@ body {
   overscroll-behavior: none;
 }
 
+/* native form 컨트롤에 accent indigo 적용 — slider/checkbox/radio */
+input[type='range'],
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: #4f46e5;
+}
+
 /* 모달/popover 진입 애니메이션 — 기성 디자인 툴 수준의 부드러운 페이드+up */
 @keyframes dw-fade-in {
   from {
