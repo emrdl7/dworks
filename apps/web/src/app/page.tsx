@@ -3934,9 +3934,20 @@ export default function HomePage() {
           }`}
         >
           {additionalSelectedNodeIds.size > 0 ? (
-            <div className="shrink-0 border-b border-[#6366f1]/40 bg-[#1e1f3a] px-5 py-2 text-xs font-semibold text-[#a5b4fc]">
-              +{additionalSelectedNodeIds.size}개 다중 선택됨 — primary 노드의
-              속성만 표시
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#6366f1]/40 bg-[#1e1f3a] px-5 py-2 text-xs font-semibold text-[#a5b4fc]">
+              <span>
+                +{additionalSelectedNodeIds.size}개 다중 선택됨 (primary
+                속성만 표시)
+              </span>
+              <button
+                type="button"
+                onClick={() => setAdditionalSelectedNodeIds(new Set())}
+                className="inline-flex items-center gap-1 rounded border border-[#6366f1]/40 px-1.5 py-0.5 text-[10px] font-semibold transition-colors hover:bg-[#2a2e35]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1]"
+                title="다중 선택 해제 (Esc)"
+              >
+                <X size={10} aria-hidden="true" />
+                해제
+              </button>
             </div>
           ) : null}
           <NodeInspector
