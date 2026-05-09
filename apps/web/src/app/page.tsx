@@ -2836,6 +2836,15 @@ export default function HomePage() {
                     className="flex items-center gap-2 text-[10px] text-[#647067]"
                     aria-label="히스토리 풍부도 추이"
                   >
+                    <div
+                      className="flex flex-col justify-between text-[8px] font-mono leading-none text-[#9aa6a0]"
+                      style={{ height: H }}
+                      aria-hidden="true"
+                    >
+                      <span>1.0</span>
+                      <span>0.5</span>
+                      <span>0.0</span>
+                    </div>
                     <svg
                       width={W}
                       height={H}
