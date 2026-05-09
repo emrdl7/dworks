@@ -13,7 +13,39 @@ body {
 input[type='range'],
 input[type='checkbox'],
 input[type='radio'] {
-  accent-color: #4f46e5;
+  accent-color: #6366f1;
+}
+
+/* 다크 친화 스크롤바 — 패널/캔버스 안에서 stationary chrome */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2e35 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #2a2e35;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 120ms ease-out;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #3a3f48;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* 모달/popover 진입 애니메이션 — 기성 디자인 툴 수준의 부드러운 페이드+up */
