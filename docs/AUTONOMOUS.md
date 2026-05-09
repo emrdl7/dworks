@@ -92,13 +92,15 @@
 - ✓ `m2-style-image-filter` — 이미지 CSS filter 5종 (`f2458b1`)
 - ✓ `m2-style-transition-timing` — timing function 5종 (`7458c6e`)
 - ✓ `m2-color-state-disabled-pointerevents` — disabled button pointer 차단 (`a6a7e1b`)
-- `m2-style-transition-cubic-bezier` — cubic-bezier 자유 입력 (transition-timing 후속)
+- ✓ `m2-style-transition-cubic-bezier` — cubic-bezier 자유 입력 (`bf39b08` + Codex test `bf9c5d1`)
 - `m2-style-image-filter-extra` — hue-rotate/saturate/invert/drop-shadow (image-filter 후속)
-- `m2-style-color-state-aria` — aria-disabled 명시 (disabled-pointerevents 후속)
+- ✓ `m2-style-color-state-aria` — aria-disabled 명시 (`2244398`)
 - ✓ `m2-style-transform` — translate/rotate/scale 노드별 변환 (`eb22afd` + Codex fix `fc0cfda`)
-- `m2-style-transform-origin` — transform-origin 좌표/preset (transform 후속)
+- ✓ `m2-style-transform-origin` — 9-point preset 기준점 (`52ed785` + Codex test `14e9b68`)
 - `m2-style-transform-3d` — rotateX/Y/Z + perspective (transform 후속)
-- `m2-style-skew` — skewX/Y (transform 후속)
+- ✓ `m2-style-skew` — skewX/Y ±45° (`c593666` + Codex test `6dd5af3`)
+- `m2-style-image-filter-drop-shadow-multi` — multi drop-shadow (image-filter-extra 후속 — 1차 1개만)
+- `m2-style-transition-spring` — spring/steps timing 함수 (cubic-bezier 후속)
 
 ## 코드 변경 정책
 
