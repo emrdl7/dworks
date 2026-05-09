@@ -6,10 +6,15 @@ import { describe, it } from 'node:test'
 import type { Tree } from '@dworks/tree'
 
 import {
+  EXPORT_BATCH_FORMAT_KEY,
+  EXPORT_BATCH_FORMAT_VERSION,
   EXPORT_FORMAT_KEY,
   EXPORT_FORMAT_VERSION,
+  buildExportBatchFilename,
+  buildExportBatchPayload,
   buildExportFilename,
   buildExportPayload,
+  parseImportBatchPayload,
   parseImportPayload,
   type ExportableGeneration,
 } from './generation-export.js'
@@ -258,6 +263,78 @@ describe('parseImportPayload', () => {
       },
     })
     const result = parseImportPayload(text)
+    assert.equal(result.ok, false)
+  })
+})
+
+describe('generation export batch', () => {
+  it('build batch payload — format/version + entries 직렬화', () => {
+    const out = buildExportBatchPayload(
+      [sampleSource, sampleSource],
+      new Date('2026-05-09T17:00:00Z'),
+    )
+    assert.equal(out.format, EXPORT_BATCH_FORMAT_KEY)
+    assert.equal(out.version, EXPORT_BATCH_FORMAT_VERSION)
+    assert.equal(out.entries.length, 2)
+    assert.equal(out.entries[0]?.format, EXPORT_FORMAT_KEY)
+  })
+
+  it('batch filename에 timestamp 포함', () => {
+    const name = buildExportBatchFilename(new Date('2026-05-09T17:30:45.000Z'))
+    assert.match(name, /^dworks-generations-2026-05-09T17-30-45-000Z\.json$/)
+  })
+
+  it('batch parse — round-trip', () => {
+    const payload = buildExportBatchPayload([sampleSource], new Date())
+    const text = JSON.stringify(payload)
+    const result = parseImportBatchPayload(text)
+    assert.equal(result.ok, true)
+    if (result.ok) {
+      assert.equal(result.payload.entries.length, 1)
+      assert.equal(result.payload.entries[0]?.label, '생성 1')
+    }
+  })
+
+  it('batch — 빈 entries 배열도 valid', () => {
+    const payload = buildExportBatchPayload([], new Date())
+    const text = JSON.stringify(payload)
+    const result = parseImportBatchPayload(text)
+    assert.equal(result.ok, true)
+    if (result.ok) {
+      assert.equal(result.payload.entries.length, 0)
+    }
+  })
+
+  it('batch — 잘못된 format 거부', () => {
+    const text = JSON.stringify({
+      format: 'wrong',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      entries: [],
+    })
+    const result = parseImportBatchPayload(text)
+    assert.equal(result.ok, false)
+  })
+
+  it('batch — entries 항목 한 개라도 invalid면 위치 표시 + 거부', () => {
+    const valid = buildExportPayload(sampleSource, new Date())
+    const text = JSON.stringify({
+      format: EXPORT_BATCH_FORMAT_KEY,
+      version: EXPORT_BATCH_FORMAT_VERSION,
+      exportedAt: new Date().toISOString(),
+      entries: [valid, { format: 'wrong' }],
+    })
+    const result = parseImportBatchPayload(text)
+    assert.equal(result.ok, false)
+    if (!result.ok) {
+      assert.match(result.reason, /entries\[1\]/)
+    }
+  })
+
+  it('batch — 단일 export 형식 거부 (format key 다름)', () => {
+    const single = buildExportPayload(sampleSource, new Date())
+    const text = JSON.stringify(single)
+    const result = parseImportBatchPayload(text)
     assert.equal(result.ok, false)
   })
 })

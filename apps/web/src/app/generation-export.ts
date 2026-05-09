@@ -14,6 +14,12 @@ import { RICHNESS_SIGNAL_KEYS, type RichnessReport } from './richness'
 export const EXPORT_FORMAT_KEY = 'dworks-generation'
 export const EXPORT_FORMAT_VERSION = 1
 
+// batch export(여러 generation을 한 .json) — single과 별도 format key.
+// 단일 export는 'dworks-generation' (단일 ExportedGeneration 객체).
+// 일괄 export는 'dworks-generation-batch' (entries: ExportedGeneration[] 배열).
+export const EXPORT_BATCH_FORMAT_KEY = 'dworks-generation-batch'
+export const EXPORT_BATCH_FORMAT_VERSION = 1
+
 export interface ExportedBriefAnswer {
   questionId: string
   questionLabel: string
@@ -100,6 +106,86 @@ export function buildExportFilename(
     .slice(0, 40)
   const labelPart = safeLabel.length > 0 ? `-${safeLabel}` : ''
   return `dworks-generation-${stamp}${labelPart}.json`
+}
+
+// ----- batch export -----
+
+export interface ExportedGenerationBatch {
+  format: typeof EXPORT_BATCH_FORMAT_KEY
+  version: typeof EXPORT_BATCH_FORMAT_VERSION
+  exportedAt: string
+  entries: ExportedGeneration[]
+}
+
+export function buildExportBatchPayload(
+  sources: ExportableGeneration[],
+  exportedAt: Date,
+): ExportedGenerationBatch {
+  return {
+    format: EXPORT_BATCH_FORMAT_KEY,
+    version: EXPORT_BATCH_FORMAT_VERSION,
+    exportedAt: exportedAt.toISOString(),
+    entries: sources.map((source) => buildExportPayload(source, exportedAt)),
+  }
+}
+
+export function buildExportBatchFilename(exportedAt: Date): string {
+  const stamp = exportedAt.toISOString().replace(/[:.]/g, '-')
+  return `dworks-generations-${stamp}.json`
+}
+
+export type BatchImportResult =
+  | { ok: true; payload: ExportedGenerationBatch }
+  | { ok: false; reason: string }
+
+export function parseImportBatchPayload(rawText: string): BatchImportResult {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(rawText)
+  } catch {
+    return { ok: false, reason: '유효한 JSON 파일이 아닙니다.' }
+  }
+  if (!isPlainObject(parsed)) {
+    return { ok: false, reason: '최상위가 객체가 아닙니다.' }
+  }
+  if (parsed.format !== EXPORT_BATCH_FORMAT_KEY) {
+    return {
+      ok: false,
+      reason: `format 키가 "${EXPORT_BATCH_FORMAT_KEY}"가 아닙니다.`,
+    }
+  }
+  if (parsed.version !== EXPORT_BATCH_FORMAT_VERSION) {
+    return {
+      ok: false,
+      reason: `version ${EXPORT_BATCH_FORMAT_VERSION}만 지원합니다.`,
+    }
+  }
+  const exportedAt =
+    typeof parsed.exportedAt === 'string' ? parsed.exportedAt : ''
+  if (exportedAt.length === 0 || Number.isNaN(Date.parse(exportedAt))) {
+    return { ok: false, reason: 'exportedAt 타임스탬프가 유효하지 않습니다.' }
+  }
+  if (!Array.isArray(parsed.entries)) {
+    return { ok: false, reason: 'entries가 배열이 아닙니다.' }
+  }
+  const entries: ExportedGeneration[] = []
+  for (let i = 0; i < parsed.entries.length; i += 1) {
+    const item = parsed.entries[i]
+    const sub = validatePayload(item)
+    if (!sub.ok) {
+      return { ok: false, reason: `entries[${i}] — ${sub.reason}` }
+    }
+    entries.push(sub.payload)
+  }
+  return {
+    ok: true,
+    payload: {
+      format: EXPORT_BATCH_FORMAT_KEY,
+      version: EXPORT_BATCH_FORMAT_VERSION,
+      exportedAt,
+      entries,
+    },
+  }
 }
 
 export type ImportResult =

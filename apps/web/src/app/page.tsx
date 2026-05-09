@@ -150,8 +150,11 @@ import {
   writePersistedGenerationState,
 } from './generation-storage'
 import {
+  buildExportBatchFilename,
+  buildExportBatchPayload,
   buildExportFilename,
   buildExportPayload,
+  parseImportBatchPayload,
   parseImportPayload,
 } from './generation-export'
 import {
@@ -1460,6 +1463,100 @@ export default function HomePage() {
     }
   }
 
+  function handleExportAllGenerations(): void {
+    if (generations.length === 0) {
+      setGenerateError('내보낼 생성이 없습니다.')
+      return
+    }
+    const exportedAt = new Date()
+    const sources = generations.map((entry) => {
+      const richness = entry.immutable
+        ? undefined
+        : computeRichnessReport(entry.tree)
+      return {
+        tree: entry.tree,
+        label: entry.label,
+        brief: entry.brief,
+        questions: entry.questions,
+        clarifyTurns: entry.clarifyTurns,
+        model: entry.model,
+        latencyMs: entry.latencyMs,
+        ...(richness !== undefined ? { richness } : {}),
+      }
+    })
+    const payload = buildExportBatchPayload(sources, exportedAt)
+    const filename = buildExportBatchFilename(exportedAt)
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    })
+    const href = URL.createObjectURL(blob)
+    try {
+      const anchor = document.createElement('a')
+      anchor.href = href
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+    } finally {
+      URL.revokeObjectURL(href)
+    }
+    setGenerateError(null)
+  }
+
+  async function handleImportGenerationBatchFile(file: File): Promise<void> {
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      setGenerateError(`${file.name}: JSON 파일이 아닙니다.`)
+      return
+    }
+    let text: string
+    try {
+      text = await file.text()
+    } catch (error) {
+      setGenerateError(
+        `${file.name}: ${error instanceof Error ? error.message : '읽기 실패'}`,
+      )
+      return
+    }
+    const result = parseImportBatchPayload(text)
+    if (!result.ok) {
+      setGenerateError(`${file.name}: ${result.reason}`)
+      return
+    }
+    if (result.payload.entries.length === 0) {
+      setGenerateError(`${file.name}: 가져올 entry가 없습니다.`)
+      return
+    }
+    const importedEntries: GenerationEntry[] = result.payload.entries.map(
+      (entry) => ({
+        id: createGenerationEntryId(),
+        label: '가져옴',
+        tree: entry.tree,
+        immutable: false,
+        brief: entry.brief,
+        questions: entry.questions,
+        clarifyTurns: entry.clarifyTurns,
+        createdAt: Date.now(),
+        latencyMs: entry.latencyMs,
+        model: entry.model,
+      }),
+    )
+    const lastEntry = importedEntries[importedEntries.length - 1]
+    if (lastEntry === undefined) return
+    setGenerations((entries) =>
+      appendGenerationHistoryEntries(entries, importedEntries, MAX_GENERATIONS),
+    )
+    setActiveGenerationId(lastEntry.id)
+    setCompareMode(false)
+    setTree(lastEntry.tree)
+    setSelectedNodeId(
+      findFirstEditableNodeId(lastEntry.tree.root) ?? lastEntry.tree.root.id,
+    )
+    setHistoryPast([])
+    setHistoryFuture([])
+    lastHistoryMergeRef.current = null
+    setGenerateError(null)
+  }
+
   async function handleAskQuestions() {
     const intent = briefIntent.trim()
     if (intent.length === 0 || clarifyLoading) return
@@ -2765,6 +2862,30 @@ export default function HomePage() {
                       event.target.value = ''
                       if (files.length > 0) {
                         void handleImportGenerationFiles(files)
+                      }
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
+                  onClick={handleExportAllGenerations}
+                  disabled={generations.length === 0}
+                  title="현재 history의 모든 generation을 한 .json batch 파일로 내보냅니다."
+                >
+                  전체 내보내기
+                </button>
+                <label className="cursor-pointer rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]">
+                  batch 불러오기
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      event.target.value = ''
+                      if (file !== undefined) {
+                        void handleImportGenerationBatchFile(file)
                       }
                     }}
                   />
