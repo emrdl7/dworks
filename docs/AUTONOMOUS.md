@@ -103,7 +103,10 @@
 - ✓ `m3-generate-fixture-export-catalog-summary` (`de4e950`) — fixture catalog .json catalog-level 요약 메타(같은 형식). test 3 추가
 - ✓ `m3-generate-fixture-builtin-richness` (`b8ed657`) — header "기본" optgroup option 라벨에도 풍부도 점수 표시
 - ✓ `m3-generate-richness-summary-active-position` (`8646dcc`) — summary card 두 번째 줄에 활성 entry 위치 표시("활성 0.X — 평균 ±0.Y 위/아래/수준")
-- `m3-generate-image-ref-multi` — 다중 참고 이미지 (ImageReference[] schema 변경, llm-prompts/api/web persist 모두 갱신)
+- ✓ `m3-generate-image-ref-multi-schema` (`e3ed0f5`) — ImageReference[] 양쪽 schema 지원 + 직렬화 (llm-prompts/api/web persist). legacy single 호환. test 6 추가
+- ✓ `m3-generate-image-ref-multi-ui` (`5fe82eb`) — 좌측 패널 다중 슬롯 (MAX_IMAGE_REFS=3). 썸네일 grid + 개별 ✕ + file input multiple. legacy single state도 동기화 + persist 자동 마이그레이션
+- ✓ `m3-generate-image-ref-multi-export-import` (`26d8127`) — export .json에 imageReferences 보존(1~3장 검증). 단일 + batch 둘 다. test 2 추가
+- ✓ `m3-generate-image-ref-multi-prompt-rich` (`ef05d8a`) — system prompt에 "## 참고 이미지 활용 가이드" 5 규칙(시드/넓은 팔레트/비율 반영/raw hex X/intent 우선). drift test 1
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
