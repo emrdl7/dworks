@@ -1130,6 +1130,23 @@ export default function HomePage() {
       setGenerateError('fixture 이름이 비어 있습니다.')
       return
     }
+    const existing = userFixtures.find((fixture) => fixture.name === sanitized)
+    if (existing !== undefined) {
+      const overwrite = window.confirm(
+        `이미 "${sanitized}" 이름의 fixture가 있습니다. 덮어쓸까요?\n취소하면 같은 이름으로 새 fixture가 추가됩니다.`,
+      )
+      if (overwrite) {
+        setUserFixtures((prev) =>
+          prev.map((fixture) =>
+            fixture.id === existing.id
+              ? { ...fixture, tree: active.tree, createdAt: Date.now() }
+              : fixture,
+          ),
+        )
+        setGenerateError(null)
+        return
+      }
+    }
     const newFixture: UserFixture = {
       id: createUserFixtureId(),
       name: sanitized,
