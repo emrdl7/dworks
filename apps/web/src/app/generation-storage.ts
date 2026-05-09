@@ -70,6 +70,7 @@ export interface PersistedGenerationState {
     questions: PersistedClarifyQuestion[]
     imageReference: PersistedImageReference | null
     imageReferenceThumbnail: string | null
+    autoRichnessRetry?: boolean
   }
   clarify: {
     turns: PersistedClarifyTurn[]
@@ -410,6 +411,12 @@ function validatePersistedState(
     briefImageReferenceThumbnail = raw.brief.imageReferenceThumbnail
   }
 
+  let autoRichnessRetry: boolean | undefined
+  if (raw.brief.autoRichnessRetry !== undefined) {
+    if (typeof raw.brief.autoRichnessRetry !== 'boolean') return null
+    autoRichnessRetry = raw.brief.autoRichnessRetry
+  }
+
   if (!isPlainObject(raw.clarify)) return null
   const clarifyTurns = validateClarifyTurns(raw.clarify.turns)
   if (clarifyTurns === null) return null
@@ -431,6 +438,7 @@ function validatePersistedState(
       questions: briefQuestions,
       imageReference: briefImageReference,
       imageReferenceThumbnail: briefImageReferenceThumbnail,
+      ...(autoRichnessRetry !== undefined ? { autoRichnessRetry } : {}),
     },
     clarify: {
       turns: clarifyTurns,

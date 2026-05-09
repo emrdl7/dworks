@@ -836,6 +836,7 @@ export default function HomePage() {
   const [briefIntent, setBriefIntent] = useState('')
   const [briefNotes, setBriefNotes] = useState('')
   const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
+  const [autoRichnessRetry, setAutoRichnessRetry] = useState(false)
   const [briefImageRef, setBriefImageRef] = useState<ImageReferenceSeed | null>(
     null,
   )
@@ -904,6 +905,9 @@ export default function HomePage() {
       setGenerateStage(persisted.clarify.stage)
       setBriefImageRef(persisted.brief.imageReference)
       setBriefImageRefThumbnail(persisted.brief.imageReferenceThumbnail)
+      if (persisted.brief.autoRichnessRetry !== undefined) {
+        setAutoRichnessRetry(persisted.brief.autoRichnessRetry)
+      }
     }
     setIsGenerationStateHydrated(true)
   }, [])
@@ -924,6 +928,7 @@ export default function HomePage() {
         questions: clarifyQuestions,
         imageReference: briefImageRef,
         imageReferenceThumbnail: briefImageRefThumbnail,
+        autoRichnessRetry,
       },
       clarify: {
         turns: clarifyTurns,
@@ -940,6 +945,7 @@ export default function HomePage() {
     briefImageRef,
     briefImageRefThumbnail,
     briefVariantCount,
+    autoRichnessRetry,
     briefAnswers,
     clarifyQuestions,
     clarifyTurns,
@@ -1496,21 +1502,27 @@ export default function HomePage() {
       } else {
         setGenerateError(null)
       }
+      if (
+        autoRichnessRetry &&
+        firstNew !== undefined &&
+        computeRichnessReport(firstNew.tree).score < 0.6
+      ) {
+        await runRichnessRetry(firstNew)
+      }
     } finally {
       setGenerateLoading(false)
     }
   }
 
-  async function handleRetryWithRichnessHints(): Promise<void> {
-    if (generateLoading) return
-    const active = generations.find((entry) => entry.id === activeGenerationId)
-    if (active === undefined || active.immutable) return
-    const baseBrief = active.brief
+  async function runRichnessRetry(
+    sourceEntry: GenerationEntry,
+  ): Promise<void> {
+    const baseBrief = sourceEntry.brief
     if (baseBrief === null) {
       setGenerateError('생성 brief가 없는 항목은 다시 시도할 수 없습니다.')
       return
     }
-    const report = computeRichnessReport(active.tree)
+    const report = computeRichnessReport(sourceEntry.tree)
     const missing = RICHNESS_SIGNAL_KEYS.filter((key) => report[key] === false)
     if (missing.length === 0) return
 
@@ -1546,8 +1558,8 @@ export default function HomePage() {
         tree: result.tree,
         immutable: false,
         brief: retryBrief,
-        questions: active.questions,
-        clarifyTurns: active.clarifyTurns,
+        questions: sourceEntry.questions,
+        clarifyTurns: sourceEntry.clarifyTurns,
         createdAt: Date.now(),
         latencyMs: result.latencyMs,
         model: result.model,
@@ -1565,6 +1577,13 @@ export default function HomePage() {
     } finally {
       setGenerateLoading(false)
     }
+  }
+
+  async function handleRetryWithRichnessHints(): Promise<void> {
+    if (generateLoading) return
+    const active = generations.find((entry) => entry.id === activeGenerationId)
+    if (active === undefined || active.immutable) return
+    await runRichnessRetry(active)
   }
 
   function handleSelectGeneration(targetId: string) {
@@ -2775,6 +2794,18 @@ export default function HomePage() {
                       </p>
                     ) : null}
                   </div>
+
+                  <label className="flex items-center gap-2 text-[11px] text-[#4f5e56]">
+                    <input
+                      type="checkbox"
+                      checked={autoRichnessRetry}
+                      disabled={generateLoading}
+                      onChange={(event) =>
+                        setAutoRichnessRetry(event.target.checked)
+                      }
+                    />
+                    낮은 풍부도(&lt; 0.6) 시 자동 재시도
+                  </label>
 
                   <button
                     type="button"
