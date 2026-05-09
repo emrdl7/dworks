@@ -740,7 +740,8 @@ export default function HomePage() {
   )
   const [compareMode, setCompareMode] = useState(false)
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
-  const hydratedRef = useRef(false)
+  const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
+    useState(false)
 
   useEffect(() => {
     // 마운트 1회 — localStorage 복원으로 새로고침 후 생성 결과물 휘발 방지.
@@ -777,12 +778,12 @@ export default function HomePage() {
       setClarifyComplete(persisted.clarify.complete)
       setGenerateStage(persisted.clarify.stage)
     }
-    hydratedRef.current = true
+    setIsGenerationStateHydrated(true)
   }, [])
 
   useEffect(() => {
     // 변경 시 localStorage 동기화 — hydrate 전 write는 skip해 default 상태로 덮어쓰지 않는다.
-    if (!hydratedRef.current) return
+    if (!isGenerationStateHydrated) return
     writePersistedGenerationState({
       version: 1,
       fixtureId: selectedFixtureId,
@@ -813,6 +814,7 @@ export default function HomePage() {
     clarifyTurns,
     clarifyComplete,
     generateStage,
+    isGenerationStateHydrated,
   ])
 
   useEffect(() => {

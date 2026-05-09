@@ -31,8 +31,10 @@ class MemoryStorage {
   }
 }
 
+let storage: MemoryStorage
+
 beforeEach(() => {
-  const storage = new MemoryStorage()
+  storage = new MemoryStorage()
   ;(globalThis as Record<string, unknown>).window = {
     localStorage: storage,
   }
@@ -109,29 +111,26 @@ describe('generation-storage', () => {
   })
 
   it('JSON 파싱 실패 시 null + 손상된 키 삭제', () => {
-    const win = (globalThis as { window: { localStorage: MemoryStorage } }).window
-    win.localStorage.setItem(STORAGE_KEY, '{ invalid json')
+    storage.setItem(STORAGE_KEY, '{ invalid json')
     const loaded = readPersistedGenerationState()
     assert.equal(loaded, null)
-    assert.equal(win.localStorage.getItem(STORAGE_KEY), null)
+    assert.equal(storage.getItem(STORAGE_KEY), null)
   })
 
   it('version 불일치 시 null', () => {
-    const win = (globalThis as { window: { localStorage: MemoryStorage } }).window
-    win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 999 }))
+    storage.setItem(STORAGE_KEY, JSON.stringify({ version: 999 }))
     const loaded = readPersistedGenerationState()
     assert.equal(loaded, null)
   })
 
   it('Tree schema 위반 generation은 거부한다', () => {
-    const win = (globalThis as { window: { localStorage: MemoryStorage } }).window
     const broken = buildSampleState()
     const corrupt = JSON.parse(JSON.stringify(broken)) as Record<string, unknown>
     const generations = (corrupt.generations as Array<Record<string, unknown>>)
     if (generations[0]) {
       generations[0].tree = { version: '1', root: { id: 'x' } }
     }
-    win.localStorage.setItem(STORAGE_KEY, JSON.stringify(corrupt))
+    storage.setItem(STORAGE_KEY, JSON.stringify(corrupt))
     const loaded = readPersistedGenerationState()
     assert.equal(loaded, null)
   })
@@ -157,11 +156,10 @@ describe('generation-storage', () => {
   })
 
   it('brief.answers / clarifyTurns 비-string 값을 거부한다', () => {
-    const win = (globalThis as { window: { localStorage: MemoryStorage } }).window
     const state = buildSampleState()
     const corrupt = JSON.parse(JSON.stringify(state)) as Record<string, unknown>
     ;(corrupt.brief as Record<string, unknown>).answers = { q1: 42 }
-    win.localStorage.setItem(STORAGE_KEY, JSON.stringify(corrupt))
+    storage.setItem(STORAGE_KEY, JSON.stringify(corrupt))
     assert.equal(readPersistedGenerationState(), null)
   })
 
