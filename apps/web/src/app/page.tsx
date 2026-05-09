@@ -2328,7 +2328,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f7f4] text-[#18211d]">
+    <main className="flex h-screen flex-col overflow-hidden bg-[#f5f7f4] text-[#18211d]">
       <header className="flex h-14 items-center justify-between border-b border-[#d7ddd2] bg-white px-5">
         <div className="flex items-center gap-4">
           <DworksLogo />
