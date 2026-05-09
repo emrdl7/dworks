@@ -2705,15 +2705,18 @@ export default function HomePage() {
                 })}
               </optgroup>
               {userFixtures.length > 0 ? (
-                <optgroup label="내 fixture">
-                  {userFixtures.map((fixture) => {
-                    const score = computeRichnessReport(fixture.tree).score
-                    return (
+                <optgroup label="내 fixture (풍부도 순)">
+                  {[...userFixtures]
+                    .map((fixture) => ({
+                      fixture,
+                      score: computeRichnessReport(fixture.tree).score,
+                    }))
+                    .sort((a, b) => b.score - a.score)
+                    .map(({ fixture, score }) => (
                       <option key={fixture.id} value={fixture.id}>
                         {fixture.name} · {score.toFixed(2)}
                       </option>
-                    )
-                  })}
+                    ))}
                 </optgroup>
               ) : null}
             </select>
