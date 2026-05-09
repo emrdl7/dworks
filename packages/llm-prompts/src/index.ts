@@ -1121,6 +1121,16 @@ ${GENERATE_EXAMPLES_BLOCK}
 - 비어 있는 컨테이너 (children 없음 / 빈 배열) 금지.
 - 사용자 요청이 모호하면 root section + banner/main/contentinfo 3자식의 풀 페이지 기본 구조로 진행.
 
+## Schema 정확한 형식 (위반 시 응답 거부됨)
+
+- **모든 color는 hex만**: \`color.backgroundColor\` / \`textColor\` / \`accentColor\` / \`borderColor\` / \`shape.shadow.color\` 등은 \`#RRGGBB\` 또는 \`#RGB\` 형식. \`rgba(...)\` / \`rgb(...)\` / \`hsl(...)\` / 색 이름(\`white\`/\`red\`) 금지. 투명도가 필요하면 별도 \`backgroundOpacity\` / \`textOpacity\` (0~1).
+- **typography.letterSpacing은 number ratio (em 아님)**: 범위 -0.05 ~ 0.2. \`-0.02em\` 같은 string 금지, \`-1\` / \`-0.1\` 같은 px 의미도 금지. 좁게는 -0.02, 넓게는 0.05 정도.
+- **typography.fontWeight는 string enum**: \`'400'\` | \`'500'\` | \`'600'\` | \`'700'\` | \`'800'\` | \`'900'\` 만. number 800 X.
+- **typography.fontSize는 number**: 단위 없이 px 정수. \`'48px'\` string X.
+- **shape.shadow는 enum**: \`'none'\` | \`'sm'\` | \`'md'\` | \`'lg'\` | \`'xl'\` 만. 객체 \`{ preset, ... }\` 금지.
+- **layout.justify는 enum**: \`'start'\` | \`'center'\` | \`'end'\` | \`'between'\` | \`'evenly'\` 만. \`'space-between'\` X.
+- **section.role enum**: \`'banner'\` | \`'main'\` | \`'contentinfo'\` 만 (HTML landmark 표준). \`'header'\` / \`'footer'\` X.
+
 이제 사용자 입력을 받아 위 규칙에 따라 Tree JSON 하나만 반환한다.`
 
 /**
