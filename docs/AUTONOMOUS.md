@@ -64,6 +64,13 @@
 - ✓ `m3-generate-prompt-emotional-mapping` (`7b5230a` r4) — system prompt에 5종 톤 매핑 가이드(차분/활기/친근/전문/프리미엄). raw hex X(색 계열만), 복합 톤은 주 톤 1개 우선. drift test 강화(header + 5 라벨)
 - ✓ `m3-generate-prompt-page-foundations` (`1ab5273` r4 / `9aee05a` r5) — 풀 페이지 골격(root section + banner/main/contentinfo) + 2026 트렌드 가이드 + responsive 의도 시범. examples 3개 풀 페이지로 재구성(298 → ~600 라인). 사용자 정정(헤더/푸터 부재) 흡수. fallback 기본값도 풀 페이지로 정합
 - ✓ `m3-generate-clarify-edit` (`d456089` r4 / `ab2a52a` r5) — active variant 선택 시 brief/questions/answers/notes를 Stage 2 폼에 복원, 답변 수정 후 새 변형 추가. GenerationEntry.questions snapshot, deep copy 방어, intent-only 분기, Stage 1에서 stale answers 차단
+- ✓ `m3-generate-responsive-rendering` (`5bb1de6` r4) — viewport별 layout 자동 적응. CanvasViewportContext + resolveResponsiveSpacing/Layout helper. mobile에서 row→column, hero split grid 1열, layoutIntent=grid 1열, padding/gap 축소. spacing은 원본 값 있을 때만 override
+- ✓ `m3-generate-mobile-nav-collapse` (`df4c564` r4 직접) — 모바일/태블릿 헤더 햄버거(MobileBannerSection). desktop 기존 nav 유지, 모바일은 토글 버튼 + 펼침 list. 가속 §6 round 1 생략
+- ✓ `m3-generate-prompt-visual-richness` (`39d015c` 1차 / `93f413c` 2차 SaaS+블로그 / `667b3f0` 카페 gallery) — 와이어프레임 탈피, typography fontSize 강제, 색감/shadow 보강, 카페 menu+gallery 섹션 신규. drift test 강화. 가속 §6 round 1 생략
+- ✓ `m3-generate-schema-retry` (`665a428`) — 422 (parse-failure / schema-failure) 시 1회 자동 재시도. DWORKS_GENERATE_RETRIES env override (default 1, NODE_ENV=test=0). runOnce loop
+- ✓ `m3-generate-prompt-strict-schema` (`6de3a1c`) — system prompt에 "Schema 정확한 형식" 절대 규칙 섹션. backgroundColor hex만/letterSpacing -0.1~0.2 ratio/justify enum 등 명시. schema-resilience 1차 시도(prompt-side)
+- ✓ `m3-generate-schema-resilience` (`668df18` r1 Claude 핸드오프 / `b49e439` r4 Codex sanitize) — Codex 주도 토픽. apps/api/src/sanitize.ts 신규 — rgba/rgb/hsl→hex+opacity peer 자동 채움, letterSpacing string→number+clamp, fontWeight numeric/alias→string, justify/role alias 정규화. treeSchema 자체는 엄격 유지, /generate 응답만 sanitize 후 검증. sanitize.test.ts 2건 + generate.test.ts 보강. 35/35 test 통과
+- ✓ `m3-generate-persist` (`bae7c89` r4) — 생성 결과물 휘발 방지. localStorage 단일 키(`dworks:m3-generate:v1`) — generations + brief + clarify 11개 state. apps/web/src/app/generation-storage.ts 신규(read/write/clear, treeSchema 재검증, SSR no-op, QuotaExceeded fallback). page.tsx hydratedRef + 마운트/변경 useEffect. 사용자 정정 흡수("생성 결과물이 휘발되어버리는 현상 해결해"). 가속 §6 round 1 생략. 9 test
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 - `m3-generate-image-ref` — 이미지 reference 입력
 
