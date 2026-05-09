@@ -2651,6 +2651,28 @@ export default function HomePage() {
         setShortcutHelpOpen((v) => !v)
         return
       }
+      // ⌘0 — 캔버스 줌 100% 리셋 (Figma/Sketch 표준)
+      if (meta && event.key === '0') {
+        event.preventDefault()
+        setCanvasZoom(1)
+        return
+      }
+      // ⌘+ / ⌘= — 줌 인 (= 키도 받음, shift 없는 + 입력 호환)
+      if (meta && (event.key === '+' || event.key === '=')) {
+        event.preventDefault()
+        setCanvasZoom((z) =>
+          Math.min(2, Math.round((z + 0.1) * 100) / 100),
+        )
+        return
+      }
+      // ⌘- — 줌 아웃
+      if (meta && event.key === '-') {
+        event.preventDefault()
+        setCanvasZoom((z) =>
+          Math.max(0.25, Math.round((z - 0.1) * 100) / 100),
+        )
+        return
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -4183,6 +4205,17 @@ export default function HomePage() {
                   items: [
                     { keys: ['⇧', 'click'], label: '노드 추가/해제 (레이어·캔버스)' },
                     { keys: ['⌘', 'click'], label: '노드 추가/해제 (대체)' },
+                  ],
+                },
+                {
+                  category: '캔버스 패닝 / 줌',
+                  items: [
+                    { keys: ['Space', '+ drag'], label: '캔버스 panning' },
+                    { keys: ['middle', 'drag'], label: '캔버스 panning (대체)' },
+                    { keys: ['⌘', 'wheel'], label: '캔버스 줌 (트랙패드 pinch도 OK)' },
+                    { keys: ['⌘', '+'], label: '줌 인 10%' },
+                    { keys: ['⌘', '-'], label: '줌 아웃 10%' },
+                    { keys: ['⌘', '0'], label: '줌 100% 리셋' },
                   ],
                 },
                 {
