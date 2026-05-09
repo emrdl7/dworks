@@ -1,10 +1,21 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 
 import { handleClarify } from './clarify.js'
 import { handleGenerate } from './generate.js'
 
 const app = new Hono()
+
+app.use(
+  '*',
+  cors({
+    origin: (origin) => origin ?? '*',
+    allowMethods: ['POST', 'GET', 'OPTIONS'],
+    allowHeaders: ['Content-Type'],
+    maxAge: 600,
+  }),
+)
 
 app.get('/health', (c) =>
   c.json({ status: 'ok', service: 'dworks-api', stage: 'M3' }),
