@@ -3416,7 +3416,7 @@ export default function HomePage() {
                     </span>
                   ) : null}
                   <div
-                    className={`group/layer-row flex items-center gap-1 rounded-md pr-2 text-sm transition ${
+                    className={`group/layer-row relative flex items-center gap-1 rounded-md pr-2 text-sm transition ${
                       node.id === selectedNodeId
                         ? 'bg-[#1e1f3a] text-[#a5b4fc]'
                         : hoveredNodeId === node.id
@@ -3425,6 +3425,12 @@ export default function HomePage() {
                     } ${isDragging ? 'opacity-50' : ''}`}
                     style={{ paddingLeft: 8 + depth * 14 }}
                   >
+                    {node.id === selectedNodeId ? (
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full bg-[#6366f1]"
+                      />
+                    ) : null}
                     <button
                       type="button"
                       aria-label={
