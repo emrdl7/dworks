@@ -6357,11 +6357,9 @@ function NodeInspector({
       <div className="shrink-0 border-b border-[#2a2e35] px-5 pb-0 pt-4">
         <div className="flex items-center justify-between gap-3 px-0">
           <div className="flex min-w-0 items-center gap-2">
-            <NodeTypeIcon
-              aria-hidden="true"
-              size={14}
-              className="shrink-0 text-[#898d97]"
-            />
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#1e1f3a] text-[#a5b4fc]">
+              <NodeTypeIcon aria-hidden="true" size={13} />
+            </span>
             <h2 className="truncate text-sm font-semibold text-[#ebecef]">
               {nodeTypeLabels[node.type]}
             </h2>
