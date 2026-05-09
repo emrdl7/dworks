@@ -3743,42 +3743,44 @@ export default function HomePage() {
 
         <section className="flex min-h-0 min-w-0 flex-col bg-[#0d0e10]">
           {compareMode ? null : (
-            <div className="flex h-10 shrink-0 items-center gap-3 border-b border-[#2a2e35] bg-[#16181c] px-4">
-              <ViewportSwitcher
-                value={responsiveViewport}
-                onChange={setResponsiveViewport}
-              />
-              <span className="h-4 w-px bg-[#2a2e35]" aria-hidden="true" />
-              <CanvasZoomControl value={canvasZoom} onChange={setCanvasZoom} />
-              <span className="h-4 w-px bg-[#2a2e35]" aria-hidden="true" />
-              <button
-                type="button"
-                aria-label={
-                  canvasGridSize === 0
-                    ? '그리드 8px로 켜기'
-                    : `그리드 ${canvasGridSize}px → 다음 사이즈`
-                }
-                aria-pressed={canvasGridSize > 0}
-                title="그리드 사이즈 cycle (off / 8 / 16 / 24 px)"
-                onClick={() =>
-                  setCanvasGridSize((s) => {
-                    if (s === 0) return 8
-                    if (s === 8) return 16
-                    if (s === 16) return 24
-                    return 0
-                  })
-                }
-                className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
-                  canvasGridSize > 0
-                    ? 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
-                    : 'border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe]'
-                }`}
-              >
-                <LayoutGrid size={13} aria-hidden="true" />
-                <span className="tabular-nums">
-                  {canvasGridSize === 0 ? '그리드' : `${canvasGridSize}px`}
-                </span>
-              </button>
+            <div className="flex h-10 shrink-0 items-center gap-2 overflow-x-auto whitespace-nowrap border-b border-[#2a2e35] bg-[#16181c] px-3 sm:gap-3 sm:px-4 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-[#2a2e35]">
+              <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                <ViewportSwitcher
+                  value={responsiveViewport}
+                  onChange={setResponsiveViewport}
+                />
+                <span className="h-4 w-px shrink-0 bg-[#2a2e35]" aria-hidden="true" />
+                <CanvasZoomControl value={canvasZoom} onChange={setCanvasZoom} />
+                <span className="h-4 w-px shrink-0 bg-[#2a2e35]" aria-hidden="true" />
+                <button
+                  type="button"
+                  aria-label={
+                    canvasGridSize === 0
+                      ? '그리드 8px로 켜기'
+                      : `그리드 ${canvasGridSize}px → 다음 사이즈`
+                  }
+                  aria-pressed={canvasGridSize > 0}
+                  title="그리드 사이즈 cycle (off / 8 / 16 / 24 px)"
+                  onClick={() =>
+                    setCanvasGridSize((s) => {
+                      if (s === 0) return 8
+                      if (s === 8) return 16
+                      if (s === 16) return 24
+                      return 0
+                    })
+                  }
+                  className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
+                    canvasGridSize > 0
+                      ? 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
+                      : 'border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe]'
+                  }`}
+                >
+                  <LayoutGrid size={13} aria-hidden="true" />
+                  <span className="tabular-nums">
+                    {canvasGridSize === 0 ? '그리드' : `${canvasGridSize}px`}
+                  </span>
+                </button>
+              </div>
             </div>
           )}
           <div
@@ -4179,11 +4181,11 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
   const selectedPreset = responsiveViewportPresets[value]
 
   return (
-    <div className="flex items-center gap-2 text-xs text-[#898d97]">
+    <div className="flex shrink-0 items-center gap-2 text-xs text-[#898d97]">
       <div
         role="group"
         aria-label="캔버스 화면 폭"
-        className="flex h-9 rounded-md border border-[#2a2e35] bg-[#1d2025] p-0.5"
+        className="flex h-8 rounded-md border border-[#2a2e35] bg-[#1d2025] p-0.5"
       >
         {responsiveViewportOptions.map((viewport) => {
           const preset = responsiveViewportPresets[viewport]
@@ -4194,7 +4196,8 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
               key={viewport}
               type="button"
               aria-pressed={isSelected}
-              className={`min-w-16 rounded px-3 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
+              title={`${preset.label} (${preset.width}px)`}
+              className={`shrink-0 rounded px-2 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] sm:px-3 ${
                 isSelected
                   ? 'bg-[#2a2e35] text-[#ebecef] shadow-[0_1px_2px_rgba(0,0,0,0.3)]'
                   : 'text-[#898d97] hover:bg-[#2a2e35]/50 hover:text-[#c5c8cf]'
@@ -4206,7 +4209,7 @@ function ViewportSwitcher({ onChange, value }: ViewportSwitcherProps) {
           )
         })}
       </div>
-      <span className="inline-flex h-7 items-center rounded-md border border-[#2a2e35] bg-[#16181c] px-2 text-xs font-semibold tabular-nums text-[#c5c8cf]">
+      <span className="hidden h-7 shrink-0 items-center rounded-md border border-[#2a2e35] bg-[#16181c] px-2 text-xs font-semibold tabular-nums text-[#c5c8cf] sm:inline-flex">
         {selectedPreset.width}px
       </span>
     </div>
@@ -4247,7 +4250,7 @@ function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
     <div
       role="group"
       aria-label="캔버스 확대/축소"
-      className="flex h-9 items-center rounded-md border border-[#2a2e35] bg-[#16181c]"
+      className="flex h-8 shrink-0 items-center rounded-md border border-[#2a2e35] bg-[#16181c]"
     >
       <button
         type="button"
