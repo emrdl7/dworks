@@ -110,6 +110,41 @@ describe('fixture-export parse', () => {
     }
   })
 
+  it('build payload는 fixture별 richness 메타 자동 포함', () => {
+    const payload = buildFixtureExportPayload(sampleFixtures, new Date())
+    assert.ok(payload.fixtures[0]?.richness !== undefined)
+    assert.equal(typeof payload.fixtures[0]?.richness?.score, 'number')
+  })
+
+  it('잘못된 richness.score 범위 거부', () => {
+    const text = JSON.stringify({
+      format: 'dworks-fixtures',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      fixtures: [
+        {
+          id: 'x',
+          name: 'fixture',
+          tree: sampleTree,
+          createdAt: 1700000000000,
+          richness: {
+            score: 1.7,
+            hasPageLandmarks: true,
+            hasMainMultiSection: true,
+            hasDisplayHeadingOne: true,
+            hasCallToAction: true,
+            fontSizeVariety: true,
+            colorVariety: true,
+            hasImagery: true,
+            hasShapeDepth: true,
+          },
+        },
+      ],
+    })
+    const result = parseFixtureImportPayload(text)
+    assert.equal(result.ok, false)
+  })
+
   it('손상 JSON 거부', () => {
     const result = parseFixtureImportPayload('{ broken')
     assert.equal(result.ok, false)

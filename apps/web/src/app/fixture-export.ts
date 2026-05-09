@@ -10,6 +10,11 @@
 import { treeSchema, type Tree } from '@dworks/tree'
 
 import {
+  computeRichnessReport,
+  RICHNESS_SIGNAL_KEYS,
+  type RichnessReport,
+} from './richness'
+import {
   createUserFixtureId,
   sanitizeUserFixtureName,
   type UserFixture,
@@ -23,6 +28,7 @@ export interface ExportedUserFixture {
   name: string
   tree: Tree
   createdAt: number
+  richness?: RichnessReport
 }
 
 export interface ExportedFixtureCatalog {
@@ -45,6 +51,7 @@ export function buildFixtureExportPayload(
       name: fixture.name,
       tree: fixture.tree,
       createdAt: fixture.createdAt,
+      richness: computeRichnessReport(fixture.tree),
     })),
   }
 }
@@ -138,10 +145,36 @@ function validateExportedFixture(raw: unknown): ExportedUserFixture | null {
   }
   const treeParse = treeSchema.safeParse(raw.tree)
   if (!treeParse.success) return null
+  const richness = validateExportedRichness(raw.richness)
+  if (richness === null && raw.richness !== undefined && raw.richness !== null) {
+    return null
+  }
   return {
     id: raw.id,
     name: raw.name,
     tree: treeParse.data,
     createdAt: raw.createdAt,
+    ...(richness !== null ? { richness } : {}),
+  }
+}
+
+function validateExportedRichness(raw: unknown): RichnessReport | null {
+  if (raw === undefined || raw === null) return null
+  if (!isPlainObject(raw)) return null
+  if (typeof raw.score !== 'number' || !Number.isFinite(raw.score)) return null
+  if (raw.score < 0 || raw.score > 1) return null
+  for (const key of RICHNESS_SIGNAL_KEYS) {
+    if (typeof raw[key] !== 'boolean') return null
+  }
+  return {
+    score: raw.score,
+    hasPageLandmarks: raw.hasPageLandmarks as boolean,
+    hasMainMultiSection: raw.hasMainMultiSection as boolean,
+    hasDisplayHeadingOne: raw.hasDisplayHeadingOne as boolean,
+    hasCallToAction: raw.hasCallToAction as boolean,
+    fontSizeVariety: raw.fontSizeVariety as boolean,
+    colorVariety: raw.colorVariety as boolean,
+    hasImagery: raw.hasImagery as boolean,
+    hasShapeDepth: raw.hasShapeDepth as boolean,
   }
 }
