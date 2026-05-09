@@ -815,6 +815,10 @@ export default function HomePage() {
     null,
   )
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [globalContextMenu, setGlobalContextMenu] = useState<{
+    x: number
+    y: number
+  } | null>(null)
   const [layerDrag, setLayerDrag] = useState<LayerDragState | null>(null)
   const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
     null,
@@ -4322,9 +4326,14 @@ export default function HomePage() {
               const nodeElement = target.closest<HTMLElement>('[data-dworks-node-id]')
               const nodeId = nodeElement?.dataset.dworksNodeId
               if (!nodeId) {
+                // 빈 영역 우클릭 → global context menu (canvas-wide 액션)
+                event.preventDefault()
+                setContextMenu(null)
+                setGlobalContextMenu({ x: event.clientX, y: event.clientY })
                 return
               }
 
+              setGlobalContextMenu(null)
               openPointerContextMenu(nodeId, event)
             }}
             onKeyDownCapture={(event) => {
@@ -4588,6 +4597,30 @@ export default function HomePage() {
             handleToggleNodeCanvasSelection(contextMenuNode)
           }
           onToggleVisibility={() => handleToggleNodeVisibility(contextMenuNode)}
+        />
+      ) : null}
+      {globalContextMenu ? (
+        <GlobalContextMenu
+          position={globalContextMenu}
+          canvasZoom={canvasZoom}
+          canvasGridSize={canvasGridSize}
+          panelsHidden={panelsHidden}
+          hasSelection={selectedNodeId !== tree.root.id}
+          onClose={() => setGlobalContextMenu(null)}
+          onDeselect={() => {
+            setSelectedNodeId(tree.root.id)
+            setAdditionalSelectedNodeIds(new Set())
+          }}
+          onFit={handleCanvasFit}
+          onZoomReset={() => setCanvasZoom(1)}
+          onZoomToSelection={handleZoomToSelection}
+          onToggleGrid={() =>
+            setCanvasGridSize((s) => {
+              if (s === 0) return 16
+              return 0
+            })
+          }
+          onTogglePanels={() => setPanelsHidden((v) => !v)}
         />
       ) : null}
       {shortcutHelpOpen ? (
@@ -5158,6 +5191,164 @@ function NodeContextMenu({
           </ContextMenuButton>
         </>
       ) : null}
+    </div>
+  )
+}
+
+interface GlobalContextMenuProps {
+  position: { x: number; y: number }
+  canvasZoom: number
+  canvasGridSize: number
+  panelsHidden: boolean
+  hasSelection: boolean
+  onClose: () => void
+  onDeselect: () => void
+  onFit: () => void
+  onZoomReset: () => void
+  onZoomToSelection: () => void
+  onToggleGrid: () => void
+  onTogglePanels: () => void
+}
+
+function GlobalContextMenu({
+  position,
+  canvasZoom,
+  canvasGridSize,
+  panelsHidden,
+  hasSelection,
+  onClose,
+  onDeselect,
+  onFit,
+  onZoomReset,
+  onZoomToSelection,
+  onToggleGrid,
+  onTogglePanels,
+}: GlobalContextMenuProps) {
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const firstItem = getContextMenuItems(menuRef.current)[0]
+    firstItem?.focus()
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (!menuRef.current?.contains(target)) onClose()
+    }
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('resize', onClose)
+    window.addEventListener('scroll', onClose, true)
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('resize', onClose)
+      window.removeEventListener('scroll', onClose, true)
+    }
+  }, [onClose])
+
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+      return
+    }
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+    event.preventDefault()
+    const items = getContextMenuItems(menuRef.current)
+    if (items.length === 0) return
+    const currentIndex = items.findIndex(
+      (item) => item === document.activeElement,
+    )
+    const nextIndex =
+      event.key === 'ArrowDown'
+        ? currentIndex < 0
+          ? 0
+          : (currentIndex + 1) % items.length
+        : currentIndex <= 0
+          ? items.length - 1
+          : currentIndex - 1
+    items[nextIndex]?.focus()
+  }
+
+  return (
+    <div
+      ref={menuRef}
+      role="menu"
+      aria-label="캔버스 컨텍스트 메뉴"
+      className="fixed z-50 min-w-56 rounded-md border border-[#2a2e35] bg-[#1d2025] p-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+      style={{
+        left: position.x,
+        top: position.y,
+        animation: 'dw-fade-up 140ms ease-out both',
+      }}
+      onContextMenu={(event) => event.preventDefault()}
+      onKeyDown={handleKeyDown}
+    >
+      <div className="mb-1 border-b border-[#2a2e35] px-3 pb-2 pt-1">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-[#5b6069]">
+          캔버스
+        </span>
+      </div>
+      <ContextMenuButton
+        disabled={!hasSelection}
+        onClick={() => {
+          onDeselect()
+          onClose()
+        }}
+        shortcut="Esc"
+      >
+        선택 해제
+      </ContextMenuButton>
+      <ContextMenuButton
+        disabled={!hasSelection}
+        onClick={() => {
+          onZoomToSelection()
+          onClose()
+        }}
+        shortcut="⌘2"
+      >
+        선택 노드를 화면 중앙에
+      </ContextMenuButton>
+      <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
+      <ContextMenuButton
+        onClick={() => {
+          onFit()
+          onClose()
+        }}
+        shortcut="⌘1"
+      >
+        화면에 맞춤
+      </ContextMenuButton>
+      <ContextMenuButton
+        onClick={() => {
+          onZoomReset()
+          onClose()
+        }}
+        disabled={canvasZoom === 1}
+        shortcut="⌘0"
+      >
+        줌 100% 리셋
+      </ContextMenuButton>
+      <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
+      <ContextMenuButton
+        checked={canvasGridSize > 0}
+        onClick={() => {
+          onToggleGrid()
+          onClose()
+        }}
+        roleType="menuitemcheckbox"
+      >
+        그리드 표시
+      </ContextMenuButton>
+      <ContextMenuButton
+        checked={!panelsHidden}
+        onClick={() => {
+          onTogglePanels()
+          onClose()
+        }}
+        roleType="menuitemcheckbox"
+        shortcut="⌘\\"
+      >
+        좌/우 패널 표시
+      </ContextMenuButton>
     </div>
   )
 }
