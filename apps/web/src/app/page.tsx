@@ -149,6 +149,11 @@ import {
   writePersistedGenerationState,
 } from './generation-storage'
 import {
+  buildExportFilename,
+  buildExportPayload,
+  parseImportPayload,
+} from './generation-export'
+import {
   computeRichnessReport,
   formatRichnessScore,
   type RichnessReport,
@@ -1148,6 +1153,86 @@ export default function HomePage() {
     setBriefImageRef(null)
     setBriefImageRefThumbnail(null)
     setBriefImageRefError(null)
+  }
+
+  function handleExportActiveGeneration(): void {
+    const active = generations.find((entry) => entry.id === activeGenerationId)
+    if (active === undefined) return
+    const exportedAt = new Date()
+    const payload = buildExportPayload(
+      {
+        tree: active.tree,
+        label: active.label,
+        brief: active.brief,
+        questions: active.questions,
+        clarifyTurns: active.clarifyTurns,
+        model: active.model,
+        latencyMs: active.latencyMs,
+      },
+      exportedAt,
+    )
+    const filename = buildExportFilename(exportedAt, active.label)
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    })
+    const href = URL.createObjectURL(blob)
+    try {
+      const anchor = document.createElement('a')
+      anchor.href = href
+      anchor.download = filename
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+    } finally {
+      URL.revokeObjectURL(href)
+    }
+  }
+
+  async function handleImportGenerationFile(file: File): Promise<void> {
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      setGenerateError('JSON 파일만 가져올 수 있습니다.')
+      return
+    }
+    let text: string
+    try {
+      text = await file.text()
+    } catch (error) {
+      setGenerateError(
+        error instanceof Error ? error.message : '파일을 읽지 못했습니다.',
+      )
+      return
+    }
+    const result = parseImportPayload(text)
+    if (!result.ok) {
+      setGenerateError(`가져오기 실패 — ${result.reason}`)
+      return
+    }
+    const importedEntry: GenerationEntry = {
+      id: createGenerationEntryId(),
+      label: '가져옴',
+      tree: result.payload.tree,
+      immutable: false,
+      brief: result.payload.brief,
+      questions: result.payload.questions,
+      clarifyTurns: result.payload.clarifyTurns,
+      createdAt: Date.now(),
+      latencyMs: result.payload.latencyMs,
+      model: result.payload.model,
+    }
+    setGenerations((entries) =>
+      appendGenerationHistoryEntries(entries, [importedEntry], MAX_GENERATIONS),
+    )
+    setActiveGenerationId(importedEntry.id)
+    setCompareMode(false)
+    setTree(importedEntry.tree)
+    setSelectedNodeId(
+      findFirstEditableNodeId(importedEntry.tree.root) ??
+        importedEntry.tree.root.id,
+    )
+    setHistoryPast([])
+    setHistoryFuture([])
+    lastHistoryMergeRef.current = null
+    setGenerateError(null)
   }
 
   async function handleAskQuestions() {
@@ -2190,6 +2275,33 @@ export default function HomePage() {
                     </button>
                   )
                 })}
+              </div>
+
+              <div className="flex items-center gap-2 text-[11px]">
+                <button
+                  type="button"
+                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
+                  onClick={handleExportActiveGeneration}
+                  disabled={compareMode}
+                  title="활성 디자인을 JSON 파일로 내보냅니다."
+                >
+                  내보내기
+                </button>
+                <label className="cursor-pointer rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]">
+                  불러오기
+                  <input
+                    type="file"
+                    accept="application/json,.json"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      event.target.value = ''
+                      if (file !== undefined) {
+                        void handleImportGenerationFile(file)
+                      }
+                    }}
+                  />
+                </label>
               </div>
 
               {(() => {
