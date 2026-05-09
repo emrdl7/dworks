@@ -244,6 +244,8 @@ export const nodeTransformSchema = z.object({
   translateY: z.number().min(-200).max(200).optional(),
   rotate: z.number().min(-360).max(360).optional(),
   scale: z.number().min(0.5).max(2).optional(),
+  skewX: z.number().min(-45).max(45).optional(),
+  skewY: z.number().min(-45).max(45).optional(),
   originX: z.number().min(0).max(100).optional(),
   originY: z.number().min(0).max(100).optional(),
 })

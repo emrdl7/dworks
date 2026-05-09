@@ -2950,6 +2950,12 @@ function getTransformStyle(
   if (transform.scale !== undefined) {
     parts.push(`scale(${transform.scale})`)
   }
+  if (transform.skewX !== undefined) {
+    parts.push(`skewX(${transform.skewX}deg)`)
+  }
+  if (transform.skewY !== undefined) {
+    parts.push(`skewY(${transform.skewY}deg)`)
+  }
   const style: CSSProperties = {}
   if (parts.length > 0) {
     style.transform = parts.join(' ')
@@ -3749,6 +3755,36 @@ function NodeInspector({
                 updateNodeTransformField(
                   node,
                   'scale',
+                  value,
+                  onNodeMetaChange,
+                )
+              }
+            />
+            <NodeTransformInput
+              label="X 기울임 (°)"
+              min={-45}
+              max={45}
+              placeholder="0"
+              value={node.transform?.skewX}
+              onChange={(value) =>
+                updateNodeTransformField(
+                  node,
+                  'skewX',
+                  value,
+                  onNodeMetaChange,
+                )
+              }
+            />
+            <NodeTransformInput
+              label="Y 기울임 (°)"
+              min={-45}
+              max={45}
+              placeholder="0"
+              value={node.transform?.skewY}
+              onChange={(value) =>
+                updateNodeTransformField(
+                  node,
+                  'skewY',
                   value,
                   onNodeMetaChange,
                 )
