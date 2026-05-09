@@ -49,9 +49,9 @@
 - ✓ `m3-generate-brief` (`fd5aa88`) — 좌측 패널 + 5필드 brief + 생성 히스토리 (clarify에 의해 5필드 UI 교체, API stepping stone)
 - ✓ `m3-generate-clarify` (`d6d84cc` r4 / `e873a6d` r5 통합) — POST /clarify (적응형 질문 3~6) + brief 재정의 (answers) + Stage 1/2 web UI + "의도만으로 바로 생성" fallback
 - ✓ `m3-generate-fallback` (`eb6aada` r4 / `c312aba` r5) — LlmProvider chain (claude/codex/gemini) + resolveProviderChain env + callLlmChain 순회. /generate + /clarify 모두 적용. parse/schema 실패는 fallback 안 함
+- ✓ `m3-generate-codex-adapter` (`9f61575` r4 / `b40cd6a` r5) — codex `-o tempfile` + final message 회수. extract-failure 분류 + 다음 provider 시도
 
 **M3 후속 후보**:
-- `m3-generate-codex-adapter` — Codex CLI 어댑터 envelope 정밀 매핑
 - `m3-generate-gemini-adapter` — Gemini CLI 어댑터
 - `m3-generate-prompt-uplift` — 프롬프트 최적화 / few-shot examples
 - `m3-generate-eval` — 재현성 7축 × repeat 평가 (M1 D8 baseline 패턴)
