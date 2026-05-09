@@ -10,6 +10,7 @@ import { treeSchema, type Tree } from '@dworks/tree'
 
 import type { M3EvalArgs } from './args.js'
 import { computeTreeStats } from './tree-stats.js'
+import { computeDiversity } from './diversity.js'
 import { renderSummaryMarkdown, summarizeCalls } from './summary.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -254,6 +255,7 @@ export async function runM3Eval(
   const writeFileImpl = deps.writeFileImpl ?? writeFile
 
   const calls: CallResult[] = []
+  const successfulTreesByIntent = new Map<string, Tree[]>()
   for (const intent of fixtures.intents) {
     for (let r = 0; r < args.repeat; r++) {
       const result = await callOnce({
@@ -277,7 +279,18 @@ export async function runM3Eval(
         treeDepth: stats?.depth ?? null,
         message: result.message,
       })
+      if (result.status === 'ok' && result.tree !== null) {
+        const list = successfulTreesByIntent.get(intent.id) ?? []
+        list.push(result.tree)
+        successfulTreesByIntent.set(intent.id, list)
+      }
     }
+  }
+
+  const diversityByIntent = new Map<string, number | null>()
+  for (const intent of fixtures.intents) {
+    const trees = successfulTreesByIntent.get(intent.id) ?? []
+    diversityByIntent.set(intent.id, computeDiversity(trees))
   }
 
   await ensureDir(outDir)
@@ -304,7 +317,7 @@ export async function runM3Eval(
   const callsJsonl = calls.map((c) => JSON.stringify(c)).join('\n') + '\n'
   await writeFileImpl(join(outDir, 'calls.jsonl'), callsJsonl, 'utf8')
 
-  const summary = summarizeCalls(calls, fixtures.intents)
+  const summary = summarizeCalls(calls, fixtures.intents, diversityByIntent)
   await writeFileImpl(
     join(outDir, 'summary.json'),
     JSON.stringify(summary, null, 2),

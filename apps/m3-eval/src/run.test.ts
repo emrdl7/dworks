@@ -133,6 +133,81 @@ describe('runM3Eval', () => {
     assert.equal(result.calls[0]?.modelLatencyMs, 42)
   })
 
+  it('dry-run repeat ≥ 2 records 구조 다양성 0.00 in summary', async () => {
+    const written: Array<{ path: string; content: string }> = []
+    await runM3Eval(
+      {
+        fixturesPath: 'fixtures.json',
+        repeat: 3,
+        apiBase: 'http://localhost:3001',
+        outDir: '/tmp/m3-eval-test-diversity',
+        providers: null,
+        live: false,
+      },
+      {
+        loadFixtures: async () => fixtures,
+        ensureDir: async () => {},
+        writeFileImpl: (async (path, content) => {
+          written.push({ path: String(path), content: String(content) })
+        }) as typeof import('node:fs/promises').writeFile,
+        now: () => new Date('2026-05-09T00:00:00Z'),
+      },
+    )
+    const md = written.find((w) => w.path.endsWith('summary.md'))?.content ?? ''
+    assert.ok(md.includes('구조 다양성'))
+    assert.ok(md.includes('0.00'))
+    assert.ok(md.includes('dry-run은 deterministic'))
+    const summaryJson = JSON.parse(
+      written.find((w) => w.path.endsWith('summary.json'))?.content ?? '{}',
+    ) as { byIntent: Array<{ intentId: string; diversityScore: number | null }> }
+    for (const row of summaryJson.byIntent) {
+      assert.equal(row.diversityScore, 0)
+    }
+  })
+
+  it('live mode mixes ok and failure — diversity counts only ok trees', async () => {
+    let callCount = 0
+    const fakeFetch = (async () => {
+      callCount += 1
+      if (callCount % 2 === 0) {
+        return new Response(
+          JSON.stringify({ error: 'schema-failure', message: 'bad tree' }),
+          { status: 422, headers: { 'Content-Type': 'application/json' } },
+        )
+      }
+      return new Response(
+        JSON.stringify({ tree: apiTree, model: 'claude', latencyMs: 30 }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      )
+    }) as typeof fetch
+    const written: Array<{ path: string; content: string }> = []
+    await runM3Eval(
+      {
+        fixturesPath: 'fixtures.json',
+        repeat: 2,
+        apiBase: 'http://localhost:3001',
+        outDir: '/tmp/m3-eval-test-mixed',
+        providers: null,
+        live: true,
+      },
+      {
+        loadFixtures: async () => fixtures,
+        ensureDir: async () => {},
+        writeFileImpl: (async (path, content) => {
+          written.push({ path: String(path), content: String(content) })
+        }) as typeof import('node:fs/promises').writeFile,
+        fetchImpl: fakeFetch,
+      },
+    )
+    const summaryJson = JSON.parse(
+      written.find((w) => w.path.endsWith('summary.json'))?.content ?? '{}',
+    ) as { byIntent: Array<{ intentId: string; diversityScore: number | null }> }
+    // Each intent had 2 calls — 1 ok + 1 schema-failure → only 1 ok tree per intent → null
+    for (const row of summaryJson.byIntent) {
+      assert.equal(row.diversityScore, null)
+    }
+  })
+
   it('live mode treats network rejection as transport-error', async () => {
     const fakeFetch = (async () => {
       throw new Error('econnrefused')

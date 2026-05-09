@@ -13,9 +13,15 @@ export interface BucketSummary {
   modelLatencyP95: number | null
 }
 
+export interface IntentSummary {
+  intentId: string
+  bucket: BucketSummary
+  diversityScore: number | null
+}
+
 export interface EvalSummary {
   overall: BucketSummary
-  byIntent: Array<{ intentId: string; bucket: BucketSummary }>
+  byIntent: IntentSummary[]
   byProvider: Array<{ provider: string; bucket: BucketSummary }>
 }
 
@@ -71,11 +77,13 @@ function bucketize(rows: CallResult[]): BucketSummary {
 export function summarizeCalls(
   calls: CallResult[],
   intents: FixtureIntent[],
+  diversityByIntent?: ReadonlyMap<string, number | null>,
 ): EvalSummary {
   const overall = bucketize(calls)
-  const byIntent = intents.map((intent) => ({
+  const byIntent: IntentSummary[] = intents.map((intent) => ({
     intentId: intent.id,
     bucket: bucketize(calls.filter((c) => c.intentId === intent.id)),
+    diversityScore: diversityByIntent?.get(intent.id) ?? null,
   }))
   const providerKeys = Array.from(
     new Set(calls.map((c) => c.model).filter((m): m is string => m !== null)),
@@ -103,6 +111,22 @@ const TABLE_HEADER =
   '| 그룹 | 호출 | 성공 | 성공률 | req p50 | req p95 | model p50 | model p95 |'
 const TABLE_DIVIDER = '|---|---|---|---|---|---|---|---|'
 
+const INTENT_TABLE_HEADER =
+  '| 그룹 | 호출 | 성공 | 성공률 | req p50 | req p95 | model p50 | model p95 | 구조 다양성 |'
+const INTENT_TABLE_DIVIDER = '|---|---|---|---|---|---|---|---|---|'
+
+function fmtDiversity(d: number | null): string {
+  return d === null ? '-' : d.toFixed(2)
+}
+
+function renderIntentRow(
+  label: string,
+  b: BucketSummary,
+  diversity: number | null,
+): string {
+  return `| ${label} | ${b.total} | ${b.success} | ${fmtPct(b.successRatio)} | ${fmtLatency(b.requestLatencyP50)} | ${fmtLatency(b.requestLatencyP95)} | ${fmtLatency(b.modelLatencyP50)} | ${fmtLatency(b.modelLatencyP95)} | ${fmtDiversity(diversity)} |`
+}
+
 export function renderSummaryMarkdown(
   summary: EvalSummary,
   manifest: { runId: string; ranAt: string; args: { fixturesPath: string; live: boolean; repeat: number } },
@@ -121,9 +145,13 @@ export function renderSummaryMarkdown(
   lines.push('')
 
   if (summary.byIntent.length > 0) {
-    lines.push('## intent별', '', TABLE_HEADER, TABLE_DIVIDER)
+    lines.push('## intent별', '', INTENT_TABLE_HEADER, INTENT_TABLE_DIVIDER)
     for (const row of summary.byIntent) {
-      lines.push(renderBucketRow(row.intentId, row.bucket))
+      lines.push(renderIntentRow(row.intentId, row.bucket, row.diversityScore))
+    }
+    if (!manifest.args.live) {
+      lines.push('')
+      lines.push('> dry-run은 deterministic이라 구조 다양성 0.00이 정상.')
     }
     lines.push('')
   }

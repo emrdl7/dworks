@@ -87,4 +87,60 @@ describe('summarizeCalls', () => {
     assert.ok(md.includes('cafe'))
     assert.ok(md.includes('claude'))
   })
+
+  it('diversityScore is null when no diversityByIntent is provided', () => {
+    const summary = summarizeCalls(calls, intents)
+    for (const row of summary.byIntent) {
+      assert.equal(row.diversityScore, null)
+    }
+  })
+
+  it('diversityScore is propagated from diversityByIntent', () => {
+    const diversity = new Map<string, number | null>([
+      ['cafe', 0],
+      ['saas', null],
+    ])
+    const summary = summarizeCalls(calls, intents, diversity)
+    const cafe = summary.byIntent.find((b) => b.intentId === 'cafe')
+    const saas = summary.byIntent.find((b) => b.intentId === 'saas')
+    assert.equal(cafe?.diversityScore, 0)
+    assert.equal(saas?.diversityScore, null)
+  })
+
+  it('intent table markdown shows 구조 다양성 header and 0.00/- formatting', () => {
+    const diversity = new Map<string, number | null>([
+      ['cafe', 0],
+      ['saas', null],
+    ])
+    const summary = summarizeCalls(calls, intents, diversity)
+    const md = renderSummaryMarkdown(summary, {
+      runId: 'r',
+      ranAt: '2026-05-09T00:00:00.000Z',
+      args: { fixturesPath: 'f.json', live: false, repeat: 2 },
+    })
+    assert.ok(md.includes('구조 다양성'))
+    // 0 → "0.00", null → "-"
+    assert.ok(md.includes('| 0.00 |'))
+    assert.ok(md.includes('| - |'))
+  })
+
+  it('dry-run markdown includes deterministic note', () => {
+    const summary = summarizeCalls(calls, intents)
+    const md = renderSummaryMarkdown(summary, {
+      runId: 'r',
+      ranAt: '2026-05-09T00:00:00.000Z',
+      args: { fixturesPath: 'f.json', live: false, repeat: 2 },
+    })
+    assert.ok(md.includes('dry-run은 deterministic'))
+  })
+
+  it('live markdown does not include dry-run note', () => {
+    const summary = summarizeCalls(calls, intents)
+    const md = renderSummaryMarkdown(summary, {
+      runId: 'r',
+      ranAt: '2026-05-09T00:00:00.000Z',
+      args: { fixturesPath: 'f.json', live: true, repeat: 2 },
+    })
+    assert.ok(!md.includes('dry-run은 deterministic'))
+  })
 })
