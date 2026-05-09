@@ -3361,6 +3361,24 @@ export default function HomePage() {
           )}
           <div
             className="min-h-0 flex-1 overflow-auto"
+            onClick={(event) => {
+              // CanvasNode들은 stopPropagation 처리되므로 여기까지 도달하면 빈 영역 클릭.
+              // 단 toolbar 등 별도 영역은 형제 노드라 여기에 안 들어옴.
+              if (compareMode) return
+              if (event.target !== event.currentTarget) {
+                // 캔버스 padding/wrapper 클릭만 deselect — viewport 카드(border) 안 클릭은 노드가 처리
+                const target = event.target
+                if (target instanceof Element) {
+                  const nodeElement = target.closest<HTMLElement>(
+                    '[data-dworks-node-id]',
+                  )
+                  if (nodeElement) return
+                }
+              }
+              if (selectedNodeId !== tree.root.id) {
+                setSelectedNodeId(tree.root.id)
+              }
+            }}
             onContextMenu={(event) => {
               if (compareMode) return
               const target = event.target
