@@ -1,6 +1,7 @@
 import { treeSchema, type Tree } from '@dworks/tree'
 
 import cardGridRaw from '../../../../seeds/trees/card-grid.json'
+import darkLuxuryHeroRaw from '../../../../seeds/trees/dark-luxury-hero.json'
 import signupFormRaw from '../../../../seeds/trees/signup-form.json'
 import simpleHeroRaw from '../../../../seeds/trees/simple-hero.json'
 
@@ -32,10 +33,18 @@ const signupFormFixture: TreeFixture = {
   tree: parseFixtureTree(signupFormRaw),
 }
 
+const darkLuxuryHeroFixture: TreeFixture = {
+  id: 'dark-luxury-hero',
+  name: '다크 럭셔리 hero',
+  description: '미드나잇 그라디언트 + 보라/시안/민트 액센트 — 럭셔리 브랜드용',
+  tree: parseFixtureTree(darkLuxuryHeroRaw),
+}
+
 export const treeFixtures = [
   simpleHeroFixture,
   cardGridFixture,
   signupFormFixture,
+  darkLuxuryHeroFixture,
 ]
 
 export const defaultTreeFixture = simpleHeroFixture
