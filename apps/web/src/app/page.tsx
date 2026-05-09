@@ -3909,6 +3909,12 @@ export default function HomePage() {
               : 'translate-x-full xl:translate-x-0'
           }`}
         >
+          {additionalSelectedNodeIds.size > 0 ? (
+            <div className="shrink-0 border-b border-[#6366f1]/40 bg-[#1e1f3a] px-5 py-2 text-xs font-semibold text-[#a5b4fc]">
+              +{additionalSelectedNodeIds.size}개 다중 선택됨 — primary 노드의
+              속성만 표시
+            </div>
+          ) : null}
           <NodeInspector
             node={selectedNode}
             tree={tree}
