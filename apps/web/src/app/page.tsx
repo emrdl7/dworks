@@ -2791,7 +2791,14 @@ function CanvasNode({
 
   switch (node.type) {
     case 'section': {
-      if (node.role === 'banner' && viewport === 'mobile') {
+      const isPageShellSection =
+        node.role !== undefined ||
+        node.layout?.direction === 'column'
+      const sectionClass = isPageShellSection
+        ? 'flex flex-col'
+        : 'flex flex-col gap-8 p-10'
+
+      if (node.role === 'banner' && viewport !== 'desktop') {
         return (
           <MobileBannerSection
             node={node}
@@ -2811,7 +2818,7 @@ function CanvasNode({
             onSelect={onSelect}
           >
             <section
-              className="flex flex-col gap-8 p-10"
+              className={sectionClass}
               style={mergeStyles(boxStyle, childLayoutStyle)}
             >
               {node.children.map((child) => (
@@ -2831,7 +2838,7 @@ function CanvasNode({
       const [firstChild, ...remainingChildren] = node.children
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <section className="flex flex-col gap-8 p-10" style={boxStyle}>
+          <section className={sectionClass} style={boxStyle}>
             {firstChild ? (
               <CanvasNode
                 node={firstChild}
