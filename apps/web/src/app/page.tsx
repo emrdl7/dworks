@@ -820,6 +820,13 @@ export default function HomePage() {
   const [canvasGridVisible, setCanvasGridVisible] = useState(false)
   // 키보드 단축키 도움말 popover
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false)
+  const shortcutHelpCloseRef = useRef<HTMLButtonElement | null>(null)
+  useEffect(() => {
+    if (shortcutHelpOpen) {
+      // 마운트 직후 focus — animation 시작과 함께
+      shortcutHelpCloseRef.current?.focus()
+    }
+  }, [shortcutHelpOpen])
   // 레이어 트리 collapse 상태 — 컨테이너 노드 ID 집합. 기본 모두 펼침.
   const [collapsedLayerNodeIds, setCollapsedLayerNodeIds] = useState<
     Set<string>
@@ -3586,6 +3593,7 @@ export default function HomePage() {
               <button
                 type="button"
                 aria-label="닫기"
+                ref={shortcutHelpCloseRef}
                 onClick={() => setShortcutHelpOpen(false)}
                 className="inline-flex h-6 w-6 items-center justify-center rounded text-[#647067] hover:bg-[#f1f5f3] hover:text-[#18211d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
               >
