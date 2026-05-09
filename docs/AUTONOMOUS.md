@@ -115,6 +115,14 @@
 - ✓ `m3-generate-image-ref-multi-aspect-merge` (`90dbc88`) — 다중 비율 통합 추론 helper(가장 흔한 + ASPECT_PRIORITY) + UI/prompt 출력. test 6 추가
 - ✓ `m3-generate-richness-trend-empty-state` (`6f3d613`) — generations < 2 시 sparkline 자리 안내 메시지
 - ✓ `m3-generate-fixture-dropdown-richness-sort` (`24e671b`) — "내 fixture" 풍부도 desc 정렬
+
+**사용자 정정 cleanup (2026-05-09 저녁)** — 자율 모드 곁가지 revert. 사용자: "풍부도고 개뼉다구고 내가 알아야 할 이유가 뭐야?" / "쓸데없는 쪽으로 빠지지 말고 실제 사용할 수 있는 툴" / "ui 난잡" / "로고는 파란계열인데 ui는 왜 녹색계열".
+
+- ✗ 풍부도 메트릭 UI revert (`49ae92b`) — chip 점수 / 부족 신호 카드 / sparkline / summary card / 통합 팔레트 카드 / fixture dropdown 점수 / 자동 retry 토글 모두 제거. 476 line deletion. 모듈/CLI 메트릭은 유지
+- ✗ 좌측 패널 PoC scope 외 6 버튼 revert (`47ae809`) — 히스토리 정리 / batch export+import / fixture catalog export+import / fixture 이름 변경 제거. 311 line deletion
+- ✓ UI 색·폼 통일 (`b824663`) — primary 청록 → indigo-600, destructive 베이지 → red, 좌측 폼 사이즈 → 우측 inspector 표준 정합
+- ✓ 헤더 메타 chip 4 제거 (`72e1d01`) — 루트/편집가능/선택/색상 제거, 대비 AA만 유지
+
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
