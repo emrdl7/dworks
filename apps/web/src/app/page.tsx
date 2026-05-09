@@ -3253,7 +3253,14 @@ export default function HomePage() {
               type="search"
               value={layerQuery}
               onChange={(event) => setLayerQuery(event.target.value)}
-              placeholder="레이어 검색"
+              onKeyDown={(event) => {
+                if (event.key === 'Escape' && layerQuery !== '') {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setLayerQuery('')
+                }
+              }}
+              placeholder="레이어 검색 (Esc — 지우기)"
               aria-label="레이어 검색"
               className="h-8 w-full rounded-md border border-[#cbd6cf] bg-white px-2.5 text-xs text-[#18211d] outline-none placeholder:text-[#9aa49d] focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/20"
             />
