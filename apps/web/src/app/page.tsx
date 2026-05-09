@@ -80,7 +80,6 @@ import {
   type ImageFilter,
   type ImageDropShadow,
   type NodeColor,
-  type NodeCursor,
   type NodeTransform,
   type NodeTransition,
   type NodeTransitionTiming,
@@ -111,7 +110,6 @@ import {
   updateNodeMeta,
   updateShape,
   updateSpacing,
-  updateStyleTokens,
   updateText,
   updateTextTypography,
 } from '@dworks/tree-editor'
@@ -3113,7 +3111,6 @@ export default function HomePage() {
           <NodeInspector
             node={selectedNode}
             tree={tree}
-            structureInfo={selectedStructureInfo}
             onTextChange={handleTextChange}
             onTextTypographyChange={handleTextTypographyChange}
             onTextTypographyReset={handleTextTypographyReset}
@@ -3135,9 +3132,6 @@ export default function HomePage() {
             onFontFamilyDelete={handleFontFamilyDelete}
             onButtonLabelChange={handleButtonLabelChange}
             onImageChange={handleImageChange}
-            onMoveUp={() => handleMoveSelected('up')}
-            onMoveDown={() => handleMoveSelected('down')}
-            onDuplicate={handleDuplicateSelected}
             colorPreset={colorPreset}
           />
         </aside>
@@ -5276,7 +5270,6 @@ const aspectRatioClasses: Record<NonNullable<ImageNode['aspectRatio']>, string> 
 interface NodeInspectorProps {
   node: TreeNode
   tree: Tree
-  structureInfo: StructureInfo
   colorPreset: ColorPreset
   onTextChange: (node: TextNode, content: string) => void
   onTextTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
@@ -5306,15 +5299,11 @@ interface NodeInspectorProps {
   onFontFamilyDelete: (familyId: string) => Promise<void>
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: ImageEditPatch) => void
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onDuplicate: () => void
 }
 
 function NodeInspector({
   node,
   tree,
-  structureInfo,
   colorPreset,
   onTextChange,
   onTextTypographyChange,
@@ -5337,9 +5326,6 @@ function NodeInspector({
   onFontFamilyDelete,
   onButtonLabelChange,
   onImageChange,
-  onMoveUp,
-  onMoveDown,
-  onDuplicate,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
   const [openSectionsByNode, setOpenSectionsByNode] = useState<
