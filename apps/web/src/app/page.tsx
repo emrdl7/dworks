@@ -4805,7 +4805,7 @@ function CanvasNode({
               ))}
             </div>
             {hasImage ? (
-              <div className="flex min-h-[320px] flex-col gap-4">
+              <div className="flex min-w-0 flex-col gap-4">
                 {imageChildren.map((child) => (
                   <CanvasNode
                     key={child.id}
@@ -6271,7 +6271,7 @@ function ImagePreview({
 
   return (
     <figure
-      className={`relative flex min-h-[320px] overflow-hidden border border-white/25 bg-[var(--dw-image-surface)] ${
+      className={`relative flex w-full min-w-0 max-w-full overflow-hidden border border-white/25 bg-[var(--dw-image-surface)] ${
         aspectRatioClasses[node.aspectRatio ?? 'wide']
       }`}
       style={style}
