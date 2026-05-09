@@ -3,7 +3,9 @@
 
 export {
   addContainerChild,
+  addContainerSibling,
   addLeafChild,
+  addLeafSibling,
   applyEditOperation,
   applyEditSequence,
   changeContainerNodeType,

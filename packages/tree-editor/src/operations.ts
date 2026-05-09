@@ -387,6 +387,105 @@ function createDefaultLeafNode(id: string, type: LeafNodeType): TreeNode {
   return { id, editKind: 'media', type: 'image', src: '', alt: '이미지' }
 }
 
+// 선택 노드 _다음에_ 형제 leaf 추가 — 같은 부모, 선택 노드 인덱스 + 1 위치.
+// root 노드는 부모가 없으므로 형제 추가 불가 → 명시적 에러.
+export function addLeafSibling(
+  tree: Tree,
+  siblingNodeId: string,
+  childType: LeafNodeType,
+  newId: string,
+): Tree {
+  if (siblingNodeId === tree.root.id) {
+    throw new Error(`tree edit failed: cannot add sibling to root: ${siblingNodeId}`)
+  }
+  const existingIds = collectNodeIdsLocal(tree.root)
+  if (existingIds.has(newId)) {
+    throw new Error(`tree edit failed: id already exists: ${newId}`)
+  }
+  const newChild = createDefaultLeafNode(newId, childType)
+  const state: EditState = { matched: false }
+  const root = walkAndAddSibling(tree.root, siblingNodeId, newChild, state)
+  if (!state.matched) {
+    throw new Error(`tree edit failed: sibling not found: ${siblingNodeId}`)
+  }
+  return { ...tree, root }
+}
+
+// 선택 노드 _다음에_ 컨테이너 형제 추가 — 빈 컨테이너 schema 위반이라 default text 자식 1개 동시 생성.
+export function addContainerSibling(
+  tree: Tree,
+  siblingNodeId: string,
+  containerType: ContainerNodeType,
+  newId: string,
+  initialTextChildId: string,
+): Tree {
+  if (siblingNodeId === tree.root.id) {
+    throw new Error(`tree edit failed: cannot add sibling to root: ${siblingNodeId}`)
+  }
+  const existingIds = collectNodeIdsLocal(tree.root)
+  if (existingIds.has(newId)) {
+    throw new Error(`tree edit failed: id already exists: ${newId}`)
+  }
+  if (existingIds.has(initialTextChildId)) {
+    throw new Error(
+      `tree edit failed: initial child id already exists: ${initialTextChildId}`,
+    )
+  }
+  const initialChild: TreeNode = {
+    id: initialTextChildId,
+    editKind: 'text',
+    type: 'text',
+    content: '내용',
+  }
+  const newChild = {
+    id: newId,
+    editKind: 'structure',
+    type: containerType,
+    children: [initialChild],
+  } as TreeNode
+  const state: EditState = { matched: false }
+  const root = walkAndAddSibling(tree.root, siblingNodeId, newChild, state)
+  if (!state.matched) {
+    throw new Error(`tree edit failed: sibling not found: ${siblingNodeId}`)
+  }
+  return { ...tree, root }
+}
+
+function walkAndAddSibling(
+  node: TreeNode,
+  siblingNodeId: string,
+  newChild: TreeNode,
+  state: EditState,
+): TreeNode {
+  if (
+    node.type !== 'section' &&
+    node.type !== 'hero' &&
+    node.type !== 'card' &&
+    node.type !== 'list' &&
+    node.type !== 'form'
+  ) {
+    return node
+  }
+  const idx = node.children.findIndex((c) => c.id === siblingNodeId)
+  if (idx >= 0) {
+    state.matched = true
+    return {
+      ...node,
+      children: [
+        ...node.children.slice(0, idx + 1),
+        newChild,
+        ...node.children.slice(idx + 1),
+      ],
+    }
+  }
+  return {
+    ...node,
+    children: node.children.map((child) =>
+      state.matched ? child : walkAndAddSibling(child, siblingNodeId, newChild, state),
+    ),
+  }
+}
+
 function walkAndAddChild(
   node: TreeNode,
   parentId: string,

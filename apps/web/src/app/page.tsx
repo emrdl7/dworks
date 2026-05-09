@@ -115,7 +115,9 @@ import {
 } from '@dworks/tree'
 import {
   addContainerChild,
+  addContainerSibling,
   addLeafChild,
+  addLeafSibling,
   type ContainerNodeType,
   changeContainerNodeType,
   changeLeafNodeType,
@@ -2581,6 +2583,45 @@ export default function HomePage() {
     closeContextMenu()
   }
 
+  // 선택 노드 _다음에_ 형제 leaf 노드 추가 (root 노드는 부모가 없어 불가)
+  function handleAddLeafSibling(siblingId: string, childType: LeafNodeType) {
+    if (siblingId === tree.root.id) return
+    const existingIds = collectNodeIds(tree.root)
+    const base = `${siblingId}.${childType}`
+    let suffix = 1
+    while (existingIds.has(`${base}-${suffix}`)) {
+      suffix += 1
+    }
+    const newId = `${base}-${suffix}`
+    const nextTree = addLeafSibling(tree, siblingId, childType, newId)
+    commitTreeEdit(nextTree, newId)
+    closeContextMenu()
+  }
+
+  function handleAddContainerSibling(
+    siblingId: string,
+    containerType: ContainerNodeType,
+  ) {
+    if (siblingId === tree.root.id) return
+    const existingIds = collectNodeIds(tree.root)
+    const base = `${siblingId}.${containerType}`
+    let suffix = 1
+    while (existingIds.has(`${base}-${suffix}`)) {
+      suffix += 1
+    }
+    const newContainerId = `${base}-${suffix}`
+    const newTextChildId = `${newContainerId}.text-1`
+    const nextTree = addContainerSibling(
+      tree,
+      siblingId,
+      containerType,
+      newContainerId,
+      newTextChildId,
+    )
+    commitTreeEdit(nextTree, newContainerId)
+    closeContextMenu()
+  }
+
   function handleToggleNodeVisibility(node: TreeNode) {
     handleNodeMetaChange(node, {
       hidden: node.hidden === true ? undefined : true,
@@ -4526,6 +4567,12 @@ export default function HomePage() {
           onAddContainerChild={(containerType) =>
             handleAddContainerChild(contextMenuNode.id, containerType)
           }
+          onAddLeafSibling={(childType) =>
+            handleAddLeafSibling(contextMenuNode.id, childType)
+          }
+          onAddContainerSibling={(containerType) =>
+            handleAddContainerSibling(contextMenuNode.id, containerType)
+          }
           onChangeContainerType={(nextType) =>
             handleChangeContainerType(contextMenuNode.id, nextType)
           }
@@ -4846,6 +4893,8 @@ interface NodeContextMenuProps {
   node: TreeNode
   onAddLeafChild: (childType: LeafNodeType) => void
   onAddContainerChild: (containerType: ContainerNodeType) => void
+  onAddLeafSibling: (childType: LeafNodeType) => void
+  onAddContainerSibling: (containerType: ContainerNodeType) => void
   onChangeContainerType: (nextType: ContainerNodeType) => void
   onChangeLeafType: (nextType: LeafNodeType) => void
   onClose: () => void
@@ -4863,6 +4912,8 @@ function NodeContextMenu({
   node,
   onAddLeafChild,
   onAddContainerChild,
+  onAddLeafSibling,
+  onAddContainerSibling,
   onChangeContainerType,
   onChangeLeafType,
   onClose,
@@ -5014,6 +5065,23 @@ function NodeContextMenu({
       >
         캔버스에서 선택
       </ContextMenuButton>
+      {!structureInfo.isRoot ? (
+        <>
+          <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
+          <ContextMenuButton onClick={() => onAddLeafSibling('text')}>
+            다음에 텍스트 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddLeafSibling('image')}>
+            다음에 이미지 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddContainerSibling('section')}>
+            다음에 섹션 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddContainerSibling('card')}>
+            다음에 카드 추가
+          </ContextMenuButton>
+        </>
+      ) : null}
       {node.type === 'text' || node.type === 'button' || node.type === 'image' ? (
         <>
           <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
