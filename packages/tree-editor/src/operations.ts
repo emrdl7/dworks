@@ -237,6 +237,96 @@ export function deleteNode(tree: Tree, nodeId: string): Tree {
   return applyEditOperation(tree, { type: 'deleteNode', nodeId })
 }
 
+// 컨테이너 노드의 마지막 자식으로 leaf 노드 추가. 사용자 mandate: _노드 수동 추가_.
+// LLM 의존을 줄이기 위한 free-form 편집 진입점.
+export function addLeafChild(
+  tree: Tree,
+  parentId: string,
+  childType: LeafNodeType,
+  newId: string,
+): Tree {
+  const existingIds = collectNodeIdsLocal(tree.root)
+  if (existingIds.has(newId)) {
+    throw new Error(`tree edit failed: id already exists: ${newId}`)
+  }
+  const newChild = createDefaultLeafNode(newId, childType)
+  const state: EditState = { matched: false }
+  const root = walkAndAddChild(tree.root, parentId, newChild, state)
+  if (!state.matched) {
+    throw new Error(`tree edit failed: parent not found: ${parentId}`)
+  }
+  return { ...tree, root }
+}
+
+function createDefaultLeafNode(id: string, type: LeafNodeType): TreeNode {
+  if (type === 'text') {
+    return { id, editKind: 'text', type: 'text', content: '새 텍스트' }
+  }
+  if (type === 'button') {
+    return { id, editKind: 'text', type: 'button', label: '버튼' }
+  }
+  return { id, editKind: 'media', type: 'image', src: '', alt: '이미지' }
+}
+
+function walkAndAddChild(
+  node: TreeNode,
+  parentId: string,
+  newChild: TreeNode,
+  state: EditState,
+): TreeNode {
+  if (node.id === parentId) {
+    if (
+      node.type === 'section' ||
+      node.type === 'hero' ||
+      node.type === 'card' ||
+      node.type === 'list' ||
+      node.type === 'form'
+    ) {
+      state.matched = true
+      return { ...node, children: [...node.children, newChild] }
+    }
+    throw new Error(
+      `tree edit failed: parent is not a container: ${parentId} (${node.type})`,
+    )
+  }
+  if (
+    node.type === 'section' ||
+    node.type === 'hero' ||
+    node.type === 'card' ||
+    node.type === 'list' ||
+    node.type === 'form'
+  ) {
+    return {
+      ...node,
+      children: node.children.map((child) =>
+        state.matched
+          ? child
+          : walkAndAddChild(child, parentId, newChild, state),
+      ),
+    }
+  }
+  return node
+}
+
+function collectNodeIdsLocal(
+  node: TreeNode,
+  ids: Set<string> = new Set(),
+): Set<string> {
+  ids.add(node.id)
+  if (
+    node.type === 'section' ||
+    node.type === 'hero' ||
+    node.type === 'card' ||
+    node.type === 'list' ||
+    node.type === 'form'
+  ) {
+    for (const child of node.children) {
+      collectNodeIdsLocal(child, ids)
+    }
+  }
+  return ids
+}
+
 // leaf 노드(text/button/image) 간 type 변경. 위치/위계와 base props(spacing/shape/color/
 // layout/transition/transform/cursor 등)는 보존, semantic 내용은 가능한 한 캐리오버한다.
 //   text → image: alt = old.content, src = ''

@@ -114,6 +114,7 @@ import {
   type Typography,
 } from '@dworks/tree'
 import {
+  addLeafChild,
   changeLeafNodeType,
   deleteNode,
   duplicateNode,
@@ -2388,6 +2389,20 @@ export default function HomePage() {
     handleDeleteNode(selectedNodeId)
   }
 
+  // 컨테이너 자식으로 leaf 노드 수동 추가 — LLM 의존 없는 자유 편집
+  function handleAddLeafChild(parentId: string, childType: LeafNodeType) {
+    const existingIds = collectNodeIds(tree.root)
+    const base = `${parentId}.${childType}`
+    let suffix = 1
+    while (existingIds.has(`${base}-${suffix}`)) {
+      suffix += 1
+    }
+    const newId = `${base}-${suffix}`
+    const nextTree = addLeafChild(tree, parentId, childType, newId)
+    commitTreeEdit(nextTree, newId)
+    closeContextMenu()
+  }
+
   function handleToggleNodeVisibility(node: TreeNode) {
     handleNodeMetaChange(node, {
       hidden: node.hidden === true ? undefined : true,
@@ -3767,6 +3782,9 @@ export default function HomePage() {
           node={contextMenuNode}
           position={contextMenu}
           structureInfo={contextMenuStructureInfo}
+          onAddLeafChild={(childType) =>
+            handleAddLeafChild(contextMenuNode.id, childType)
+          }
           onChangeLeafType={(nextType) =>
             handleChangeLeafType(contextMenuNode.id, nextType)
           }
@@ -4014,6 +4032,7 @@ function CanvasZoomControl({ value, onChange }: CanvasZoomControlProps) {
 
 interface NodeContextMenuProps {
   node: TreeNode
+  onAddLeafChild: (childType: LeafNodeType) => void
   onChangeLeafType: (nextType: LeafNodeType) => void
   onClose: () => void
   onDelete: () => void
@@ -4028,6 +4047,7 @@ interface NodeContextMenuProps {
 
 function NodeContextMenu({
   node,
+  onAddLeafChild,
   onChangeLeafType,
   onClose,
   onDelete,
@@ -4198,6 +4218,24 @@ function NodeContextMenu({
             onClick={() => onChangeLeafType('button')}
           >
             버튼으로 변경
+          </ContextMenuButton>
+        </>
+      ) : null}
+      {node.type === 'section' ||
+      node.type === 'hero' ||
+      node.type === 'card' ||
+      node.type === 'list' ||
+      node.type === 'form' ? (
+        <>
+          <div className="my-1 h-px bg-[#2a2e35]" role="separator" />
+          <ContextMenuButton onClick={() => onAddLeafChild('text')}>
+            텍스트 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddLeafChild('button')}>
+            버튼 추가
+          </ContextMenuButton>
+          <ContextMenuButton onClick={() => onAddLeafChild('image')}>
+            이미지 추가
           </ContextMenuButton>
         </>
       ) : null}

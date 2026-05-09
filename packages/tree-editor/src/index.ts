@@ -2,6 +2,7 @@
 // M2 tree-editor 첫 단위: text/button content edits only.
 
 export {
+  addLeafChild,
   applyEditOperation,
   applyEditSequence,
   changeLeafNodeType,
