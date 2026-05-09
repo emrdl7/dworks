@@ -35,8 +35,6 @@ import {
   ArrowUp,
   ArrowUpLeft,
   ArrowUpRight,
-  ChevronDown,
-  ChevronUp,
   Columns2,
   Copy,
   GripVertical,
@@ -57,7 +55,6 @@ import {
 } from 'lucide-react'
 import {
   COLOR_PRESETS,
-  COLOR_PRESET_IDS,
   BUILT_IN_FONT_FAMILY_IDS,
   GRADIENT_DIRECTION_IDS,
   GRADIENT_TYPE_IDS,
@@ -88,7 +85,6 @@ import {
   type NodeTransition,
   type NodeTransitionTiming,
   type TransitionCubicBezier,
-  NODE_CURSOR_IDS,
   NODE_TRANSITION_TIMING_IDS,
   type NodeLayout,
   type ShadowPreset,
@@ -342,34 +338,6 @@ const nodeTypeLabels: Record<TreeNode['type'], string> = {
   form: '폼',
 }
 
-const editKindLabels: Record<TreeNode['editKind'], string> = {
-  text: '텍스트',
-  media: '미디어',
-  structure: '구조',
-  style: '스타일',
-}
-
-const contentRoleLabels = {
-  heading: '제목',
-  body: '본문',
-  caption: '캡션',
-  cta: '주요 행동',
-  label: '라벨',
-  value: '값',
-} as const
-
-const buttonVariantLabels = {
-  primary: '주요',
-  secondary: '보조',
-  ghost: '투명',
-} as const
-
-const listVariantLabels = {
-  ordered: '순서 목록',
-  unordered: '기본 목록',
-  description: '설명 목록',
-} as const
-
 const imageAspectRatioLabels = {
   square: '정사각형',
   landscape: '가로형',
@@ -389,14 +357,6 @@ const layoutIntentLabels = {
   split: '분할',
   'dashboard-grid': '대시보드 그리드',
 } as const
-
-const colorPresetLabels: Record<ColorPreset, string> = {
-  mint: '민트',
-  navy: '네이비',
-  sand: '샌드',
-  plum: '플럼',
-  graphite: '그래파이트',
-}
 
 const fontWeightLabels: Record<FontWeight, string> = {
   '100': '씬',
@@ -441,15 +401,6 @@ const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
   mono: '고정폭',
 }
 
-const nodeCursorLabels: Record<NodeCursor, string> = {
-  default: '기본',
-  pointer: '포인터',
-  text: '텍스트',
-  help: '도움말',
-  'not-allowed': '금지',
-  grab: '잡기',
-  crosshair: '십자',
-}
 
 const nodeTransitionTimingLabels: Record<NodeTransitionTiming, string> = {
   linear: '선형',
