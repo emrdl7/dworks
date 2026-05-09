@@ -137,7 +137,15 @@ export interface LlmCliOptions {
   }>
 }
 
-const DEFAULT_TIMEOUT_MS = 30_000
+function resolveDefaultTimeoutMs(): number {
+  const raw = process.env.DWORKS_LLM_TIMEOUT_MS
+  if (raw === undefined) return 90_000
+  const parsed = Number.parseInt(raw, 10)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 90_000
+  return parsed
+}
+
+const DEFAULT_TIMEOUT_MS = resolveDefaultTimeoutMs()
 
 /**
  * provider별 LLM CLI에 system + user prompt를 보내고 stdout을 회수한다.
