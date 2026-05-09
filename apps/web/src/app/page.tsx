@@ -824,6 +824,12 @@ export default function HomePage() {
   const [collapsedLayerNodeIds, setCollapsedLayerNodeIds] = useState<
     Set<string>
   >(() => new Set())
+  // 레이어↔캔버스 cross-highlight — hover 중인 노드 ID
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+  const canvasHoverValue = useMemo(
+    () => ({ hoveredNodeId, setHoveredNodeId }),
+    [hoveredNodeId],
+  )
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -2402,6 +2408,7 @@ export default function HomePage() {
   ])
 
   return (
+    <CanvasHoverContext.Provider value={canvasHoverValue}>
     <main className="flex h-screen flex-col overflow-hidden bg-[#f5f7f4] text-[#18211d]">
       <header className="flex h-14 items-center justify-between border-b border-[#d7ddd2] bg-white px-5">
         <div className="flex items-center gap-4">
@@ -3192,6 +3199,12 @@ export default function HomePage() {
                   key={node.id}
                   data-layer-node-id={node.id}
                   className="relative py-0.5"
+                  onMouseEnter={() => setHoveredNodeId(node.id)}
+                  onMouseLeave={() => {
+                    if (hoveredNodeId === node.id) {
+                      setHoveredNodeId(null)
+                    }
+                  }}
                   onDragLeave={handleLayerDragLeave}
                   onDragOver={(event) => handleLayerDragOver(node.id, event)}
                   onDrop={(event) => handleLayerDrop(node.id, event)}
@@ -3214,7 +3227,9 @@ export default function HomePage() {
                     className={`flex items-center gap-1 rounded-md pr-2 text-sm transition ${
                       node.id === selectedNodeId
                         ? 'bg-[#dff1ee] text-[#073d37]'
-                        : 'text-[#26312b] hover:bg-[#eef3ed]'
+                        : hoveredNodeId === node.id
+                          ? 'bg-[#eef3ed] text-[#26312b]'
+                          : 'text-[#26312b] hover:bg-[#eef3ed]'
                     } ${isDragging ? 'opacity-50' : ''}`}
                     style={{ paddingLeft: 8 + depth * 14 }}
                   >
@@ -3564,6 +3579,7 @@ export default function HomePage() {
         </>
       ) : null}
     </main>
+    </CanvasHoverContext.Provider>
   )
 }
 
@@ -3941,6 +3957,15 @@ function getContextMenuItems(menu: HTMLDivElement | null): HTMLButtonElement[] {
 
 const CanvasReadOnlyContext = createContext(false)
 const CanvasViewportContext = createContext<ResponsiveViewport>('desktop')
+
+interface CanvasHoverContextValue {
+  hoveredNodeId: string | null
+  setHoveredNodeId: (id: string | null) => void
+}
+const CanvasHoverContext = createContext<CanvasHoverContextValue>({
+  hoveredNodeId: null,
+  setHoveredNodeId: () => {},
+})
 
 interface CanvasNodeProps {
   inheritedTextColor?: string
@@ -4520,6 +4545,7 @@ function SelectableNode({
   children,
 }: SelectableNodeProps) {
   const readOnly = useContext(CanvasReadOnlyContext)
+  const { hoveredNodeId, setHoveredNodeId } = useContext(CanvasHoverContext)
   const transformStyle = getTransformStyle(node.transform)
   const transitionStyle = getTransitionStyle(node.transition)
 
@@ -4539,6 +4565,7 @@ function SelectableNode({
 
   const isSelected = node.id === selectedNodeId
   const isCanvasSelectable = node.pointerEvents !== 'none'
+  const isHovered = hoveredNodeId === node.id && !isSelected
   const nodeMetaStyle: CSSProperties = {
     pointerEvents: isCanvasSelectable ? 'auto' : 'none',
     ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
@@ -4576,9 +4603,19 @@ function SelectableNode({
       className={`group/dwnode relative border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-accent)] ${
         isSelected
           ? 'border-[var(--dw-accent)] shadow-[0_0_0_3px_var(--dw-selection-ring)]'
-          : 'border-transparent hover:border-[var(--dw-border)]'
+          : isHovered
+            ? 'border-[var(--dw-accent)]/60 shadow-[0_0_0_2px_rgba(79,70,229,0.12)]'
+            : 'border-transparent hover:border-[var(--dw-border)]'
       }`}
       style={nodeMetaStyle}
+      onMouseEnter={() => {
+        if (isCanvasSelectable) setHoveredNodeId(node.id)
+      }}
+      onMouseLeave={() => {
+        if (isCanvasSelectable && hoveredNodeId === node.id) {
+          setHoveredNodeId(null)
+        }
+      }}
       onClick={(event) => {
         event.stopPropagation()
         selectNode()
