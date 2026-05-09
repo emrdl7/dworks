@@ -2766,17 +2766,29 @@ export default function HomePage() {
                         stroke="#1b7f72"
                         strokeWidth={1.2}
                       />
-                      {points.map((p, i) => (
-                        <circle
-                          key={i}
-                          cx={p.x}
-                          cy={p.y}
-                          r={i === activeIndex ? 2.6 : 1.6}
-                          fill={i === activeIndex ? '#1b7f72' : '#7c8a82'}
-                        />
-                      ))}
+                      {points.map((p, i) => {
+                        const entry = generations[i]
+                        const label = entry?.userLabel ?? entry?.label ?? ''
+                        return (
+                          <circle
+                            key={i}
+                            cx={p.x}
+                            cy={p.y}
+                            r={i === activeIndex ? 2.6 : 1.6}
+                            fill={i === activeIndex ? '#1b7f72' : '#7c8a82'}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              if (entry !== undefined) {
+                                handleSelectGeneration(entry.id)
+                              }
+                            }}
+                          >
+                            <title>{`${label} — ${p.score.toFixed(2)}`}</title>
+                          </circle>
+                        )
+                      })}
                     </svg>
-                    <span>풍부도 추이 (점선 = 0.6 임계)</span>
+                    <span>풍부도 추이 (점선 = 0.6 임계, 점 클릭 = 선택)</span>
                   </div>
                 )
               })()}
