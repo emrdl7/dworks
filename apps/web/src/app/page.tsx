@@ -283,6 +283,7 @@ type GenerateStage = 'intent' | 'questions'
 interface GenerationEntry {
   id: string
   label: string
+  userLabel?: string
   tree: Tree
   immutable: boolean
   pinned?: boolean
@@ -846,6 +847,8 @@ export default function HomePage() {
   const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
   const [autoRichnessRetry, setAutoRichnessRetry] = useState(false)
   const [userFixtures, setUserFixtures] = useState<UserFixture[]>([])
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null)
+  const [editingLabelDraft, setEditingLabelDraft] = useState('')
   const [briefImageRef, setBriefImageRef] = useState<ImageReferenceSeed | null>(
     null,
   )
@@ -1690,6 +1693,35 @@ export default function HomePage() {
     )
   }
 
+  function handleStartLabelEdit(entry: GenerationEntry): void {
+    if (entry.immutable) return
+    setEditingLabelId(entry.id)
+    setEditingLabelDraft(entry.userLabel ?? entry.label)
+  }
+
+  function handleCommitLabelEdit(): void {
+    if (editingLabelId === null) return
+    const trimmed = editingLabelDraft.trim().slice(0, 30)
+    setGenerations((entries) =>
+      entries.map((entry) => {
+        if (entry.id !== editingLabelId) return entry
+        if (trimmed.length === 0) {
+          const { userLabel: _userLabel, ...rest } = entry
+          void _userLabel
+          return rest
+        }
+        return { ...entry, userLabel: trimmed }
+      }),
+    )
+    setEditingLabelId(null)
+    setEditingLabelDraft('')
+  }
+
+  function handleCancelLabelEdit(): void {
+    setEditingLabelId(null)
+    setEditingLabelDraft('')
+  }
+
   function handleSelectGeneration(targetId: string) {
     if (targetId === activeGenerationId || generateLoading) return
     const target = generations.find((entry) => entry.id === targetId)
@@ -2450,6 +2482,8 @@ export default function HomePage() {
                 {generations.map((entry) => {
                   const isActive = entry.id === activeGenerationId
                   const isPinned = entry.pinned === true
+                  const isEditing = editingLabelId === entry.id
+                  const displayLabel = entry.userLabel ?? entry.label
                   const richness = entry.immutable
                     ? null
                     : computeRichnessReport(entry.tree).score
@@ -2460,42 +2494,68 @@ export default function HomePage() {
                     (entry.immutable ? '원본 fixture' : '생성 결과')
                   return (
                     <span key={entry.id} className="inline-flex items-center">
-                      <button
-                        type="button"
-                        title={
-                          formattedRichness === null
-                            ? generationTitle
-                            : `${generationTitle} · 디자인 풍부도 ${formattedRichness}`
-                        }
-                        aria-label={
-                          formattedRichness === null
-                            ? entry.label
-                            : `${entry.label} 디자인 풍부도 ${formattedRichness}`
-                        }
-                        aria-pressed={isActive}
-                        aria-disabled={compareMode || undefined}
-                        disabled={compareMode}
-                        className={`${
-                          entry.immutable
-                            ? 'rounded-full'
-                            : 'rounded-l-full rounded-r-none'
-                        } border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50 ${
-                          isActive
-                            ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
-                            : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
-                        }`}
-                        onClick={() => handleSelectGeneration(entry.id)}
-                      >
-                        {entry.label}
-                        {formattedRichness !== null ? (
-                          <span
-                            className="ml-1 text-[10px] font-normal opacity-70"
-                            aria-hidden="true"
-                          >
-                            {formattedRichness}
-                          </span>
-                        ) : null}
-                      </button>
+                      {isEditing ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          maxLength={30}
+                          value={editingLabelDraft}
+                          onChange={(event) =>
+                            setEditingLabelDraft(event.target.value)
+                          }
+                          onBlur={handleCommitLabelEdit}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.preventDefault()
+                              handleCommitLabelEdit()
+                            } else if (event.key === 'Escape') {
+                              event.preventDefault()
+                              handleCancelLabelEdit()
+                            }
+                          }}
+                          className="rounded-l-full rounded-r-none border border-[#1b7f72] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#18211d] outline-none focus:ring-2 focus:ring-[#1b7f72]/20"
+                          style={{ width: '6.5rem' }}
+                          placeholder="이름 (비우면 기본값)"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          title={
+                            formattedRichness === null
+                              ? `${generationTitle} (더블클릭으로 이름 변경)`
+                              : `${generationTitle} · 디자인 풍부도 ${formattedRichness} (더블클릭으로 이름 변경)`
+                          }
+                          aria-label={
+                            formattedRichness === null
+                              ? displayLabel
+                              : `${displayLabel} 디자인 풍부도 ${formattedRichness}`
+                          }
+                          aria-pressed={isActive}
+                          aria-disabled={compareMode || undefined}
+                          disabled={compareMode}
+                          className={`${
+                            entry.immutable
+                              ? 'rounded-full'
+                              : 'rounded-l-full rounded-r-none'
+                          } border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50 ${
+                            isActive
+                              ? 'border-[#1b7f72] bg-[#1b7f72] text-white'
+                              : 'border-[#cbd6cf] bg-white text-[#4f5e56] hover:border-[#1b7f72]'
+                          }`}
+                          onClick={() => handleSelectGeneration(entry.id)}
+                          onDoubleClick={() => handleStartLabelEdit(entry)}
+                        >
+                          {displayLabel}
+                          {formattedRichness !== null ? (
+                            <span
+                              className="ml-1 text-[10px] font-normal opacity-70"
+                              aria-hidden="true"
+                            >
+                              {formattedRichness}
+                            </span>
+                          ) : null}
+                        </button>
+                      )}
                       {!entry.immutable ? (
                         <button
                           type="button"

@@ -42,6 +42,7 @@ export interface PersistedImageReference {
 export interface PersistedGenerationEntry {
   id: string
   label: string
+  userLabel?: string
   tree: Tree
   immutable: boolean
   pinned?: boolean
@@ -350,9 +351,17 @@ function validateGenerationEntry(
     pinned = raw.pinned
   }
 
+  let userLabel: string | undefined
+  if (raw.userLabel !== undefined) {
+    if (typeof raw.userLabel !== 'string') return null
+    if (raw.userLabel.length === 0 || raw.userLabel.length > 30) return null
+    userLabel = raw.userLabel
+  }
+
   return {
     id,
     label,
+    ...(userLabel !== undefined ? { userLabel } : {}),
     tree: treeParse.data,
     immutable,
     ...(pinned !== undefined ? { pinned } : {}),
