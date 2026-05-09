@@ -797,6 +797,16 @@ export default function HomePage() {
     scrollLeft: number
     scrollTop: number
   } | null>(null)
+  // 좌/우 패널 폭 — drag로 조정 가능. localStorage 저장.
+  const LEFT_PANEL_MIN = 220
+  const LEFT_PANEL_MAX = 420
+  const RIGHT_PANEL_MIN = 280
+  const RIGHT_PANEL_MAX = 520
+  const [leftPanelWidth, setLeftPanelWidth] = useState(260)
+  const [rightPanelWidth, setRightPanelWidth] = useState(360)
+  const [resizingPanel, setResizingPanel] = useState<'left' | 'right' | null>(
+    null,
+  )
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [layerDrag, setLayerDrag] = useState<LayerDragState | null>(null)
   const [layerDropTarget, setLayerDropTarget] = useState<LayerDropTarget | null>(
@@ -910,6 +920,8 @@ export default function HomePage() {
           canvasZoom?: number
           responsiveViewport?: ResponsiveViewport
           leftPanelTab?: 'brief' | 'layers'
+          leftPanelWidth?: number
+          rightPanelWidth?: number
         }
         // 신규(canvasGridSize) 우선, 없으면 legacy boolean 마이그레이션
         if (
@@ -940,6 +952,20 @@ export default function HomePage() {
         if (saved.leftPanelTab === 'brief' || saved.leftPanelTab === 'layers') {
           setLeftPanelTab(saved.leftPanelTab)
         }
+        if (
+          typeof saved.leftPanelWidth === 'number' &&
+          saved.leftPanelWidth >= 220 &&
+          saved.leftPanelWidth <= 420
+        ) {
+          setLeftPanelWidth(saved.leftPanelWidth)
+        }
+        if (
+          typeof saved.rightPanelWidth === 'number' &&
+          saved.rightPanelWidth >= 280 &&
+          saved.rightPanelWidth <= 520
+        ) {
+          setRightPanelWidth(saved.rightPanelWidth)
+        }
       }
     } catch {
       // localStorage 접근 실패는 무시 — default 상태 유지
@@ -957,6 +983,8 @@ export default function HomePage() {
           canvasZoom,
           responsiveViewport,
           leftPanelTab,
+          leftPanelWidth,
+          rightPanelWidth,
         }),
       )
     } catch {
@@ -968,6 +996,8 @@ export default function HomePage() {
     canvasZoom,
     responsiveViewport,
     leftPanelTab,
+    leftPanelWidth,
+    rightPanelWidth,
   ])
 
   useEffect(() => {
@@ -2806,6 +2836,42 @@ export default function HomePage() {
     }
   }, [isPanning])
 
+  // 좌/우 패널 resize drag
+  useEffect(() => {
+    if (resizingPanel === null) return
+    function onMove(event: MouseEvent) {
+      if (resizingPanel === 'left') {
+        // 왼쪽 패널 폭 = 마우스 X 좌표 (창 좌측 기준). clamp.
+        const next = Math.max(
+          LEFT_PANEL_MIN,
+          Math.min(LEFT_PANEL_MAX, event.clientX),
+        )
+        setLeftPanelWidth(next)
+      } else if (resizingPanel === 'right') {
+        // 오른쪽 패널 폭 = 창 폭 - 마우스 X. clamp.
+        const next = Math.max(
+          RIGHT_PANEL_MIN,
+          Math.min(RIGHT_PANEL_MAX, window.innerWidth - event.clientX),
+        )
+        setRightPanelWidth(next)
+      }
+    }
+    function onUp() {
+      setResizingPanel(null)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    // 리사이즈 중 텍스트 선택/iframe pointer 이벤트 차단
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [resizingPanel])
+
   // 줌 변경 시 cursor anchor 위치 보정 — Figma처럼 커서 아래 점이 그대로
   const pendingZoomAnchorRef = useRef<{
     cursorX: number
@@ -2984,11 +3050,14 @@ export default function HomePage() {
       </header>
 
       <div
-        className={`grid h-[calc(100vh-56px)] min-h-0 ${
-          compareMode
-            ? 'grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)]'
-            : 'grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_360px]'
+        className={`grid h-[calc(100vh-56px)] min-h-0 grid-cols-1 ${
+          compareMode ? 'dw-grid-2col' : 'dw-grid-2col dw-grid-3col'
         }`}
+        style={{
+          // CSS 변수: globals.css의 .dw-grid-2col / .dw-grid-3col 미디어 쿼리에서 사용
+          ['--dw-left-panel' as string]: `${leftPanelWidth}px`,
+          ['--dw-right-panel' as string]: `${rightPanelWidth}px`,
+        }}
       >
         <button
           type="button"
@@ -3005,12 +3074,26 @@ export default function HomePage() {
         <aside
           aria-label="AI 디자인 브리프 패널"
           aria-hidden={!briefDrawerOpen}
-          className={`fixed bottom-0 left-0 top-14 z-40 flex min-h-0 w-[280px] flex-col border-r border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out md:static md:z-auto md:w-auto md:translate-x-0 md:shadow-none md:transition-none ${
+          className={`fixed bottom-0 left-0 top-14 z-40 flex min-h-0 w-[280px] flex-col border-r border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out md:relative md:z-auto md:w-auto md:translate-x-0 md:shadow-none md:transition-none ${
             briefDrawerOpen
               ? 'translate-x-0'
               : '-translate-x-full md:translate-x-0'
           }`}
         >
+          {/* 우측 가장자리 resize handle (md+에서만 보임) */}
+          <button
+            type="button"
+            aria-label={`좌측 패널 폭 조정 (현재 ${leftPanelWidth}px)`}
+            title="드래그로 폭 조정 — 더블클릭으로 260px 리셋"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              setResizingPanel('left')
+            }}
+            onDoubleClick={() => setLeftPanelWidth(260)}
+            className={`absolute -right-0.5 top-0 z-30 hidden h-full w-1 cursor-col-resize bg-transparent transition-colors hover:bg-[#6366f1]/40 focus-visible:bg-[#6366f1]/60 focus-visible:outline-none md:block ${
+              resizingPanel === 'left' ? 'bg-[#6366f1]/60' : ''
+            }`}
+          />
           <div
             role="tablist"
             aria-label="좌측 패널"
@@ -4205,12 +4288,26 @@ export default function HomePage() {
         <aside
           aria-label="속성 패널"
           aria-hidden={!inspectorDrawerOpen}
-          className={`fixed bottom-0 right-0 top-14 z-40 block min-h-0 w-[360px] overflow-hidden border-l border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out xl:static xl:z-auto xl:block xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
+          className={`fixed bottom-0 right-0 top-14 z-40 block min-h-0 w-[360px] overflow-hidden border-l border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out xl:relative xl:z-auto xl:block xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
             inspectorDrawerOpen
               ? 'translate-x-0'
               : 'translate-x-full xl:translate-x-0'
           }`}
         >
+          {/* 좌측 가장자리 resize handle (xl+에서만 보임) */}
+          <button
+            type="button"
+            aria-label={`우측 패널 폭 조정 (현재 ${rightPanelWidth}px)`}
+            title="드래그로 폭 조정 — 더블클릭으로 360px 리셋"
+            onMouseDown={(event) => {
+              event.preventDefault()
+              setResizingPanel('right')
+            }}
+            onDoubleClick={() => setRightPanelWidth(360)}
+            className={`absolute -left-0.5 top-0 z-30 hidden h-full w-1 cursor-col-resize bg-transparent transition-colors hover:bg-[#6366f1]/40 focus-visible:bg-[#6366f1]/60 focus-visible:outline-none xl:block ${
+              resizingPanel === 'right' ? 'bg-[#6366f1]/60' : ''
+            }`}
+          />
           {additionalSelectedNodeIds.size > 0 ? (
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#6366f1]/40 bg-[#1e1f3a] px-4 py-2 text-xs font-semibold text-[#a5b4fc]">
               <span>

@@ -77,6 +77,23 @@ input[type='radio'] {
   background: transparent;
 }
 
+/* 좌/우 패널 폭 — Tailwind 임의값 + 미디어쿼리 한계로 css 변수 + class 사용.
+   모바일(< md)에서는 grid-cols-1 (className), aside는 fixed drawer.
+   md+ 에서만 grid-template-columns 적용해서 좁은 화면에서 main 압박 방지. */
+@media (min-width: 768px) {
+  .dw-grid-2col {
+    grid-template-columns: var(--dw-left-panel, 260px) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .dw-grid-3col {
+    grid-template-columns:
+      var(--dw-left-panel, 260px) minmax(0, 1fr)
+      var(--dw-right-panel, 360px);
+  }
+}
+
 /* 모달/popover 진입 애니메이션 — 기성 디자인 툴 수준의 부드러운 페이드+up */
 @keyframes dw-fade-in {
   from {
