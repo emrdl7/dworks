@@ -2296,6 +2296,54 @@ export default function HomePage() {
     setSelectedNodeId((currentNodeId) => getSafeSelectedNodeId(nextTree, currentNodeId))
   }
 
+  // 글로벌 키보드 shortcut — input/textarea/contenteditable에서는 비활성
+  useEffect(() => {
+    function isEditableTarget(el: EventTarget | null): boolean {
+      if (!(el instanceof HTMLElement)) return false
+      const tag = el.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true
+      if (el.isContentEditable) return true
+      return false
+    }
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (isEditableTarget(event.target)) return
+      const meta = event.metaKey || event.ctrlKey
+
+      // Cmd/Ctrl+Z — undo / Cmd/Ctrl+Shift+Z — redo
+      if (meta && event.key.toLowerCase() === 'z') {
+        event.preventDefault()
+        if (event.shiftKey) {
+          handleRedo()
+        } else {
+          handleUndo()
+        }
+        return
+      }
+      // Cmd/Ctrl+Y — redo (Windows 표준)
+      if (meta && !event.shiftKey && event.key.toLowerCase() === 'y') {
+        event.preventDefault()
+        handleRedo()
+        return
+      }
+      // Cmd/Ctrl+D — duplicate
+      if (meta && event.key.toLowerCase() === 'd') {
+        event.preventDefault()
+        handleDuplicateSelected()
+        return
+      }
+      // Delete/Backspace — delete selected (root는 무시)
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault()
+        handleDeleteSelected()
+        return
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+    // 핸들러는 closure로 최신 state를 참조하므로 deps 비움
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyPast, historyFuture, selectedNodeId, tree])
+
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-[#f5f7f4] text-[#18211d]">
       <header className="flex h-14 items-center justify-between border-b border-[#d7ddd2] bg-white px-5">
@@ -2345,12 +2393,14 @@ export default function HomePage() {
           <div className="flex items-center gap-1">
             <HistoryButton
               ariaLabel="실행 취소"
+              shortcut="⌘Z"
               disabled={historyPast.length === 0}
               icon={Undo2}
               onClick={handleUndo}
             />
             <HistoryButton
               ariaLabel="다시 실행"
+              shortcut="⌘⇧Z"
               disabled={historyFuture.length === 0}
               icon={Redo2}
               onClick={handleRedo}
@@ -3316,6 +3366,7 @@ interface HistoryButtonProps {
   disabled: boolean
   icon: LucideIcon
   onClick: () => void
+  shortcut?: string
 }
 
 function HistoryButton({
@@ -3323,12 +3374,13 @@ function HistoryButton({
   disabled,
   icon: Icon,
   onClick,
+  shortcut,
 }: HistoryButtonProps) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
-      title={ariaLabel}
+      title={shortcut ? `${ariaLabel} (${shortcut})` : ariaLabel}
       className="flex h-9 w-9 items-center justify-center rounded-md border border-[#c9d4cd] bg-white text-[#26312b] transition hover:bg-[#eef3ed] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
       disabled={disabled}
       onClick={onClick}
