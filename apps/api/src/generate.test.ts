@@ -273,6 +273,61 @@ describe('handleGenerate', () => {
     assert.equal(calls.length, 1)
   })
 
+  it('sanitizes recoverable schema drift before returning a generated tree', async () => {
+    const { calls, spawn } = createClosingSpawn(
+      JSON.stringify({
+        version: '1',
+        root: {
+          id: 'generated.page',
+          type: 'section',
+          editKind: 'structure',
+          role: 'header',
+          layout: {
+            justify: 'space-between',
+          },
+          color: {
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          },
+          children: [
+            {
+              id: 'generated.title',
+              type: 'text',
+              editKind: 'text',
+              content: 'Dworks',
+              typography: {
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+              },
+            },
+          ],
+        },
+      }),
+    )
+
+    const result = await handleGenerate(
+      { prompt: 'schema drift가 있는 랜딩 페이지 생성' },
+      { spawnImpl: spawn, providerChain: ['claude'] },
+    )
+
+    assert.equal(result.status, 200)
+    if (result.status === 200) {
+      assert.equal(result.body.tree.root.type, 'section')
+      if (result.body.tree.root.type === 'section') {
+        assert.equal(result.body.tree.root.role, 'banner')
+        assert.equal(result.body.tree.root.layout?.justify, 'between')
+        assert.equal(result.body.tree.root.color?.backgroundColor, '#ffffff')
+        assert.equal(result.body.tree.root.color?.backgroundOpacity, 0.95)
+        const title = result.body.tree.root.children[0]
+        assert.equal(title?.type, 'text')
+        if (title?.type === 'text') {
+          assert.equal(title.typography?.fontWeight, '700')
+          assert.equal(title.typography?.letterSpacing, -0.02)
+        }
+      }
+    }
+    assert.equal(calls.length, 1)
+  })
+
   it('maps CLI timeout to a timeout failure and terminates the child process', async () => {
     const { killedSignals, spawn } = createHangingSpawn()
 

@@ -16,6 +16,7 @@ import {
   type LlmProvider,
   type SpawnLike,
 } from './llm.js'
+import { sanitizeGeneratedTreeJson } from './sanitize.js'
 
 export const briefAnswerSchema = z.object({
   questionId: z.string().min(1).max(40),
@@ -201,15 +202,21 @@ export async function handleGenerate(
       }
     }
 
-    const treeParse = treeSchema.safeParse(json)
+    const sanitizedJson = sanitizeGeneratedTreeJson(json)
+    const treeParse = treeSchema.safeParse(sanitizedJson)
     if (!treeParse.success) {
       if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
         console.error(
           '[dworks-api] schema-failure issues:',
           JSON.stringify(treeParse.error.issues.slice(0, 8), null, 2),
         )
-        const head = JSON.stringify(json).slice(0, 1500)
-        console.error('[dworks-api] schema-failure raw json (head):', head)
+        const rawHead = JSON.stringify(json).slice(0, 1500)
+        const sanitizedHead = JSON.stringify(sanitizedJson).slice(0, 1500)
+        console.error('[dworks-api] schema-failure raw json (head):', rawHead)
+        console.error(
+          '[dworks-api] schema-failure sanitized json (head):',
+          sanitizedHead,
+        )
       }
       return {
         status: 422,
