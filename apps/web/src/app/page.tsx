@@ -142,7 +142,6 @@ import {
   VARIANT_COUNT_OPTIONS,
   appendGenerationHistoryEntries,
   buildVariantRequestBrief,
-  clearMutableEntries,
   type VariantCount,
 } from './generation-history'
 import {
@@ -150,27 +149,17 @@ import {
   writePersistedGenerationState,
 } from './generation-storage'
 import {
-  buildExportBatchFilename,
-  buildExportBatchPayload,
   buildExportFilename,
   buildExportPayload,
-  parseImportBatchPayload,
   parseImportPayload,
 } from './generation-export'
 import {
   createUserFixtureId,
   readUserFixtures,
-  renameUserFixture,
   sanitizeUserFixtureName,
   writeUserFixtures,
   type UserFixture,
 } from './user-fixtures'
-import {
-  adoptImportedFixtures,
-  buildFixtureExportFilename,
-  buildFixtureExportPayload,
-  parseFixtureImportPayload,
-} from './fixture-export'
 import { extractDominantColors, pickAspectRatio } from './image-color'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
@@ -1154,91 +1143,6 @@ export default function HomePage() {
     }
   }
 
-  function handleRenameUserFixture(fixtureId: string): void {
-    const target = userFixtures.find((fixture) => fixture.id === fixtureId)
-    if (target === undefined) return
-    const next = window.prompt(
-      'fixture 이름을 변경합니다 (40자 이내).',
-      target.name,
-    )
-    if (next === null) return
-    const sanitized = sanitizeUserFixtureName(next)
-    if (sanitized.length === 0) {
-      setGenerateError('fixture 이름이 비어 있습니다.')
-      return
-    }
-    setUserFixtures((prev) => renameUserFixture(prev, fixtureId, sanitized))
-    setGenerateError(null)
-  }
-
-  function handleExportUserFixtures(): void {
-    if (userFixtures.length === 0) {
-      setGenerateError('내보낼 사용자 fixture가 없습니다.')
-      return
-    }
-    const exportedAt = new Date()
-    const payload = buildFixtureExportPayload(userFixtures, exportedAt)
-    const filename = buildFixtureExportFilename(exportedAt)
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: 'application/json',
-    })
-    const href = URL.createObjectURL(blob)
-    try {
-      const anchor = document.createElement('a')
-      anchor.href = href
-      anchor.download = filename
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-    } finally {
-      URL.revokeObjectURL(href)
-    }
-    setGenerateError(null)
-  }
-
-  async function handleImportUserFixtureFiles(files: File[]): Promise<void> {
-    const adopted: UserFixture[] = []
-    const failures: string[] = []
-    for (const file of files) {
-      if (!file.name.toLowerCase().endsWith('.json')) {
-        failures.push(`${file.name}: JSON 파일이 아닙니다.`)
-        continue
-      }
-      let text: string
-      try {
-        text = await file.text()
-      } catch (error) {
-        failures.push(
-          `${file.name}: ${error instanceof Error ? error.message : '읽기 실패'}`,
-        )
-        continue
-      }
-      const result = parseFixtureImportPayload(text)
-      if (!result.ok) {
-        failures.push(`${file.name}: ${result.reason}`)
-        continue
-      }
-      if (result.payload.fixtures.length === 0) {
-        failures.push(`${file.name}: fixture가 비어 있습니다.`)
-        continue
-      }
-      adopted.push(...adoptImportedFixtures(result.payload.fixtures))
-    }
-    if (adopted.length === 0) {
-      setGenerateError(
-        failures.length > 0
-          ? `fixture 가져오기 실패 — ${failures.join(' / ')}`
-          : '가져올 fixture가 없습니다.',
-      )
-      return
-    }
-    setUserFixtures((prev) => [...prev, ...adopted])
-    setGenerateError(
-      failures.length > 0
-        ? `${adopted.length}개 가져옴, 일부 실패 — ${failures.join(' / ')}`
-        : null,
-    )
-  }
 
   function collectCurrentAnswers(): BriefAnswer[] {
     const collected: BriefAnswer[] = []
@@ -1493,94 +1397,6 @@ export default function HomePage() {
     } else {
       setGenerateError(null)
     }
-  }
-
-  function handleExportAllGenerations(): void {
-    if (generations.length === 0) {
-      setGenerateError('내보낼 생성이 없습니다.')
-      return
-    }
-    const exportedAt = new Date()
-    const sources = generations.map((entry) => ({
-      tree: entry.tree,
-      label: entry.label,
-      brief: entry.brief,
-      questions: entry.questions,
-      clarifyTurns: entry.clarifyTurns,
-      model: entry.model,
-      latencyMs: entry.latencyMs,
-    }))
-    const payload = buildExportBatchPayload(sources, exportedAt)
-    const filename = buildExportBatchFilename(exportedAt)
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: 'application/json',
-    })
-    const href = URL.createObjectURL(blob)
-    try {
-      const anchor = document.createElement('a')
-      anchor.href = href
-      anchor.download = filename
-      document.body.appendChild(anchor)
-      anchor.click()
-      anchor.remove()
-    } finally {
-      URL.revokeObjectURL(href)
-    }
-    setGenerateError(null)
-  }
-
-  async function handleImportGenerationBatchFile(file: File): Promise<void> {
-    if (!file.name.toLowerCase().endsWith('.json')) {
-      setGenerateError(`${file.name}: JSON 파일이 아닙니다.`)
-      return
-    }
-    let text: string
-    try {
-      text = await file.text()
-    } catch (error) {
-      setGenerateError(
-        `${file.name}: ${error instanceof Error ? error.message : '읽기 실패'}`,
-      )
-      return
-    }
-    const result = parseImportBatchPayload(text)
-    if (!result.ok) {
-      setGenerateError(`${file.name}: ${result.reason}`)
-      return
-    }
-    if (result.payload.entries.length === 0) {
-      setGenerateError(`${file.name}: 가져올 entry가 없습니다.`)
-      return
-    }
-    const importedEntries: GenerationEntry[] = result.payload.entries.map(
-      (entry) => ({
-        id: createGenerationEntryId(),
-        label: '가져옴',
-        tree: entry.tree,
-        immutable: false,
-        brief: entry.brief,
-        questions: entry.questions,
-        clarifyTurns: entry.clarifyTurns,
-        createdAt: Date.now(),
-        latencyMs: entry.latencyMs,
-        model: entry.model,
-      }),
-    )
-    const lastEntry = importedEntries[importedEntries.length - 1]
-    if (lastEntry === undefined) return
-    setGenerations((entries) =>
-      appendGenerationHistoryEntries(entries, importedEntries, MAX_GENERATIONS),
-    )
-    setActiveGenerationId(lastEntry.id)
-    setCompareMode(false)
-    setTree(lastEntry.tree)
-    setSelectedNodeId(
-      findFirstEditableNodeId(lastEntry.tree.root) ?? lastEntry.tree.root.id,
-    )
-    setHistoryPast([])
-    setHistoryFuture([])
-    lastHistoryMergeRef.current = null
-    setGenerateError(null)
   }
 
   async function handleAskQuestions() {
@@ -1838,44 +1654,6 @@ export default function HomePage() {
         return { ...entry, pinned: !(entry.pinned === true) }
       }),
     )
-  }
-
-  function handleClearMutableHistory(): void {
-    const removable = generations.filter(
-      (entry) => !entry.immutable && entry.pinned !== true,
-    )
-    if (removable.length === 0) {
-      setGenerateError('정리할 mutable 생성이 없습니다.')
-      return
-    }
-    const ok = window.confirm(
-      `보호되지 않은 ${removable.length}개의 생성을 정리합니다. immutable과 ★ 고정은 유지됩니다. 계속할까요?`,
-    )
-    if (!ok) return
-    setGenerations((entries) => clearMutableEntries(entries))
-    setCompareMode(false)
-    const activeIsRemovable =
-      generations.find((entry) => entry.id === activeGenerationId)
-        ?.immutable === false &&
-      generations.find((entry) => entry.id === activeGenerationId)?.pinned !==
-        true
-    if (activeIsRemovable) {
-      const protectedFirst = generations.find(
-        (entry) => entry.immutable || entry.pinned === true,
-      )
-      if (protectedFirst !== undefined) {
-        setActiveGenerationId(protectedFirst.id)
-        setTree(protectedFirst.tree)
-        setSelectedNodeId(
-          findFirstEditableNodeId(protectedFirst.tree.root) ??
-            protectedFirst.tree.root.id,
-        )
-        setHistoryPast([])
-        setHistoryFuture([])
-        lastHistoryMergeRef.current = null
-      }
-    }
-    setGenerateError(null)
   }
 
   function handleStartLabelEdit(entry: GenerationEntry): void {
@@ -2755,22 +2533,26 @@ export default function HomePage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                {(() => {
-                  const removableCount = generations.filter(
-                    (entry) => !entry.immutable && entry.pinned !== true,
-                  ).length
-                  return (
-                    <button
-                      type="button"
-                      className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb] disabled:opacity-40"
-                      onClick={handleClearMutableHistory}
-                      disabled={removableCount === 0 || compareMode}
-                      title="immutable과 ★ 고정된 생성은 유지하고 나머지 mutable 생성을 일괄 정리합니다."
-                    >
-                      히스토리 정리{removableCount > 0 ? ` (${removableCount})` : ''}
-                    </button>
-                  )
-                })()}
+                <button
+                  type="button"
+                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
+                  onClick={handleSaveAsUserFixture}
+                  disabled={compareMode}
+                  title="활성 디자인을 사용자 fixture로 저장 — 다음 세션에서 예제 dropdown에 표시됩니다."
+                >
+                  fixture로 등록
+                </button>
+                {userFixtures.find((fx) => fx.id === selectedFixtureId) !==
+                undefined ? (
+                  <button
+                    type="button"
+                    className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb]"
+                    onClick={() => handleDeleteUserFixture(selectedFixtureId)}
+                    title="현재 선택된 사용자 fixture를 삭제합니다."
+                  >
+                    fixture 삭제
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
@@ -2792,85 +2574,6 @@ export default function HomePage() {
                       event.target.value = ''
                       if (files.length > 0) {
                         void handleImportGenerationFiles(files)
-                      }
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
-                  onClick={handleExportAllGenerations}
-                  disabled={generations.length === 0}
-                  title="현재 history의 모든 generation을 한 .json batch 파일로 내보냅니다."
-                >
-                  전체 내보내기
-                </button>
-                <label className="cursor-pointer rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]">
-                  batch 불러오기
-                  <input
-                    type="file"
-                    accept="application/json,.json"
-                    className="hidden"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0]
-                      event.target.value = ''
-                      if (file !== undefined) {
-                        void handleImportGenerationBatchFile(file)
-                      }
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
-                  onClick={handleSaveAsUserFixture}
-                  disabled={compareMode}
-                  title="활성 디자인을 사용자 fixture로 저장 — 다음 세션에서 예제 dropdown에 표시됩니다."
-                >
-                  fixture로 등록
-                </button>
-                {userFixtures.find((fx) => fx.id === selectedFixtureId) !==
-                undefined ? (
-                  <>
-                    <button
-                      type="button"
-                      className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]"
-                      onClick={() => handleRenameUserFixture(selectedFixtureId)}
-                      title="현재 선택된 사용자 fixture의 이름을 변경합니다."
-                    >
-                      fixture 이름 변경
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-md border border-[#e7d6c1] bg-white px-2 py-1 font-semibold text-[#7c5a2a] hover:bg-[#fff7eb]"
-                      onClick={() => handleDeleteUserFixture(selectedFixtureId)}
-                      title="현재 선택된 사용자 fixture를 삭제합니다."
-                    >
-                      fixture 삭제
-                    </button>
-                  </>
-                ) : null}
-                <button
-                  type="button"
-                  className="rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72] disabled:opacity-40"
-                  onClick={handleExportUserFixtures}
-                  disabled={userFixtures.length === 0}
-                  title="저장된 사용자 fixture 전체를 JSON 파일로 내보냅니다."
-                >
-                  fixture 내보내기
-                </button>
-                <label className="cursor-pointer rounded-md border border-[#cbd6cf] bg-white px-2 py-1 font-semibold text-[#4f5e56] hover:border-[#1b7f72] hover:text-[#1b7f72]">
-                  fixture 가져오기
-                  <input
-                    type="file"
-                    accept="application/json,.json"
-                    multiple
-                    className="hidden"
-                    onChange={(event) => {
-                      const files = Array.from(event.target.files ?? [])
-                      event.target.value = ''
-                      if (files.length > 0) {
-                        void handleImportUserFixtureFiles(files)
                       }
                     }}
                   />
