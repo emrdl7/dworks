@@ -36,7 +36,6 @@ import {
   ArrowUp,
   ArrowUpLeft,
   ArrowUpRight,
-  CheckCircle2,
   Columns2,
   Copy,
   GripVertical,
@@ -2402,29 +2401,19 @@ export default function HomePage() {
           {(() => {
             const total = contrastAuditSummary.total
             const passes = contrastAuditSummary.passesAA
-            const isAllPass = total > 0 && passes === total
-            const isEmpty = total === 0
-            const StatusIcon = isEmpty
-              ? null
-              : isAllPass
-                ? CheckCircle2
-                : AlertTriangle
+            // 모두 통과거나 측정 대상이 없으면 헤더에 chip을 띄우지 않음 (signal-only)
+            if (total === 0 || passes === total) {
+              return null
+            }
+            const failing = total - passes
             return (
               <span
-                className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold ${
-                  isEmpty
-                    ? 'border-[#dde3df] bg-white text-[#9aa49d]'
-                    : isAllPass
-                      ? 'border-[#4f46e5] bg-[#eef8f6] text-[#4f46e5]'
-                      : 'border-[#d5b56c] bg-[#fff8df] text-[#6b4b00]'
-                }`}
-                title={`WCAG AA 대비 통과 ${passes}/${total}`}
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[#d5b56c] bg-[#fff8df] px-2 text-xs font-semibold text-[#6b4b00]"
+                title={`WCAG AA 대비 미통과 ${failing}/${total}`}
               >
-                {StatusIcon ? (
-                  <StatusIcon aria-hidden="true" size={13} />
-                ) : null}
+                <AlertTriangle aria-hidden="true" size={13} />
                 <span>
-                  AA {passes}/{total}
+                  대비 {passes}/{total}
                 </span>
               </span>
             )
