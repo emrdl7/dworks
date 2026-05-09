@@ -220,7 +220,13 @@ describe('tree editor operations', () => {
       cursor: 'help',
       transition: {
         duration: 240,
-        timing: 'ease-in-out',
+        timing: 'custom',
+        cubicBezier: {
+          x1: 0.2,
+          y1: -0.3,
+          x2: 0.8,
+          y2: 1.3,
+        },
       },
       transform: {
         translateX: 24,
@@ -291,7 +297,13 @@ describe('tree editor operations', () => {
         assert.equal(editedCard.cursor, 'help')
         assert.deepEqual(editedCard.transition, {
           duration: 240,
-          timing: 'ease-in-out',
+          timing: 'custom',
+          cubicBezier: {
+            x1: 0.2,
+            y1: -0.3,
+            x2: 0.8,
+            y2: 1.3,
+          },
         })
         assert.deepEqual(editedCard.transform, {
           translateX: 24,

@@ -82,7 +82,13 @@ describe('tree schema', () => {
       cursor: 'help',
       transition: {
         duration: 240,
-        timing: 'ease-out',
+        timing: 'custom',
+        cubicBezier: {
+          x1: 0.2,
+          y1: -0.4,
+          x2: 0.8,
+          y2: 1.4,
+        },
       },
       transform: {
         translateX: 24,
@@ -103,7 +109,13 @@ describe('tree schema', () => {
       assert.equal(parsed.pointerEvents, 'none')
       assert.equal(parsed.cursor, 'help')
       assert.equal(parsed.transition?.duration, 240)
-      assert.equal(parsed.transition?.timing, 'ease-out')
+      assert.equal(parsed.transition?.timing, 'custom')
+      assert.deepEqual(parsed.transition?.cubicBezier, {
+        x1: 0.2,
+        y1: -0.4,
+        x2: 0.8,
+        y2: 1.4,
+      })
       assert.deepEqual(parsed.transform, {
         translateX: 24,
         translateY: -12,
@@ -205,6 +217,42 @@ describe('tree schema', () => {
         editKind: 'structure',
         transform: {
           originY: 101,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transition: {
+          timing: 'custom',
+          cubicBezier: {
+            x1: -0.01,
+            y1: 0,
+            x2: 0.5,
+            y2: 1,
+          },
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transition: {
+          timing: 'custom',
+          cubicBezier: {
+            x1: 0.25,
+            y1: -2.01,
+            x2: 1.01,
+            y2: 2.01,
+          },
         },
         children: [],
       }),

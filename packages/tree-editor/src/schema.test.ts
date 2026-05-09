@@ -170,7 +170,13 @@ describe('edit-operation schema', () => {
         cursor: 'pointer',
         transition: {
           duration: 240,
-          timing: 'ease-in',
+          timing: 'custom',
+          cubicBezier: {
+            x1: 0.15,
+            y1: -0.25,
+            x2: 0.85,
+            y2: 1.25,
+          },
         },
         transform: {
           translateX: 32,
@@ -193,7 +199,13 @@ describe('edit-operation schema', () => {
       assert.equal(op.patch.pointerEvents, 'none')
       assert.equal(op.patch.cursor, 'pointer')
       assert.equal(op.patch.transition?.duration, 240)
-      assert.equal(op.patch.transition?.timing, 'ease-in')
+      assert.equal(op.patch.transition?.timing, 'custom')
+      assert.deepEqual(op.patch.transition?.cubicBezier, {
+        x1: 0.15,
+        y1: -0.25,
+        x2: 0.85,
+        y2: 1.25,
+      })
       assert.deepEqual(op.patch.transform, {
         translateX: 32,
         translateY: -20,
@@ -632,6 +644,42 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           disabled: 'true',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transition: {
+            timing: 'custom',
+            cubicBezier: {
+              x1: -0.01,
+              y1: 0,
+              x2: 0.5,
+              y2: 1,
+            },
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transition: {
+            timing: 'custom',
+            cubicBezier: {
+              x1: 0.25,
+              y1: -2.01,
+              x2: 1.01,
+              y2: 2.01,
+            },
+          },
         },
       }),
     )
