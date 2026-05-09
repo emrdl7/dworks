@@ -85,6 +85,44 @@ function createHangingSpawn(): {
   return { killedSignals, spawn }
 }
 
+type SpawnStep =
+  | { kind: 'throw'; error: Error }
+  | { kind: 'close'; stdout?: string; code?: number }
+  | { kind: 'hang' }
+
+function createSequencedSpawn(steps: SpawnStep[]): {
+  calls: SpawnCall[]
+  killedSignals: Array<NodeJS.Signals | number | undefined>
+  spawn: SpawnLike
+} {
+  const calls: SpawnCall[] = []
+  const killedSignals: Array<NodeJS.Signals | number | undefined> = []
+  let index = 0
+  const spawn: SpawnLike = (command, args, options) => {
+    calls.push({ command, args, options })
+    const step = steps[index++] ?? { kind: 'close', code: 1 }
+    if (step.kind === 'throw') {
+      throw step.error
+    }
+    const child = createFakeChild()
+    child.kill = (signal?: NodeJS.Signals | number) => {
+      killedSignals.push(signal)
+      return true
+    }
+    if (step.kind === 'hang') {
+      return child
+    }
+    queueMicrotask(() => {
+      if (step.stdout !== undefined) {
+        child.stdout.emit('data', step.stdout)
+      }
+      child.emit('close', step.code ?? 0)
+    })
+    return child
+  }
+  return { calls, killedSignals, spawn }
+}
+
 describe('handleGenerate', () => {
   it('returns a schema-valid generated tree from Claude CLI stdout', async () => {
     const { calls, spawn } = createClosingSpawn(JSON.stringify(validTree))
@@ -153,17 +191,21 @@ describe('handleGenerate', () => {
   })
 
   it('maps invalid CLI JSON to a parse failure without exposing raw output', async () => {
-    const { spawn } = createClosingSpawn('not-json-output')
+    const { calls, spawn } = createClosingSpawn('not-json-output')
 
-    const result = await handleGenerate({ prompt: '히어로 생성' }, { spawnImpl: spawn })
+    const result = await handleGenerate(
+      { prompt: '히어로 생성' },
+      { spawnImpl: spawn, providerChain: ['claude', 'codex'] },
+    )
 
     assert.equal(result.status, 422)
     assert.equal(result.body.error, 'parse-failure')
     assert.equal(result.body.message.includes('not-json-output'), false)
+    assert.equal(calls.length, 1)
   })
 
   it('maps schema-invalid JSON to a schema failure', async () => {
-    const { spawn } = createClosingSpawn(
+    const { calls, spawn } = createClosingSpawn(
       JSON.stringify({
         version: '2',
         root: {
@@ -182,10 +224,14 @@ describe('handleGenerate', () => {
       }),
     )
 
-    const result = await handleGenerate({ prompt: '빈 히어로 생성' }, { spawnImpl: spawn })
+    const result = await handleGenerate(
+      { prompt: '빈 히어로 생성' },
+      { spawnImpl: spawn, providerChain: ['claude', 'codex'] },
+    )
 
     assert.equal(result.status, 422)
     assert.equal(result.body.error, 'schema-failure')
+    assert.equal(calls.length, 1)
   })
 
   it('maps CLI timeout to a timeout failure and terminates the child process', async () => {
@@ -199,5 +245,94 @@ describe('handleGenerate', () => {
     assert.equal(result.status, 502)
     assert.equal(result.body.error, 'cli-timeout')
     assert.deepEqual(killedSignals, ['SIGTERM'])
+  })
+
+  it('falls back from Claude spawn error to Codex and reports the Codex model', async () => {
+    const { calls, spawn } = createSequencedSpawn([
+      { kind: 'throw', error: new Error('claude missing') },
+      { kind: 'close', stdout: JSON.stringify(validTree) },
+    ])
+
+    const result = await handleGenerate(
+      { prompt: 'Codex fallback 랜딩 페이지 생성' },
+      { spawnImpl: spawn, providerChain: ['claude', 'codex', 'gemini'] },
+    )
+
+    assert.equal(result.status, 200)
+    if (result.status === 200) {
+      assert.equal(result.body.model, 'codex')
+      assert.deepEqual(result.body.tree, validTree)
+    }
+    assert.deepEqual(
+      calls.map((call) => call.command),
+      ['claude', 'codex'],
+    )
+    assert.deepEqual(calls[1]?.args.slice(0, 3), [
+      'exec',
+      '--json',
+      '--ephemeral',
+    ])
+  })
+
+  it('falls back through timeout and non-zero exit to Gemini', async () => {
+    const { calls, killedSignals, spawn } = createSequencedSpawn([
+      { kind: 'hang' },
+      { kind: 'close', code: 2 },
+      { kind: 'close', stdout: JSON.stringify(validTree) },
+    ])
+
+    const result = await handleGenerate(
+      { prompt: 'Gemini fallback 랜딩 페이지 생성' },
+      {
+        spawnImpl: spawn,
+        providerChain: ['claude', 'codex', 'gemini'],
+        timeoutMs: 1,
+      },
+    )
+
+    assert.equal(result.status, 200)
+    if (result.status === 200) {
+      assert.equal(result.body.model, 'gemini')
+      assert.deepEqual(result.body.tree, validTree)
+    }
+    assert.deepEqual(killedSignals, ['SIGTERM'])
+    assert.deepEqual(
+      calls.map((call) => call.command),
+      ['claude', 'codex', 'gemini'],
+    )
+    assert.equal(calls[2]?.args[0], '-p')
+    assert.match(calls[2]?.args[1] ?? '', /Gemini fallback 랜딩 페이지 생성/)
+  })
+
+  it('uses the configured provider chain without appending Gemini implicitly', async () => {
+    const { calls, spawn } = createSequencedSpawn([
+      { kind: 'close', code: 1 },
+      { kind: 'close', code: 1 },
+    ])
+
+    const result = await handleGenerate(
+      { prompt: '두 provider만 사용' },
+      { spawnImpl: spawn, providerChain: ['claude', 'codex'] },
+    )
+
+    assert.equal(result.status, 502)
+    assert.equal(result.body.error, 'cli-failure')
+    assert.deepEqual(
+      calls.map((call) => call.command),
+      ['claude', 'codex'],
+    )
+  })
+
+  it('returns cli-unavailable when the provider chain is empty', async () => {
+    const { calls, spawn } = createClosingSpawn(JSON.stringify(validTree))
+
+    const result = await handleGenerate(
+      { prompt: 'provider chain 없음' },
+      { spawnImpl: spawn, providerChain: [] },
+    )
+
+    assert.equal(result.status, 502)
+    assert.equal(result.body.error, 'cli-unavailable')
+    assert.equal(calls.length, 0)
   })
 })
