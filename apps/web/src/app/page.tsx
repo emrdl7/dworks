@@ -1213,51 +1213,72 @@ export default function HomePage() {
     }
   }
 
-  async function handleImportGenerationFile(file: File): Promise<void> {
-    if (!file.name.toLowerCase().endsWith('.json')) {
-      setGenerateError('JSON 파일만 가져올 수 있습니다.')
-      return
+  async function handleImportGenerationFiles(files: File[]): Promise<void> {
+    const importedEntries: GenerationEntry[] = []
+    const failures: string[] = []
+    for (const file of files) {
+      if (!file.name.toLowerCase().endsWith('.json')) {
+        failures.push(`${file.name}: JSON 파일이 아닙니다.`)
+        continue
+      }
+      let text: string
+      try {
+        text = await file.text()
+      } catch (error) {
+        failures.push(
+          `${file.name}: ${error instanceof Error ? error.message : '읽기 실패'}`,
+        )
+        continue
+      }
+      const result = parseImportPayload(text)
+      if (!result.ok) {
+        failures.push(`${file.name}: ${result.reason}`)
+        continue
+      }
+      importedEntries.push({
+        id: createGenerationEntryId(),
+        label: '가져옴',
+        tree: result.payload.tree,
+        immutable: false,
+        brief: result.payload.brief,
+        questions: result.payload.questions,
+        clarifyTurns: result.payload.clarifyTurns,
+        createdAt: Date.now(),
+        latencyMs: result.payload.latencyMs,
+        model: result.payload.model,
+      })
     }
-    let text: string
-    try {
-      text = await file.text()
-    } catch (error) {
+    if (importedEntries.length === 0) {
       setGenerateError(
-        error instanceof Error ? error.message : '파일을 읽지 못했습니다.',
+        failures.length > 0
+          ? `가져오기 실패 — ${failures.join(' / ')}`
+          : '가져올 파일이 없습니다.',
       )
       return
     }
-    const result = parseImportPayload(text)
-    if (!result.ok) {
-      setGenerateError(`가져오기 실패 — ${result.reason}`)
-      return
-    }
-    const importedEntry: GenerationEntry = {
-      id: createGenerationEntryId(),
-      label: '가져옴',
-      tree: result.payload.tree,
-      immutable: false,
-      brief: result.payload.brief,
-      questions: result.payload.questions,
-      clarifyTurns: result.payload.clarifyTurns,
-      createdAt: Date.now(),
-      latencyMs: result.payload.latencyMs,
-      model: result.payload.model,
-    }
+
+    const lastEntry = importedEntries[importedEntries.length - 1]
+    if (lastEntry === undefined) return
+
     setGenerations((entries) =>
-      appendGenerationHistoryEntries(entries, [importedEntry], MAX_GENERATIONS),
+      appendGenerationHistoryEntries(entries, importedEntries, MAX_GENERATIONS),
     )
-    setActiveGenerationId(importedEntry.id)
+    setActiveGenerationId(lastEntry.id)
     setCompareMode(false)
-    setTree(importedEntry.tree)
+    setTree(lastEntry.tree)
     setSelectedNodeId(
-      findFirstEditableNodeId(importedEntry.tree.root) ??
-        importedEntry.tree.root.id,
+      findFirstEditableNodeId(lastEntry.tree.root) ?? lastEntry.tree.root.id,
     )
     setHistoryPast([])
     setHistoryFuture([])
     lastHistoryMergeRef.current = null
-    setGenerateError(null)
+    if (failures.length > 0) {
+      setGenerateError(
+        `${importedEntries.length}개 가져옴, ${failures.length}개 실패 — ${failures.join(' / ')}`,
+      )
+    } else {
+      setGenerateError(null)
+    }
   }
 
   async function handleAskQuestions() {
@@ -2436,12 +2457,13 @@ export default function HomePage() {
                   <input
                     type="file"
                     accept="application/json,.json"
+                    multiple
                     className="hidden"
                     onChange={(event) => {
-                      const file = event.target.files?.[0]
+                      const files = Array.from(event.target.files ?? [])
                       event.target.value = ''
-                      if (file !== undefined) {
-                        void handleImportGenerationFile(file)
+                      if (files.length > 0) {
+                        void handleImportGenerationFiles(files)
                       }
                     }}
                   />
