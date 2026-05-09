@@ -124,6 +124,33 @@ describe('summarizeCalls', () => {
     assert.ok(md.includes('| - |'))
   })
 
+  it('slopRichness is null when no slopRichnessByIntent is provided', () => {
+    const summary = summarizeCalls(calls, intents)
+    for (const row of summary.byIntent) {
+      assert.equal(row.slopRichness, null)
+    }
+  })
+
+  it('slopRichness is propagated and rendered with 풍부도 column', () => {
+    const richness = new Map<string, number | null>([
+      ['cafe', 0.6],
+      ['saas', null],
+    ])
+    const summary = summarizeCalls(calls, intents, undefined, richness)
+    const cafe = summary.byIntent.find((b) => b.intentId === 'cafe')
+    const saas = summary.byIntent.find((b) => b.intentId === 'saas')
+    assert.equal(cafe?.slopRichness, 0.6)
+    assert.equal(saas?.slopRichness, null)
+
+    const md = renderSummaryMarkdown(summary, {
+      runId: 'r',
+      ranAt: '2026-05-09T00:00:00.000Z',
+      args: { fixturesPath: 'f.json', live: true, repeat: 1 },
+    })
+    assert.ok(md.includes('풍부도'))
+    assert.ok(md.includes('| 0.60 |'))
+  })
+
   it('dry-run markdown includes deterministic note', () => {
     const summary = summarizeCalls(calls, intents)
     const md = renderSummaryMarkdown(summary, {

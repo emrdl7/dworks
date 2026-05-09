@@ -17,6 +17,7 @@ export interface IntentSummary {
   intentId: string
   bucket: BucketSummary
   diversityScore: number | null
+  slopRichness: number | null
 }
 
 export interface EvalSummary {
@@ -78,12 +79,14 @@ export function summarizeCalls(
   calls: CallResult[],
   intents: FixtureIntent[],
   diversityByIntent?: ReadonlyMap<string, number | null>,
+  slopRichnessByIntent?: ReadonlyMap<string, number | null>,
 ): EvalSummary {
   const overall = bucketize(calls)
   const byIntent: IntentSummary[] = intents.map((intent) => ({
     intentId: intent.id,
     bucket: bucketize(calls.filter((c) => c.intentId === intent.id)),
     diversityScore: diversityByIntent?.get(intent.id) ?? null,
+    slopRichness: slopRichnessByIntent?.get(intent.id) ?? null,
   }))
   const providerKeys = Array.from(
     new Set(calls.map((c) => c.model).filter((m): m is string => m !== null)),
@@ -112,19 +115,24 @@ const TABLE_HEADER =
 const TABLE_DIVIDER = '|---|---|---|---|---|---|---|---|'
 
 const INTENT_TABLE_HEADER =
-  '| 그룹 | 호출 | 성공 | 성공률 | req p50 | req p95 | model p50 | model p95 | 구조 다양성 |'
-const INTENT_TABLE_DIVIDER = '|---|---|---|---|---|---|---|---|---|'
+  '| 그룹 | 호출 | 성공 | 성공률 | req p50 | req p95 | model p50 | model p95 | 구조 다양성 | 풍부도 |'
+const INTENT_TABLE_DIVIDER = '|---|---|---|---|---|---|---|---|---|---|'
 
 function fmtDiversity(d: number | null): string {
   return d === null ? '-' : d.toFixed(2)
+}
+
+function fmtRichness(r: number | null): string {
+  return r === null ? '-' : r.toFixed(2)
 }
 
 function renderIntentRow(
   label: string,
   b: BucketSummary,
   diversity: number | null,
+  slopRichness: number | null,
 ): string {
-  return `| ${label} | ${b.total} | ${b.success} | ${fmtPct(b.successRatio)} | ${fmtLatency(b.requestLatencyP50)} | ${fmtLatency(b.requestLatencyP95)} | ${fmtLatency(b.modelLatencyP50)} | ${fmtLatency(b.modelLatencyP95)} | ${fmtDiversity(diversity)} |`
+  return `| ${label} | ${b.total} | ${b.success} | ${fmtPct(b.successRatio)} | ${fmtLatency(b.requestLatencyP50)} | ${fmtLatency(b.requestLatencyP95)} | ${fmtLatency(b.modelLatencyP50)} | ${fmtLatency(b.modelLatencyP95)} | ${fmtDiversity(diversity)} | ${fmtRichness(slopRichness)} |`
 }
 
 export function renderSummaryMarkdown(
@@ -147,12 +155,23 @@ export function renderSummaryMarkdown(
   if (summary.byIntent.length > 0) {
     lines.push('## intent별', '', INTENT_TABLE_HEADER, INTENT_TABLE_DIVIDER)
     for (const row of summary.byIntent) {
-      lines.push(renderIntentRow(row.intentId, row.bucket, row.diversityScore))
+      lines.push(
+        renderIntentRow(
+          row.intentId,
+          row.bucket,
+          row.diversityScore,
+          row.slopRichness,
+        ),
+      )
     }
     if (!manifest.args.live && manifest.args.repeat >= 2) {
       lines.push('')
       lines.push('> dry-run은 deterministic이라 구조 다양성 0.00이 정상.')
     }
+    lines.push('')
+    lines.push(
+      '> 풍부도 0.0(슬롭) ~ 1.0(풍부) — heading-1/fontSize 다양성/색 다양성/이미지/shape 깊이 5신호 평균.',
+    )
     lines.push('')
   }
 

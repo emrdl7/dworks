@@ -11,6 +11,7 @@ import { treeSchema, type Tree } from '@dworks/tree'
 import type { M3EvalArgs } from './args.js'
 import { computeTreeStats } from './tree-stats.js'
 import { computeDiversity } from './diversity.js'
+import { averageSlopRichness } from './ai-slop.js'
 import { renderSummaryMarkdown, summarizeCalls } from './summary.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -288,9 +289,11 @@ export async function runM3Eval(
   }
 
   const diversityByIntent = new Map<string, number | null>()
+  const slopRichnessByIntent = new Map<string, number | null>()
   for (const intent of fixtures.intents) {
     const trees = successfulTreesByIntent.get(intent.id) ?? []
     diversityByIntent.set(intent.id, computeDiversity(trees))
+    slopRichnessByIntent.set(intent.id, averageSlopRichness(trees))
   }
 
   await ensureDir(outDir)
@@ -317,7 +320,12 @@ export async function runM3Eval(
   const callsJsonl = calls.map((c) => JSON.stringify(c)).join('\n') + '\n'
   await writeFileImpl(join(outDir, 'calls.jsonl'), callsJsonl, 'utf8')
 
-  const summary = summarizeCalls(calls, fixtures.intents, diversityByIntent)
+  const summary = summarizeCalls(
+    calls,
+    fixtures.intents,
+    diversityByIntent,
+    slopRichnessByIntent,
+  )
   await writeFileImpl(
     join(outDir, 'summary.json'),
     JSON.stringify(summary, null, 2),
