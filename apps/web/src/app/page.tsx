@@ -3929,12 +3929,17 @@ function NodeContextMenu({
       <ContextMenuButton disabled={!canMoveDown} onClick={onMoveDown}>
         아래로 이동
       </ContextMenuButton>
-      <ContextMenuButton disabled={!canEditStructure} onClick={onDuplicate}>
+      <ContextMenuButton
+        disabled={!canEditStructure}
+        onClick={onDuplicate}
+        shortcut="⌘D"
+      >
         복제
       </ContextMenuButton>
       <ContextMenuButton
         disabled={!canEditStructure}
         onClick={onDelete}
+        shortcut="Del"
         tone="danger"
       >
         삭제
@@ -3988,6 +3993,7 @@ interface ContextMenuButtonProps {
   disabled?: boolean
   onClick: () => void
   roleType?: 'menuitem' | 'menuitemcheckbox'
+  shortcut?: string
   tone?: 'neutral' | 'danger'
 }
 
@@ -3997,6 +4003,7 @@ function ContextMenuButton({
   disabled = false,
   onClick,
   roleType = 'menuitem',
+  shortcut,
   tone = 'neutral',
 }: ContextMenuButtonProps) {
   const toneClass =
@@ -4016,6 +4023,10 @@ function ContextMenuButton({
       <span>{children}</span>
       {roleType === 'menuitemcheckbox' ? (
         <span className="text-xs text-[#4f46e5]">{checked ? '켬' : '끔'}</span>
+      ) : shortcut ? (
+        <span className="text-[11px] font-medium tabular-nums text-[#9aa49d]">
+          {shortcut}
+        </span>
       ) : null}
     </button>
   )
