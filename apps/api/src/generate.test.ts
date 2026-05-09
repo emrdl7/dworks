@@ -250,12 +250,20 @@ describe('handleGenerate', () => {
   it('falls back from Claude spawn error to Codex and reports the Codex model', async () => {
     const { calls, spawn } = createSequencedSpawn([
       { kind: 'throw', error: new Error('claude missing') },
-      { kind: 'close', stdout: JSON.stringify(validTree) },
+      { kind: 'close' },
     ])
 
     const result = await handleGenerate(
       { prompt: 'Codex fallback 랜딩 페이지 생성' },
-      { spawnImpl: spawn, providerChain: ['claude', 'codex', 'gemini'] },
+      {
+        spawnImpl: spawn,
+        providerChain: ['claude', 'codex', 'gemini'],
+        prepareOutputFileImpl: async () => ({
+          path: '/tmp/test-codex-output',
+          cleanup: async () => {},
+        }),
+        readOutputFileImpl: async () => JSON.stringify(validTree),
+      },
     )
 
     assert.equal(result.status, 200)

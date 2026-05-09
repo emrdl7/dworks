@@ -73,6 +73,11 @@ export interface ClarifyDeps {
   command?: string
   timeoutMs?: number
   providerChain?: readonly LlmProvider[]
+  readOutputFileImpl?: (path: string) => Promise<string>
+  prepareOutputFileImpl?: () => Promise<{
+    path: string
+    cleanup: () => Promise<void>
+  }>
 }
 
 /**
@@ -111,6 +116,8 @@ export async function handleClarify(
     spawnImpl: deps.spawnImpl,
     command: deps.command,
     timeoutMs: deps.timeoutMs,
+    readOutputFileImpl: deps.readOutputFileImpl,
+    prepareOutputFileImpl: deps.prepareOutputFileImpl,
   })
 
   if (final === null || !final.result.ok) {

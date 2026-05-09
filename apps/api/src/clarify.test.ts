@@ -211,12 +211,20 @@ describe('handleClarify', () => {
   it('falls back from Claude spawn error to Codex and reports the Codex model', async () => {
     const { calls, spawn } = createSequencedSpawn([
       { kind: 'throw', error: new Error('claude missing') },
-      { kind: 'close', stdout: JSON.stringify(validQuestions) },
+      { kind: 'close' },
     ])
 
     const result = await handleClarify(
       { intent: 'Codex fallback 질문 생성' },
-      { spawnImpl: spawn, providerChain: ['claude', 'codex', 'gemini'] },
+      {
+        spawnImpl: spawn,
+        providerChain: ['claude', 'codex', 'gemini'],
+        prepareOutputFileImpl: async () => ({
+          path: '/tmp/test-codex-output',
+          cleanup: async () => {},
+        }),
+        readOutputFileImpl: async () => JSON.stringify(validQuestions),
+      },
     )
 
     assert.equal(result.status, 200)

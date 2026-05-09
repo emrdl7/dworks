@@ -1,8 +1,11 @@
-// LLM CLI 어댑터 (m3-generate-mvp + m3-generate-fallback).
+// LLM CLI 어댑터 (m3-generate-mvp + m3-generate-fallback + m3-generate-codex-adapter).
 // D12 LLM 정책 — 1순위 Claude → 2순위 Codex → 3순위 Gemini fallback chain.
 // spawn 함수는 주입 가능하게 분리해 unit test mock.
 
 import { spawn as defaultSpawn, type SpawnOptions } from 'node:child_process'
+import { mkdtemp, readFile as fsReadFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 export interface SpawnLike {
   (
@@ -46,18 +49,22 @@ export function resolveProviderChain(
 interface ProviderInvocation {
   command: string
   args: readonly string[]
+  /** Codex가 마지막 assistant message를 쓰는 임시 파일. 정의되면 stdout 대신 파일 내용을 결과로 사용. */
+  outputFile?: string
 }
 
 /**
- * provider별 CLI 명령/인자 매핑. 1차는 Claude만 정밀, Codex/Gemini는 stub.
- * - Codex: `codex exec --json --ephemeral` + system+user를 단일 prompt로 결합
- *   (실제 envelope 매핑은 후속 m3-generate-codex-adapter)
- * - Gemini: `gemini -p ...` (실제 호출 검증은 후속 m3-generate-gemini-adapter)
+ * provider별 CLI 명령/인자 매핑.
+ * - Claude: `claude -p <user> --system-prompt <system>` headless. stdout primary.
+ * - Codex: `codex exec --json --ephemeral -o <tempfile> <combined>` — 마지막 메시지를 파일로 회수
+ *   (Codex r2 권장, judge.ts callCodex 패턴과 동일).
+ * - Gemini: `gemini -p ...` stdout. envelope 정밀 매핑은 m3-generate-gemini-adapter 후속.
  */
 function getProviderInvocation(
   provider: LlmProvider,
   systemPrompt: string,
   userPrompt: string,
+  outputFile?: string,
 ): ProviderInvocation {
   switch (provider) {
     case 'claude':
@@ -65,16 +72,15 @@ function getProviderInvocation(
         command: 'claude',
         args: ['-p', userPrompt, '--system-prompt', systemPrompt],
       }
-    case 'codex':
-      return {
-        command: 'codex',
-        args: [
-          'exec',
-          '--json',
-          '--ephemeral',
-          `${systemPrompt}\n\n---\n\n${userPrompt}`,
-        ],
+    case 'codex': {
+      const combined = `${systemPrompt}\n\n---\n\n${userPrompt}`
+      const args: string[] = ['exec', '--json', '--ephemeral']
+      if (outputFile !== undefined) {
+        args.push('-o', outputFile)
       }
+      args.push(combined)
+      return { command: 'codex', args, outputFile }
+    }
     case 'gemini':
       return {
         command: 'gemini',
@@ -88,6 +94,8 @@ export type ClaudeCliFailureKind =
   | 'non-zero-exit'
   | 'timeout'
   | 'empty-output'
+  /** Codex tempfile 누락 / empty / read 실패. transport-adapter 실패 — chain에서 다음 provider 시도 (Codex r2 권장). */
+  | 'extract-failure'
 
 export interface ClaudeCliSuccess {
   ok: true
@@ -120,6 +128,13 @@ export interface LlmCliOptions {
   spawnImpl?: SpawnLike
   /** 테스트 / env override용. 미지정 시 provider 기본 명령. */
   command?: string
+  /** Codex outputFile 읽기 주입 (테스트). 미지정 시 fs/promises.readFile. */
+  readOutputFileImpl?: (path: string) => Promise<string>
+  /** Codex tempfile 생성 주입 (테스트). 미지정 시 mkdtemp + rm in tmpdir. */
+  prepareOutputFileImpl?: () => Promise<{
+    path: string
+    cleanup: () => Promise<void>
+  }>
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000
@@ -141,17 +156,142 @@ export function callLlmCli(options: LlmCliOptions): Promise<ClaudeCliResult> {
     systemPrompt,
     userPrompt,
     timeoutMs = DEFAULT_TIMEOUT_MS,
-    spawnImpl = defaultSpawn,
+    spawnImpl = defaultSpawn as SpawnLike,
     command,
+    readOutputFileImpl,
+    prepareOutputFileImpl,
   } = options
-  const invocation = getProviderInvocation(provider, systemPrompt, userPrompt)
-  const resolvedCommand = command ?? invocation.command
-  const startedAt = Date.now()
+  return runProvider({
+    provider,
+    systemPrompt,
+    userPrompt,
+    timeoutMs,
+    spawnImpl,
+    command,
+    readOutputFileImpl,
+    prepareOutputFileImpl,
+  })
+}
 
+interface RunProviderInput {
+  provider: LlmProvider
+  systemPrompt: string
+  userPrompt: string
+  timeoutMs: number
+  spawnImpl: SpawnLike
+  command?: string
+  readOutputFileImpl?: (path: string) => Promise<string>
+  prepareOutputFileImpl?: () => Promise<{
+    path: string
+    cleanup: () => Promise<void>
+  }>
+}
+
+async function defaultPrepareOutputFile(): Promise<{
+  path: string
+  cleanup: () => Promise<void>
+}> {
+  const dir = await mkdtemp(join(tmpdir(), 'dworks-codex-'))
+  return {
+    path: join(dir, 'last-message.txt'),
+    cleanup: () => rm(dir, { recursive: true, force: true }),
+  }
+}
+
+async function runProvider(input: RunProviderInput): Promise<ClaudeCliResult> {
+  const startedAt = Date.now()
+  const usesOutputFile = input.provider === 'codex'
+  let outputFilePath: string | undefined
+  let cleanupOutputFile: (() => Promise<void>) | undefined
+  if (usesOutputFile) {
+    try {
+      const prepared = await (input.prepareOutputFileImpl ?? defaultPrepareOutputFile)()
+      outputFilePath = prepared.path
+      cleanupOutputFile = prepared.cleanup
+    } catch (err) {
+      return {
+        ok: false,
+        kind: 'extract-failure',
+        message: err instanceof Error ? err.message : String(err),
+        latencyMs: Date.now() - startedAt,
+      }
+    }
+  }
+
+  const invocation = getProviderInvocation(
+    input.provider,
+    input.systemPrompt,
+    input.userPrompt,
+    outputFilePath,
+  )
+  const resolvedCommand = input.command ?? invocation.command
+
+  try {
+    const spawnResult = await runSpawnedProcess({
+      command: resolvedCommand,
+      args: invocation.args,
+      provider: input.provider,
+      timeoutMs: input.timeoutMs,
+      spawnImpl: input.spawnImpl,
+      startedAt,
+      allowEmptyStdout: outputFilePath !== undefined,
+    })
+    if (!spawnResult.ok) {
+      return spawnResult
+    }
+    if (outputFilePath !== undefined) {
+      const reader = input.readOutputFileImpl ?? ((p) => fsReadFile(p, 'utf8'))
+      try {
+        const fileContent = await reader(outputFilePath)
+        const trimmed = fileContent.trim()
+        if (trimmed.length === 0) {
+          return {
+            ok: false,
+            kind: 'extract-failure',
+            message: `${input.provider} 출력 파일이 비어 있음`,
+            latencyMs: Date.now() - startedAt,
+          }
+        }
+        return { ok: true, stdout: trimmed, latencyMs: spawnResult.latencyMs }
+      } catch (err) {
+        return {
+          ok: false,
+          kind: 'extract-failure',
+          message: err instanceof Error ? err.message : String(err),
+          latencyMs: Date.now() - startedAt,
+        }
+      }
+    }
+    return spawnResult
+  } finally {
+    if (cleanupOutputFile !== undefined) {
+      try {
+        await cleanupOutputFile()
+      } catch {
+        // best effort
+      }
+    }
+  }
+}
+
+interface RunSpawnedProcessInput {
+  command: string
+  args: readonly string[]
+  provider: LlmProvider
+  timeoutMs: number
+  spawnImpl: SpawnLike
+  startedAt: number
+  /** true면 stdout 비어있어도 'empty-output'로 처리하지 않고 success 반환 (codex outputFile 등). */
+  allowEmptyStdout?: boolean
+}
+
+function runSpawnedProcess(
+  input: RunSpawnedProcessInput,
+): Promise<ClaudeCliResult> {
   return new Promise((resolve) => {
     let child: ReturnType<SpawnLike>
     try {
-      child = spawnImpl(resolvedCommand, invocation.args, {
+      child = input.spawnImpl(input.command, input.args, {
         stdio: ['ignore', 'pipe', 'pipe'],
       })
     } catch (err) {
@@ -159,7 +299,7 @@ export function callLlmCli(options: LlmCliOptions): Promise<ClaudeCliResult> {
         ok: false,
         kind: 'spawn-error',
         message: err instanceof Error ? err.message : String(err),
-        latencyMs: Date.now() - startedAt,
+        latencyMs: Date.now() - input.startedAt,
       })
       return
     }
@@ -172,15 +312,15 @@ export function callLlmCli(options: LlmCliOptions): Promise<ClaudeCliResult> {
       try {
         child.kill('SIGTERM')
       } catch {
-        // ignore — child may already be gone
+        // ignore
       }
       resolve({
         ok: false,
         kind: 'timeout',
-        message: `${provider} CLI 응답이 ${timeoutMs}ms 안에 도착하지 않음`,
-        latencyMs: Date.now() - startedAt,
+        message: `${input.provider} CLI 응답이 ${input.timeoutMs}ms 안에 도착하지 않음`,
+        latencyMs: Date.now() - input.startedAt,
       })
-    }, timeoutMs)
+    }, input.timeoutMs)
 
     child.stdout?.on('data', (chunk: Buffer | string) => {
       stdout += typeof chunk === 'string' ? chunk : chunk.toString('utf8')
@@ -194,7 +334,7 @@ export function callLlmCli(options: LlmCliOptions): Promise<ClaudeCliResult> {
         ok: false,
         kind: 'spawn-error',
         message: err instanceof Error ? err.message : String(err),
-        latencyMs: Date.now() - startedAt,
+        latencyMs: Date.now() - input.startedAt,
       })
     })
 
@@ -202,22 +342,22 @@ export function callLlmCli(options: LlmCliOptions): Promise<ClaudeCliResult> {
       if (settled) return
       settled = true
       clearTimeout(timer)
-      const latencyMs = Date.now() - startedAt
+      const latencyMs = Date.now() - input.startedAt
       if (code !== 0) {
         resolve({
           ok: false,
           kind: 'non-zero-exit',
-          message: `${provider} CLI 종료 코드 ${code}`,
+          message: `${input.provider} CLI 종료 코드 ${code}`,
           latencyMs,
         })
         return
       }
       const trimmed = stdout.trim()
-      if (trimmed.length === 0) {
+      if (trimmed.length === 0 && input.allowEmptyStdout !== true) {
         resolve({
           ok: false,
           kind: 'empty-output',
-          message: `${provider} CLI 응답이 비어 있음`,
+          message: `${input.provider} CLI 응답이 비어 있음`,
           latencyMs,
         })
         return
