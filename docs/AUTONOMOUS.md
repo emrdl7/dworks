@@ -70,9 +70,16 @@
 - ✓ `m3-generate-schema-retry` (`665a428`) — 422 (parse-failure / schema-failure) 시 1회 자동 재시도. DWORKS_GENERATE_RETRIES env override (default 1, NODE_ENV=test=0). runOnce loop
 - ✓ `m3-generate-prompt-strict-schema` (`6de3a1c`) — system prompt에 "Schema 정확한 형식" 절대 규칙 섹션. backgroundColor hex만/letterSpacing -0.1~0.2 ratio/justify enum 등 명시. schema-resilience 1차 시도(prompt-side)
 - ✓ `m3-generate-schema-resilience` (`668df18` r1 Claude 핸드오프 / `b49e439` r4 Codex sanitize) — Codex 주도 토픽. apps/api/src/sanitize.ts 신규 — rgba/rgb/hsl→hex+opacity peer 자동 채움, letterSpacing string→number+clamp, fontWeight numeric/alias→string, justify/role alias 정규화. treeSchema 자체는 엄격 유지, /generate 응답만 sanitize 후 검증. sanitize.test.ts 2건 + generate.test.ts 보강. 35/35 test 통과
-- ✓ `m3-generate-persist` (`bae7c89` r4) — 생성 결과물 휘발 방지. localStorage 단일 키(`dworks:m3-generate:v1`) — generations + brief + clarify 11개 state. apps/web/src/app/generation-storage.ts 신규(read/write/clear, treeSchema 재검증, SSR no-op, QuotaExceeded fallback). page.tsx hydratedRef + 마운트/변경 useEffect. 사용자 정정 흡수("생성 결과물이 휘발되어버리는 현상 해결해"). 가속 §6 round 1 생략. 9 test
+- ✓ `m3-generate-persist` (`bae7c89` r4 / `5566cc1` Codex r5) — 생성 결과물 휘발 방지. localStorage 단일 키(`dworks:m3-generate:v1`). generation-storage.ts(read/write/clear, treeSchema 재검증, SSR no-op, QuotaExceeded fallback). hydration flag을 ref → state로 (Codex r5)
+- ✓ `m3-generate-prompt-saas-magazine-sections` (`cd509f0`) — SaaS main에 hero(다크 + 청록 accent + screenshot) + features(3-card grid) 추가, 매거진에 related 3-card grid 추가. drift test 2건 신규
+- ✓ `m3-generate-eval-ai-slop` (`833e3e5` 5신호 / `ef4e558` Codex 8신호 확장) — apps/m3-eval/ai-slop.ts pure tree walker, summary 풍부도 컬럼. 신호 8종(랜드마크/main 다중 섹션/display H1/CTA/fontSize 다양성/색 다양성/이미지/shape 깊이) trueCount/8 평균
+- ✓ `m3-generate-richness-badge` (`4b8c506` r4 / `5f77c11` Codex test) — apps/web/richness.ts(ai-slop와 동일 8 신호 미러). chip 라벨 뒤 0.00~1.00 dim 점수 + aria-label. 부족 신호 카드 below chip group
+- ✓ `m3-generate-richness-warnings` (`4b20052`) — 8 신호 한국어 라벨 매핑(RICHNESS_SIGNAL_LABELS), 활성 generation의 missing 신호를 베이지 카드 ul 리스트로 actionable 표시
+- ✓ `m3-generate-image-ref` (`b500a53` r4) — 참고 이미지 색감/비율 시드. apps/web/image-color.ts(extractDominantColors quantize bucket + pickAspectRatio). brief.imageReference 신규(@dworks/llm-prompts + apps/api hex6 zod). vision-LLM 의존 없이 색 hex 시그널만 텍스트로 LLM에 전달. file input + 썸네일 + 색 chip + 비율 라벨 + 5MB cap
+- ✓ `m3-generate-image-ref-persist` (`728bb39`) — image ref + 썸네일을 v1 schema에 additive 추가. validateImageReference + thumbnail data:image/ prefix 검증. 새 test 3건
+- ✓ `m3-generate-export-import` (`c55825a`) — 단일 generation .json 다운로드/업로드. generation-export.ts(format/version 키 + tree schema 재검증 + 모든 nested 형식 검증). 좌측 패널 "내보내기"/"불러오기" 버튼. import 시 새 mutable entry로 합류. 8 test
+- ✓ `m3-generate-richness-retry` (`89a0dc3`) — 풍부도 부족 신호 8종을 한국어 hint 매핑(RICHNESS_RETRY_HINTS) → brief.notes에 "자동 보강 힌트" 섹션 append → /generate 한 번 호출. 카드에 "이 신호로 다시 시도" 버튼. 명시 클릭에서만(자동 retry X)
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
-- `m3-generate-image-ref` — 이미지 reference 입력
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
 
