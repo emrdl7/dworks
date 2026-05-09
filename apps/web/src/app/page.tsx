@@ -793,6 +793,8 @@ export default function HomePage() {
   // 좁은 화면 drawer 토글 — md 이상은 grid 컬럼으로 표시되고, 미만에서는 fixed overlay로 띄움
   const [briefDrawerOpen, setBriefDrawerOpen] = useState(false)
   const [inspectorDrawerOpen, setInspectorDrawerOpen] = useState(false)
+  // 좌측 패널 탭 — 브리프/레이어 풀 높이 전환
+  const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -2392,6 +2394,40 @@ export default function HomePage() {
               : 'hidden'
           }`}
         >
+          <div role="tablist" aria-label="좌측 패널" className="flex shrink-0 items-stretch border-b border-[#e0e5de] bg-white">
+            {([
+              { id: 'brief' as const, label: '브리프' },
+              { id: 'layers' as const, label: '레이어' },
+            ]).map((tab) => {
+              const isActive = leftPanelTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  id={`left-panel-tab-${tab.id}`}
+                  aria-selected={isActive}
+                  aria-controls={`left-panel-tabpanel-${tab.id}`}
+                  tabIndex={isActive ? 0 : -1}
+                  onClick={() => setLeftPanelTab(tab.id)}
+                  className={`relative -mb-px flex-1 border-b-2 py-3 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5] ${
+                    isActive
+                      ? 'border-[#4f46e5] text-[#4f46e5]'
+                      : 'border-transparent text-[#647067] hover:text-[#1f2a25]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+          {leftPanelTab === 'brief' ? (
+          <div
+            role="tabpanel"
+            id="left-panel-tabpanel-brief"
+            aria-labelledby="left-panel-tab-brief"
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto"
+          >
           <details
             open
             className="border-b border-[#e0e5de] [&_summary]:cursor-pointer"
@@ -2954,10 +2990,15 @@ export default function HomePage() {
               ) : null}
             </div>
           </details>
-
-          <div className="border-b border-[#e0e5de] px-4 py-3">
-            <h2 className="text-sm font-semibold">레이어</h2>
           </div>
+          ) : null}
+          {leftPanelTab === 'layers' ? (
+          <div
+            role="tabpanel"
+            id="left-panel-tabpanel-layers"
+            aria-labelledby="left-panel-tab-layers"
+            className="flex min-h-0 flex-1 flex-col"
+          >
           <nav className="flex-1 overflow-auto p-2">
             {layerItems.map(({ node, depth }) => {
               const structureInfo = getStructureInfo(tree, node.id)
@@ -3041,6 +3082,8 @@ export default function HomePage() {
               )
             })}
           </nav>
+          </div>
+          ) : null}
         </aside>
 
         <section
