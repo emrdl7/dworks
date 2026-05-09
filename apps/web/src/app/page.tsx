@@ -3499,7 +3499,7 @@ export default function HomePage() {
                   ) : null}
                   <div
                     className={`group/layer-row relative flex items-center gap-1 rounded-md pr-2 text-sm transition ${
-                      node.id === selectedNodeId
+                      allSelectedNodeIds.has(node.id)
                         ? 'bg-[#1e1f3a] text-[#a5b4fc]'
                         : hoveredNodeId === node.id
                           ? 'bg-[#1d2025] text-[#c5c8cf]'
@@ -3556,7 +3556,23 @@ export default function HomePage() {
                       data-layer-node-id={node.id}
                       title={nodeTypeLabels[node.type]}
                       className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#6366f1]"
-                      onClick={() => setSelectedNodeId(node.id)}
+                      onClick={(event) => {
+                        if (event.shiftKey || event.metaKey || event.ctrlKey) {
+                          // multi-select 토글 — selectedNodeId는 그대로, additional만 변경
+                          if (node.id === selectedNodeId) return
+                          setAdditionalSelectedNodeIds((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(node.id)) {
+                              next.delete(node.id)
+                            } else {
+                              next.add(node.id)
+                            }
+                            return next
+                          })
+                        } else {
+                          setSelectedNodeId(node.id)
+                        }
+                      }}
                       onKeyDown={(event) => openKeyboardContextMenu(node.id, event)}
                     >
                       <NodeTypeIcon
