@@ -1604,6 +1604,12 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - **친근 / 따뜻 / 부드러움**: warm \`color.backgroundGradient\`, soft \`shape.radius\`(16~32), 큰 \`spacing.padding\`, \`typography.lineHeight\` ≥ 1.6.
 - **전문 / 정확 / 깔끔**: 흑백 가까운 palette, sharp \`shape.radius\`(4~8), 명확한 \`layout.direction='column'\`, 절제된 \`typography.lineHeight\`(~1.5).
 - **프리미엄 / 고급**: deep premium palette, generous \`spacing.padding\`(≥64), subtle \`shape.shadow\`(\`sm\`), \`layout.align='center'\`.
+- **다크 / 미드나잇 / 럭셔리 / 스타일리시**: bg deep(#0a0a0a~#1a1d22), text bright(#e5e7eb~#f9fafb), accent vivid(violet/cyan/lime/orange 중 하나). shadow는 약하게 또는 \`none\`, border 약간 강화로 위계.
+- **미니멀 / 절제미 / 선禪**: monochrome 거의 무채색(off-white #fafafa + warm gray #6b7280 + black #18181b), \`shape.shadow\`=\`none\`, \`shape.radius\` 0~8(거의 sharp), generous \`spacing.padding\`(≥80). 컨텐츠 자체가 시각.
+- **빈티지 / 클래식 / 따뜻한 회고**: warm sepia palette(#f5e6d3 + #8b7355 + #5e3a1d), \`emphasis: 'heading-1'\` typography 큰 사이즈 + serif 느낌(_fontFamily 직접 지정 권장_), \`shape.radius\` 0~4 sharp.
+- **퓨처리스틱 / 사이버 / 테크**: dark navy/black bg + neon accent(#00ffff / #ff00ff / #00ff88), \`shape.radius\` 0(sharp) 또는 24+ extreme, glassmorphism 같은 backgroundOpacity 0.6~0.9 + border accent.
+- **에디토리얼 / 매거진 / 갤러리**: 흰 bg + serif heading 큰 사이즈 + clear grid layout(\`layout.justify='start'\` + 명확한 column gap), 이미지 풍부, \`spacing.padding\` 비대칭(좌우 다르게).
+- **놀이적 / GenZ / vibrant**: vivid gradient hero(#fbbf24~#ef4444 같은 warm 또는 #06b6d4~#a855f7 같은 cool), 거대 fontSize(72~96), \`shape.radius\` 24~48 둥글, 강한 shadow.
 
 답변에 톤 키워드가 없거나 모호하면 강제 매핑하지 않고 도메인 시그니처 기본 스타일을 적용한다. 복합 톤("전문적이지만 친근한")은 주 톤 1개를 우선하고, 보조 톤은 1~2개 prop으로만 약하게 반영한다.
 
