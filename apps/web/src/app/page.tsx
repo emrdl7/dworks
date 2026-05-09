@@ -825,8 +825,8 @@ export default function HomePage() {
   const [inspectorDrawerOpen, setInspectorDrawerOpen] = useState(false)
   // 좌측 패널 탭 — 브리프/레이어 풀 높이 전환
   const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
-  // 캔버스 grid — 디자인 정밀도용 16px 격자 토글
-  const [canvasGridVisible, setCanvasGridVisible] = useState(false)
+  // 캔버스 grid — 디자인 정밀도용 격자 (off / 8 / 16 / 24 px cycle)
+  const [canvasGridSize, setCanvasGridSize] = useState<0 | 8 | 16 | 24>(0)
   // 키보드 단축키 도움말 popover
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false)
   const shortcutHelpCloseRef = useRef<HTMLButtonElement | null>(null)
@@ -884,12 +884,22 @@ export default function HomePage() {
       if (raw) {
         const saved = JSON.parse(raw) as {
           canvasGridVisible?: boolean
+          canvasGridSize?: number
           canvasZoom?: number
           responsiveViewport?: ResponsiveViewport
           leftPanelTab?: 'brief' | 'layers'
         }
-        if (typeof saved.canvasGridVisible === 'boolean') {
-          setCanvasGridVisible(saved.canvasGridVisible)
+        // 신규(canvasGridSize) 우선, 없으면 legacy boolean 마이그레이션
+        if (
+          saved.canvasGridSize === 8 ||
+          saved.canvasGridSize === 16 ||
+          saved.canvasGridSize === 24
+        ) {
+          setCanvasGridSize(saved.canvasGridSize)
+        } else if (saved.canvasGridSize === 0) {
+          setCanvasGridSize(0)
+        } else if (typeof saved.canvasGridVisible === 'boolean') {
+          setCanvasGridSize(saved.canvasGridVisible ? 16 : 0)
         }
         if (
           typeof saved.canvasZoom === 'number' &&
@@ -921,7 +931,7 @@ export default function HomePage() {
       window.localStorage.setItem(
         'dw:uiPrefs:v1',
         JSON.stringify({
-          canvasGridVisible,
+          canvasGridSize,
           canvasZoom,
           responsiveViewport,
           leftPanelTab,
@@ -932,7 +942,7 @@ export default function HomePage() {
     }
   }, [
     isUIPrefsHydrated,
-    canvasGridVisible,
+    canvasGridSize,
     canvasZoom,
     responsiveViewport,
     leftPanelTab,
@@ -3640,18 +3650,31 @@ export default function HomePage() {
               <span className="h-4 w-px bg-[#2a2e35]" aria-hidden="true" />
               <button
                 type="button"
-                aria-label={canvasGridVisible ? '그리드 숨기기' : '그리드 표시'}
-                aria-pressed={canvasGridVisible}
-                title="16px 그리드"
-                onClick={() => setCanvasGridVisible((v) => !v)}
+                aria-label={
+                  canvasGridSize === 0
+                    ? '그리드 8px로 켜기'
+                    : `그리드 ${canvasGridSize}px → 다음 사이즈`
+                }
+                aria-pressed={canvasGridSize > 0}
+                title="그리드 사이즈 cycle (off / 8 / 16 / 24 px)"
+                onClick={() =>
+                  setCanvasGridSize((s) => {
+                    if (s === 0) return 8
+                    if (s === 8) return 16
+                    if (s === 16) return 24
+                    return 0
+                  })
+                }
                 className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
-                  canvasGridVisible
+                  canvasGridSize > 0
                     ? 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
                     : 'border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe]'
                 }`}
               >
                 <LayoutGrid size={13} aria-hidden="true" />
-                <span>그리드</span>
+                <span className="tabular-nums">
+                  {canvasGridSize === 0 ? '그리드' : `${canvasGridSize}px`}
+                </span>
               </button>
             </div>
           )}
@@ -3743,11 +3766,11 @@ export default function HomePage() {
               className="px-8 py-8"
               style={{
                 minWidth: selectedViewportPreset.width * canvasZoom + 64,
-                ...(canvasGridVisible
+                ...(canvasGridSize > 0
                   ? {
                       backgroundImage:
                         'linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)',
-                      backgroundSize: '16px 16px',
+                      backgroundSize: `${canvasGridSize}px ${canvasGridSize}px`,
                     }
                   : {}),
               }}
