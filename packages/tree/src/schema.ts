@@ -314,6 +314,7 @@ export const imageFilterSchema = z.object({
   saturate: z.number().min(0).max(200).optional(),
   invert: z.number().min(0).max(100).optional(),
   dropShadow: imageDropShadowSchema.optional(),
+  dropShadows: z.array(imageDropShadowSchema).max(2).optional(),
 })
 export type ImageFilter = z.infer<typeof imageFilterSchema>
 

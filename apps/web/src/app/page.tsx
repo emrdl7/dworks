@@ -3461,6 +3461,13 @@ function getImageFilterCss(filter?: ImageFilter): string | undefined {
       `drop-shadow(${ds.offsetX}px ${ds.offsetY}px ${ds.blur}px ${ds.color})`,
     )
   }
+  if (filter.dropShadows !== undefined) {
+    for (const ds of filter.dropShadows) {
+      parts.push(
+        `drop-shadow(${ds.offsetX}px ${ds.offsetY}px ${ds.blur}px ${ds.color})`,
+      )
+    }
+  }
   return parts.length === 0 ? undefined : parts.join(' ')
 }
 
@@ -7958,6 +7965,7 @@ function ImageCompositionControls({
       nextFilter.dropShadow = IMAGE_DROP_SHADOW_DEFAULT
     } else {
       delete nextFilter.dropShadow
+      delete nextFilter.dropShadows
     }
     const isEmpty = Object.keys(nextFilter).length === 0
     onImageChange(
@@ -7974,6 +7982,64 @@ function ImageCompositionControls({
         ),
       },
     )
+  }
+
+  function getCurrentDropShadows(): ImageDropShadow[] {
+    return presentation.filter?.dropShadows ?? []
+  }
+
+  function commitDropShadows(nextDropShadows: ImageDropShadow[], mergeKey: string) {
+    const currentFilter = presentation.filter ?? {}
+    const nextFilter: ImageFilter = { ...currentFilter }
+    if (nextDropShadows.length === 0) {
+      delete nextFilter.dropShadows
+    } else {
+      nextFilter.dropShadows = nextDropShadows
+    }
+    onImageChange(
+      node,
+      { presentation: { filter: nextFilter } },
+      { mergeKey: getNodeColorMergeKey(node.id, mergeKey) },
+    )
+  }
+
+  function addImageDropShadowExtra() {
+    const current = getCurrentDropShadows()
+    if (current.length >= 2) return
+    commitDropShadows(
+      [...current, IMAGE_DROP_SHADOW_DEFAULT],
+      'imageFilter.dropShadows.add',
+    )
+  }
+
+  function removeImageDropShadowExtra(index: number) {
+    const current = getCurrentDropShadows()
+    const next = current.filter((_, i) => i !== index)
+    commitDropShadows(next, `imageFilter.dropShadows.remove.${index}`)
+  }
+
+  function moveImageDropShadowExtra(index: number, dir: -1 | 1) {
+    const current = getCurrentDropShadows()
+    const target = index + dir
+    if (target < 0 || target >= current.length) return
+    const item = current[index]
+    if (item === undefined) return
+    const next = current.filter((_, i) => i !== index)
+    next.splice(target, 0, item)
+    commitDropShadows(next, `imageFilter.dropShadows.move.${index}.${dir}`)
+  }
+
+  function updateImageDropShadowExtraField<K extends keyof ImageDropShadow>(
+    index: number,
+    field: K,
+    value: ImageDropShadow[K],
+  ) {
+    const current = getCurrentDropShadows()
+    if (index < 0 || index >= current.length) return
+    const next = current.map((entry, i) =>
+      i === index ? { ...entry, [field]: value } : entry,
+    )
+    commitDropShadows(next, `imageFilter.dropShadows.${index}.${field}`)
   }
 
   return (
@@ -8316,6 +8382,123 @@ function ImageCompositionControls({
                 }
               />
             </label>
+          </div>
+        ) : null}
+        {presentation.filter?.dropShadow !== undefined ? (
+          <div className="mt-2 space-y-2">
+            {(presentation.filter?.dropShadows ?? []).map((extra, index) => (
+              <div
+                key={index}
+                className="rounded-md border border-[#e0e5de] bg-white p-2"
+              >
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-[#4f5e56]">
+                    추가 그림자 {index + 1}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      aria-label={`추가 그림자 ${index + 1} 위로`}
+                      title="위로"
+                      disabled={index === 0}
+                      className="h-6 w-6 rounded border border-[#cbd6cf] text-xs text-[#4f5e56] disabled:opacity-40"
+                      onClick={() => moveImageDropShadowExtra(index, -1)}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`추가 그림자 ${index + 1} 아래로`}
+                      title="아래로"
+                      disabled={
+                        index >= (presentation.filter?.dropShadows ?? []).length - 1
+                      }
+                      className="h-6 w-6 rounded border border-[#cbd6cf] text-xs text-[#4f5e56] disabled:opacity-40"
+                      onClick={() => moveImageDropShadowExtra(index, 1)}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`추가 그림자 ${index + 1} 삭제`}
+                      title="삭제"
+                      className="h-6 w-6 rounded border border-[#f0c4c4] text-xs text-[#9b3030]"
+                      onClick={() => removeImageDropShadowExtra(index)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <ImageFilterInput
+                    label="X 오프셋 (px)"
+                    min={-50}
+                    max={50}
+                    placeholder="0"
+                    value={extra.offsetX}
+                    onChange={(value) =>
+                      updateImageDropShadowExtraField(
+                        index,
+                        'offsetX',
+                        value === undefined ? 0 : value,
+                      )
+                    }
+                  />
+                  <ImageFilterInput
+                    label="Y 오프셋 (px)"
+                    min={-50}
+                    max={50}
+                    placeholder="4"
+                    value={extra.offsetY}
+                    onChange={(value) =>
+                      updateImageDropShadowExtraField(
+                        index,
+                        'offsetY',
+                        value === undefined ? 0 : value,
+                      )
+                    }
+                  />
+                  <ImageFilterInput
+                    label="흐림 (px)"
+                    min={0}
+                    max={50}
+                    placeholder="6"
+                    value={extra.blur}
+                    onChange={(value) =>
+                      updateImageDropShadowExtraField(
+                        index,
+                        'blur',
+                        value === undefined ? 0 : value,
+                      )
+                    }
+                  />
+                  <label className="block">
+                    <span className="text-[11px] text-[#647067]">색상</span>
+                    <input
+                      type="color"
+                      aria-label={`추가 그림자 ${index + 1} 색상`}
+                      className="mt-1 h-9 w-full cursor-pointer rounded-md border border-[#cbd6cf] bg-white p-0.5"
+                      value={extra.color}
+                      onChange={(event) =>
+                        updateImageDropShadowExtraField(
+                          index,
+                          'color',
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              disabled={(presentation.filter?.dropShadows ?? []).length >= 2}
+              className="w-full rounded-md border border-dashed border-[#cbd6cf] py-2 text-xs font-semibold text-[#4f5e56] hover:bg-[#f1f5f3] disabled:opacity-40"
+              onClick={addImageDropShadowExtra}
+            >
+              + 그림자 추가
+            </button>
           </div>
         ) : null}
       </div>
