@@ -84,6 +84,7 @@ import {
   type NodeTransform,
   type NodeTransition,
   type NodeTransitionTiming,
+  type TransitionCubicBezier,
   NODE_CURSOR_IDS,
   NODE_TRANSITION_TIMING_IDS,
   type NodeLayout,
@@ -297,6 +298,7 @@ const nodeTransitionTimingLabels: Record<NodeTransitionTiming, string> = {
   'ease-in': '시작 가속',
   'ease-out': '끝 가속',
   'ease-in-out': '양쪽 가속',
+  custom: '사용자 지정',
 }
 
 const layoutDirectionLabels: Record<LayoutDirection, string> = {
@@ -2931,6 +2933,55 @@ function updateNodeTransformField(
   )
 }
 
+const TRANSITION_CUBIC_BEZIER_DEFAULT: TransitionCubicBezier = {
+  x1: 0.25,
+  y1: 0.1,
+  x2: 0.25,
+  y2: 1,
+}
+
+function updateNodeTransitionCubicBezierField(
+  node: TreeNode,
+  field: keyof TransitionCubicBezier,
+  value: number,
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: NodeMetaPatch,
+    options?: CommitTreeEditOptions,
+  ) => void,
+) {
+  const currentTransition = node.transition ?? {}
+  const currentCubicBezier =
+    currentTransition.cubicBezier ?? TRANSITION_CUBIC_BEZIER_DEFAULT
+  const min = field === 'x1' || field === 'x2' ? 0 : -2
+  const max = field === 'x1' || field === 'x2' ? 1 : 2
+  const clamped = Math.max(min, Math.min(max, value))
+  const nextCubicBezier: TransitionCubicBezier = {
+    ...currentCubicBezier,
+    [field]: clamped,
+  }
+  onNodeMetaChange(
+    node,
+    {
+      transition: {
+        ...(currentTransition.duration !== undefined
+          ? { duration: currentTransition.duration }
+          : {}),
+        ...(currentTransition.timing !== undefined
+          ? { timing: currentTransition.timing }
+          : {}),
+        cubicBezier: nextCubicBezier,
+      },
+    },
+    {
+      mergeKey: getNodeColorMergeKey(
+        node.id,
+        `meta.transition.cubicBezier.${field}`,
+      ),
+    },
+  )
+}
+
 function getTransformStyle(
   transform?: NodeTransform,
 ): CSSProperties | undefined {
@@ -3023,7 +3074,13 @@ function getTransitionStyle(
   if (transition.duration !== undefined) {
     style.transitionDuration = `${transition.duration}ms`
   }
-  if (transition.timing !== undefined) {
+  if (transition.timing === 'custom') {
+    const cb = transition.cubicBezier
+    style.transitionTimingFunction =
+      cb === undefined
+        ? 'ease'
+        : `cubic-bezier(${cb.x1}, ${cb.y1}, ${cb.x2}, ${cb.y2})`
+  } else if (transition.timing !== undefined) {
     style.transitionTimingFunction = transition.timing
   }
   return Object.keys(style).length === 0 ? undefined : style
@@ -5212,11 +5269,19 @@ function NodeColorControls({
               onChange={(event) => {
                 const raw = event.target.value
                 const currentTiming = node.transition?.timing
+                const currentCubicBezier = node.transition?.cubicBezier
                 if (raw === '') {
                   const nextTransition =
-                    currentTiming === undefined
+                    currentTiming === undefined && currentCubicBezier === undefined
                       ? undefined
-                      : { timing: currentTiming }
+                      : {
+                          ...(currentTiming !== undefined
+                            ? { timing: currentTiming }
+                            : {}),
+                          ...(currentCubicBezier !== undefined
+                            ? { cubicBezier: currentCubicBezier }
+                            : {}),
+                        }
                   onNodeMetaChange(
                     node,
                     { transition: nextTransition },
@@ -5241,6 +5306,9 @@ function NodeColorControls({
                       duration: clamped,
                       ...(currentTiming !== undefined
                         ? { timing: currentTiming }
+                        : {}),
+                      ...(currentCubicBezier !== undefined
+                        ? { cubicBezier: currentCubicBezier }
                         : {}),
                     },
                   },
@@ -5267,10 +5335,13 @@ function NodeColorControls({
               onChange={(event) => {
                 const raw = event.target.value
                 const currentDuration = node.transition?.duration
+                const currentCubicBezier = node.transition?.cubicBezier
                 const nextTiming =
                   raw === '' ? undefined : (raw as NodeTransitionTiming)
                 const nextTransition =
-                  currentDuration === undefined && nextTiming === undefined
+                  currentDuration === undefined &&
+                  nextTiming === undefined &&
+                  currentCubicBezier === undefined
                     ? undefined
                     : {
                         ...(currentDuration !== undefined
@@ -5278,6 +5349,9 @@ function NodeColorControls({
                           : {}),
                         ...(nextTiming !== undefined
                           ? { timing: nextTiming }
+                          : {}),
+                        ...(currentCubicBezier !== undefined
+                          ? { cubicBezier: currentCubicBezier }
                           : {}),
                       }
                 onNodeMetaChange(
@@ -5300,6 +5374,40 @@ function NodeColorControls({
               ))}
             </select>
           </label>
+        ) : null}
+
+        {supportsHoverBackgroundColor && node.transition?.timing === 'custom' ? (
+          <div className="space-y-2 rounded-md border border-dashed border-[#cbd6cf] bg-[#f8faf9] p-3">
+            <span className="text-[11px] font-semibold text-[#4f5e56]">
+              사용자 지정 곡선
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              {(['x1', 'y1', 'x2', 'y2'] as const).map((axis) => {
+                const isX = axis === 'x1' || axis === 'x2'
+                const fallback = TRANSITION_CUBIC_BEZIER_DEFAULT[axis]
+                const current = node.transition?.cubicBezier?.[axis] ?? fallback
+                return (
+                  <NodeTransformInput
+                    key={axis}
+                    label={axis.toUpperCase()}
+                    min={isX ? 0 : -2}
+                    max={isX ? 1 : 2}
+                    step={0.01}
+                    placeholder={`${fallback}`}
+                    value={current}
+                    onChange={(value) =>
+                      updateNodeTransitionCubicBezierField(
+                        node,
+                        axis,
+                        value === undefined ? fallback : value,
+                        onNodeMetaChange,
+                      )
+                    }
+                  />
+                )
+              })}
+            </div>
+          </div>
         ) : null}
 
         {supportsHoverBackgroundColor ? (

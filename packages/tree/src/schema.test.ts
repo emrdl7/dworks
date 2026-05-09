@@ -1528,6 +1528,7 @@ describe('tree schema', () => {
       'ease-in',
       'ease-out',
       'ease-in-out',
+      'custom',
     ])
   })
 })

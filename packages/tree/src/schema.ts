@@ -229,13 +229,23 @@ export const NODE_TRANSITION_TIMING_IDS = [
   'ease-in',
   'ease-out',
   'ease-in-out',
+  'custom',
 ] as const
 export const nodeTransitionTimingSchema = z.enum(NODE_TRANSITION_TIMING_IDS)
 export type NodeTransitionTiming = z.infer<typeof nodeTransitionTimingSchema>
 
+export const transitionCubicBezierSchema = z.object({
+  x1: z.number().min(0).max(1),
+  y1: z.number().min(-2).max(2),
+  x2: z.number().min(0).max(1),
+  y2: z.number().min(-2).max(2),
+})
+export type TransitionCubicBezier = z.infer<typeof transitionCubicBezierSchema>
+
 export const nodeTransitionSchema = z.object({
   duration: z.number().min(0).max(2000).optional(),
   timing: nodeTransitionTimingSchema.optional(),
+  cubicBezier: transitionCubicBezierSchema.optional(),
 })
 export type NodeTransition = z.infer<typeof nodeTransitionSchema>
 
