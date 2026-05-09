@@ -1168,10 +1168,6 @@ export default function HomePage() {
     }
   }
 
-  async function handleImageRefSelect(file: File): Promise<void> {
-    await handleImageRefAddFiles([file])
-  }
-
   async function handleImageRefAddFiles(files: File[]): Promise<void> {
     const MAX_BYTES = 5 * 1024 * 1024
     const remaining = MAX_IMAGE_REFS - briefImageRefs.length
@@ -2245,10 +2241,6 @@ export default function HomePage() {
       pointerEvents: node.pointerEvents === 'none' ? undefined : 'none',
     })
     closeContextMenu()
-  }
-
-  function handleColorPresetChange(nextColorPreset: ColorPreset) {
-    commitTreeEdit(updateStyleTokens(tree, { colorPreset: nextColorPreset }))
   }
 
   function handleUndo() {
