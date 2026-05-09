@@ -29,6 +29,8 @@ import {
   AlignVerticalJustifyEnd,
   AlignVerticalJustifyStart,
   ArrowDown,
+  ChevronDown,
+  ChevronRight,
   ArrowDownLeft,
   ArrowDownRight,
   ArrowLeft,
@@ -818,6 +820,10 @@ export default function HomePage() {
   const [canvasGridVisible, setCanvasGridVisible] = useState(false)
   // 키보드 단축키 도움말 popover
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false)
+  // 레이어 트리 collapse 상태 — 컨테이너 노드 ID 집합. 기본 모두 펼침.
+  const [collapsedLayerNodeIds, setCollapsedLayerNodeIds] = useState<
+    Set<string>
+  >(() => new Set())
   const lastHistoryMergeRef = useRef<HistoryMergeState | null>(null)
   const [isGenerationStateHydrated, setIsGenerationStateHydrated] =
     useState(false)
@@ -972,7 +978,22 @@ export default function HomePage() {
     () => (contextMenu ? getStructureInfo(tree, contextMenu.nodeId) : null),
     [contextMenu, tree],
   )
-  const layerItems = useMemo(() => flattenTree(tree.root), [tree])
+  const layerItems = useMemo(
+    () => flattenTree(tree.root, collapsedLayerNodeIds),
+    [tree, collapsedLayerNodeIds],
+  )
+
+  function toggleLayerCollapse(nodeId: string): void {
+    setCollapsedLayerNodeIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(nodeId)) {
+        next.delete(nodeId)
+      } else {
+        next.add(nodeId)
+      }
+      return next
+    })
+  }
   const fontUsageCounts = useMemo(
     () => countTypographyFontUsage(tree.root),
     [tree],
@@ -3162,6 +3183,9 @@ export default function HomePage() {
                   : null
               const isDragging = layerDrag?.nodeId === node.id
               const NodeTypeIcon = nodeTypeIcons[node.type]
+              const isContainer = isContainerNode(node)
+              const isCollapsed =
+                isContainer && collapsedLayerNodeIds.has(node.id)
 
               return (
                 <div
@@ -3210,6 +3234,27 @@ export default function HomePage() {
                     >
                       <GripVertical aria-hidden="true" size={15} />
                     </button>
+                    {isContainer ? (
+                      <button
+                        type="button"
+                        aria-label={
+                          isCollapsed
+                            ? `${node.id} 자식 노드 펼치기`
+                            : `${node.id} 자식 노드 접기`
+                        }
+                        aria-expanded={!isCollapsed}
+                        onClick={() => toggleLayerCollapse(node.id)}
+                        className="flex h-6 w-5 shrink-0 items-center justify-center rounded text-[#6d7a72] outline-none transition hover:bg-white/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4f46e5]"
+                      >
+                        {isCollapsed ? (
+                          <ChevronRight aria-hidden="true" size={13} />
+                        ) : (
+                          <ChevronDown aria-hidden="true" size={13} />
+                        )}
+                      </button>
+                    ) : (
+                      <span aria-hidden="true" className="w-5 shrink-0" />
+                    )}
                     <button
                       type="button"
                       title={nodeTypeLabels[node.type]}
@@ -10726,15 +10771,25 @@ function findNode(node: TreeNode, nodeId: string): TreeNode | null {
   return null
 }
 
-function flattenTree(node: TreeNode, depth = 0): LayerItem[] {
+function flattenTree(
+  node: TreeNode,
+  collapsedIds?: ReadonlySet<string>,
+  depth = 0,
+): LayerItem[] {
   const current = [{ node, depth }]
   if (!isContainerNode(node)) {
+    return current
+  }
+  // 컨테이너가 collapsed면 자식 노드는 트리에서 제외
+  if (collapsedIds !== undefined && collapsedIds.has(node.id)) {
     return current
   }
 
   return [
     ...current,
-    ...node.children.flatMap((child) => flattenTree(child, depth + 1)),
+    ...node.children.flatMap((child) =>
+      flattenTree(child, collapsedIds, depth + 1),
+    ),
   ]
 }
 
