@@ -110,22 +110,44 @@ export function buildExportFilename(
 
 // ----- batch export -----
 
+export interface ExportedBatchSummary {
+  count: number
+  avgRichness: number | null
+  maxRichness: number | null
+  minRichness: number | null
+}
+
 export interface ExportedGenerationBatch {
   format: typeof EXPORT_BATCH_FORMAT_KEY
   version: typeof EXPORT_BATCH_FORMAT_VERSION
   exportedAt: string
   entries: ExportedGeneration[]
+  summary?: ExportedBatchSummary
 }
 
 export function buildExportBatchPayload(
   sources: ExportableGeneration[],
   exportedAt: Date,
 ): ExportedGenerationBatch {
+  const entries = sources.map((source) => buildExportPayload(source, exportedAt))
+  const scores = entries
+    .map((entry) => entry.richness?.score)
+    .filter((score): score is number => typeof score === 'number')
+  const summary: ExportedBatchSummary = {
+    count: entries.length,
+    avgRichness:
+      scores.length > 0
+        ? scores.reduce((sum, s) => sum + s, 0) / scores.length
+        : null,
+    maxRichness: scores.length > 0 ? Math.max(...scores) : null,
+    minRichness: scores.length > 0 ? Math.min(...scores) : null,
+  }
   return {
     format: EXPORT_BATCH_FORMAT_KEY,
     version: EXPORT_BATCH_FORMAT_VERSION,
     exportedAt: exportedAt.toISOString(),
-    entries: sources.map((source) => buildExportPayload(source, exportedAt)),
+    entries,
+    summary,
   }
 }
 
@@ -177,6 +199,8 @@ export function parseImportBatchPayload(rawText: string): BatchImportResult {
     }
     entries.push(sub.payload)
   }
+  const summaryResult = validateBatchSummary(parsed.summary)
+  if (!summaryResult.ok) return summaryResult
   return {
     ok: true,
     payload: {
@@ -184,6 +208,42 @@ export function parseImportBatchPayload(rawText: string): BatchImportResult {
       version: EXPORT_BATCH_FORMAT_VERSION,
       exportedAt,
       entries,
+      ...(summaryResult.value !== undefined
+        ? { summary: summaryResult.value }
+        : {}),
+    },
+  }
+}
+
+function validateBatchSummary(
+  raw: unknown,
+):
+  | { ok: true; value: ExportedBatchSummary | undefined }
+  | { ok: false; reason: string } {
+  if (raw === undefined || raw === null) return { ok: true, value: undefined }
+  if (!isPlainObject(raw)) {
+    return { ok: false, reason: 'summary가 객체가 아닙니다.' }
+  }
+  if (typeof raw.count !== 'number' || !Number.isFinite(raw.count) || raw.count < 0) {
+    return { ok: false, reason: 'summary.count가 음이 아닌 숫자가 아닙니다.' }
+  }
+  for (const key of ['avgRichness', 'maxRichness', 'minRichness'] as const) {
+    const value = raw[key]
+    if (value === null) continue
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return { ok: false, reason: `summary.${key}가 숫자/null이 아닙니다.` }
+    }
+    if (value < 0 || value > 1) {
+      return { ok: false, reason: `summary.${key}는 0~1 범위여야 합니다.` }
+    }
+  }
+  return {
+    ok: true,
+    value: {
+      count: raw.count,
+      avgRichness: raw.avgRichness === null ? null : (raw.avgRichness as number),
+      maxRichness: raw.maxRichness === null ? null : (raw.maxRichness as number),
+      minRichness: raw.minRichness === null ? null : (raw.minRichness as number),
     },
   }
 }

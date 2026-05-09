@@ -337,4 +337,69 @@ describe('generation export batch', () => {
     const result = parseImportBatchPayload(text)
     assert.equal(result.ok, false)
   })
+
+  it('batch — summary count + 풍부도 통계 자동 계산', () => {
+    const sourceWithRichness = {
+      ...sampleSource,
+      richness: {
+        score: 0.75,
+        hasPageLandmarks: true,
+        hasMainMultiSection: true,
+        hasDisplayHeadingOne: true,
+        hasCallToAction: true,
+        fontSizeVariety: true,
+        colorVariety: true,
+        hasImagery: false,
+        hasShapeDepth: false,
+      },
+    }
+    const sourceLow = {
+      ...sampleSource,
+      richness: {
+        score: 0.25,
+        hasPageLandmarks: true,
+        hasMainMultiSection: true,
+        hasDisplayHeadingOne: false,
+        hasCallToAction: false,
+        fontSizeVariety: false,
+        colorVariety: false,
+        hasImagery: false,
+        hasShapeDepth: false,
+      },
+    }
+    const out = buildExportBatchPayload(
+      [sourceWithRichness, sourceLow],
+      new Date(),
+    )
+    assert.equal(out.summary?.count, 2)
+    assert.equal(out.summary?.maxRichness, 0.75)
+    assert.equal(out.summary?.minRichness, 0.25)
+    assert.equal(out.summary?.avgRichness, 0.5)
+  })
+
+  it('batch — richness 없는 entries는 summary stats null', () => {
+    const out = buildExportBatchPayload([sampleSource], new Date())
+    assert.equal(out.summary?.count, 1)
+    assert.equal(out.summary?.avgRichness, null)
+    assert.equal(out.summary?.maxRichness, null)
+    assert.equal(out.summary?.minRichness, null)
+  })
+
+  it('batch — summary 잘못된 score 거부', () => {
+    const valid = buildExportPayload(sampleSource, new Date())
+    const text = JSON.stringify({
+      format: EXPORT_BATCH_FORMAT_KEY,
+      version: EXPORT_BATCH_FORMAT_VERSION,
+      exportedAt: new Date().toISOString(),
+      entries: [valid],
+      summary: {
+        count: 1,
+        avgRichness: 1.5,
+        maxRichness: 1,
+        minRichness: 0,
+      },
+    })
+    const result = parseImportBatchPayload(text)
+    assert.equal(result.ok, false)
+  })
 })
