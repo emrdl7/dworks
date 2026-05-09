@@ -86,6 +86,10 @@
 - ✓ `m3-generate-multi-import` (`d2faaa8`) — file input multiple + handleImportGenerationFiles(files: File[]). 부분 실패 reason 누적, 마지막 성공 entry로 active 전환
 - ✓ `m3-generate-fixture-from-active` (`1cb2192`) — 활성 디자인을 사용자 fixture로 등록, localStorage 'dworks:user-fixtures:v1' 별도 키. dropdown에 "기본"/"내 fixture" optgroup. handleSaveAsUserFixture(prompt) + handleDeleteUserFixture. 8 test
 - ✓ `m3-generate-history-rename` (`9ee5992`) — chip 더블클릭으로 사용자 라벨(30자 cap) 인라인 편집. Enter commit / Esc cancel / 빈 입력은 자동 라벨 복귀. PersistedGenerationEntry.userLabel?: optional
+- ✓ `m3-generate-fixture-export-import` (`1fe7ff7`) — 사용자 fixture catalog .json 내보내기/가져오기. 별도 format 'dworks-fixtures' v1, adoptImportedFixtures가 import 시 새 id 발급해 충돌 회피. file input multiple + 부분 실패 reason 누적. fixture-export.test 11
+- ✓ `m3-generate-fixture-rename` (`afd6d81`) — user fixture 등록 후 이름 변경. renameUserFixture(fixtures, id, newName) pure helper(빈 이름/id 미일치/같은 이름 시 원본 참조). user-fixtures.test 4 추가
+- ✓ `m3-generate-richness-detail-hint` (`9e1befb`) — 부족 신호 카드 li에 RICHNESS_RETRY_HINTS의 보강 hint를 작은 보조 텍스트로 인라인 표시. 라벨(굵게) + 10px hint 줄
+- ✓ `m3-generate-history-clear-mutable` (`e7ee124`) — mutable 생성 일괄 정리. clearMutableEntries(entries) helper(immutable + pinned 보호). chip group 아래 "히스토리 정리 (N)" 버튼(개수 표시, 0이면 disabled, 베이지 destructive 톤). generation-history.test 3 추가
 - `m3-generate-stream` — 스트리밍 응답 (CLI batch return 한계 대응)
 
 ### 2026-05-08 mandate (디자이너 자유 편집 — M2 트랙) — 흡수 완료
