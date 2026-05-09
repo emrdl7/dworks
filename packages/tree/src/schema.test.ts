@@ -89,6 +89,8 @@ describe('tree schema', () => {
         translateY: -12,
         rotate: 8,
         scale: 1.1,
+        skewX: -12,
+        skewY: 6,
         originX: 0,
         originY: 100,
       },
@@ -107,6 +109,8 @@ describe('tree schema', () => {
         translateY: -12,
         rotate: 8,
         scale: 1.1,
+        skewX: -12,
+        skewY: 6,
         originX: 0,
         originY: 100,
       })
@@ -120,6 +124,30 @@ describe('tree schema', () => {
         type: 'card',
         editKind: 'structure',
         pointerEvents: 'visible',
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transform: {
+          skewX: -46,
+        },
+        children: [],
+      }),
+    )
+
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'landing.card',
+        type: 'card',
+        editKind: 'structure',
+        transform: {
+          skewY: 46,
+        },
         children: [],
       }),
     )

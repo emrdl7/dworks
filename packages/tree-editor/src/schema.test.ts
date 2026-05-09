@@ -177,6 +177,8 @@ describe('edit-operation schema', () => {
           translateY: -20,
           rotate: -15,
           scale: 0.9,
+          skewX: 15,
+          skewY: -10,
           originX: 100,
         },
       },
@@ -197,6 +199,8 @@ describe('edit-operation schema', () => {
         translateY: -20,
         rotate: -15,
         scale: 0.9,
+        skewX: 15,
+        skewY: -10,
         originX: 100,
       })
     }
@@ -628,6 +632,30 @@ describe('edit-operation schema', () => {
         nodeId: 'hero.card',
         patch: {
           disabled: 'true',
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transform: {
+            skewX: -46,
+          },
+        },
+      }),
+    )
+
+    assert.throws(() =>
+      editOperationSchema.parse({
+        type: 'updateNodeMeta',
+        nodeId: 'hero.card',
+        patch: {
+          transform: {
+            skewY: 46,
+          },
         },
       }),
     )
