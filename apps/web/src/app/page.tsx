@@ -4459,7 +4459,7 @@ function CanvasNodeToolbar({ nodeId }: { nodeId: string }) {
     <div
       role="toolbar"
       aria-label="선택 노드 툴바"
-      className="pointer-events-auto absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded border border-[#c9d4cd] bg-white px-1 py-0.5 shadow"
+      className="pointer-events-auto absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded-md border border-[#c9d4cd] bg-white px-1 py-0.5 shadow-md"
       onClick={(event) => event.stopPropagation()}
       onContextMenu={(event) => event.stopPropagation()}
     >
@@ -4477,11 +4477,13 @@ function CanvasNodeToolbar({ nodeId }: { nodeId: string }) {
       />
       <CanvasToolbarButton
         ariaLabel="복제"
+        shortcut="⌘D"
         icon={Copy}
         onClick={onDuplicate}
       />
       <CanvasToolbarButton
         ariaLabel="삭제"
+        shortcut="Del"
         icon={Trash2}
         onClick={onDelete}
         tone="danger"
@@ -4495,6 +4497,7 @@ interface CanvasToolbarButtonProps {
   disabled?: boolean
   icon: LucideIcon
   onClick: () => void
+  shortcut?: string
   tone?: 'neutral' | 'danger'
 }
 
@@ -4503,6 +4506,7 @@ function CanvasToolbarButton({
   disabled = false,
   icon: Icon,
   onClick,
+  shortcut,
   tone = 'neutral',
 }: CanvasToolbarButtonProps) {
   const toneClass =
@@ -4514,6 +4518,7 @@ function CanvasToolbarButton({
     <button
       type="button"
       aria-label={ariaLabel}
+      title={shortcut ? `${ariaLabel} (${shortcut})` : ariaLabel}
       className={`inline-flex h-6 w-6 items-center justify-center rounded outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--dw-accent)] disabled:cursor-not-allowed disabled:text-[#9aa49d] disabled:hover:bg-transparent ${toneClass}`}
       disabled={disabled}
       onClick={(event) => {
