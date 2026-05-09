@@ -2347,11 +2347,11 @@ export default function HomePage() {
       <div
         className={`grid h-[calc(100vh-56px)] min-h-0 ${
           compareMode
-            ? 'grid-cols-[260px_minmax(0,1fr)]'
-            : 'grid-cols-[260px_minmax(0,1fr)_360px]'
+            ? 'grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)]'
+            : 'grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_360px]'
         }`}
       >
-        <aside className="flex min-h-0 flex-col border-r border-[#d7ddd2] bg-[#fbfcfa]">
+        <aside className="hidden min-h-0 flex-col border-r border-[#d7ddd2] bg-[#fbfcfa] md:flex">
           <details
             open
             className="border-b border-[#e0e5de] [&_summary]:cursor-pointer"
@@ -3107,7 +3107,7 @@ export default function HomePage() {
         </section>
 
         {compareMode ? null : (
-        <aside className="min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white">
+        <aside className="hidden min-h-0 overflow-hidden border-l border-[#d7ddd2] bg-white xl:block">
           <NodeInspector
             node={selectedNode}
             tree={tree}
