@@ -52,6 +52,7 @@ import {
   PanelLeft,
   PanelRight,
   PanelTop,
+  Pin,
   Plus,
   Redo2,
   Rows2,
@@ -2717,7 +2718,7 @@ export default function HomePage() {
                               handleCancelLabelEdit()
                             }
                           }}
-                          className="rounded-l-full rounded-r-none border border-[#4f46e5] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#18211d] outline-none focus:ring-2 focus:ring-[#4f46e5]/20"
+                          className="rounded-l-md rounded-r-none border border-[#4f46e5] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#18211d] outline-none focus:ring-2 focus:ring-[#4f46e5]/20"
                           style={{ width: '6.5rem' }}
                           placeholder="이름 (비우면 기본값)"
                         />
@@ -2731,8 +2732,8 @@ export default function HomePage() {
                           disabled={compareMode}
                           className={`${
                             entry.immutable
-                              ? 'rounded-full'
-                              : 'rounded-l-full rounded-r-none'
+                              ? 'rounded-md'
+                              : 'rounded-l-md rounded-r-none'
                           } border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-50 ${
                             isActive
                               ? 'border-[#4f46e5] bg-[#4f46e5] text-white'
@@ -2759,14 +2760,18 @@ export default function HomePage() {
                           }
                           aria-pressed={isPinned}
                           disabled={compareMode}
-                          className={`rounded-r-full rounded-l-none border border-l-0 px-1.5 py-1 text-[12px] leading-none transition disabled:opacity-50 ${
+                          className={`inline-flex items-center justify-center rounded-r-md rounded-l-none border border-l-0 px-1.5 py-1 leading-none transition disabled:opacity-50 ${
                             isPinned
                               ? 'border-[#c7d2fe] bg-[#eef2ff] text-[#4f46e5]'
                               : 'border-[#cbd6cf] bg-white text-[#9aa6a0] hover:border-[#c7d2fe] hover:text-[#4f46e5]'
                           }`}
                           onClick={() => handleToggleGenerationPin(entry.id)}
                         >
-                          {isPinned ? '★' : '☆'}
+                          <Pin
+                            size={11}
+                            className={isPinned ? 'fill-current' : ''}
+                            aria-hidden="true"
+                          />
                         </button>
                       ) : null}
                     </span>
