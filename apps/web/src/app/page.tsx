@@ -5542,23 +5542,33 @@ function NodeInspector({
     })
   }
 
+  const NodeTypeIcon = nodeTypeIcons[node.type]
   return (
     <section className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b border-[#e0e5de] px-5 pb-0 pt-4">
         <div className="flex items-center justify-between gap-3 px-0">
-          <h2 className="text-sm font-semibold">속성</h2>
+          <div className="flex min-w-0 items-center gap-2">
+            <NodeTypeIcon
+              aria-hidden="true"
+              size={14}
+              className="shrink-0 text-[#4f5e56]"
+            />
+            <h2 className="truncate text-sm font-semibold text-[#18211d]">
+              {nodeTypeLabels[node.type]}
+            </h2>
+          </div>
           <button
             type="button"
             aria-label={
               anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'
             }
-            className="text-xs font-semibold text-[#4f46e5] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
+            className="shrink-0 text-xs font-semibold text-[#4f46e5] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4f46e5]"
             onClick={handleMasterCollapseToggle}
           >
             {anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'}
           </button>
         </div>
-        <p className="mt-1 break-all text-xs text-[#647067]">{node.id}</p>
+        <p className="mt-0.5 break-all text-[11px] text-[#9aa49d]">{node.id}</p>
         <div role="tablist" aria-label="속성 탭" className="-mx-5 mt-3 flex items-stretch border-t border-[#e0e5de] px-5">
           {INSPECTOR_TABS.map((tab) => {
             const isActive = activeTab === tab.id
