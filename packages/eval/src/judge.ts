@@ -387,7 +387,11 @@ function runCli(
     const stdout: Buffer[] = []
     const stderr: Buffer[] = []
     let settled = false
-    let timer: NodeJS.Timeout
+
+    const timer: NodeJS.Timeout = setTimeout(() => {
+      killProcessGroup(child.pid)
+      finish(new Error(`${command} judge timed out after ${timeoutMs}ms`))
+    }, timeoutMs)
 
     const finish = (error: Error | null, output?: CliOutput): void => {
       if (settled) return
@@ -396,11 +400,6 @@ function runCli(
       if (error) reject(error)
       else resolve(output ?? { stdout: '', stderr: '' })
     }
-
-    timer = setTimeout(() => {
-      killProcessGroup(child.pid)
-      finish(new Error(`${command} judge timed out after ${timeoutMs}ms`))
-    }, timeoutMs)
 
     child.stdout.on('data', (chunk: Buffer) => stdout.push(chunk))
     child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk))
