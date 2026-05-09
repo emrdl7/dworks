@@ -3572,11 +3572,13 @@ export default function HomePage() {
                   ) : null}
                   <div
                     className={`group/layer-row relative flex items-center gap-1 rounded-md pr-2 text-sm transition ${
-                      allSelectedNodeIds.has(node.id)
+                      node.id === selectedNodeId
                         ? 'bg-[#1e1f3a] text-[#a5b4fc]'
-                        : hoveredNodeId === node.id
-                          ? 'bg-[#1d2025] text-[#c5c8cf]'
-                          : 'text-[#c5c8cf] hover:bg-[#1d2025]'
+                        : allSelectedNodeIds.has(node.id)
+                          ? 'bg-[#1e1f3a]/70 text-[#a5b4fc]'
+                          : hoveredNodeId === node.id
+                            ? 'bg-[#1d2025] text-[#c5c8cf]'
+                            : 'text-[#c5c8cf] hover:bg-[#1d2025]'
                     } ${isDragging ? 'opacity-50' : ''}`}
                     style={{ paddingLeft: 8 + depth * 14 }}
                   >
