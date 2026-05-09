@@ -8,11 +8,15 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "tsx src/index.ts",
     "lint": "eslint src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts"
   },
   "dependencies": {
+    "@dworks/llm-prompts": "workspace:*",
+    "@dworks/tree": "workspace:*",
     "@hono/node-server": "^1.13.7",
-    "hono": "^4.6.13"
+    "hono": "^4.6.13",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
