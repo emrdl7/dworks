@@ -2597,6 +2597,7 @@ export default function HomePage() {
             role="tabpanel"
             id="left-panel-tabpanel-brief"
             aria-labelledby="left-panel-tab-brief"
+            style={{ animation: 'dw-fade-in 150ms ease-out both' }}
             className="flex min-h-0 flex-1 flex-col overflow-y-auto"
           >
           <div className="border-b border-[#e0e5de]">
@@ -3197,6 +3198,7 @@ export default function HomePage() {
             role="tabpanel"
             id="left-panel-tabpanel-layers"
             aria-labelledby="left-panel-tab-layers"
+            style={{ animation: 'dw-fade-in 150ms ease-out both' }}
             className="flex min-h-0 flex-1 flex-col"
           >
           <div className="shrink-0 border-b border-[#e0e5de] px-2 py-2">
@@ -5969,9 +5971,11 @@ function NodeInspector({
       </div>
 
       <div
+        key={activeTab}
         role="tabpanel"
         id={`inspector-tabpanel-${activeTab}`}
         aria-labelledby={`inspector-tab-${activeTab}`}
+        style={{ animation: 'dw-fade-in 150ms ease-out both' }}
         className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
       >
         {activeTab === 'design' ? (
