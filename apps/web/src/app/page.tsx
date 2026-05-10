@@ -6810,13 +6810,13 @@ function NodeInspector({
   const NodeTypeIcon = nodeTypeIcons[node.type]
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 border-b border-[#2a2e35] px-4 pb-0 pt-4">
+      <div className="shrink-0 border-b border-[var(--dw-ui-border)] px-4 pb-0 pt-3">
         <div className="flex items-center justify-between gap-3 px-0">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[#1e1f3a] text-[#a5b4fc]">
-              <NodeTypeIcon aria-hidden="true" size={13} />
+            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--dw-radius-sm)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]">
+              <NodeTypeIcon aria-hidden="true" size={12} />
             </span>
-            <h2 className="truncate text-sm font-semibold text-[#ebecef]">
+            <h2 className="truncate text-[length:var(--dw-text-value)] font-[number:var(--dw-font-weight-label)] text-[var(--dw-ui-text-primary)]">
               {nodeTypeLabels[node.type]}
             </h2>
           </div>
@@ -6825,7 +6825,7 @@ function NodeInspector({
             aria-label={
               anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'
             }
-            className="shrink-0 text-xs font-semibold text-[#a5b4fc] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1]"
+            className="shrink-0 rounded-[var(--dw-radius-sm)] px-1.5 py-0.5 text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] text-[var(--dw-ui-accent-text)] transition-colors duration-[var(--dw-motion-fast)] hover:bg-[var(--dw-ui-accent-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)]"
             onClick={handleMasterCollapseToggle}
           >
             {anyVisibleSectionOpen ? '모두 접기' : '모두 펼치기'}
@@ -6843,9 +6843,8 @@ function NodeInspector({
               })
               .catch(() => {})
           }}
-          className="mt-0.5 -mx-1 block w-[calc(100%+0.5rem)] break-all rounded px-1 py-0.5 text-left text-[11px] transition-colors hover:bg-[#1d2025] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] data-[copied=true]:text-[#a5b4fc]"
+          className="mt-1 -mx-1 block w-[calc(100%+0.5rem)] break-all rounded-[var(--dw-radius-sm)] px-1 py-0.5 text-left font-mono text-[length:var(--dw-text-caption)] text-[var(--dw-ui-text-faint)] transition-colors duration-[var(--dw-motion-fast)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] data-[copied=true]:text-[var(--dw-ui-accent-text)]"
           data-copied={nodeIdCopied || undefined}
-          style={{ color: nodeIdCopied ? undefined : '#5b6069' }}
         >
           {nodeIdCopied ? 'ID 복사됨 ✓' : node.id}
         </button>
@@ -6871,7 +6870,7 @@ function NodeInspector({
             )
             nextEl?.focus()
           }}
-          className="-mx-4 mt-3 flex items-stretch border-t border-[#2a2e35] px-4"
+          className="-mx-4 mt-3 flex items-stretch border-t border-[var(--dw-ui-border)] px-4"
         >
           {INSPECTOR_TABS.map((tab) => {
             const isActive = activeTab === tab.id
@@ -6885,10 +6884,10 @@ function NodeInspector({
                 aria-controls={`inspector-tabpanel-${tab.id}`}
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative -mb-px flex-1 border-b-2 py-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
+                className={`relative -mb-px flex-1 border-b-2 py-2 text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] tracking-wide transition-colors duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] ${
                   isActive
-                    ? 'border-[#6366f1] text-[#a5b4fc]'
-                    : 'border-transparent text-[#898d97] hover:text-[#ebecef]'
+                    ? 'border-[var(--dw-ui-accent)] text-[var(--dw-ui-accent-text)]'
+                    : 'border-transparent text-[var(--dw-ui-text-muted)] hover:text-[var(--dw-ui-text-primary)]'
                 }`}
               >
                 {tab.label}
