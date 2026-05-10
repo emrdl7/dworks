@@ -1062,6 +1062,7 @@ export default function HomePage() {
         flexDirection: cs.flexDirection,
         justifyContent: cs.justifyContent,
         alignItems: cs.alignItems,
+        flexWrap: cs.flexWrap,
       })
     }
     measureEffective()
@@ -10462,6 +10463,54 @@ function LayoutControls({
   // 캔버스 렌더 default 값을 fallback으로 (사용자가 _현재 보이는 값_을 input에 직접 보고 즉시 수정 가능)
   const eff = effectiveStyle ?? {}
   const effectiveGap = spacing.gap ?? eff.gap
+  // tree에 명시 값이 없을 때 effective(getComputedStyle)에서 derive — 토글 selected 상태 일관
+  const effectiveDirection: LayoutDirection | undefined = (() => {
+    const v = eff.flexDirection
+    if (v === 'row' || v === 'row-reverse') return 'row'
+    if (v === 'column' || v === 'column-reverse') return 'column'
+    return undefined
+  })()
+  const effectiveAlign: LayoutAlign | undefined = (() => {
+    switch (eff.alignItems) {
+      case 'flex-start':
+        return 'start'
+      case 'center':
+        return 'center'
+      case 'flex-end':
+        return 'end'
+      case 'stretch':
+        return 'stretch'
+      default:
+        return undefined
+    }
+  })()
+  const effectiveJustify: LayoutJustify | undefined = (() => {
+    switch (eff.justifyContent) {
+      case 'flex-start':
+        return 'start'
+      case 'center':
+        return 'center'
+      case 'flex-end':
+        return 'end'
+      case 'space-between':
+        return 'between'
+      case 'space-evenly':
+        return 'evenly'
+      default:
+        return undefined
+    }
+  })()
+  const effectiveWrap: LayoutWrap | undefined = (() => {
+    if (eff.flexWrap === 'nowrap') return 'nowrap'
+    if (eff.flexWrap === 'wrap' || eff.flexWrap === 'wrap-reverse') return 'wrap'
+    return undefined
+  })()
+  const layoutWithEffective: NodeLayout = {
+    direction: layout.direction ?? effectiveDirection,
+    align: layout.align ?? effectiveAlign,
+    justify: layout.justify ?? effectiveJustify,
+    wrap: layout.wrap ?? effectiveWrap,
+  }
 
   function updateLayoutField<T extends keyof NodeLayout>(
     field: T,
@@ -10494,7 +10543,7 @@ function LayoutControls({
               key={option}
               disabled={disabled}
               icon={icons[option]}
-              isSelected={layout[field] === option}
+              isSelected={layoutWithEffective[field] === option}
               label={`${title}: ${labels[option]}`}
               onClick={() =>
                 updateLayoutField(
@@ -13768,6 +13817,7 @@ interface EffectiveCanvasStyle {
   flexDirection?: string
   justifyContent?: string
   alignItems?: string
+  flexWrap?: string
 }
 
 // computed style의 'rgb(R, G, B)' / 'rgba(R, G, B, A)'를 #RRGGBB로 정규화.
