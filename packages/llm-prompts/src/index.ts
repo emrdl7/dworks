@@ -1652,7 +1652,7 @@ ${GENERATE_EXAMPLES_BLOCK}
 ## 절대 규칙
 
 - JSON 외 어떤 출력도 금지.
-- id는 트리 안에서 유일.
+- id는 트리 안에서 _전역_ 유일 — 같은 id를 두 노드에 박지 않는다 (서버에서 자동 dedup되지만 의도된 id를 유지하려면 LLM이 처음부터 유일 생성). prefix-suffix 방식 권장(예: hero.heading, hero.cta, main.feature1.title, main.feature2.title 등).
 - 비어 있는 컨테이너 (children 없음 / 빈 배열) 금지.
 - 사용자 요청이 모호하면 root section + banner/main/contentinfo 3자식의 풀 페이지 기본 구조로 진행.
 
