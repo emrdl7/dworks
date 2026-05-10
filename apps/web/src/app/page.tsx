@@ -9001,10 +9001,22 @@ function NodeColorControls({
     opacityLabel: string
     opacityValue?: number
   }) {
+    // node.color에 명시 안 됐는데 inputValue가 채워져 있으면 effective(token/inherited)
+    const isEffective =
+      color[colorField] === undefined && inputValue.trim().length > 0
     return (
       <div className="space-y-3">
         <label className="block">
-          <span className="text-xs font-semibold text-[#898d97]">{label}</span>
+          <span className="flex items-center gap-1 text-xs font-semibold text-[#898d97]">
+            {label}
+            {isEffective ? (
+              <span
+                aria-label="캔버스 default 값"
+                title="캔버스 default 값 (트리에 명시 없음 — token 또는 부모 상속). 입력하면 이 노드 전용으로 override."
+                className="inline-block h-1.5 w-1.5 rounded-full bg-[#5b6069]"
+              />
+            ) : null}
+          </span>
           <span className="mt-2 flex h-10 items-center gap-2 rounded-md border border-[#2a2e35] bg-[#16181c] px-2 focus-within:border-[#6366f1] focus-within:ring-2 focus-within:ring-[#6366f1]/20">
             <input
               className="h-full min-w-0 flex-1 bg-transparent font-mono text-sm outline-none"
