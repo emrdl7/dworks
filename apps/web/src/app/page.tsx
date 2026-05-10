@@ -936,11 +936,53 @@ export default function HomePage() {
         setEffectiveStyle({})
         return
       }
-      // SelectableNode wrapper(div + border)의 첫 element 자식이 실제 렌더 노드
-      const inner =
-        wrapper.querySelector<HTMLElement>(
-          ':scope > section, :scope > article, :scope > h1, :scope > h2, :scope > h3, :scope > p, :scope > span, :scope > a, :scope > button, :scope > figure, :scope > ul, :scope > ol, :scope > form, :scope > div',
-        ) ?? wrapper
+      // SelectableNode wrapper의 첫 _content_ 자식.
+      // 단, isPrimary 시 추가되는 type 라벨 badge(span.absolute)와 CanvasNodeToolbar는
+      // skip — 이들은 absolute 위치 + 자체 padding/gap을 가져 측정값을 오염시킴.
+      function pickContentChild(parent: Element): HTMLElement | null {
+        const children = Array.from(parent.children) as HTMLElement[]
+        return (
+          children.find((el) => {
+            if (el.classList.contains('absolute')) return false
+            if (el.classList.contains('pointer-events-none')) return false
+            return true
+          }) ?? null
+        )
+      }
+      let inner: HTMLElement = pickContentChild(wrapper) ?? wrapper
+      // 텍스트 노드 등 일부는 boxStyle wrapper(빈 div)로 한 번 더 감싸있어 실제
+      // 의미 있는 element는 그 안에 있다. 최대 3단 drill — text-/font-/grid/flex/
+      // bg- 같은 의미 class가 있거나, 텍스트 content를 가진 element를 만나면 stop.
+      let depth = 0
+      while (depth < 3) {
+        const cls = inner.className?.toString() ?? ''
+        if (/(text-|font-|grid|flex|aspect-|p-|gap-|bg-|border-|rounded-|shadow-|min-h-|min-w-)/.test(cls))
+          break
+        const innerTag = inner.tagName
+        if (
+          innerTag === 'H1' ||
+          innerTag === 'H2' ||
+          innerTag === 'H3' ||
+          innerTag === 'H4' ||
+          innerTag === 'H5' ||
+          innerTag === 'H6' ||
+          innerTag === 'P' ||
+          innerTag === 'BUTTON' ||
+          innerTag === 'A' ||
+          innerTag === 'FIGURE' ||
+          innerTag === 'IMG' ||
+          innerTag === 'SECTION' ||
+          innerTag === 'ARTICLE' ||
+          innerTag === 'UL' ||
+          innerTag === 'OL' ||
+          innerTag === 'FORM'
+        )
+          break
+        const next = pickContentChild(inner)
+        if (!next) break
+        inner = next
+        depth++
+      }
       const cs = window.getComputedStyle(inner)
       const z = canvasZoom > 0 ? canvasZoom : 1
       // CSS zoom으로 크기 모두 z배 — 픽셀 값은 / z로 logical 변환
@@ -4653,6 +4695,7 @@ export default function HomePage() {
           <NodeInspector
             node={selectedNode}
             tree={tree}
+            effectiveStyle={effectiveStyle}
             onTextChange={handleTextChange}
             onTextTypographyChange={handleTextTypographyChange}
             onTextTypographyReset={handleTextTypographyReset}
@@ -7337,6 +7380,7 @@ interface NodeInspectorProps {
   node: TreeNode
   tree: Tree
   colorPreset: ColorPreset
+  effectiveStyle: EffectiveCanvasStyle
   onTextChange: (node: TextNode, content: string) => void
   onTextTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
   onTextTypographyReset: (node: TextNode) => void
@@ -7371,6 +7415,7 @@ function NodeInspector({
   node,
   tree,
   colorPreset,
+  effectiveStyle,
   onTextChange,
   onTextTypographyChange,
   onTextTypographyReset,
@@ -7567,6 +7612,7 @@ function NodeInspector({
               node={node}
               tree={tree}
               colorPreset={colorPreset}
+              effectiveStyle={effectiveStyle}
               disclosure={bindSection('색상')}
               onNodeColorChange={onNodeColorChange}
               onNodeColorReset={onNodeColorReset}
@@ -7576,6 +7622,7 @@ function NodeInspector({
             {node.type === 'text' ? (
               <TypographyControls
                 node={node}
+                effectiveStyle={effectiveStyle}
                 disclosure={bindSection('타이포그래피')}
                 onTypographyChange={onTextTypographyChange}
                 onTypographyReset={onTextTypographyReset}
@@ -7591,6 +7638,7 @@ function NodeInspector({
 
             <ShapeControls
               node={node}
+              effectiveStyle={effectiveStyle}
               disclosure={bindSection('모양')}
               onShapeChange={onShapeChange}
               onShapeReset={onShapeReset}
@@ -7602,6 +7650,7 @@ function NodeInspector({
           <>
             <LayoutControls
               node={node}
+              effectiveStyle={effectiveStyle}
               disclosure={bindSection('레이아웃')}
               onLayoutChange={onLayoutChange}
               onLayoutReset={onLayoutReset}
@@ -7610,6 +7659,7 @@ function NodeInspector({
 
             <SpacingControls
               node={node}
+              effectiveStyle={effectiveStyle}
               disclosure={bindSection('간격')}
               onSpacingChange={onSpacingChange}
               onSpacingReset={onSpacingReset}
@@ -8029,6 +8079,7 @@ interface NodeColorControlsProps {
   node: TreeNode
   tree: Tree
   colorPreset: ColorPreset
+  effectiveStyle?: EffectiveCanvasStyle
   onNodeColorChange: (
     node: TreeNode,
     patch: Partial<NodeColor>,
@@ -8047,6 +8098,7 @@ function NodeColorControls({
   node,
   tree,
   colorPreset,
+  effectiveStyle,
   onNodeColorChange,
   onNodeMetaChange,
   onNodeColorReset,
@@ -8054,6 +8106,10 @@ function NodeColorControls({
   const textContrast =
     node.type === 'text' ? computeTextContrast(tree, node, colorPreset) : null
   const color = node.color ?? {}
+  const eff = effectiveStyle ?? {}
+  // tree 색상 || 캔버스 렌더 색상 — 비어있어도 _현재 렌더 색_을 input value로 표시
+  const effectiveBackgroundColor = color.backgroundColor ?? eff.backgroundColor
+  const effectiveTextColor = color.textColor ?? eff.textColor
   const supportsAccentColor = canUseAccentColor(node)
   const supportsHoverBackgroundColor = node.type === 'button'
   const backgroundMode: ColorMode =
@@ -8064,7 +8120,7 @@ function NodeColorControls({
     color.backgroundOpacity,
   )
   const [backgroundColorInput, setBackgroundColorInput] = useState(
-    color.backgroundColor ?? '',
+    color.backgroundColor ?? eff.backgroundColor ?? '',
   )
   const [backgroundGradientFromInput, setBackgroundGradientFromInput] = useState(
     backgroundGradient.from,
@@ -8072,7 +8128,9 @@ function NodeColorControls({
   const [backgroundGradientToInput, setBackgroundGradientToInput] = useState(
     backgroundGradient.to,
   )
-  const [textColorInput, setTextColorInput] = useState(color.textColor ?? '')
+  const [textColorInput, setTextColorInput] = useState(
+    color.textColor ?? eff.textColor ?? '',
+  )
   const [accentColorInput, setAccentColorInput] = useState(
     color.accentColor ?? '',
   )
@@ -8120,14 +8178,14 @@ function NodeColorControls({
   const [disabledTextColorError, setDisabledTextColorError] = useState(false)
 
   useEffect(() => {
-    setBackgroundColorInput(color.backgroundColor ?? '')
+    setBackgroundColorInput(color.backgroundColor ?? effectiveBackgroundColor ?? '')
     setBackgroundColorError(false)
-  }, [node.id, color.backgroundColor])
+  }, [node.id, color.backgroundColor, effectiveBackgroundColor])
 
   useEffect(() => {
-    setTextColorInput(color.textColor ?? '')
+    setTextColorInput(color.textColor ?? effectiveTextColor ?? '')
     setTextColorError(false)
-  }, [node.id, color.textColor])
+  }, [node.id, color.textColor, effectiveTextColor])
 
   useEffect(() => {
     setAccentColorInput(color.accentColor ?? '')
@@ -9649,6 +9707,7 @@ const TYPOGRAPHY_PRESETS = [
 interface TypographyControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TextNode
+  effectiveStyle?: EffectiveCanvasStyle
   onTypographyChange: (
     node: TextNode,
     patch: Partial<Typography>,
@@ -9670,6 +9729,7 @@ interface TypographyControlsProps {
 function TypographyControls({
   disclosure,
   node,
+  effectiveStyle,
   onTypographyChange,
   onTypographyReset,
   registeredFonts,
@@ -9995,7 +10055,7 @@ function TypographyControls({
           min={8}
           max={120}
           step={1}
-          value={typography.fontSize}
+          value={typography.fontSize ?? effectiveStyle?.fontSize}
           placeholder={String(defaults.fontSize)}
           onChange={(value) => updateNumberField('fontSize', value, 8, 120)}
         />
@@ -10003,7 +10063,7 @@ function TypographyControls({
           <span className="text-xs font-semibold text-[#898d97]">굵기</span>
           <select
             className="mt-2 h-10 w-full rounded-md border border-[#2a2e35] bg-[#16181c] px-3 text-sm outline-none focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/40"
-            value={typography.fontWeight ?? ''}
+            value={typography.fontWeight ?? (effectiveStyle?.fontWeight as FontWeight | undefined) ?? ''}
             onChange={(event) =>
               onTypographyChange(node, {
                 fontWeight:
@@ -10027,7 +10087,7 @@ function TypographyControls({
           min={0.8}
           max={3}
           step={0.05}
-          value={typography.lineHeight}
+          value={typography.lineHeight ?? effectiveStyle?.lineHeight}
           placeholder={String(defaults.lineHeight)}
           onChange={(value) => updateNumberField('lineHeight', value, 0.8, 3)}
         />
@@ -10037,7 +10097,7 @@ function TypographyControls({
           min={-0.1}
           max={0.2}
           step={0.005}
-          value={typography.letterSpacing}
+          value={typography.letterSpacing ?? effectiveStyle?.letterSpacing}
           placeholder={String(defaults.letterSpacing)}
           onChange={(value) => updateNumberField('letterSpacing', value, -0.1, 0.2)}
         />
@@ -10182,6 +10242,7 @@ function TypographyControls({
 interface SpacingControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TreeNode
+  effectiveStyle?: EffectiveCanvasStyle
   onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
   onSpacingReset: (node: TreeNode) => void
 }
@@ -10189,6 +10250,7 @@ interface SpacingControlsProps {
 interface LayoutControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TreeNode
+  effectiveStyle?: EffectiveCanvasStyle
   onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
   onLayoutReset: (node: TreeNode) => void
   onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
@@ -10197,6 +10259,7 @@ interface LayoutControlsProps {
 function LayoutControls({
   disclosure,
   node,
+  effectiveStyle,
   onLayoutChange,
   onLayoutReset,
   onSpacingChange,
@@ -10204,6 +10267,9 @@ function LayoutControls({
   const canEditLayout = isContainerNode(node)
   const layout = node.layout ?? {}
   const spacing = node.spacing ?? {}
+  // 캔버스 렌더 default 값을 fallback으로 (사용자가 _현재 보이는 값_을 input에 직접 보고 즉시 수정 가능)
+  const eff = effectiveStyle ?? {}
+  const effectiveGap = spacing.gap ?? eff.gap
 
   function updateLayoutField<T extends keyof NodeLayout>(
     field: T,
@@ -10313,8 +10379,8 @@ function LayoutControls({
           min={0}
           max={200}
           step={1}
-          value={spacing.gap}
-          placeholder="기본"
+          value={effectiveGap}
+          placeholder="0"
           onChange={(value) =>
             onSpacingChange(node, {
               gap: parseOptionalNumber(value, 0, 200),
@@ -10329,6 +10395,7 @@ function LayoutControls({
 function SpacingControls({
   disclosure,
   node,
+  effectiveStyle,
   onSpacingChange,
   onSpacingReset,
 }: SpacingControlsProps) {
@@ -10336,6 +10403,19 @@ function SpacingControls({
   const [marginMode, setMarginMode] = useState<SpacingMode>('all')
   const spacing = node.spacing ?? {}
   const canEditGap = isContainerNode(node)
+  // tree 값 || 캔버스 렌더 default — 사용자가 _현재 보이는 값_을 input에 직접 보고 즉시 수정
+  const eff = effectiveStyle ?? {}
+  const spacingWithEffective: Spacing = {
+    paddingTop: spacing.paddingTop ?? eff.paddingTop,
+    paddingRight: spacing.paddingRight ?? eff.paddingRight,
+    paddingBottom: spacing.paddingBottom ?? eff.paddingBottom,
+    paddingLeft: spacing.paddingLeft ?? eff.paddingLeft,
+    marginTop: spacing.marginTop ?? eff.marginTop,
+    marginRight: spacing.marginRight ?? eff.marginRight,
+    marginBottom: spacing.marginBottom ?? eff.marginBottom,
+    marginLeft: spacing.marginLeft ?? eff.marginLeft,
+    gap: spacing.gap ?? eff.gap,
+  }
 
   function updateFields(
     fields: readonly SpacingField[],
@@ -10423,7 +10503,7 @@ function SpacingControls({
               min={min}
               max={max}
               step={1}
-              value={getSpacingGroupValue(spacing, fields)}
+              value={getSpacingGroupValue(spacingWithEffective, fields)}
               placeholder={placeholder}
               onChange={(value) => updateFields(fields, value, min, max)}
             />
@@ -10437,7 +10517,7 @@ function SpacingControls({
               min={min}
               max={max}
               step={1}
-              value={getSpacingGroupValue(spacing, horizontalFields)}
+              value={getSpacingGroupValue(spacingWithEffective, horizontalFields)}
               placeholder={placeholder}
               onChange={(value) =>
                 updateFields(horizontalFields, value, min, max)
@@ -10449,7 +10529,7 @@ function SpacingControls({
               min={min}
               max={max}
               step={1}
-              value={getSpacingGroupValue(spacing, verticalFields)}
+              value={getSpacingGroupValue(spacingWithEffective, verticalFields)}
               placeholder={placeholder}
               onChange={(value) => updateFields(verticalFields, value, min, max)}
             />
@@ -10463,7 +10543,7 @@ function SpacingControls({
               min={min}
               max={max}
               step={1}
-              value={spacing[topField]}
+              value={spacingWithEffective[topField]}
               placeholder={placeholder}
               onChange={(value) => updateField(topField, value, min, max)}
             />
@@ -10473,7 +10553,7 @@ function SpacingControls({
               min={min}
               max={max}
               step={1}
-              value={spacing[rightField]}
+              value={spacingWithEffective[rightField]}
               placeholder={placeholder}
               onChange={(value) => updateField(rightField, value, min, max)}
             />
@@ -10483,7 +10563,7 @@ function SpacingControls({
               min={min}
               max={max}
               step={1}
-              value={spacing[bottomField]}
+              value={spacingWithEffective[bottomField]}
               placeholder={placeholder}
               onChange={(value) => updateField(bottomField, value, min, max)}
             />
@@ -10493,7 +10573,7 @@ function SpacingControls({
               min={min}
               max={max}
               step={1}
-              value={spacing[leftField]}
+              value={spacingWithEffective[leftField]}
               placeholder={placeholder}
               onChange={(value) => updateField(leftField, value, min, max)}
             />
@@ -10542,8 +10622,8 @@ function SpacingControls({
               min={0}
               max={200}
               step={1}
-              value={spacing.gap}
-              placeholder="기본"
+              value={spacingWithEffective.gap}
+              placeholder="0"
               onChange={(value) => updateField('gap', value, 0, 200)}
             />
           </div>
@@ -10556,6 +10636,7 @@ function SpacingControls({
 interface ShapeControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TreeNode
+  effectiveStyle?: EffectiveCanvasStyle
   onShapeChange: (
     node: TreeNode,
     patch: Partial<Shape>,
@@ -10567,6 +10648,7 @@ interface ShapeControlsProps {
 function ShapeControls({
   disclosure,
   node,
+  effectiveStyle,
   onShapeChange,
   onShapeReset,
 }: ShapeControlsProps) {
@@ -10970,8 +11052,19 @@ function ShapeControls({
                 min={0}
                 max={120}
                 step={1}
-                value={shape.radius}
-                placeholder="기본"
+                value={
+                  shape.radius ??
+                  (effectiveStyle?.borderRadiusTopLeft !== undefined &&
+                  effectiveStyle.borderRadiusTopLeft ===
+                    effectiveStyle.borderRadiusTopRight &&
+                  effectiveStyle.borderRadiusTopLeft ===
+                    effectiveStyle.borderRadiusBottomLeft &&
+                  effectiveStyle.borderRadiusTopLeft ===
+                    effectiveStyle.borderRadiusBottomRight
+                    ? effectiveStyle.borderRadiusTopLeft
+                    : undefined)
+                }
+                placeholder="0"
                 onChange={updateRadius}
               />
             </div>
