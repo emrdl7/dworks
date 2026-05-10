@@ -11,6 +11,7 @@ import {
   DEFAULT_SPACING_BY_TYPE,
 } from './canvas-defaults.js'
 import {
+  resolveColor,
   resolveLayout,
   resolveShape,
   resolveSpacing,
@@ -244,5 +245,69 @@ describe('resolveShape', () => {
     const out = resolveShape(card)
     assert.equal(out.value.borderColor, undefined)
     assert.equal(out.sources.borderColor, undefined)
+  })
+})
+
+describe('resolveColor', () => {
+  it('section/list/leaf는 token slot 없어 빈 color', () => {
+    const out = resolveColor(makeSection(), {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.deepEqual(out.value, {})
+    assert.deepEqual(out.sources, {})
+  })
+
+  it('hero는 mint preset에서 heroSurface(#102822) / heroText(#ffffff) token resolved', () => {
+    const hero = makeSection({ type: 'hero', id: 'n-hero' } as Partial<TreeNode>)
+    const out = resolveColor(hero, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.equal(out.value.backgroundColor, '#102822')
+    assert.equal(out.value.textColor, '#ffffff')
+    assert.equal(out.sources.backgroundColor, 'token')
+    assert.equal(out.sources.textColor, 'token')
+  })
+
+  it('card는 mint preset에서 surfaceMuted(#fbfcfa) backgroundColor token resolved', () => {
+    // borderColor는 Shape 스키마라 본 resolver 영역 밖 — 후속 phase의 resolveShape에서 처리
+    const card = makeSection({ type: 'card', id: 'n-card' } as Partial<TreeNode>)
+    const out = resolveColor(card, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.equal(out.value.backgroundColor, '#fbfcfa')
+    assert.equal(out.sources.backgroundColor, 'token')
+  })
+
+  it('explicit override는 token을 덮음', () => {
+    const hero = makeSection({
+      type: 'hero',
+      id: 'n-hero',
+      color: { backgroundColor: '#ff0000' },
+    } as Partial<TreeNode>)
+    const out = resolveColor(hero, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.equal(out.value.backgroundColor, '#ff0000')
+    assert.equal(out.sources.backgroundColor, 'explicit')
+    // 명시 안 한 키는 token
+    assert.equal(out.value.textColor, '#ffffff')
+    assert.equal(out.sources.textColor, 'token')
+  })
+
+  it('colorPreset 미지정 시 token slot은 resolve 안 됨 (explicit만 살아남음)', () => {
+    const hero = makeSection({
+      type: 'hero',
+      id: 'n-hero',
+      color: { backgroundColor: '#abcdef' },
+    } as Partial<TreeNode>)
+    const out = resolveColor(hero, { viewport: 'desktop' })
+    assert.equal(out.value.backgroundColor, '#abcdef')
+    assert.equal(out.sources.backgroundColor, 'explicit')
+    assert.equal(out.value.textColor, undefined)
+    assert.equal(out.sources.textColor, undefined)
   })
 })

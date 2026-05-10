@@ -9,6 +9,7 @@
 // 등)는 후속 phase에서 role/intent별 default로 분리.
 
 import type {
+  ColorPresetTokens,
   Emphasis,
   NodeLayout,
   Shape,
@@ -158,6 +159,33 @@ export const DEFAULT_SHAPE_BY_TYPE: Record<TreeNodeType, Shape> = {
   card: { radius: 8, borderWidth: 1, borderStyle: 'solid', shadow: 'sm' },
   list: {},
   form: { radius: 8, borderWidth: 1, borderStyle: 'solid', shadow: 'sm' },
+  text: {},
+  button: {},
+  image: {},
+}
+
+// type별 color token slot — 캔버스 className의 var(--dw-*) 토큰을 ColorPresetTokens
+// 키로 매핑한다. resolveColor가 colorPreset과 합쳐 _최종 hex_를 산출.
+//
+// hero: bg-[var(--dw-hero-surface)] text-[var(--dw-hero-text)]
+//   → backgroundColor=heroSurface, textColor=heroText
+// card/form: border-[var(--dw-border)] bg-[var(--dw-surface-muted)]
+//   → backgroundColor=surfaceMuted, borderColor=border
+// section/list: 컨테이너 색 명시 없음 — 캔버스가 부모 색 상속
+// text/button/image leaf: 부모 색 상속 (token-aware inherited resolver는 후속 phase)
+export interface ColorTokenSlots {
+  backgroundColor?: keyof ColorPresetTokens
+  textColor?: keyof ColorPresetTokens
+  accentColor?: keyof ColorPresetTokens
+  borderColor?: keyof ColorPresetTokens
+}
+
+export const DEFAULT_COLOR_TOKENS_BY_TYPE: Record<TreeNodeType, ColorTokenSlots> = {
+  section: {},
+  hero: { backgroundColor: 'heroSurface', textColor: 'heroText' },
+  card: { backgroundColor: 'surfaceMuted', borderColor: 'border' },
+  list: {},
+  form: { backgroundColor: 'surfaceMuted', borderColor: 'border' },
   text: {},
   button: {},
   image: {},

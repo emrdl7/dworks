@@ -15,18 +15,22 @@
 //   Phase 5: AI 생성 후 normalize에 resolver 적용.
 
 import type {
+  ColorPreset,
+  NodeColor,
   NodeLayout,
   Shape,
   Spacing,
   TreeNode,
   Typography,
 } from '@dworks/tree'
+import { COLOR_PRESETS } from '@dworks/tree'
 import {
   resolveResponsiveLayout,
   resolveResponsiveSpacing,
   type ResponsiveViewport,
 } from './responsive'
 import {
+  DEFAULT_COLOR_TOKENS_BY_TYPE,
   DEFAULT_LAYOUT_BY_TYPE,
   DEFAULT_SHAPE_BY_TYPE,
   DEFAULT_SPACING_BY_TYPE,
@@ -59,6 +63,9 @@ export interface ResolvedSpacing {
 
 export interface ResolveContext {
   viewport: ResponsiveViewport
+  // colorPreset은 color resolver에서만 사용. 다른 영역(spacing/layout/shape/
+  // typography)은 무관 — 호출자가 항상 채워주면 코드 단순화.
+  colorPreset?: ColorPreset
 }
 
 // node + context → resolved spacing.
@@ -266,6 +273,57 @@ export function resolveShape(node: TreeNode): ResolvedShape {
   for (const key of SHAPE_KEYS) {
     pick(key)
   }
+
+  return { value, sources }
+}
+
+// resolved color — type별 token slot + colorPreset → hex 매핑.
+//   1) DEFAULT_COLOR_TOKENS_BY_TYPE이 type별 token slot(예: hero → heroSurface) 정의
+//   2) COLOR_PRESETS[colorPreset]가 token → hex 매핑
+//   3) explicit override가 hex로 위에 덮음
+//
+// 본 함수는 NodeColor 스키마(backgroundColor/textColor/accentColor) 영역만 처리.
+// borderColor는 Shape 스키마이며 후속 phase에서 resolveShape가 colorPreset 받아 처리.
+//
+// 한계 (후속 phase):
+//   - text 노드의 inherited textColor (부모 hero에서 상속) 미처리
+//   - hover/active/focus/disabled state colors 미처리
+//   - gradient 미처리
+//   - opacity 처리는 explicit-only
+export type ColorKey = 'backgroundColor' | 'textColor' | 'accentColor'
+
+export interface ResolvedColor {
+  value: NodeColor
+  sources: Partial<Record<ColorKey, NodeDesignSource>>
+}
+
+export function resolveColor(node: TreeNode, context: ResolveContext): ResolvedColor {
+  const tokenSlots = DEFAULT_COLOR_TOKENS_BY_TYPE[node.type] ?? {}
+  const explicit = node.color ?? {}
+  const tokens = context.colorPreset
+    ? COLOR_PRESETS[context.colorPreset]
+    : undefined
+
+  const value: NodeColor = {}
+  const sources: Partial<Record<ColorKey, NodeDesignSource>> = {}
+
+  function pick(key: ColorKey): void {
+    const explicitValue = explicit[key]
+    if (explicitValue !== undefined) {
+      value[key] = explicitValue
+      sources[key] = 'explicit'
+      return
+    }
+    const tokenName = tokenSlots[key]
+    if (tokenName !== undefined && tokens) {
+      value[key] = tokens[tokenName]
+      sources[key] = 'token'
+    }
+  }
+
+  pick('backgroundColor')
+  pick('textColor')
+  pick('accentColor')
 
   return { value, sources }
 }
