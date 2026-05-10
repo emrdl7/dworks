@@ -47,26 +47,34 @@ describe('resolveSpacing', () => {
     assert.deepEqual(out.sources, {})
   })
 
-  it('section은 type default(p-10 gap-8)을 채운다', () => {
+  it('section은 default spacing이 비어있다 (role-aware default는 후속 phase)', () => {
     const out = resolveSpacing(makeSection(), { viewport: 'desktop' })
-    assert.equal(out.value.paddingTop, 40)
-    assert.equal(out.value.paddingRight, 40)
-    assert.equal(out.value.paddingBottom, 40)
-    assert.equal(out.value.paddingLeft, 40)
-    assert.equal(out.value.gap, 32)
+    assert.deepEqual(out.value, {})
+    assert.deepEqual(out.sources, {})
+  })
+
+  it('hero default(p-12 gap-10)을 채운다', () => {
+    const hero = makeSection({ type: 'hero', id: 'n-hero' } as Partial<TreeNode>)
+    const out = resolveSpacing(hero, { viewport: 'desktop' })
+    assert.equal(out.value.paddingTop, 48)
+    assert.equal(out.value.gap, 40)
     assert.equal(out.sources.paddingTop, 'default')
     assert.equal(out.sources.gap, 'default')
   })
 
   it('explicit override는 default를 덮고 source가 explicit', () => {
-    const node = makeSection({ spacing: { paddingTop: 100, gap: 16 } })
-    const out = resolveSpacing(node, { viewport: 'desktop' })
+    const hero = makeSection({
+      type: 'hero',
+      id: 'n-hero',
+      spacing: { paddingTop: 100, gap: 16 },
+    } as Partial<TreeNode>)
+    const out = resolveSpacing(hero, { viewport: 'desktop' })
     assert.equal(out.value.paddingTop, 100)
     assert.equal(out.value.gap, 16)
     assert.equal(out.sources.paddingTop, 'explicit')
     assert.equal(out.sources.gap, 'explicit')
     // 명시 안 한 키는 default로 채워짐
-    assert.equal(out.value.paddingLeft, 40)
+    assert.equal(out.value.paddingLeft, 48)
     assert.equal(out.sources.paddingLeft, 'default')
   })
 
@@ -87,9 +95,10 @@ describe('resolveSpacing', () => {
   })
 
   it('default는 viewport 보정 없이 그대로 (회귀 방지 — 작은 화면에서 default 말없이 줄어들면 시각 회귀)', () => {
-    // section default paddingTop=40. mobile threshold(≥80)보다 작으므로 변동 없음
-    const out = resolveSpacing(makeSection(), { viewport: 'mobile' })
-    assert.equal(out.value.paddingTop, 40)
+    // hero default paddingTop=48. mobile threshold(≥80)보다 작으므로 변동 없음
+    const hero = makeSection({ type: 'hero', id: 'n-hero' } as Partial<TreeNode>)
+    const out = resolveSpacing(hero, { viewport: 'mobile' })
+    assert.equal(out.value.paddingTop, 48)
     assert.equal(out.sources.paddingTop, 'default')
   })
 
