@@ -1,7 +1,6 @@
 'use client'
 
 import {
-  createContext,
   useContext,
   useEffect,
   useMemo,
@@ -98,7 +97,6 @@ import {
   type ImageDropShadow,
   type NodeColor,
   type NodeTransform,
-  type NodeTransition,
   type NodeTransitionTiming,
   type TransitionCubicBezier,
   NODE_TRANSITION_TIMING_IDS,
@@ -213,6 +211,14 @@ import {
   hasLayoutOverride,
 } from './design-style'
 import { TextPreview } from './text-preview'
+import {
+  CanvasColorPresetContext,
+  CanvasHoverContext,
+  CanvasReadOnlyContext,
+  CanvasSelectionContext,
+  CanvasToolbarContext,
+  CanvasViewportContext,
+} from './canvas-contexts'
 import {
   type ColorField,
   type ColorOpacityField,
@@ -5677,37 +5683,6 @@ function getContextMenuItems(menu: HTMLDivElement | null): HTMLButtonElement[] {
   )
 }
 
-const CanvasReadOnlyContext = createContext(false)
-const CanvasViewportContext = createContext<ResponsiveViewport>('desktop')
-// design-resolver가 token slot → hex 변환에 필요. 'mint'는 globals.css의 default fallback.
-const CanvasColorPresetContext = createContext<ColorPreset>('mint')
-
-interface CanvasHoverContextValue {
-  hoveredNodeId: string | null
-  setHoveredNodeId: (id: string | null) => void
-}
-const CanvasHoverContext = createContext<CanvasHoverContextValue>({
-  hoveredNodeId: null,
-  setHoveredNodeId: () => {},
-})
-
-interface CanvasSelectionContextValue {
-  primarySelectedId: string
-  allSelectedIds: ReadonlySet<string>
-  toggleAdditional: (id: string) => void
-  // Shift+click 범위 선택: primary부터 target까지 (트리 flat 순서 기준)
-  selectRange: (id: string) => void
-  // 캔버스 panning 활성 시 노드 click을 무시 (Space drag 시 selection 변경 방지)
-  isPanActive: boolean
-}
-const CanvasSelectionContext = createContext<CanvasSelectionContextValue>({
-  primarySelectedId: '',
-  allSelectedIds: new Set(),
-  toggleAdditional: () => {},
-  selectRange: () => {},
-  isPanActive: false,
-})
-
 interface CanvasNodeProps {
   inheritedTextColor?: string
   node: TreeNode
@@ -6105,18 +6080,6 @@ function CanvasNode({
   }
 }
 
-interface CanvasToolbarContextValue {
-  selectedNodeId: string
-  selectedStructureInfo: StructureInfo
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onDuplicate: () => void
-  onDelete: () => void
-}
-
-const CanvasToolbarContext = createContext<CanvasToolbarContextValue | null>(
-  null,
-)
 
 function CanvasNodeToolbar({ nodeId }: { nodeId: string }) {
   const ctx = useContext(CanvasToolbarContext)
