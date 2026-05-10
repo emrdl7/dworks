@@ -1014,12 +1014,11 @@ export default function HomePage() {
         depth++
       }
       const cs = window.getComputedStyle(inner)
-      const z = canvasZoom > 0 ? canvasZoom : 1
-      // CSS zoom으로 크기 모두 z배 — 픽셀 값은 / z로 logical 변환
+      // getComputedStyle은 CSS px 기준 (CSS zoom 적용 전 declared value)이므로 보정 불필요
       const px = (v: string): number | undefined => {
         const n = parseFloat(v)
         if (!Number.isFinite(n)) return undefined
-        return Math.round((n / z) * 10) / 10
+        return Math.round(n * 10) / 10
       }
       setEffectiveStyle({
         paddingTop: px(cs.paddingTop),
@@ -1043,8 +1042,8 @@ export default function HomePage() {
           cs.lineHeight === 'normal'
             ? undefined
             : (() => {
-                const lh = parseFloat(cs.lineHeight) / z
-                const fs = parseFloat(cs.fontSize) / z
+                const lh = parseFloat(cs.lineHeight)
+                const fs = parseFloat(cs.fontSize)
                 if (!Number.isFinite(lh) || !Number.isFinite(fs) || fs <= 0)
                   return undefined
                 return Math.round((lh / fs) * 100) / 100
@@ -1053,8 +1052,8 @@ export default function HomePage() {
           cs.letterSpacing === 'normal'
             ? 0
             : (() => {
-                const ls = parseFloat(cs.letterSpacing) / z
-                const fs = parseFloat(cs.fontSize) / z
+                const ls = parseFloat(cs.letterSpacing)
+                const fs = parseFloat(cs.fontSize)
                 if (!Number.isFinite(ls) || !Number.isFinite(fs) || fs <= 0)
                   return undefined
                 return Math.round((ls / fs) * 1000) / 1000
@@ -1072,7 +1071,7 @@ export default function HomePage() {
     )
     if (wrapper) ro.observe(wrapper)
     return () => ro.disconnect()
-  }, [selectedNodeId, tree, canvasZoom, responsiveViewport])
+  }, [selectedNodeId, tree, responsiveViewport])
 
   // 선택 노드의 logical (zoom 무관) 크기를 status bar용으로 측정
   useEffect(() => {
