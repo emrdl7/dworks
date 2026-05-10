@@ -186,6 +186,10 @@ import {
   type ResolvedLayout,
   type ResolvedSpacing,
 } from './design-resolver'
+import {
+  DEFAULT_TYPOGRAPHY_BY_EMPHASIS,
+  type EmphasisTypographyDefaults,
+} from './canvas-defaults'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -13322,59 +13326,14 @@ function getFontRegistryErrorMessage(error: unknown): string {
   return '글꼴 작업에 실패했습니다.'
 }
 
-type TypographyDefaults = Required<Omit<Typography, 'textShadow'>> & {
+type TypographyDefaults = EmphasisTypographyDefaults & {
   textShadow?: TextShadow
 }
 
 function getTypographyDefaults(node: TextNode): TypographyDefaults {
-  switch (node.emphasis) {
-    case 'heading-1':
-      return {
-        fontSize: 48,
-        fontWeight: '600',
-        lineHeight: 1.25,
-        letterSpacing: 0,
-        textAlign: 'left',
-        fontFamily: 'sans',
-      }
-    case 'heading-2':
-      return {
-        fontSize: 24,
-        fontWeight: '600',
-        lineHeight: 1.35,
-        letterSpacing: 0,
-        textAlign: 'left',
-        fontFamily: 'sans',
-      }
-    case 'heading-3':
-      return {
-        fontSize: 18,
-        fontWeight: '600',
-        lineHeight: 1.45,
-        letterSpacing: 0,
-        textAlign: 'left',
-        fontFamily: 'sans',
-      }
-    case 'caption':
-      return {
-        fontSize: 12,
-        fontWeight: '600',
-        lineHeight: 1.35,
-        letterSpacing: 0,
-        textAlign: 'left',
-        fontFamily: 'sans',
-      }
-    case 'body':
-    default:
-      return {
-        fontSize: 16,
-        fontWeight: '400',
-        lineHeight: 1.75,
-        letterSpacing: 0,
-        textAlign: 'left',
-        fontFamily: 'sans',
-      }
-  }
+  // single source of truth: DEFAULT_TYPOGRAPHY_BY_EMPHASIS (canvas-defaults.ts)
+  // emphasis 미지정 시 'body'로 fallback (TextPreview default branch와 일치)
+  return DEFAULT_TYPOGRAPHY_BY_EMPHASIS[node.emphasis ?? 'body']
 }
 
 function createDuplicateNodeId(tree: Tree, nodeId: string): string {

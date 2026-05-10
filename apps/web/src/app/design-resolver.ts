@@ -14,13 +14,17 @@
 //   Phase 4: Inspector가 resolver 결과 표시 (effectiveStyle 제거).
 //   Phase 5: AI 생성 후 normalize에 resolver 적용.
 
-import type { NodeLayout, Spacing, TreeNode } from '@dworks/tree'
+import type { NodeLayout, Spacing, TreeNode, Typography } from '@dworks/tree'
 import {
   resolveResponsiveLayout,
   resolveResponsiveSpacing,
   type ResponsiveViewport,
 } from './responsive'
-import { DEFAULT_LAYOUT_BY_TYPE, DEFAULT_SPACING_BY_TYPE } from './canvas-defaults'
+import {
+  DEFAULT_LAYOUT_BY_TYPE,
+  DEFAULT_SPACING_BY_TYPE,
+  DEFAULT_TYPOGRAPHY_BY_EMPHASIS,
+} from './canvas-defaults'
 
 // 인스펙터에서 각 값의 _출처_를 표시하기 위한 태그.
 //   explicit  — 트리에 명시 (사용자가 직접 박은 값)
@@ -157,6 +161,53 @@ export function resolveLayout(
   pick('align')
   pick('justify')
   pick('wrap')
+
+  return { value, sources }
+}
+
+// resolved typography — text 노드 한정.
+//   1) emphasis별 default
+//   2) explicit override
+// 텍스트 회귀 viewport 보정 없음 (현재 코드에 텍스트 responsive 보정 없음).
+export type TypographyKey = keyof Typography
+
+export interface ResolvedTypography {
+  value: Typography
+  sources: Partial<Record<TypographyKey, NodeDesignSource>>
+}
+
+export function resolveTypography(node: TreeNode): ResolvedTypography {
+  if (node.type !== 'text') {
+    return { value: {}, sources: {} }
+  }
+  const emphasis = node.emphasis ?? 'body'
+  // EmphasisTypographyDefaults에 textShadow가 없어 generic indexed access가 깨지므로
+  // Partial<Typography>로 좁혀 사용 (textShadow는 default 없음 — explicit-only).
+  const defaults: Partial<Typography> = DEFAULT_TYPOGRAPHY_BY_EMPHASIS[emphasis]
+  const explicit = node.typography ?? {}
+
+  const value: Typography = {}
+  const sources: Partial<Record<TypographyKey, NodeDesignSource>> = {}
+
+  function pick<K extends TypographyKey>(key: K): void {
+    const explicitValue = explicit[key]
+    const defaultValue = defaults[key]
+    if (explicitValue !== undefined) {
+      value[key] = explicitValue
+      sources[key] = 'explicit'
+    } else if (defaultValue !== undefined) {
+      value[key] = defaultValue
+      sources[key] = 'default'
+    }
+  }
+
+  pick('fontSize')
+  pick('fontWeight')
+  pick('lineHeight')
+  pick('letterSpacing')
+  pick('textAlign')
+  pick('fontFamily')
+  pick('textShadow')
 
   return { value, sources }
 }

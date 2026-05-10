@@ -10,7 +10,11 @@ import {
   DEFAULT_LAYOUT_BY_TYPE,
   DEFAULT_SPACING_BY_TYPE,
 } from './canvas-defaults.js'
-import { resolveLayout, resolveSpacing } from './design-resolver.js'
+import {
+  resolveLayout,
+  resolveSpacing,
+  resolveTypography,
+} from './design-resolver.js'
 
 function makeSection(overrides: Partial<TreeNode> = {}): TreeNode {
   return {
@@ -151,5 +155,51 @@ describe('resolveLayout', () => {
     const out = resolveLayout(node, { viewport: 'mobile' })
     assert.equal(out.value.direction, 'column')
     assert.equal(out.sources.direction, 'explicit')
+  })
+})
+
+describe('resolveTypography', () => {
+  it('text가 아닌 노드는 빈 typography 반환', () => {
+    const out = resolveTypography(makeSection())
+    assert.deepEqual(out.value, {})
+    assert.deepEqual(out.sources, {})
+  })
+
+  it('emphasis 미지정 text는 body default(fontSize 16, fontWeight 400, lineHeight 1.75)', () => {
+    const out = resolveTypography(makeText())
+    assert.equal(out.value.fontSize, 16)
+    assert.equal(out.value.fontWeight, '400')
+    assert.equal(out.value.lineHeight, 1.75)
+    assert.equal(out.value.textAlign, 'left')
+    assert.equal(out.value.fontFamily, 'sans')
+    assert.equal(out.sources.fontSize, 'default')
+    assert.equal(out.sources.lineHeight, 'default')
+  })
+
+  it('heading-1 default는 48/600/1.25', () => {
+    const node = makeText({ emphasis: 'heading-1' } as Partial<TreeNode>)
+    const out = resolveTypography(node)
+    assert.equal(out.value.fontSize, 48)
+    assert.equal(out.value.fontWeight, '600')
+    assert.equal(out.value.lineHeight, 1.25)
+  })
+
+  it('explicit fontSize는 default를 덮고 source가 explicit', () => {
+    const node = makeText({
+      emphasis: 'heading-1',
+      typography: { fontSize: 64 },
+    } as Partial<TreeNode>)
+    const out = resolveTypography(node)
+    assert.equal(out.value.fontSize, 64)
+    assert.equal(out.value.fontWeight, '600')
+    assert.equal(out.sources.fontSize, 'explicit')
+    assert.equal(out.sources.fontWeight, 'default')
+  })
+
+  it('caption emphasis는 fontSize 12 fontWeight 600', () => {
+    const node = makeText({ emphasis: 'caption' } as Partial<TreeNode>)
+    const out = resolveTypography(node)
+    assert.equal(out.value.fontSize, 12)
+    assert.equal(out.value.fontWeight, '600')
   })
 })

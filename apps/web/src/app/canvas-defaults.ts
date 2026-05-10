@@ -8,7 +8,13 @@
 // branch (no layout override, no role-specific path). 특수 case(banner, layoutOverride
 // 등)는 후속 phase에서 role/intent별 default로 분리.
 
-import type { NodeLayout, Spacing, TreeNodeType } from '@dworks/tree'
+import type {
+  Emphasis,
+  NodeLayout,
+  Spacing,
+  TreeNodeType,
+  Typography,
+} from '@dworks/tree'
 
 // type별 spacing default — 캔버스 className과 _값 일치_ 보장 필요
 //
@@ -53,6 +59,65 @@ export const DEFAULT_SPACING_BY_TYPE: Record<TreeNodeType, Spacing> = {
   text: {},
   button: {},
   image: {},
+}
+
+// emphasis별 typography default — text 노드 TextPreview의 className에서 추출 + 인스펙터
+// 표시용 기본값(textAlign 'left', fontFamily 'sans' 등)을 함께 명시.
+//
+// heading-1: text-5xl(48) font-semibold(600) leading-tight(1.25)
+// heading-2: text-2xl(24) font-semibold(600) — Tailwind line-height(1.35)
+// heading-3: text-lg(18)  font-semibold(600) — Tailwind line-height(1.45)
+// body:      text-base(16) leading-7(28→1.75) — fontWeight 400(normal)
+// caption:   text-xs(12)  font-semibold(600) line-height(1.35)
+//
+// 모든 emphasis가 _완전한_ default 보유 (textShadow 제외) — getTypographyDefaults가
+// 이 매핑을 lookup하기 위해 통합. 단일 source of truth.
+export type EmphasisTypographyDefaults = Required<Omit<Typography, 'textShadow'>>
+
+export const DEFAULT_TYPOGRAPHY_BY_EMPHASIS: Record<
+  Emphasis,
+  EmphasisTypographyDefaults
+> = {
+  'heading-1': {
+    fontSize: 48,
+    fontWeight: '600',
+    lineHeight: 1.25,
+    letterSpacing: 0,
+    textAlign: 'left',
+    fontFamily: 'sans',
+  },
+  'heading-2': {
+    fontSize: 24,
+    fontWeight: '600',
+    lineHeight: 1.35,
+    letterSpacing: 0,
+    textAlign: 'left',
+    fontFamily: 'sans',
+  },
+  'heading-3': {
+    fontSize: 18,
+    fontWeight: '600',
+    lineHeight: 1.45,
+    letterSpacing: 0,
+    textAlign: 'left',
+    fontFamily: 'sans',
+  },
+  body: {
+    fontSize: 16,
+    fontWeight: '400',
+    lineHeight: 1.75,
+    letterSpacing: 0,
+    textAlign: 'left',
+    fontFamily: 'sans',
+  },
+  caption: {
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 1.35,
+    letterSpacing: 0,
+    textAlign: 'left',
+    fontFamily: 'sans',
+  },
 }
 
 // type별 layout default — 캔버스 className의 flex direction/wrap에서 추출.
