@@ -89,7 +89,11 @@
                 "emphasis": "heading-1",
                 "content": "디자인의 시작은\n언제나 한 줄의 의도.",
                 "typography": { "fontSize": 72, "fontWeight": "800", "lineHeight": 1.05, "letterSpacing": -0.035, "textAlign": "center" },
-                "color": { "textColor": "#1c1917" }
+                "color": { "textColor": "#1c1917" },
+                "responsiveStyle": {
+                  "mobile": { "typography": { "fontSize": 40, "lineHeight": 1.1 } },
+                  "tablet": { "typography": { "fontSize": 56 } }
+                }
               },
               {
                 "id": "hero.subtitle",

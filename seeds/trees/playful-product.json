@@ -90,7 +90,11 @@
                 "editKind": "text",
                 "emphasis": "heading-1",
                 "content": "Smile loud,\nbloom louder.",
-                "typography": { "fontSize": 96, "fontWeight": "900", "lineHeight": 0.95, "letterSpacing": -0.04, "textAlign": "center", "textShadow": { "offsetX": 0, "offsetY": 4, "blur": 20, "color": "#7c2d12", "opacity": 0.3 } }
+                "typography": { "fontSize": 96, "fontWeight": "900", "lineHeight": 0.95, "letterSpacing": -0.04, "textAlign": "center", "textShadow": { "offsetX": 0, "offsetY": 4, "blur": 20, "color": "#7c2d12", "opacity": 0.3 } },
+                "responsiveStyle": {
+                  "mobile": { "typography": { "fontSize": 52 } },
+                  "tablet": { "typography": { "fontSize": 72 } }
+                }
               },
               {
                 "id": "hero.subtitle",

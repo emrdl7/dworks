@@ -105,7 +105,11 @@
                 "editKind": "text",
                 "emphasis": "heading-1",
                 "content": "한 줄 코드로\n프로덕션 분석 시작",
-                "typography": { "fontSize": 64, "fontWeight": "800", "lineHeight": 1.1, "letterSpacing": -0.025, "textAlign": "center" }
+                "typography": { "fontSize": 64, "fontWeight": "800", "lineHeight": 1.1, "letterSpacing": -0.025, "textAlign": "center" },
+                "responsiveStyle": {
+                  "mobile": { "typography": { "fontSize": 36 } },
+                  "tablet": { "typography": { "fontSize": 48 } }
+                }
               },
               {
                 "id": "hero.subtitle",
