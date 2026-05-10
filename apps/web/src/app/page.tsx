@@ -6433,17 +6433,20 @@ function SelectableNode({
           return
         // 1) 노드 선택 (보통 이미 선택됨)
         onSelect(node.id)
-        // 2) 다음 frame에서 콘텐츠 input 찾아 focus + select
+        // 2) 콘텐츠 탭으로 명시 전환 — 이전엔 활성 탭에 input이 없으면 실패했음
         requestAnimationFrame(() => {
+          const tabBtn = document.getElementById('inspector-tab-content')
+          tabBtn?.click()
+          // 3) 탭 전환 후 다음 frame에서 panel 안의 input 찾아 focus + select
           requestAnimationFrame(() => {
-            const aside = document.querySelector<HTMLElement>(
-              'aside[aria-label="속성 패널"]',
+            const panel = document.getElementById(
+              'inspector-tabpanel-content',
             )
-            if (!aside) return
+            if (!panel) return
             const target =
-              aside.querySelector<HTMLTextAreaElement | HTMLInputElement>(
-                'details[open] textarea, details[open] input[type="text"]',
-              ) ?? aside.querySelector<HTMLTextAreaElement>('textarea')
+              panel.querySelector<HTMLTextAreaElement | HTMLInputElement>(
+                'textarea, input[type="text"]',
+              )
             if (target) {
               target.focus()
               if (target instanceof HTMLTextAreaElement) {
