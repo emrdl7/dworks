@@ -4149,7 +4149,7 @@ export default function HomePage() {
             style={{ animation: 'dw-fade-in 150ms ease-out both' }}
             className="flex min-h-0 flex-1 flex-col"
           >
-          <div className="shrink-0 border-b border-[#2a2e35] px-2 py-2">
+          <div className="flex shrink-0 items-center gap-1 border-b border-[#2a2e35] px-2 py-2">
             <input
               type="search"
               value={layerQuery}
@@ -4163,8 +4163,48 @@ export default function HomePage() {
               }}
               placeholder="레이어 검색 (Esc — 지우기)"
               aria-label="레이어 검색"
-              className="h-8 w-full rounded-md border border-[#2a2e35] bg-[#16181c] px-2.5 text-xs text-[#ebecef] outline-none placeholder:text-[#5b6069] focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/40"
+              className="h-8 min-w-0 flex-1 rounded-md border border-[#2a2e35] bg-[#16181c] px-2.5 text-xs text-[#ebecef] outline-none placeholder:text-[#5b6069] focus:border-[#6366f1] focus:ring-2 focus:ring-[#6366f1]/40"
             />
+            <button
+              type="button"
+              aria-label={
+                collapsedLayerNodeIds.size > 0 ? '전체 펼치기' : '전체 접기'
+              }
+              title={
+                collapsedLayerNodeIds.size > 0
+                  ? '전체 펼치기 — 모든 컨테이너 자식 노드 보임'
+                  : '전체 접기 — 모든 컨테이너 자식 노드 숨김'
+              }
+              onClick={() => {
+                if (collapsedLayerNodeIds.size > 0) {
+                  setCollapsedLayerNodeIds(new Set())
+                } else {
+                  // 모든 container ID 수집
+                  const allIds = new Set<string>()
+                  function walk(n: TreeNode): void {
+                    if (
+                      n.type === 'section' ||
+                      n.type === 'hero' ||
+                      n.type === 'card' ||
+                      n.type === 'list' ||
+                      n.type === 'form'
+                    ) {
+                      allIds.add(n.id)
+                      n.children.forEach(walk)
+                    }
+                  }
+                  walk(tree.root)
+                  setCollapsedLayerNodeIds(allIds)
+                }
+              }}
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[#2a2e35] bg-[#16181c] text-[#898d97] hover:border-[#6366f1] hover:text-[#c7d2fe] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1]"
+            >
+              {collapsedLayerNodeIds.size > 0 ? (
+                <ChevronDown size={14} aria-hidden="true" />
+              ) : (
+                <ChevronRight size={14} aria-hidden="true" />
+              )}
+            </button>
           </div>
           {filteredLayerItems.length === 0 && layerQuery.trim() !== '' ? (
             <p className="px-4 py-6 text-center text-xs text-[#5b6069]">
