@@ -794,6 +794,10 @@ export default function HomePage() {
     width: number
     height: number
   } | null>(null)
+  // 캔버스 렌더링 default 값(Tailwind class에서 오는 padding/gap/color/font 등)을
+  // inspector placeholder로 노출하기 위한 effective style. tree props가 비어있어도
+  // 사용자가 _현재 렌더되고 있는 값_을 즉시 확인 가능 (Codex P1 회신).
+  const [effectiveStyle, setEffectiveStyle] = useState<EffectiveCanvasStyle>({})
   // 캔버스 panning(스페이스+드래그) 상태
   const [isSpacePressed, setIsSpacePressed] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
@@ -917,6 +921,86 @@ export default function HomePage() {
     )
     row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [selectedNodeId, tree.root.id, leftPanelTab])
+
+  // 선택 노드의 effective canvas style 측정 — Tailwind/CSS class에서 오는 default 값
+  useEffect(() => {
+    function measureEffective(): void {
+      if (selectedNodeId === '') {
+        setEffectiveStyle({})
+        return
+      }
+      const wrapper = document.querySelector<HTMLElement>(
+        `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
+      )
+      if (!wrapper) {
+        setEffectiveStyle({})
+        return
+      }
+      // SelectableNode wrapper(div + border)의 첫 element 자식이 실제 렌더 노드
+      const inner =
+        wrapper.querySelector<HTMLElement>(
+          ':scope > section, :scope > article, :scope > h1, :scope > h2, :scope > h3, :scope > p, :scope > span, :scope > a, :scope > button, :scope > figure, :scope > ul, :scope > ol, :scope > form, :scope > div',
+        ) ?? wrapper
+      const cs = window.getComputedStyle(inner)
+      const z = canvasZoom > 0 ? canvasZoom : 1
+      // CSS zoom으로 크기 모두 z배 — 픽셀 값은 / z로 logical 변환
+      const px = (v: string): number | undefined => {
+        const n = parseFloat(v)
+        if (!Number.isFinite(n)) return undefined
+        return Math.round((n / z) * 10) / 10
+      }
+      setEffectiveStyle({
+        paddingTop: px(cs.paddingTop),
+        paddingRight: px(cs.paddingRight),
+        paddingBottom: px(cs.paddingBottom),
+        paddingLeft: px(cs.paddingLeft),
+        marginTop: px(cs.marginTop),
+        marginRight: px(cs.marginRight),
+        marginBottom: px(cs.marginBottom),
+        marginLeft: px(cs.marginLeft),
+        gap: cs.rowGap !== '' ? px(cs.rowGap) : undefined,
+        backgroundColor: rgbToHex(cs.backgroundColor),
+        textColor: rgbToHex(cs.color),
+        borderRadiusTopLeft: px(cs.borderTopLeftRadius),
+        borderRadiusTopRight: px(cs.borderTopRightRadius),
+        borderRadiusBottomLeft: px(cs.borderBottomLeftRadius),
+        borderRadiusBottomRight: px(cs.borderBottomRightRadius),
+        fontSize: px(cs.fontSize),
+        fontWeight: cs.fontWeight,
+        lineHeight:
+          cs.lineHeight === 'normal'
+            ? undefined
+            : (() => {
+                const lh = parseFloat(cs.lineHeight) / z
+                const fs = parseFloat(cs.fontSize) / z
+                if (!Number.isFinite(lh) || !Number.isFinite(fs) || fs <= 0)
+                  return undefined
+                return Math.round((lh / fs) * 100) / 100
+              })(),
+        letterSpacing:
+          cs.letterSpacing === 'normal'
+            ? 0
+            : (() => {
+                const ls = parseFloat(cs.letterSpacing) / z
+                const fs = parseFloat(cs.fontSize) / z
+                if (!Number.isFinite(ls) || !Number.isFinite(fs) || fs <= 0)
+                  return undefined
+                return Math.round((ls / fs) * 1000) / 1000
+              })(),
+        display: cs.display,
+        flexDirection: cs.flexDirection,
+        justifyContent: cs.justifyContent,
+        alignItems: cs.alignItems,
+      })
+    }
+    measureEffective()
+    const ro = new ResizeObserver(() => measureEffective())
+    const wrapper = document.querySelector<HTMLElement>(
+      `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
+    )
+    if (wrapper) ro.observe(wrapper)
+    return () => ro.disconnect()
+  }, [selectedNodeId, tree, canvasZoom, responsiveViewport])
 
   // 선택 노드의 logical (zoom 무관) 크기를 status bar용으로 측정
   useEffect(() => {
@@ -13356,6 +13440,49 @@ function getCssColorWithOpacity(color: string, opacity?: number): string {
   }
 
   return hexToRgba(color, opacity)
+}
+
+// 캔버스 노드 effective style — Tailwind class에서 오는 padding/gap/color/font 등을
+// inspector placeholder로 노출 (Codex 회신: 사용자가 _현재 렌더 중_인 값 즉시 확인).
+interface EffectiveCanvasStyle {
+  paddingTop?: number
+  paddingRight?: number
+  paddingBottom?: number
+  paddingLeft?: number
+  marginTop?: number
+  marginRight?: number
+  marginBottom?: number
+  marginLeft?: number
+  gap?: number
+  backgroundColor?: string
+  textColor?: string
+  borderRadiusTopLeft?: number
+  borderRadiusTopRight?: number
+  borderRadiusBottomLeft?: number
+  borderRadiusBottomRight?: number
+  fontSize?: number
+  fontWeight?: string
+  lineHeight?: number
+  letterSpacing?: number
+  display?: string
+  flexDirection?: string
+  justifyContent?: string
+  alignItems?: string
+}
+
+// computed style의 'rgb(R, G, B)' / 'rgba(R, G, B, A)'를 #RRGGBB로 정규화.
+// 투명(alpha 0) 또는 'transparent' 등은 undefined 반환.
+function rgbToHex(rgb: string): string | undefined {
+  if (!rgb || rgb === 'transparent' || rgb === 'rgba(0, 0, 0, 0)') return undefined
+  const m = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/)
+  if (!m) return undefined
+  const r = Number(m[1])
+  const g = Number(m[2])
+  const b = Number(m[3])
+  const a = m[4] !== undefined ? Number(m[4]) : 1
+  if (a < 0.05) return undefined
+  const toHex = (n: number) => n.toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
 function hexToRgba(hex: string, alpha: number): string {
