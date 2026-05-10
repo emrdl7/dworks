@@ -656,8 +656,6 @@ const spacingModeIcons: Record<SpacingMode, LucideIcon> = {
 }
 import {
   responsiveViewportPresets,
-  resolveResponsiveLayout,
-  resolveResponsiveSpacing,
   type ResponsiveViewport,
 } from './responsive.js'
 const responsiveViewportOptions: ResponsiveViewport[] = [
@@ -5770,8 +5768,11 @@ function CanvasNode({
     return null
   }
 
-  const resolvedSpacing = resolveResponsiveSpacing(node.spacing, viewport)
-  const resolvedLayout = resolveResponsiveLayout(node.layout, viewport)
+  // Phase 3-1: design-resolver 사용 — explicit + canvas-defaults + responsive 보정 합본.
+  // 결과 spacing/layout은 type default까지 포함해 다음 단계(className에서 default 빼기) 안전망.
+  // 현재 캔버스 className에 박힌 default와 _이중_으로 적용되지만 값 일치라 시각 회귀 없음.
+  const resolvedSpacing = resolveSpacing(node, { viewport }).value
+  const resolvedLayout = resolveLayout(node, { viewport }).value
   const boxSpacingStyle = getBoxSpacingStyle(resolvedSpacing)
   const gapSpacingStyle = getGapSpacingStyle(resolvedSpacing)
   const containerSpacingStyle = getContainerSpacingStyle(resolvedSpacing)
