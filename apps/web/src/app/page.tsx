@@ -187,12 +187,12 @@ import {
   mergeStyles,
   rgbToHex,
 } from './style-utils'
+import { TextPreview } from './text-preview'
 import {
   resolveColor,
   resolveLayout,
   resolveShape,
   resolveSpacing,
-  resolveTypography,
   type ResolvedLayout,
   type ResolvedSpacing,
 } from './design-resolver'
@@ -6536,179 +6536,6 @@ function highlightSearchMatch(text: string, query: string): ReactNode {
 }
 
 
-function TextPreview({
-  accentColorStyle,
-  node,
-  textColorStyle,
-}: {
-  accentColorStyle?: CSSProperties
-  node: TextNode
-  textColorStyle?: CSSProperties
-}) {
-  // Phase 3-2 typography: resolveTypography 결과(emphasis-driven default + explicit)를
-  // style로 적용. className에서 text-Xxl/font-semibold/leading-X 제거 — resolved
-  // value가 fontSize/fontWeight/lineHeight를 채움. text color token(var(--dw-*))은
-  // 후속 token resolver로 마이그레이션.
-  const typographyStyle = getTypographyStyle(resolveTypography(node).value)
-  const textStyle = mergeStyles(typographyStyle, textColorStyle)
-  const captionTextStyle = mergeStyles(textStyle, accentColorStyle)
-  const content = parseInlineMarkdown(node.content)
-
-  switch (node.emphasis) {
-    case 'heading-1':
-      return (
-        <h2
-          className="max-w-3xl"
-          style={textStyle}
-        >
-          {content}
-        </h2>
-      )
-    case 'heading-2':
-      return (
-        // textColor token(textPrimary)은 resolveColor가 처리해 effectiveTextColor로 이미 적용
-        <h3 style={textStyle}>{content}</h3>
-      )
-    case 'heading-3':
-      return <h4 style={textStyle}>{content}</h4>
-    case 'caption':
-      return (
-        // caption textColor token(accent)도 resolveColor가 처리. uppercase는 typography 영역 밖이라 className 유지.
-        <p
-          className="uppercase"
-          style={captionTextStyle}
-        >
-          {content}
-        </p>
-      )
-    case 'body':
-    default:
-      return (
-        <p className="max-w-2xl" style={textStyle}>
-          {content}
-        </p>
-      )
-  }
-}
-
-function parseInlineMarkdown(content: string): ReactNode[] {
-  const nodes: ReactNode[] = []
-  const inlinePattern =
-    /\[([^\]\n]+)\]\(([^)\s]+)\)|\*\*([^*\n]+)\*\*|\*([^*\n]+)\*/g
-  let lastIndex = 0
-
-  for (const match of content.matchAll(inlinePattern)) {
-    const matchIndex = match.index ?? 0
-
-    if (matchIndex > lastIndex) {
-      nodes.push(content.slice(lastIndex, matchIndex))
-    }
-
-    const rawMatch = match[0]
-    const linkText = match[1]
-    const linkHref = match[2]
-    const boldText = match[3]
-    const italicText = match[4]
-    const key = `${matchIndex}-${rawMatch.length}`
-
-    if (linkText !== undefined && linkHref !== undefined) {
-      const safeHref = getSafeInlineHref(linkHref)
-
-      if (safeHref) {
-        nodes.push(
-          <a
-            key={`link-${key}`}
-            className="font-semibold text-[var(--dw-accent)] underline underline-offset-4"
-            href={safeHref}
-            target={isFragmentHref(safeHref) ? undefined : '_blank'}
-            rel={isFragmentHref(safeHref) ? undefined : 'noopener noreferrer'}
-            onClick={(event) => event.preventDefault()}
-          >
-            {linkText}
-          </a>,
-        )
-      } else {
-        nodes.push(rawMatch)
-      }
-    } else if (boldText !== undefined) {
-      nodes.push(
-        <strong key={`bold-${key}`} className="font-semibold">
-          {boldText}
-        </strong>,
-      )
-    } else if (italicText !== undefined) {
-      nodes.push(
-        <em key={`italic-${key}`} className="italic">
-          {italicText}
-        </em>,
-      )
-    }
-
-    lastIndex = matchIndex + rawMatch.length
-  }
-
-  if (lastIndex < content.length) {
-    nodes.push(content.slice(lastIndex))
-  }
-
-  return nodes.length > 0 ? nodes : [content]
-}
-
-function getSafeInlineHref(href: string): string | null {
-  const trimmedHref = href.trim()
-
-  if (trimmedHref.length === 0 || /[\u0000-\u001f\u007f]/.test(trimmedHref)) {
-    return null
-  }
-
-  if (isFragmentHref(trimmedHref)) {
-    return trimmedHref
-  }
-
-  try {
-    const parsedUrl = new URL(trimmedHref)
-    const allowedProtocols = new Set(['http:', 'https:', 'mailto:'])
-
-    return allowedProtocols.has(parsedUrl.protocol) ? trimmedHref : null
-  } catch {
-    return null
-  }
-}
-
-function isFragmentHref(href: string): boolean {
-  return href.startsWith('#')
-}
-
-function getTypographyStyle(typography?: Typography): CSSProperties | undefined {
-  if (!typography) {
-    return undefined
-  }
-
-  return {
-    ...(typography.fontSize !== undefined
-      ? { fontSize: `${typography.fontSize}px` }
-      : {}),
-    ...(typography.fontWeight !== undefined
-      ? { fontWeight: typography.fontWeight }
-      : {}),
-    ...(typography.lineHeight !== undefined
-      ? { lineHeight: typography.lineHeight }
-      : {}),
-    ...(typography.letterSpacing !== undefined
-      ? { letterSpacing: `${typography.letterSpacing}em` }
-      : {}),
-    ...(typography.textAlign !== undefined
-      ? { textAlign: typography.textAlign }
-      : {}),
-    ...(typography.fontFamily !== undefined
-      ? { fontFamily: getFontFamilyStack(typography.fontFamily) }
-      : {}),
-    ...(typography.textShadow !== undefined
-      ? { textShadow: textShadowToCss(typography.textShadow) }
-      : {}),
-  }
-}
-
 function getBoxSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
   if (!spacing) {
     return undefined
@@ -7225,25 +7052,6 @@ function getAccentTextColorStyle(color?: NodeColor): CSSProperties | undefined {
 
 function getTextColorStyle(textColor?: string): CSSProperties | undefined {
   return textColor ? { color: textColor } : undefined
-}
-
-const KOREAN_SANS_FALLBACK_STACK =
-  '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Helvetica Neue", "Segoe UI", Arial, sans-serif'
-
-function getFontFamilyStack(fontFamily: FontFamily): string {
-  if (fontFamily === 'serif') {
-    return 'ui-serif, "Noto Serif KR", Georgia, serif'
-  }
-
-  if (fontFamily === 'mono') {
-    return 'ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace'
-  }
-
-  if (fontFamily !== 'sans') {
-    return `"${fontFamily.replaceAll('"', '\\"')}", ${KOREAN_SANS_FALLBACK_STACK}`
-  }
-
-  return KOREAN_SANS_FALLBACK_STACK
 }
 
 interface RegisteredFontGroup {
@@ -13241,15 +13049,6 @@ function customShadowToCss(shadow: CustomShadow): string {
     getCssColorWithOpacity(shadow.color, shadow.opacity),
   ]
   return shadow.inset === true ? `inset ${parts.join(' ')}` : parts.join(' ')
-}
-
-function textShadowToCss(shadow: TextShadow): string {
-  return [
-    `${shadow.offsetX}px`,
-    `${shadow.offsetY}px`,
-    `${shadow.blur}px`,
-    getCssColorWithOpacity(shadow.color, shadow.opacity),
-  ].join(' ')
 }
 
 function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
