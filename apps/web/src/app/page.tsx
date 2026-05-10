@@ -42,13 +42,9 @@ import {
   Eye,
   EyeOff,
   GripVertical,
-  FormInput,
   Lock,
   Unlock,
-  Image as ImageIcon,
   LayoutGrid,
-  List,
-  MousePointer,
   Move,
   PanelLeft,
   PanelRight,
@@ -58,9 +54,7 @@ import {
   Redo2,
   Rows2,
   Square,
-  SquareStack,
   StretchHorizontal,
-  Type,
   Menu,
   StretchVertical,
   Trash2,
@@ -211,6 +205,7 @@ import {
   hasLayoutOverride,
 } from './design-style'
 import { TextPreview } from './text-preview'
+import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
 import {
   CanvasColorPresetContext,
   CanvasHoverContext,
@@ -414,27 +409,6 @@ function createOriginalEntry(tree: Tree): GenerationEntry {
   }
 }
 
-const nodeTypeLabels: Record<TreeNode['type'], string> = {
-  text: '텍스트',
-  button: '버튼',
-  image: '이미지',
-  section: '섹션',
-  hero: '히어로',
-  card: '카드',
-  list: '목록',
-  form: '폼',
-}
-
-const nodeTypeIcons: Record<TreeNode['type'], LucideIcon> = {
-  text: Type,
-  button: MousePointer,
-  image: ImageIcon,
-  section: PanelTop,
-  hero: SquareStack,
-  card: Square,
-  list: List,
-  form: FormInput,
-}
 
 const imageAspectRatioLabels = {
   square: '정사각형',
