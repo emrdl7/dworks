@@ -187,6 +187,13 @@ import {
   mergeStyles,
   rgbToHex,
 } from './style-utils'
+import {
+  getBoxSpacingStyle,
+  getContainerSpacingStyle,
+  getGapSpacingStyle,
+  getLayoutStyle,
+  hasLayoutOverride,
+} from './design-style'
 import { TextPreview } from './text-preview'
 import {
   resolveColor,
@@ -6535,93 +6542,6 @@ function highlightSearchMatch(text: string, query: string): ReactNode {
   )
 }
 
-
-function getBoxSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
-  if (!spacing) {
-    return undefined
-  }
-
-  const style: CSSProperties = {
-    ...(spacing.paddingTop !== undefined
-      ? { paddingTop: `${spacing.paddingTop}px` }
-      : {}),
-    ...(spacing.paddingRight !== undefined
-      ? { paddingRight: `${spacing.paddingRight}px` }
-      : {}),
-    ...(spacing.paddingBottom !== undefined
-      ? { paddingBottom: `${spacing.paddingBottom}px` }
-      : {}),
-    ...(spacing.paddingLeft !== undefined
-      ? { paddingLeft: `${spacing.paddingLeft}px` }
-      : {}),
-    ...(spacing.marginTop !== undefined
-      ? { marginTop: `${spacing.marginTop}px` }
-      : {}),
-    ...(spacing.marginRight !== undefined
-      ? { marginRight: `${spacing.marginRight}px` }
-      : {}),
-    ...(spacing.marginBottom !== undefined
-      ? { marginBottom: `${spacing.marginBottom}px` }
-      : {}),
-    ...(spacing.marginLeft !== undefined
-      ? { marginLeft: `${spacing.marginLeft}px` }
-      : {}),
-  }
-
-  return Object.keys(style).length > 0 ? style : undefined
-}
-
-function getGapSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
-  if (spacing?.gap === undefined) {
-    return undefined
-  }
-
-  return { gap: `${spacing.gap}px` }
-}
-
-function hasLayoutOverride(layout?: NodeLayout): boolean {
-  return layout !== undefined && Object.keys(layout).length > 0
-}
-
-function getLayoutStyle(layout?: NodeLayout): CSSProperties | undefined {
-  if (!hasLayoutOverride(layout)) {
-    return undefined
-  }
-
-  const style: CSSProperties = {
-    display: 'flex',
-    ...(layout?.direction !== undefined
-      ? { flexDirection: layout.direction }
-      : {}),
-    ...(layout?.align !== undefined
-      ? { alignItems: toFlexAlignment(layout.align) }
-      : {}),
-    ...(layout?.justify !== undefined
-      ? { justifyContent: toFlexJustify(layout.justify) }
-      : {}),
-    ...(layout?.wrap !== undefined ? { flexWrap: layout.wrap } : {}),
-  }
-
-  return style
-}
-
-function toFlexAlignment(value: LayoutAlign): CSSProperties['alignItems'] {
-  if (value === 'start') return 'flex-start'
-  if (value === 'end') return 'flex-end'
-  return value
-}
-
-function toFlexJustify(value: LayoutJustify): CSSProperties['justifyContent'] {
-  if (value === 'start') return 'flex-start'
-  if (value === 'end') return 'flex-end'
-  if (value === 'between') return 'space-between'
-  if (value === 'evenly') return 'space-evenly'
-  return value
-}
-
-function getContainerSpacingStyle(spacing?: Spacing): CSSProperties | undefined {
-  return mergeStyles(getBoxSpacingStyle(spacing), getGapSpacingStyle(spacing))
-}
 
 function getShapeStyle(shape?: Shape): CSSProperties | undefined {
   if (!shape) {
