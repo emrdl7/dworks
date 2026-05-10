@@ -181,6 +181,7 @@ import {
 } from './user-fixtures'
 import { extractDominantColors, pickAspectRatio } from './image-color'
 import {
+  resolveColor,
   resolveLayout,
   resolveShape,
   resolveSpacing,
@@ -5782,11 +5783,12 @@ function CanvasNode({
   const resolvedSpacing = resolveSpacing(node, ctx).value
   const resolvedLayout = resolveLayout(node, ctx).value
   const resolvedShape = resolveShape(node, ctx).value
+  const resolvedColor = resolveColor(node, ctx).value
   const boxSpacingStyle = getBoxSpacingStyle(resolvedSpacing)
   const gapSpacingStyle = getGapSpacingStyle(resolvedSpacing)
   const containerSpacingStyle = getContainerSpacingStyle(resolvedSpacing)
   const shapeStyle = getShapeStyle(resolvedShape)
-  const colorStyle = getColorStyle(node.color, inheritedTextColor)
+  const colorStyle = getColorStyle(resolvedColor, inheritedTextColor)
   const accentBackgroundStyle = getAccentBackgroundStyle(node.color)
   const accentTextColorStyle = getAccentTextColorStyle(node.color)
   const hoverBackgroundStyle = getHoverBackgroundStyle(node.color)
@@ -5799,10 +5801,12 @@ function CanvasNode({
   const disabledTextStyle = getDisabledTextStyle(node.color)
   const transitionStyle = getTransitionStyle(node.transition)
   const layoutStyle = getLayoutStyle(resolvedLayout)
+  // resolved textColor를 우선으로 — token-resolved hex이거나 explicit이거나
+  // 자식 노드의 inheritedTextColor에 그대로 전달
   const effectiveTextColor =
-    node.color?.textColor !== undefined || inheritedTextColor !== undefined
+    resolvedColor.textColor !== undefined || inheritedTextColor !== undefined
       ? getCssColorWithOpacity(
-          node.color?.textColor ?? inheritedTextColor ?? '',
+          resolvedColor.textColor ?? inheritedTextColor ?? '',
           node.color?.textOpacity,
         )
       : undefined
@@ -5919,9 +5923,9 @@ function CanvasNode({
             selectedNodeId={selectedNodeId}
             onSelect={onSelect}
           >
-            {/* Phase 3-2: p-12 gap-10 제거 — resolver default(padding=48, gap=40)가 style로 적용 */}
+            {/* Phase 3-2: padding/gap + bg/text color token 모두 제거 — resolver가 모두 처리 */}
             <section
-              className="grid min-h-[420px] bg-[var(--dw-hero-surface)] text-[var(--dw-hero-text)]"
+              className="grid min-h-[420px]"
               style={mergeStyles(containerStyle, childLayoutStyle)}
             >
               {node.children.map((child) => (
@@ -5940,9 +5944,9 @@ function CanvasNode({
 
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          {/* Phase 3-2: p-12 gap-10 제거 — resolver default가 containerStyle에 포함 */}
+          {/* Phase 3-2: padding/gap + bg/text color token 모두 제거 — resolver가 모두 처리 */}
           <section
-            className={`grid min-h-[420px] bg-[var(--dw-hero-surface)] text-[var(--dw-hero-text)] ${
+            className={`grid min-h-[420px] ${
               hasImage && viewport !== 'mobile'
                 ? 'grid-cols-[1.05fr_0.95fr]'
                 : 'grid-cols-1'
@@ -5982,11 +5986,8 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <article
-            // Phase 3-2: shape token(rounded-lg/border/shadow-sm) 제거 — resolveShape이
-            // radius=8/borderWidth=1/borderStyle=solid/borderColor(token→hex)/shadow=sm을
-            // boxStyle로 산출. backgroundColor token(bg-[var(--dw-surface-muted)])은
-            // 후속 color token 마이그레이션 단계에서 제거.
-            className="h-full bg-[var(--dw-surface-muted)]"
+            // Phase 3-2: shape + backgroundColor token 모두 제거 — resolver가 모두 처리
+            className="h-full"
             style={boxStyle}
           >
             {/* gap-3 제거 — resolver default(gap=12)가 childLayoutStyle로 적용 */}
@@ -6030,9 +6031,8 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <form
-            // Phase 3-2: padding/gap + shape token 제거 — resolver가 모두 처리.
-            // backgroundColor token(bg-...)은 후속 color token 마이그레이션
-            className="mx-auto flex max-w-[520px] flex-col bg-[var(--dw-surface-muted)]"
+            // Phase 3-2: padding/gap + shape + backgroundColor token 모두 제거
+            className="mx-auto flex max-w-[520px] flex-col"
             style={mergeStyles(containerStyle, childLayoutStyle)}
           >
             {node.children.map((child) => (
