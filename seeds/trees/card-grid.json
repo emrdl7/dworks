@@ -1,78 +1,259 @@
 {
   "version": "1",
   "root": {
-    "id": "cards",
+    "id": "page",
     "type": "section",
     "editKind": "structure",
-    "role": "feature-grid",
+    "color": { "backgroundColor": "#ffffff", "textColor": "#0f172a" },
+    "spacing": { "paddingTop": 0, "paddingBottom": 0, "paddingLeft": 0, "paddingRight": 0, "gap": 0 },
     "children": [
       {
-        "id": "cards.heading",
-        "type": "text",
-        "editKind": "text",
-        "emphasis": "heading-2",
-        "content": "주요 기능"
-      },
-      {
-        "id": "cards.card-a",
-        "type": "card",
+        "id": "page.banner",
+        "type": "section",
+        "role": "banner",
         "editKind": "structure",
+        "layout": { "direction": "row", "justify": "between", "align": "center" },
+        "spacing": { "paddingTop": 18, "paddingBottom": 18, "paddingLeft": 56, "paddingRight": 56, "gap": 32 },
+        "color": { "backgroundColor": "#ffffff", "borderColor": "#e2e8f0" },
+        "shape": { "borderWidth": 1, "borderStyle": "solid" },
+        "responsive": { "mobile": "햄버거 메뉴" },
         "children": [
           {
-            "id": "cards.card-a.title",
+            "id": "banner.brand",
             "type": "text",
             "editKind": "text",
             "emphasis": "heading-3",
-            "content": "디자인 생성"
+            "content": "Mosaic",
+            "typography": { "fontSize": 20, "fontWeight": "800", "letterSpacing": -0.02 },
+            "color": { "textColor": "#0f172a" }
           },
           {
-            "id": "cards.card-a.body",
-            "type": "text",
+            "id": "banner.nav",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 28 },
+            "children": [
+              { "id": "banner.nav.features", "type": "text", "editKind": "text", "content": "Features", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "500" }, "color": { "textColor": "#475569" } },
+              { "id": "banner.nav.changelog", "type": "text", "editKind": "text", "content": "Changelog", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "500" }, "color": { "textColor": "#475569" } },
+              { "id": "banner.nav.docs", "type": "text", "editKind": "text", "content": "Docs", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "500" }, "color": { "textColor": "#475569" } }
+            ]
+          },
+          {
+            "id": "banner.cta",
+            "type": "button",
             "editKind": "text",
-            "emphasis": "body",
-            "content": "브리프와 레퍼런스로 시안을 생성합니다."
+            "variant": "primary",
+            "label": "다운로드",
+            "color": { "backgroundColor": "#0f172a", "textColor": "#ffffff", "hoverBackgroundColor": "#1e293b" },
+            "shape": { "radius": 8, "shadow": "sm" },
+            "spacing": { "paddingLeft": 18, "paddingRight": 18, "paddingTop": 10, "paddingBottom": 10 },
+            "typography": { "fontSize": 14, "fontWeight": "600" }
           }
         ]
       },
       {
-        "id": "cards.card-b",
-        "type": "card",
+        "id": "page.main",
+        "type": "section",
+        "role": "main",
         "editKind": "structure",
+        "spacing": { "gap": 0 },
         "children": [
           {
-            "id": "cards.card-b.title",
-            "type": "text",
-            "editKind": "text",
-            "emphasis": "heading-3",
-            "content": "캔버스 편집"
+            "id": "intro",
+            "type": "hero",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 56, "paddingLeft": 56, "paddingRight": 56, "gap": 20 },
+            "color": { "backgroundColor": "#ffffff" },
+            "children": [
+              { "id": "intro.eyebrow", "type": "text", "editKind": "text", "emphasis": "caption", "content": "주요 기능", "typography": { "fontSize": 13, "fontWeight": "700", "letterSpacing": 0.1, "textAlign": "center" }, "color": { "textColor": "#0d9488" } },
+              { "id": "intro.title", "type": "text", "editKind": "text", "emphasis": "heading-1", "content": "디자인 작업,\n세 단계로 단순하게.", "typography": { "fontSize": 60, "fontWeight": "800", "lineHeight": 1.1, "letterSpacing": -0.03, "textAlign": "center" }, "color": { "textColor": "#0f172a" } },
+              { "id": "intro.desc", "type": "text", "editKind": "text", "emphasis": "body", "content": "아이디어 → 시안 → 출력. 도구 사이를 옮겨다닐 필요 없습니다.", "typography": { "fontSize": 18, "lineHeight": 1.6, "textAlign": "center" }, "color": { "textColor": "#475569" } }
+            ]
           },
           {
-            "id": "cards.card-b.body",
-            "type": "text",
-            "editKind": "text",
-            "emphasis": "body",
-            "content": "트리 노드를 직접 편집해 디자인을 다듬습니다."
+            "id": "features",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 24, "paddingBottom": 96, "paddingLeft": 56, "paddingRight": 56, "gap": 24 },
+            "color": { "backgroundColor": "#ffffff" },
+            "children": [
+              {
+                "id": "features.grid",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "row", "align": "stretch" },
+                "spacing": { "gap": 24 },
+                "responsive": { "mobile": "1열 stack" },
+                "children": [
+                  {
+                    "id": "card.1",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "paddingTop": 0, "paddingBottom": 28, "paddingLeft": 0, "paddingRight": 0, "gap": 0 },
+                    "color": { "backgroundColor": "#f0fdfa" },
+                    "shape": { "radius": 20, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#ccfbf1", "shadow": "sm" },
+                    "children": [
+                      { "id": "card.1.image", "type": "image", "editKind": "media", "src": "https://images.unsplash.com/photo-1559028012-481c04fa702d?auto=format&fit=crop&w=900&q=80", "alt": "디자인 생성 — 자연어로 시안 출력", "aspectRatio": "landscape", "shape": { "radius": 20 } },
+                      {
+                        "id": "card.1.body",
+                        "type": "section",
+                        "editKind": "structure",
+                        "layout": { "direction": "column" },
+                        "spacing": { "paddingTop": 24, "paddingLeft": 28, "paddingRight": 28, "gap": 12 },
+                        "children": [
+                          { "id": "card.1.tag", "type": "text", "editKind": "text", "content": "01 · GENERATE", "typography": { "fontSize": 11, "fontWeight": "700", "letterSpacing": 0.12 }, "color": { "textColor": "#0d9488" } },
+                          { "id": "card.1.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "디자인 생성", "typography": { "fontSize": 22, "fontWeight": "800", "letterSpacing": -0.01 }, "color": { "textColor": "#0f766e" } },
+                          { "id": "card.1.desc", "type": "text", "editKind": "text", "emphasis": "body", "content": "브리프와 레퍼런스 이미지로 풍부한 11 신호 시안을 30초 내. 변형 비교까지 한 번에.", "typography": { "fontSize": 15, "lineHeight": 1.6 }, "color": { "textColor": "#115e59" } }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "card.2",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "paddingTop": 0, "paddingBottom": 28, "paddingLeft": 0, "paddingRight": 0, "gap": 0 },
+                    "color": { "backgroundColor": "#0f172a" },
+                    "shape": { "radius": 20, "shadow": "lg" },
+                    "children": [
+                      { "id": "card.2.image", "type": "image", "editKind": "media", "src": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=900&q=80", "alt": "캔버스 편집 — 노드 트리 직접 조작", "aspectRatio": "landscape", "shape": { "radius": 20 } },
+                      {
+                        "id": "card.2.body",
+                        "type": "section",
+                        "editKind": "structure",
+                        "layout": { "direction": "column" },
+                        "spacing": { "paddingTop": 24, "paddingLeft": 28, "paddingRight": 28, "gap": 12 },
+                        "children": [
+                          { "id": "card.2.tag", "type": "text", "editKind": "text", "content": "02 · EDIT", "typography": { "fontSize": 11, "fontWeight": "700", "letterSpacing": 0.12 }, "color": { "textColor": "#7dd3fc" } },
+                          { "id": "card.2.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "캔버스 편집", "typography": { "fontSize": 22, "fontWeight": "800", "letterSpacing": -0.01 }, "color": { "textColor": "#f8fafc" } },
+                          { "id": "card.2.desc", "type": "text", "editKind": "text", "emphasis": "body", "content": "노드 트리를 직접 편집해 spacing/color/typography까지 픽셀 단위 조정. 인스펙터 11 영역.", "typography": { "fontSize": 15, "lineHeight": 1.6 }, "color": { "textColor": "#cbd5e1" } }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "card.3",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "paddingTop": 0, "paddingBottom": 28, "paddingLeft": 0, "paddingRight": 0, "gap": 0 },
+                    "color": { "backgroundColor": "#fef3c7" },
+                    "shape": { "radius": 20, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#fde68a", "shadow": "sm" },
+                    "children": [
+                      { "id": "card.3.image", "type": "image", "editKind": "media", "src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80", "alt": "익스포트 — 다중 변환기로 분기 출력", "aspectRatio": "landscape", "shape": { "radius": 20 } },
+                      {
+                        "id": "card.3.body",
+                        "type": "section",
+                        "editKind": "structure",
+                        "layout": { "direction": "column" },
+                        "spacing": { "paddingTop": 24, "paddingLeft": 28, "paddingRight": 28, "gap": 12 },
+                        "children": [
+                          { "id": "card.3.tag", "type": "text", "editKind": "text", "content": "03 · EXPORT", "typography": { "fontSize": 11, "fontWeight": "700", "letterSpacing": 0.12 }, "color": { "textColor": "#a16207" } },
+                          { "id": "card.3.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "익스포트", "typography": { "fontSize": 22, "fontWeight": "800", "letterSpacing": -0.01 }, "color": { "textColor": "#854d0e" } },
+                          { "id": "card.3.desc", "type": "text", "editKind": "text", "emphasis": "body", "content": "Tree JSON · Figma · React · Web Components로 동시 분기 출력. 디자인 토큰까지 함께 생성.", "typography": { "fontSize": 15, "lineHeight": 1.6 }, "color": { "textColor": "#713f12" } }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "stats",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center", "justify": "between" },
+            "spacing": { "paddingTop": 56, "paddingBottom": 56, "paddingLeft": 56, "paddingRight": 56, "gap": 48 },
+            "color": { "backgroundColor": "#0f766e" },
+            "responsive": { "mobile": "2x2 grid" },
+            "children": [
+              {
+                "id": "stats.1",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column", "align": "start" },
+                "spacing": { "gap": 4 },
+                "children": [
+                  { "id": "stats.1.v", "type": "text", "editKind": "text", "emphasis": "heading-1", "content": "30초", "typography": { "fontSize": 48, "fontWeight": "800", "letterSpacing": -0.03 }, "color": { "textColor": "#ffffff" } },
+                  { "id": "stats.1.l", "type": "text", "editKind": "text", "emphasis": "caption", "content": "첫 시안 출력 시간", "typography": { "fontSize": 13, "fontWeight": "500" }, "color": { "textColor": "#99f6e4" } }
+                ]
+              },
+              {
+                "id": "stats.2",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column", "align": "start" },
+                "spacing": { "gap": 4 },
+                "children": [
+                  { "id": "stats.2.v", "type": "text", "editKind": "text", "emphasis": "heading-1", "content": "11", "typography": { "fontSize": 48, "fontWeight": "800", "letterSpacing": -0.03 }, "color": { "textColor": "#ffffff" } },
+                  { "id": "stats.2.l", "type": "text", "editKind": "text", "emphasis": "caption", "content": "풍부도 신호 자체점검", "typography": { "fontSize": 13, "fontWeight": "500" }, "color": { "textColor": "#99f6e4" } }
+                ]
+              },
+              {
+                "id": "stats.3",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column", "align": "start" },
+                "spacing": { "gap": 4 },
+                "children": [
+                  { "id": "stats.3.v", "type": "text", "editKind": "text", "emphasis": "heading-1", "content": "200+", "typography": { "fontSize": 48, "fontWeight": "800", "letterSpacing": -0.03 }, "color": { "textColor": "#ffffff" } },
+                  { "id": "stats.3.l", "type": "text", "editKind": "text", "emphasis": "caption", "content": "사용 디자인 팀", "typography": { "fontSize": 13, "fontWeight": "500" }, "color": { "textColor": "#99f6e4" } }
+                ]
+              },
+              {
+                "id": "stats.4",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column", "align": "start" },
+                "spacing": { "gap": 4 },
+                "children": [
+                  { "id": "stats.4.v", "type": "text", "editKind": "text", "emphasis": "heading-1", "content": "₩0", "typography": { "fontSize": 48, "fontWeight": "800", "letterSpacing": -0.03 }, "color": { "textColor": "#ffffff" } },
+                  { "id": "stats.4.l", "type": "text", "editKind": "text", "emphasis": "caption", "content": "월 50 시안 무료", "typography": { "fontSize": 13, "fontWeight": "500" }, "color": { "textColor": "#99f6e4" } }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "final-cta",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 80, "paddingBottom": 80, "paddingLeft": 56, "paddingRight": 56, "gap": 20 },
+            "color": { "backgroundColor": "#ffffff" },
+            "children": [
+              { "id": "final-cta.title", "type": "text", "editKind": "text", "emphasis": "heading-2", "content": "오늘 첫 시안을 시작하세요.", "typography": { "fontSize": 36, "fontWeight": "800", "lineHeight": 1.1, "letterSpacing": -0.02, "textAlign": "center" }, "color": { "textColor": "#0f172a" } },
+              { "id": "final-cta.button", "type": "button", "editKind": "text", "variant": "primary", "label": "무료 시작하기 →", "color": { "backgroundColor": "#0d9488", "textColor": "#ffffff", "hoverBackgroundColor": "#0f766e" }, "shape": { "radius": 10, "shadow": "lg" }, "spacing": { "paddingLeft": 28, "paddingRight": 28, "paddingTop": 14, "paddingBottom": 14 }, "typography": { "fontSize": 15, "fontWeight": "700" }, "transition": { "duration": 160, "timing": "ease-out" } }
+            ]
           }
         ]
       },
       {
-        "id": "cards.card-c",
-        "type": "card",
+        "id": "page.footer",
+        "type": "section",
+        "role": "contentinfo",
         "editKind": "structure",
+        "layout": { "direction": "row", "align": "center", "justify": "between" },
+        "spacing": { "paddingTop": 32, "paddingBottom": 32, "paddingLeft": 56, "paddingRight": 56, "gap": 24 },
+        "color": { "backgroundColor": "#f1f5f9", "textColor": "#64748b" },
         "children": [
+          { "id": "footer.copy", "type": "text", "editKind": "text", "emphasis": "caption", "content": "© 2026 Mosaic Studio", "typography": { "fontSize": 13, "fontWeight": "500" } },
           {
-            "id": "cards.card-c.title",
-            "type": "text",
-            "editKind": "text",
-            "emphasis": "heading-3",
-            "content": "익스포트"
-          },
-          {
-            "id": "cards.card-c.body",
-            "type": "text",
-            "editKind": "text",
-            "emphasis": "body",
-            "content": "트리에서 분기되는 다중 변환기로 출력합니다."
+            "id": "footer.links",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 24 },
+            "children": [
+              { "id": "footer.links.privacy", "type": "text", "editKind": "text", "content": "개인정보", "contentRole": "label", "typography": { "fontSize": 13 } },
+              { "id": "footer.links.terms", "type": "text", "editKind": "text", "content": "약관", "contentRole": "label", "typography": { "fontSize": 13 } },
+              { "id": "footer.links.contact", "type": "text", "editKind": "text", "content": "문의", "contentRole": "label", "typography": { "fontSize": 13 } }
+            ]
           }
         ]
       }

@@ -1,45 +1,254 @@
 {
   "version": "1",
   "root": {
-    "id": "signup",
-    "type": "form",
+    "id": "page",
+    "type": "section",
     "editKind": "structure",
-    "method": "post",
+    "color": { "backgroundColor": "#0c0a09", "textColor": "#fafaf9" },
+    "spacing": { "paddingTop": 0, "paddingBottom": 0, "paddingLeft": 0, "paddingRight": 0, "gap": 0 },
     "children": [
       {
-        "id": "signup.title",
-        "type": "text",
-        "editKind": "text",
-        "emphasis": "heading-2",
-        "content": "Dworks 가입"
+        "id": "page.banner",
+        "type": "section",
+        "role": "banner",
+        "editKind": "structure",
+        "layout": { "direction": "row", "justify": "between", "align": "center" },
+        "spacing": { "paddingTop": 20, "paddingBottom": 20, "paddingLeft": 56, "paddingRight": 56, "gap": 32 },
+        "color": { "backgroundColor": "#0c0a09" },
+        "children": [
+          { "id": "banner.brand", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "Dworks", "typography": { "fontSize": 20, "fontWeight": "800", "letterSpacing": -0.02 }, "color": { "textColor": "#fafaf9" } },
+          {
+            "id": "banner.right",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 24 },
+            "children": [
+              { "id": "banner.right.signin", "type": "text", "editKind": "text", "content": "이미 계정이 있으신가요? 로그인", "contentRole": "label", "typography": { "fontSize": 13, "fontWeight": "500" }, "color": { "textColor": "#a8a29e" } }
+            ]
+          }
+        ]
       },
       {
-        "id": "signup.intro",
-        "type": "text",
-        "editKind": "text",
-        "emphasis": "body",
-        "content": "이메일과 이름만으로 시작할 수 있습니다."
+        "id": "page.main",
+        "type": "section",
+        "role": "main",
+        "editKind": "structure",
+        "layout": { "direction": "row", "align": "stretch" },
+        "spacing": { "gap": 0 },
+        "responsive": { "mobile": "1열 stack — 우측 form이 hero 아래로" },
+        "children": [
+          {
+            "id": "value-prop",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column", "justify": "between" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 64, "paddingLeft": 64, "paddingRight": 56, "gap": 48 },
+            "color": {
+              "backgroundGradient": {
+                "type": "linear",
+                "from": "#0c0a09",
+                "to": "#451a03",
+                "direction": "to-bottom"
+              }
+            },
+            "children": [
+              {
+                "id": "value-prop.head",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 24 },
+                "children": [
+                  { "id": "value-prop.eyebrow", "type": "text", "editKind": "text", "emphasis": "caption", "content": "BETA — 5,000명 한정", "typography": { "fontSize": 12, "fontWeight": "700", "letterSpacing": 0.12 }, "color": { "textColor": "#fb923c" } },
+                  { "id": "value-prop.title", "type": "text", "editKind": "text", "emphasis": "heading-1", "content": "디자인 도구가\n드디어 빨라집니다.", "typography": { "fontSize": 56, "fontWeight": "800", "lineHeight": 1.05, "letterSpacing": -0.03 }, "color": { "textColor": "#fafaf9" } },
+                  { "id": "value-prop.desc", "type": "text", "editKind": "text", "emphasis": "body", "content": "30초 안에 첫 시안. 다섯 번의 변형 비교. 무한 무료. 카드 등록 없습니다.", "typography": { "fontSize": 17, "lineHeight": 1.6 }, "color": { "textColor": "#d6d3d1" } }
+                ]
+              },
+              {
+                "id": "value-prop.bullets",
+                "type": "list",
+                "editKind": "structure",
+                "variant": "unordered",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 14 },
+                "children": [
+                  {
+                    "id": "vp.b.1",
+                    "type": "section",
+                    "editKind": "structure",
+                    "layout": { "direction": "row", "align": "start" },
+                    "spacing": { "gap": 12 },
+                    "children": [
+                      { "id": "vp.b.1.dot", "type": "text", "editKind": "text", "content": "✓", "typography": { "fontSize": 16, "fontWeight": "800" }, "color": { "textColor": "#fb923c" } },
+                      { "id": "vp.b.1.text", "type": "text", "editKind": "text", "content": "11 신호 자체검사로 풍부한 디자인 보장", "typography": { "fontSize": 15, "lineHeight": 1.6 }, "color": { "textColor": "#fafaf9" } }
+                    ]
+                  },
+                  {
+                    "id": "vp.b.2",
+                    "type": "section",
+                    "editKind": "structure",
+                    "layout": { "direction": "row", "align": "start" },
+                    "spacing": { "gap": 12 },
+                    "children": [
+                      { "id": "vp.b.2.dot", "type": "text", "editKind": "text", "content": "✓", "typography": { "fontSize": 16, "fontWeight": "800" }, "color": { "textColor": "#fb923c" } },
+                      { "id": "vp.b.2.text", "type": "text", "editKind": "text", "content": "캔버스에서 즉시 픽셀 단위 편집", "typography": { "fontSize": 15, "lineHeight": 1.6 }, "color": { "textColor": "#fafaf9" } }
+                    ]
+                  },
+                  {
+                    "id": "vp.b.3",
+                    "type": "section",
+                    "editKind": "structure",
+                    "layout": { "direction": "row", "align": "start" },
+                    "spacing": { "gap": 12 },
+                    "children": [
+                      { "id": "vp.b.3.dot", "type": "text", "editKind": "text", "content": "✓", "typography": { "fontSize": 16, "fontWeight": "800" }, "color": { "textColor": "#fb923c" } },
+                      { "id": "vp.b.3.text", "type": "text", "editKind": "text", "content": "Tree JSON · Figma · React 동시 export", "typography": { "fontSize": 15, "lineHeight": 1.6 }, "color": { "textColor": "#fafaf9" } }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "value-prop.testi",
+                "type": "card",
+                "editKind": "structure",
+                "layout": { "direction": "column" },
+                "spacing": { "paddingTop": 20, "paddingBottom": 20, "paddingLeft": 24, "paddingRight": 24, "gap": 12 },
+                "color": { "backgroundColor": "#1c1917" },
+                "shape": { "radius": 14, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#292524", "shadow": "lg" },
+                "children": [
+                  { "id": "value-prop.testi.quote", "type": "text", "editKind": "text", "emphasis": "body", "content": "\"디자이너 1명이 5명 분량을 합니다. 진짜로.\"", "typography": { "fontSize": 16, "fontWeight": "500", "lineHeight": 1.5 }, "color": { "textColor": "#fafaf9" } },
+                  { "id": "value-prop.testi.author", "type": "text", "editKind": "text", "emphasis": "caption", "content": "— 박지원 · 드리프트 디자인 리드", "typography": { "fontSize": 12, "fontWeight": "500" }, "color": { "textColor": "#a8a29e" } }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "signup",
+            "type": "form",
+            "method": "post",
+            "editKind": "structure",
+            "layout": { "direction": "column", "justify": "center" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 96, "paddingLeft": 64, "paddingRight": 64, "gap": 28 },
+            "color": { "backgroundColor": "#fafaf9" },
+            "children": [
+              {
+                "id": "signup.head",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 8 },
+                "children": [
+                  { "id": "signup.title", "type": "text", "editKind": "text", "emphasis": "heading-2", "content": "30초 가입.", "typography": { "fontSize": 36, "fontWeight": "800", "letterSpacing": -0.02 }, "color": { "textColor": "#0c0a09" } },
+                  { "id": "signup.intro", "type": "text", "editKind": "text", "emphasis": "body", "content": "이메일과 이름만 — 비밀번호도 카드도 X.", "typography": { "fontSize": 15, "lineHeight": 1.55 }, "color": { "textColor": "#57534e" } }
+                ]
+              },
+              {
+                "id": "signup.field-name",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 6 },
+                "children": [
+                  { "id": "signup.field-name.label", "type": "text", "editKind": "text", "emphasis": "caption", "content": "이름", "typography": { "fontSize": 12, "fontWeight": "700", "letterSpacing": 0.04 }, "color": { "textColor": "#1c1917" } },
+                  {
+                    "id": "signup.field-name.input",
+                    "type": "section",
+                    "editKind": "structure",
+                    "layout": { "direction": "row", "align": "center" },
+                    "spacing": { "paddingTop": 14, "paddingBottom": 14, "paddingLeft": 16, "paddingRight": 16 },
+                    "color": { "backgroundColor": "#ffffff", "borderColor": "#d6d3d1" },
+                    "shape": { "radius": 10, "borderWidth": 1, "borderStyle": "solid" },
+                    "children": [
+                      { "id": "signup.field-name.placeholder", "type": "text", "editKind": "text", "content": "박지원", "typography": { "fontSize": 15, "lineHeight": 1.4 }, "color": { "textColor": "#1c1917" } }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "signup.field-email",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 6 },
+                "children": [
+                  { "id": "signup.field-email.label", "type": "text", "editKind": "text", "emphasis": "caption", "content": "업무용 이메일", "typography": { "fontSize": 12, "fontWeight": "700", "letterSpacing": 0.04 }, "color": { "textColor": "#1c1917" } },
+                  {
+                    "id": "signup.field-email.input",
+                    "type": "section",
+                    "editKind": "structure",
+                    "layout": { "direction": "row", "align": "center" },
+                    "spacing": { "paddingTop": 14, "paddingBottom": 14, "paddingLeft": 16, "paddingRight": 16 },
+                    "color": { "backgroundColor": "#ffffff", "borderColor": "#d6d3d1" },
+                    "shape": { "radius": 10, "borderWidth": 1, "borderStyle": "solid" },
+                    "children": [
+                      { "id": "signup.field-email.placeholder", "type": "text", "editKind": "text", "content": "you@company.com", "typography": { "fontSize": 15, "lineHeight": 1.4 }, "color": { "textColor": "#a8a29e" } }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "signup.field-team",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 6 },
+                "children": [
+                  { "id": "signup.field-team.label", "type": "text", "editKind": "text", "emphasis": "caption", "content": "팀 규모", "typography": { "fontSize": 12, "fontWeight": "700", "letterSpacing": 0.04 }, "color": { "textColor": "#1c1917" } },
+                  {
+                    "id": "signup.field-team.options",
+                    "type": "section",
+                    "editKind": "structure",
+                    "layout": { "direction": "row", "align": "center" },
+                    "spacing": { "gap": 8 },
+                    "children": [
+                      { "id": "signup.field-team.solo", "type": "button", "editKind": "text", "variant": "primary", "label": "혼자", "color": { "backgroundColor": "#0c0a09", "textColor": "#fafaf9" }, "shape": { "radius": 100 }, "spacing": { "paddingLeft": 16, "paddingRight": 16, "paddingTop": 8, "paddingBottom": 8 }, "typography": { "fontSize": 13, "fontWeight": "600" } },
+                      { "id": "signup.field-team.small", "type": "button", "editKind": "text", "variant": "ghost", "label": "2~10명", "color": { "backgroundColor": "#f5f5f4", "textColor": "#44403c" }, "shape": { "radius": 100, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#d6d3d1" }, "spacing": { "paddingLeft": 16, "paddingRight": 16, "paddingTop": 8, "paddingBottom": 8 }, "typography": { "fontSize": 13, "fontWeight": "500" } },
+                      { "id": "signup.field-team.mid", "type": "button", "editKind": "text", "variant": "ghost", "label": "11~50명", "color": { "backgroundColor": "#f5f5f4", "textColor": "#44403c" }, "shape": { "radius": 100, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#d6d3d1" }, "spacing": { "paddingLeft": 16, "paddingRight": 16, "paddingTop": 8, "paddingBottom": 8 }, "typography": { "fontSize": 13, "fontWeight": "500" } },
+                      { "id": "signup.field-team.large", "type": "button", "editKind": "text", "variant": "ghost", "label": "50명+", "color": { "backgroundColor": "#f5f5f4", "textColor": "#44403c" }, "shape": { "radius": 100, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#d6d3d1" }, "spacing": { "paddingLeft": 16, "paddingRight": 16, "paddingTop": 8, "paddingBottom": 8 }, "typography": { "fontSize": 13, "fontWeight": "500" } }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "signup.cta",
+                "type": "button",
+                "editKind": "text",
+                "variant": "primary",
+                "label": "30초 가입 시작 →",
+                "color": { "backgroundColor": "#ea580c", "textColor": "#ffffff", "hoverBackgroundColor": "#c2410c" },
+                "shape": { "radius": 12, "shadow": "lg" },
+                "spacing": { "paddingLeft": 24, "paddingRight": 24, "paddingTop": 16, "paddingBottom": 16 },
+                "typography": { "fontSize": 15, "fontWeight": "800" },
+                "transition": { "duration": 160, "timing": "ease-out" }
+              },
+              { "id": "signup.terms", "type": "text", "editKind": "text", "emphasis": "caption", "content": "가입 시 이용약관 및 개인정보처리방침에 동의하신 것으로 간주됩니다. 언제든지 계정 삭제 가능.", "typography": { "fontSize": 12, "lineHeight": 1.55 }, "color": { "textColor": "#78716c" } }
+            ]
+          }
+        ]
       },
       {
-        "id": "signup.field-email.label",
-        "type": "text",
-        "editKind": "text",
-        "emphasis": "caption",
-        "content": "이메일"
-      },
-      {
-        "id": "signup.field-name.label",
-        "type": "text",
-        "editKind": "text",
-        "emphasis": "caption",
-        "content": "이름"
-      },
-      {
-        "id": "signup.cta",
-        "type": "button",
-        "editKind": "text",
-        "variant": "primary",
-        "label": "회원가입"
+        "id": "page.footer",
+        "type": "section",
+        "role": "contentinfo",
+        "editKind": "structure",
+        "layout": { "direction": "row", "align": "center", "justify": "between" },
+        "spacing": { "paddingTop": 28, "paddingBottom": 28, "paddingLeft": 56, "paddingRight": 56, "gap": 24 },
+        "color": { "backgroundColor": "#0c0a09", "textColor": "#78716c" },
+        "children": [
+          { "id": "footer.copy", "type": "text", "editKind": "text", "emphasis": "caption", "content": "© 2026 Dworks · 개인정보 보호", "typography": { "fontSize": 12, "fontWeight": "500" } },
+          {
+            "id": "footer.links",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 24 },
+            "children": [
+              { "id": "footer.links.help", "type": "text", "editKind": "text", "content": "도움말", "contentRole": "label", "typography": { "fontSize": 12 } },
+              { "id": "footer.links.status", "type": "text", "editKind": "text", "content": "Status", "contentRole": "label", "typography": { "fontSize": 12 } }
+            ]
+          }
+        ]
       }
     ]
   }
