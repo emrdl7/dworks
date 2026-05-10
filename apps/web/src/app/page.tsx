@@ -1356,9 +1356,18 @@ export default function HomePage() {
     if (q === '') return layerItems
     // 검색 시에는 collapsed 무시(전체 트리 평탄화 후 매치) — 결과 가독성 우선
     const allItems = flattenTree(tree.root)
-    return allItems.filter((item) =>
-      item.node.id.toLowerCase().includes(q),
-    )
+    return allItems.filter((item) => {
+      const node = item.node
+      // ID + 콘텐츠 모두 검색 — 텍스트 노드는 content, 버튼은 label, 이미지는 alt
+      if (node.id.toLowerCase().includes(q)) return true
+      if (node.type === 'text' && node.content.toLowerCase().includes(q))
+        return true
+      if (node.type === 'button' && node.label.toLowerCase().includes(q))
+        return true
+      if (node.type === 'image' && node.alt.toLowerCase().includes(q))
+        return true
+      return false
+    })
   }, [layerItems, layerQuery, tree])
 
   function toggleLayerCollapse(nodeId: string): void {
