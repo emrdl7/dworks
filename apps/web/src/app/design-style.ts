@@ -14,6 +14,8 @@ import type {
   LayoutJustify,
   NodeColor,
   NodeLayout,
+  NodeTransform,
+  NodeTransition,
   Shape,
   ShadowPreset,
   Spacing,
@@ -403,4 +405,71 @@ export function getDisabledTextStyle(
     : ({
         '--dw-disabled-text': getCssColorWithOpacity(color.disabledTextColor),
       } as CSSProperties)
+}
+
+
+export function getTransformStyle(
+  transform?: NodeTransform,
+): CSSProperties | undefined {
+  if (transform === undefined) {
+    return undefined
+  }
+  const parts: string[] = []
+  if (transform.perspective !== undefined) {
+    parts.push(`perspective(${transform.perspective}px)`)
+  }
+  if (transform.translateX !== undefined) {
+    parts.push(`translateX(${transform.translateX}px)`)
+  }
+  if (transform.translateY !== undefined) {
+    parts.push(`translateY(${transform.translateY}px)`)
+  }
+  if (transform.rotate !== undefined) {
+    parts.push(`rotate(${transform.rotate}deg)`)
+  }
+  if (transform.scale !== undefined) {
+    parts.push(`scale(${transform.scale})`)
+  }
+  if (transform.skewX !== undefined) {
+    parts.push(`skewX(${transform.skewX}deg)`)
+  }
+  if (transform.skewY !== undefined) {
+    parts.push(`skewY(${transform.skewY}deg)`)
+  }
+  if (transform.rotateX !== undefined) {
+    parts.push(`rotateX(${transform.rotateX}deg)`)
+  }
+  if (transform.rotateY !== undefined) {
+    parts.push(`rotateY(${transform.rotateY}deg)`)
+  }
+  const style: CSSProperties = {}
+  if (parts.length > 0) {
+    style.transform = parts.join(' ')
+  }
+  if (transform.originX !== undefined || transform.originY !== undefined) {
+    style.transformOrigin = `${transform.originX ?? 50}% ${transform.originY ?? 50}%`
+  }
+  return Object.keys(style).length === 0 ? undefined : style
+}
+
+export function getTransitionStyle(
+  transition?: NodeTransition,
+): CSSProperties | undefined {
+  if (transition === undefined) {
+    return undefined
+  }
+  const style: CSSProperties = {}
+  if (transition.duration !== undefined) {
+    style.transitionDuration = `${transition.duration}ms`
+  }
+  if (transition.timing === 'custom') {
+    const cb = transition.cubicBezier
+    style.transitionTimingFunction =
+      cb === undefined
+        ? 'ease'
+        : `cubic-bezier(${cb.x1}, ${cb.y1}, ${cb.x2}, ${cb.y2})`
+  } else if (transition.timing !== undefined) {
+    style.transitionTimingFunction = transition.timing
+  }
+  return Object.keys(style).length === 0 ? undefined : style
 }
