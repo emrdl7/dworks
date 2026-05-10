@@ -5117,6 +5117,7 @@ function CanvasZoomControl({ value, onChange, onFit }: CanvasZoomControlProps) {
       <button
         type="button"
         aria-label="축소"
+        title="축소 (⌘-)"
         className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#c5c8cf] hover:bg-[#2a2e35] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1]"
         onClick={() => step(-1)}
         disabled={value <= minZoom}
@@ -5128,13 +5129,14 @@ function CanvasZoomControl({ value, onChange, onFit }: CanvasZoomControlProps) {
         aria-label="100%로 재설정"
         className="min-w-14 px-2 text-xs font-semibold tabular-nums text-[#ebecef] hover:bg-[#2a2e35]"
         onClick={() => onChange(1)}
-        title="100%로 재설정"
+        title="100%로 재설정 (⌘0)"
       >
         {percent}%
       </button>
       <button
         type="button"
         aria-label="확대"
+        title="확대 (⌘+)"
         className="flex h-full w-8 items-center justify-center text-sm font-semibold text-[#c5c8cf] hover:bg-[#2a2e35] disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1]"
         onClick={() => step(1)}
         disabled={value >= maxZoom}
