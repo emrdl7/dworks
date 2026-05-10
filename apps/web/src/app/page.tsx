@@ -10574,6 +10574,8 @@ function LayoutControls({
     options: Array<NonNullable<NodeLayout[T]>>
     title: string
   }) {
+    // explicit이 없는데 selected라면 default/responsive가 채운 effective
+    const isFieldEffective = layout[field] === undefined
     return (
       <div>
         <span className="text-xs font-semibold text-[#898d97]">{title}</span>
@@ -10584,6 +10586,7 @@ function LayoutControls({
               disabled={disabled}
               icon={icons[option]}
               isSelected={layoutWithEffective[field] === option}
+              isEffective={isFieldEffective}
               label={`${title}: ${labels[option]}`}
               onClick={() =>
                 updateLayoutField(
@@ -12796,6 +12799,8 @@ interface IconToggleButtonProps {
   disabled?: boolean
   icon: LucideIcon
   isSelected: boolean
+  // selected가 사용자 explicit이 아닌 default/responsive에서 왔는지 — 시각 약화
+  isEffective?: boolean
   label: string
   onClick: () => void
 }
@@ -12804,6 +12809,7 @@ function IconToggleButton({
   disabled = false,
   icon: Icon,
   isSelected,
+  isEffective = false,
   label,
   onClick,
 }: IconToggleButtonProps) {
@@ -12812,10 +12818,16 @@ function IconToggleButton({
       type="button"
       aria-label={label}
       aria-pressed={isSelected}
-      title={label}
+      title={
+        isSelected && isEffective
+          ? `${label} (캔버스 default — 클릭하면 명시 박힘)`
+          : label
+      }
       className={`flex h-9 items-center justify-center rounded-md border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
         isSelected
-          ? 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
+          ? isEffective
+            ? 'border-[#3a3f55] bg-[#1a1c24] text-[#7e8395]'
+            : 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
           : 'border-[#2a2e35] bg-[#16181c] text-[#c5c8cf] hover:bg-[#1d2025]'
       } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#16181c]`}
       disabled={disabled}
