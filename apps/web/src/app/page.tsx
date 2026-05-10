@@ -6011,8 +6011,10 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <form
-            className="mx-auto flex max-w-[520px] flex-col gap-5 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-8 shadow-sm"
-            style={mergeStyles(containerStyle, layoutStyle)}
+            // Phase 3-2: p-8 gap-5 제거 — resolver default(padding=32, gap=20)가 style로 적용
+            // border/bg는 token이라 className 유지 (color/shape resolver token 마이그레이션은 후속)
+            className="mx-auto flex max-w-[520px] flex-col rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] shadow-sm"
+            style={mergeStyles(containerStyle, childLayoutStyle)}
           >
             {node.children.map((child) => (
               <CanvasNode
