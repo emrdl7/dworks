@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import type { Tree } from '@dworks/tree'
+import { treeSchema, type Tree } from '@dworks/tree'
 
 import {
   EXPORT_BATCH_FORMAT_KEY,
@@ -453,5 +453,310 @@ describe('generation export batch', () => {
     })
     const result = parseImportBatchPayload(text)
     assert.equal(result.ok, false)
+  })
+})
+
+// 핸드오버 미검증 #5 — 풍부한 design override (gradient/state colors/responsive
+// /transform/customShadows/typography textShadow/opacity)에 대해 export ↔ parse
+// round-trip이 idempotent인지 회귀 방어. AI 응답이 모든 슬롯을 박을 가능성에 대비.
+const richTree: Tree = {
+  version: '1',
+  styleTokens: { colorPreset: 'navy' },
+  root: {
+    id: 'page',
+    type: 'section',
+    editKind: 'structure',
+    role: 'main',
+    layoutIntent: 'stack',
+    opacity: 0.95,
+    responsive: {
+      mobile: '단일 컬럼, hero 축소',
+      tablet: '2열 그리드',
+      desktop: '3열 그리드',
+    },
+    spacing: {
+      paddingTop: 80,
+      paddingRight: 24,
+      paddingBottom: 80,
+      paddingLeft: 24,
+      gap: 32,
+    },
+    layout: {
+      direction: 'column',
+      align: 'center',
+      justify: 'start',
+    },
+    color: {
+      backgroundGradient: {
+        type: 'linear',
+        from: '#0e1a2e',
+        to: '#1e3a5f',
+        direction: 'to-bottom-right',
+        fromOpacity: 0.95,
+        toOpacity: 0.85,
+      },
+    },
+    shape: {
+      radius: 12,
+      borderWidth: 1,
+      borderStyle: 'solid',
+      borderColor: '#2a5fa0',
+      borderOpacity: 0.5,
+      shadow: 'lg',
+      customShadows: [
+        {
+          offsetX: 0,
+          offsetY: 4,
+          blur: 12,
+          spread: 0,
+          color: '#000000',
+          opacity: 0.2,
+        },
+        {
+          offsetX: 0,
+          offsetY: 1,
+          blur: 2,
+          color: '#000000',
+          opacity: 0.1,
+          inset: true,
+        },
+      ],
+    },
+    transform: {
+      translateX: 0,
+      translateY: -10,
+      rotate: 0,
+      scale: 1,
+      perspective: 800,
+      originX: 50,
+      originY: 50,
+    },
+    transition: {
+      duration: 200,
+      timing: 'custom',
+      cubicBezier: { x1: 0.4, y1: 0, x2: 0.2, y2: 1 },
+    },
+    children: [
+      {
+        id: 'heading',
+        type: 'text',
+        editKind: 'text',
+        content: '풍부한 fixture 검증',
+        emphasis: 'heading-1',
+        contentRole: 'heading',
+        opacity: 1,
+        typography: {
+          fontSize: 56,
+          fontWeight: '700',
+          lineHeight: 1.1,
+          letterSpacing: -0.02,
+          textAlign: 'center',
+          fontFamily: 'sans',
+          textShadow: {
+            offsetX: 0,
+            offsetY: 2,
+            blur: 8,
+            color: '#000000',
+            opacity: 0.3,
+          },
+        },
+        color: {
+          textColor: '#ffffff',
+          textOpacity: 0.95,
+        },
+      },
+      {
+        id: 'cta',
+        type: 'button',
+        editKind: 'text',
+        label: '시작하기',
+        variant: 'primary',
+        contentRole: 'cta',
+        cursor: 'pointer',
+        color: {
+          backgroundColor: '#2a5fa0',
+          textColor: '#ffffff',
+          hoverBackgroundColor: '#1e4a82',
+          hoverTextColor: '#ffffff',
+          activeBackgroundColor: '#163966',
+          focusBackgroundColor: '#2a5fa0',
+          focusTextColor: '#ffffff',
+          disabledBackgroundColor: '#8aa8c8',
+          disabledTextColor: '#dbe5f2',
+        },
+        shape: {
+          radius: 8,
+          shadow: 'sm',
+        },
+        spacing: {
+          paddingTop: 12,
+          paddingBottom: 12,
+          paddingLeft: 24,
+          paddingRight: 24,
+        },
+        transition: {
+          duration: 140,
+          timing: 'ease-out',
+        },
+      },
+      {
+        id: 'hero-image',
+        type: 'image',
+        editKind: 'media',
+        src: 'https://example.com/hero.png',
+        alt: '풍부한 fixture 이미지',
+        aspectRatio: 'wide',
+        focalPoint: { x: 0.5, y: 0.4 },
+        presentation: {
+          fit: 'cover',
+          overlayGradient: {
+            type: 'linear',
+            from: '#000000',
+            to: '#000000',
+            direction: 'to-top',
+            fromOpacity: 0.6,
+            toOpacity: 0,
+          },
+          filter: {
+            brightness: 95,
+            contrast: 110,
+            saturate: 105,
+            dropShadows: [
+              { offsetX: 0, offsetY: 8, blur: 24, color: '#000000' },
+            ],
+          },
+        },
+      },
+    ],
+  },
+}
+
+const richSource: ExportableGeneration = {
+  tree: richTree,
+  label: '풍부한 fixture',
+  brief: {
+    intent: '복잡한 design override 검증',
+    notes: '모든 슬롯 박음',
+    imageReferences: [
+      {
+        colors: ['#0e1a2e', '#2a5fa0', '#dbe5f2'],
+        aspectRatio: 'wide',
+      },
+    ],
+  },
+  questions: [],
+  clarifyTurns: [],
+  model: 'claude',
+  latencyMs: 5678,
+  richness: {
+    score: 0.92,
+    hasPageLandmarks: true,
+    hasMainMultiSection: true,
+    hasDisplayHeadingOne: true,
+    hasCallToAction: true,
+    fontSizeVariety: true,
+    colorVariety: true,
+    hasImagery: true,
+    hasShapeDepth: true,
+  },
+}
+
+describe('idempotent — 풍부한 design override round-trip', () => {
+  it('richTree가 treeSchema 통과 (sanity)', () => {
+    const result = treeSchema.safeParse(richTree)
+    if (!result.success) {
+      throw new Error(
+        `richTree schema 위반 — fixture 자체가 invalid: ${JSON.stringify(result.error.issues)}`,
+      )
+    }
+    assert.equal(result.success, true)
+  })
+
+  it('export → JSON → parse 1회 round-trip — payload deepEqual', () => {
+    const exportedAt = new Date('2026-05-10T10:00:00Z')
+    const payload = buildExportPayload(richSource, exportedAt)
+    const text = JSON.stringify(payload)
+    const result = parseImportPayload(text)
+    if (!result.ok) {
+      throw new Error(`parse 거부 — ${result.reason}`)
+    }
+    assert.equal(result.ok, true)
+    if (result.ok) {
+      assert.deepEqual(result.payload, payload)
+      assert.deepEqual(result.payload.tree, richTree)
+    }
+  })
+
+  it('export → parse → export → parse 2회 round-trip — drift 없음', () => {
+    const exportedAt = new Date('2026-05-10T10:00:00Z')
+    const first = buildExportPayload(richSource, exportedAt)
+    const firstParsed = parseImportPayload(JSON.stringify(first))
+    assert.equal(firstParsed.ok, true)
+    if (!firstParsed.ok) return
+
+    // 두 번째 export — parsed payload를 source 형태로 재구성해서 export.
+    // ExportedGeneration과 ExportableGeneration이 brief/model/latencyMs 모두 |null.
+    const secondSource: ExportableGeneration = {
+      tree: firstParsed.payload.tree,
+      label: firstParsed.payload.label,
+      brief: firstParsed.payload.brief,
+      questions: firstParsed.payload.questions,
+      clarifyTurns: firstParsed.payload.clarifyTurns,
+      model: firstParsed.payload.model,
+      latencyMs: firstParsed.payload.latencyMs,
+      richness: firstParsed.payload.richness,
+    }
+    const second = buildExportPayload(secondSource, exportedAt)
+    const secondParsed = parseImportPayload(JSON.stringify(second))
+    assert.equal(secondParsed.ok, true)
+    if (!secondParsed.ok) return
+
+    // drift 0건 — 두 번 round-trip해도 첫 번째와 동일.
+    assert.deepEqual(secondParsed.payload, firstParsed.payload)
+  })
+
+  it('gradient + state colors + customShadows 보존 (P1 회귀 방어)', () => {
+    const payload = buildExportPayload(richSource, new Date())
+    const result = parseImportPayload(JSON.stringify(payload))
+    assert.equal(result.ok, true)
+    if (!result.ok) return
+
+    const root = result.payload.tree.root
+    assert.equal(root.type, 'section')
+    if (root.type !== 'section') return
+
+    // gradient 보존 확인 — section root.
+    assert.deepEqual(root.color?.backgroundGradient, {
+      type: 'linear',
+      from: '#0e1a2e',
+      to: '#1e3a5f',
+      direction: 'to-bottom-right',
+      fromOpacity: 0.95,
+      toOpacity: 0.85,
+    })
+
+    // customShadows 2건 보존.
+    assert.equal(root.shape?.customShadows?.length, 2)
+    assert.equal(root.shape?.customShadows?.[1]?.inset, true)
+
+    // state colors 보존 — button.
+    const button = root.children[1]
+    assert.equal(button?.type, 'button')
+    if (button?.type !== 'button') return
+    assert.equal(button.color?.hoverBackgroundColor, '#1e4a82')
+    assert.equal(button.color?.activeBackgroundColor, '#163966')
+    assert.equal(button.color?.focusBackgroundColor, '#2a5fa0')
+    assert.equal(button.color?.disabledBackgroundColor, '#8aa8c8')
+
+    // transform / responsive 보존.
+    assert.equal(root.transform?.perspective, 800)
+    assert.equal(root.responsive?.mobile, '단일 컬럼, hero 축소')
+
+    // image presentation overlayGradient 보존.
+    const image = root.children[2]
+    assert.equal(image?.type, 'image')
+    if (image?.type !== 'image') return
+    assert.equal(image.presentation?.overlayGradient?.fromOpacity, 0.6)
+    assert.equal(image.presentation?.filter?.dropShadows?.length, 1)
   })
 })
