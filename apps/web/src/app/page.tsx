@@ -5907,8 +5907,9 @@ function CanvasNode({
             selectedNodeId={selectedNodeId}
             onSelect={onSelect}
           >
+            {/* Phase 3-2: p-12 gap-10 제거 — resolver default(padding=48, gap=40)가 style로 적용 */}
             <section
-              className="grid min-h-[420px] gap-10 bg-[var(--dw-hero-surface)] p-12 text-[var(--dw-hero-text)]"
+              className="grid min-h-[420px] bg-[var(--dw-hero-surface)] text-[var(--dw-hero-text)]"
               style={mergeStyles(containerStyle, childLayoutStyle)}
             >
               {node.children.map((child) => (
@@ -5927,8 +5928,9 @@ function CanvasNode({
 
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          {/* Phase 3-2: p-12 gap-10 제거 — resolver default가 containerStyle에 포함 */}
           <section
-            className={`grid min-h-[420px] gap-10 bg-[var(--dw-hero-surface)] p-12 text-[var(--dw-hero-text)] ${
+            className={`grid min-h-[420px] bg-[var(--dw-hero-surface)] text-[var(--dw-hero-text)] ${
               hasImage && viewport !== 'mobile'
                 ? 'grid-cols-[1.05fr_0.95fr]'
                 : 'grid-cols-1'
@@ -5968,10 +5970,12 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <article
-            className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] p-5 shadow-sm"
+            // Phase 3-2: p-5 제거 — resolver default(padding=20)가 boxStyle로 적용
+            className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] shadow-sm"
             style={boxStyle}
           >
-            <div className="flex flex-col gap-3" style={childLayoutStyle}>
+            {/* gap-3 제거 — resolver default(gap=12)가 childLayoutStyle로 적용 */}
+            <div className="flex flex-col" style={childLayoutStyle}>
               {node.children.map((child) => (
                 <CanvasNode
                   key={child.id}
