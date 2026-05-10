@@ -1558,7 +1558,9 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - image: \`aspectRatio\` ("square" | "landscape" | "portrait" | "wide")
 - 공통: \`hidden\`, \`disabled\` (button만), \`opacity\` (0~1)
 
-스타일 prop은 도메인 시그니처가 명확하면 \`color\` / \`spacing\` / \`shape\` / \`layout\`과 제한적 \`typography\`(주로 본문 \`lineHeight\`)를 **최소 범위**로 사용한다. 다만 과한 장식보다 구조와 콘텐츠를 우선하고, 디자이너가 m2에서 자유 편집할 수 있도록 노드 단위 스타일을 과밀하게 넣지 않는다. \`transition\` / \`transform\` / \`cursor\` / \`responsive\` / 상태 색(hover/active/focus/disabled)은 명시 요청 없으면 생략.
+스타일 prop은 _디자인 의도가 명확한 곳에 자유롭게_ 박는다. \`color\` / \`spacing\` / \`shape\` / \`layout\` / \`typography\`(fontSize/fontWeight/lineHeight/letterSpacing/textAlign/fontFamily/textShadow) — 시각 위계와 호흡을 만드는 데 필요하다 판단되는 모든 노드에 명시한다. 시스템에 design-resolver가 있어 type별 default가 자동으로 채워지므로, _override가 필요한 부분만_ 명시해도 일관성이 유지된다.
+
+\`transition\` / \`transform\` / \`cursor\` / 상태 색(hover/active/focus/disabled)은 _상호작용 의도가 명확할 때_(예: CTA 버튼 hover 색상 변화, primary 카드 hover lift) 자유롭게 사용. 단순 정적 노드엔 생략. \`responsive\`는 layout이 viewport별로 적응할 의도가 있을 때 한국어 메모로 표현.
 
 ## 디자인 브리프 처리
 
@@ -1609,9 +1611,9 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - raw hex 값을 그대로 출력 강제하지 말고 시드 색감을 반영한 자유 색을 고른다.
 - 이미지 시드와 의도(intent)가 충돌하면 의도를 우선한다 — 시드는 보조 시그널.
 
-## 풍부도 8 신호 자체 점검
+## 풍부도 9 신호 자체 점검
 
-응답 직전 트리를 8 신호로 자체 검사하고 모두 만족하지 않으면 그 자리에서 보강한 뒤 반환한다. 미달한 채 응답하지 않는다.
+응답 직전 트리를 9 신호로 자체 검사하고 모두 만족하지 않으면 그 자리에서 보강한 뒤 반환한다. 미달한 채 응답하지 않는다.
 
 1. **랜드마크 구조** — root는 \`section\` 하나, 직접 자식에 \`role: 'banner'\` / \`role: 'main'\` / \`role: 'contentinfo'\` 모두 존재.
 2. **main 다중 섹션** — \`role: 'main'\` 직접 자식에 \`type: 'section'\` 또는 \`type: 'hero'\`가 _2개 이상_.
@@ -1621,6 +1623,7 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 6. **색 다양성** — \`color\` prop의 hex 고유값 _3개 이상_(\`backgroundColor\` / \`textColor\` / \`borderColor\` / \`accentColor\` / \`overlayColor\` 통합).
 7. **이미지 사용** — \`type: 'image'\` 노드 _1개 이상_, plausible https URL.
 8. **Shape 깊이** — \`shape.shadow !== 'none'\` 또는 \`shape.radius\` ≥ 8 인 노드 _1개 이상_.
+9. **명시 design override 다양성** — type별 default를 그대로 두지 않고 _최소 8 노드 이상_에 \`spacing\` / \`color\` / \`typography\` / \`shape\` / \`layout\` 중 하나라도 명시 override가 있어야 한다. 와이어프레임처럼 default만 의존하지 말고 _의도된 디자인_을 노드별로 표현. (resolver가 default를 채우므로 LLM은 _차별화 포인트_만 박아도 충분.)
 
 ## 답변 → 스타일 매핑 가이드
 
