@@ -207,6 +207,7 @@ import {
 import { TextPreview } from './text-preview'
 import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
 import { SelectableNode } from './selectable-node'
+import { CommandPalette, type CommandPaletteItem } from './command-palette'
 import {
   DisclosureChevron,
   IconToggleButton,
@@ -872,6 +873,8 @@ export default function HomePage() {
       shortcutHelpCloseRef.current?.focus()
     }
   }, [shortcutHelpOpen])
+  // ⌘K 명령 팔레트
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   // 레이어 트리 collapse 상태 — 컨테이너 노드 ID 집합. 기본 모두 펼침.
   const [collapsedLayerNodeIds, setCollapsedLayerNodeIds] = useState<
     Set<string>
@@ -2945,8 +2948,13 @@ export default function HomePage() {
         handleDeleteSelected()
         return
       }
-      // Esc — 우선순위: 도움말 popover → drawer → multi-select → 선택 해제
+      // Esc — 우선순위: 명령 팔레트 → 도움말 popover → drawer → multi-select → 선택 해제
       if (event.key === 'Escape') {
+        if (commandPaletteOpen) {
+          event.preventDefault()
+          setCommandPaletteOpen(false)
+          return
+        }
         if (shortcutHelpOpen) {
           event.preventDefault()
           setShortcutHelpOpen(false)
@@ -2979,6 +2987,12 @@ export default function HomePage() {
       if (meta && event.key === '\\') {
         event.preventDefault()
         setPanelsHidden((v) => !v)
+        return
+      }
+      // ⌘K — 명령 팔레트 (Figma/Linear 표준)
+      if (meta && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setCommandPaletteOpen((v) => !v)
         return
       }
       // ⌘F — 레이어 검색 input으로 focus
@@ -3040,6 +3054,7 @@ export default function HomePage() {
     selectedNodeId,
     tree,
     shortcutHelpOpen,
+    commandPaletteOpen,
     briefDrawerOpen,
     inspectorDrawerOpen,
     additionalSelectedNodeIds,
@@ -3203,6 +3218,159 @@ export default function HomePage() {
       pendingDirectScrollRef.current = null
     }
   }, [canvasZoom])
+
+  // ⌘K 명령 팔레트 항목 — 선택 노드 컨텍스트에 따라 disabled 결정.
+  // 의도적으로 useMemo 안 쓰고 inline 계산 — handler들이 매 렌더 새 참조라
+  // useMemo deps가 매번 변해 캐싱 효과 없음. 15개 항목 계산은 trivial.
+  const selectedCommandNode = findNode(tree.root, selectedNodeId)
+  const selectedCommandIsContainer = selectedCommandNode
+    ? isContainerNode(selectedCommandNode)
+    : false
+  const selectedCommandIsRoot = selectedNodeId === tree.root.id
+  const selectedCommandIsMissing = !selectedCommandNode
+  const commandItems: CommandPaletteItem[] = [
+    // 노드 추가 — 선택 노드가 컨테이너면 자식으로, 그 외엔 형제로.
+    ...(['text', 'button', 'image'] as const).map<CommandPaletteItem>(
+      (childType) => ({
+        id: `add-leaf-${childType}`,
+        label: `${nodeTypeLabels[childType]} 추가`,
+        group: '노드 추가',
+        icon: nodeTypeIcons[childType],
+        keywords: [childType, 'add', '새', '생성'],
+        disabled: selectedCommandIsMissing,
+        disabledReason: '선택된 노드가 없음',
+        action: () => {
+          if (!selectedCommandNode) return
+          if (selectedCommandIsContainer) {
+            handleAddLeafChild(selectedCommandNode.id, childType)
+          } else if (!selectedCommandIsRoot) {
+            handleAddLeafSibling(selectedCommandNode.id, childType)
+          }
+        },
+      }),
+    ),
+    ...(['section', 'hero', 'card', 'list', 'form'] as const).map<CommandPaletteItem>(
+      (containerType) => ({
+        id: `add-container-${containerType}`,
+        label: `${nodeTypeLabels[containerType]} 컨테이너 추가`,
+        group: '노드 추가',
+        icon: nodeTypeIcons[containerType],
+        keywords: [containerType, 'add', '컨테이너'],
+        disabled: selectedCommandIsMissing,
+        disabledReason: '선택된 노드가 없음',
+        action: () => {
+          if (!selectedCommandNode) return
+          if (selectedCommandIsContainer) {
+            handleAddContainerChild(selectedCommandNode.id, containerType)
+          } else if (!selectedCommandIsRoot) {
+            handleAddContainerSibling(selectedCommandNode.id, containerType)
+          }
+        },
+      }),
+    ),
+    // 편집
+    {
+      id: 'duplicate',
+      label: '선택 노드 복제',
+      group: '편집',
+      shortcut: '⌘D',
+      keywords: ['duplicate', 'copy'],
+      disabled: selectedCommandIsRoot || selectedCommandIsMissing,
+      disabledReason: 'root는 복제 불가',
+      action: handleDuplicateSelected,
+    },
+    {
+      id: 'delete',
+      label: '선택 노드 삭제',
+      group: '편집',
+      shortcut: 'Delete',
+      keywords: ['remove', 'trash'],
+      disabled: selectedCommandIsRoot || selectedCommandIsMissing,
+      disabledReason: 'root는 삭제 불가',
+      action: handleDeleteSelected,
+    },
+    {
+      id: 'undo',
+      label: '실행 취소',
+      group: '편집',
+      shortcut: '⌘Z',
+      keywords: ['undo', 'back'],
+      disabled: historyPast.length === 0,
+      disabledReason: '취소할 작업 없음',
+      action: handleUndo,
+    },
+    {
+      id: 'redo',
+      label: '다시 실행',
+      group: '편집',
+      shortcut: '⌘⇧Z',
+      keywords: ['redo', 'forward'],
+      disabled: historyFuture.length === 0,
+      disabledReason: '다시 실행할 작업 없음',
+      action: handleRedo,
+    },
+    // 줌
+    {
+      id: 'zoom-100',
+      label: '줌 100% 리셋',
+      group: '줌',
+      shortcut: '⌘0',
+      keywords: ['zoom', 'reset', '100'],
+      action: () => setCanvasZoom(1),
+    },
+    {
+      id: 'zoom-fit',
+      label: '화면에 맞춤 (fit to screen)',
+      group: '줌',
+      shortcut: '⌘1',
+      keywords: ['fit', 'screen'],
+      action: handleCanvasFit,
+    },
+    {
+      id: 'zoom-selection',
+      label: '선택 노드를 화면 중앙에 fit',
+      group: '줌',
+      shortcut: '⌘2',
+      keywords: ['zoom', 'selection'],
+      disabled: selectedCommandIsMissing,
+      action: handleZoomToSelection,
+    },
+    // 패널
+    {
+      id: 'toggle-panels',
+      label: panelsHidden ? '좌/우 패널 보이기' : '좌/우 패널 숨기기 (집중 모드)',
+      group: '패널',
+      shortcut: '⌘\\',
+      keywords: ['hide', 'panels', 'focus'],
+      action: () => setPanelsHidden((v) => !v),
+    },
+    {
+      id: 'focus-search',
+      label: '레이어 검색 focus',
+      group: '패널',
+      shortcut: '⌘F',
+      keywords: ['search', 'find', 'layer'],
+      action: () => {
+        setLeftPanelTab('layers')
+        requestAnimationFrame(() => {
+          const search = document.querySelector<HTMLInputElement>(
+            'aside[aria-label="AI 디자인 브리프 패널"] input[type="search"]',
+          )
+          search?.focus()
+          search?.select()
+        })
+      },
+    },
+    // 도움말
+    {
+      id: 'shortcut-help',
+      label: '키보드 단축키 도움말',
+      group: '도움말',
+      shortcut: '?',
+      keywords: ['shortcut', 'help', 'hotkey'],
+      action: () => setShortcutHelpOpen(true),
+    },
+  ]
 
   return (
     <CanvasSelectionContext.Provider
@@ -4994,6 +5162,7 @@ export default function HomePage() {
                   items: [
                     { keys: ['Esc'], label: '선택 해제 / 닫기' },
                     { keys: ['?'], label: '이 도움말 토글' },
+                    { keys: ['⌘', 'K'], label: '명령 팔레트' },
                     { keys: ['⌘', 'F'], label: '레이어 검색 focus' },
                     { keys: ['⌘', '\\'], label: '좌/우 패널 hide (집중 모드)' },
                   ],
@@ -5032,6 +5201,11 @@ export default function HomePage() {
           </div>
         </>
       ) : null}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        items={commandItems}
+      />
     </main>
     </CanvasHoverContext.Provider>
     </CanvasSelectionContext.Provider>
