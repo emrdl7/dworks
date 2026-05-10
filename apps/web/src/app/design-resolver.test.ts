@@ -6,8 +6,11 @@ import { describe, it } from 'node:test'
 
 import type { TreeNode } from '@dworks/tree'
 
-import { DEFAULT_SPACING_BY_TYPE } from './canvas-defaults.js'
-import { resolveSpacing } from './design-resolver.js'
+import {
+  DEFAULT_LAYOUT_BY_TYPE,
+  DEFAULT_SPACING_BY_TYPE,
+} from './canvas-defaults.js'
+import { resolveLayout, resolveSpacing } from './design-resolver.js'
 
 function makeSection(overrides: Partial<TreeNode> = {}): TreeNode {
   return {
@@ -100,6 +103,53 @@ describe('resolveSpacing', () => {
         DEFAULT_SPACING_BY_TYPE[t] !== undefined,
         `DEFAULT_SPACING_BY_TYPE missing ${t}`,
       )
+      assert.ok(
+        DEFAULT_LAYOUT_BY_TYPE[t] !== undefined,
+        `DEFAULT_LAYOUT_BY_TYPE missing ${t}`,
+      )
     }
+  })
+})
+
+describe('resolveLayout', () => {
+  it('section default는 column / nowrap', () => {
+    const out = resolveLayout(makeSection(), { viewport: 'desktop' })
+    assert.equal(out.value.direction, 'column')
+    assert.equal(out.value.wrap, 'nowrap')
+    assert.equal(out.sources.direction, 'default')
+    assert.equal(out.sources.wrap, 'default')
+  })
+
+  it('hero/card default는 비어 있어 토글이 비활성 상태로 표시', () => {
+    const hero = makeSection({ type: 'hero', id: 'n-hero' } as Partial<TreeNode>)
+    const out = resolveLayout(hero, { viewport: 'desktop' })
+    assert.equal(out.value.direction, undefined)
+    assert.equal(out.value.wrap, undefined)
+  })
+
+  it('explicit override는 default를 덮고 source가 explicit', () => {
+    const node = makeSection({ layout: { direction: 'row', justify: 'center' } })
+    const out = resolveLayout(node, { viewport: 'desktop' })
+    assert.equal(out.value.direction, 'row')
+    assert.equal(out.value.justify, 'center')
+    assert.equal(out.sources.direction, 'explicit')
+    assert.equal(out.sources.justify, 'explicit')
+    // 명시 안 한 키는 default
+    assert.equal(out.value.wrap, 'nowrap')
+    assert.equal(out.sources.wrap, 'default')
+  })
+
+  it('mobile에서 explicit row direction은 column으로 보정 (source: responsive)', () => {
+    const node = makeSection({ layout: { direction: 'row' } })
+    const out = resolveLayout(node, { viewport: 'mobile' })
+    assert.equal(out.value.direction, 'column')
+    assert.equal(out.sources.direction, 'responsive')
+  })
+
+  it('mobile에서도 explicit column은 그대로 (source: explicit)', () => {
+    const node = makeSection({ layout: { direction: 'column' } })
+    const out = resolveLayout(node, { viewport: 'mobile' })
+    assert.equal(out.value.direction, 'column')
+    assert.equal(out.sources.direction, 'explicit')
   })
 })

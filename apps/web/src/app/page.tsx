@@ -180,7 +180,12 @@ import {
   type UserFixture,
 } from './user-fixtures'
 import { extractDominantColors, pickAspectRatio } from './image-color'
-import { resolveSpacing, type ResolvedSpacing } from './design-resolver'
+import {
+  resolveLayout,
+  resolveSpacing,
+  type ResolvedLayout,
+  type ResolvedSpacing,
+} from './design-resolver'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -7837,6 +7842,8 @@ function NodeInspector({
             <LayoutControls
               node={node}
               effectiveStyle={effectiveStyle}
+              resolvedLayout={resolveLayout(node, { viewport })}
+              resolvedSpacing={resolveSpacing(node, { viewport })}
               disclosure={bindSection('레이아웃')}
               onLayoutChange={onLayoutChange}
               onLayoutReset={onLayoutReset}
@@ -10450,6 +10457,8 @@ interface LayoutControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TreeNode
   effectiveStyle?: EffectiveCanvasStyle
+  resolvedLayout?: ResolvedLayout
+  resolvedSpacing?: ResolvedSpacing
   onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
   onLayoutReset: (node: TreeNode) => void
   onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
@@ -10459,6 +10468,8 @@ function LayoutControls({
   disclosure,
   node,
   effectiveStyle,
+  resolvedLayout,
+  resolvedSpacing,
   onLayoutChange,
   onLayoutReset,
   onSpacingChange,
@@ -10466,10 +10477,12 @@ function LayoutControls({
   const canEditLayout = isContainerNode(node)
   const layout = node.layout ?? {}
   const spacing = node.spacing ?? {}
-  // 캔버스 렌더 default 값을 fallback으로 (사용자가 _현재 보이는 값_을 input에 직접 보고 즉시 수정 가능)
+  // 우선순위: explicit(spacing) > resolver default(canvas-defaults) > DOM 측정(effectiveStyle)
   const eff = effectiveStyle ?? {}
-  const effectiveGap = spacing.gap ?? eff.gap
-  // tree에 명시 값이 없을 때 effective(getComputedStyle)에서 derive — 토글 selected 상태 일관
+  const rl = resolvedLayout?.value ?? {}
+  const rs = resolvedSpacing?.value ?? {}
+  const effectiveGap = spacing.gap ?? rs.gap ?? eff.gap
+  // tree에 명시 값이 없을 때 resolver default → effective(getComputedStyle) 순으로 fallback
   const effectiveDirection: LayoutDirection | undefined = (() => {
     const v = eff.flexDirection
     if (v === 'row' || v === 'row-reverse') return 'row'
@@ -10512,10 +10525,10 @@ function LayoutControls({
     return undefined
   })()
   const layoutWithEffective: NodeLayout = {
-    direction: layout.direction ?? effectiveDirection,
-    align: layout.align ?? effectiveAlign,
-    justify: layout.justify ?? effectiveJustify,
-    wrap: layout.wrap ?? effectiveWrap,
+    direction: layout.direction ?? rl.direction ?? effectiveDirection,
+    align: layout.align ?? rl.align ?? effectiveAlign,
+    justify: layout.justify ?? rl.justify ?? effectiveJustify,
+    wrap: layout.wrap ?? rl.wrap ?? effectiveWrap,
   }
 
   function updateLayoutField<T extends keyof NodeLayout>(

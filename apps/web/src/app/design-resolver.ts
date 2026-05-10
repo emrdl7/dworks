@@ -14,12 +14,13 @@
 //   Phase 4: Inspector가 resolver 결과 표시 (effectiveStyle 제거).
 //   Phase 5: AI 생성 후 normalize에 resolver 적용.
 
-import type { Spacing, TreeNode } from '@dworks/tree'
+import type { NodeLayout, Spacing, TreeNode } from '@dworks/tree'
 import {
+  resolveResponsiveLayout,
   resolveResponsiveSpacing,
   type ResponsiveViewport,
 } from './responsive'
-import { DEFAULT_SPACING_BY_TYPE } from './canvas-defaults'
+import { DEFAULT_LAYOUT_BY_TYPE, DEFAULT_SPACING_BY_TYPE } from './canvas-defaults'
 
 // 인스펙터에서 각 값의 _출처_를 표시하기 위한 태그.
 //   explicit  — 트리에 명시 (사용자가 직접 박은 값)
@@ -99,6 +100,63 @@ export function resolveSpacing(
       sources[key] = 'default'
     }
   }
+
+  return { value, sources }
+}
+
+// resolved layout — spacing과 같은 패턴.
+//   1) type default
+//   2) explicit override
+//   3) viewport responsive 보정 (mobile에서 row → column 등)
+export type LayoutKey = keyof NodeLayout
+
+export interface ResolvedLayout {
+  value: NodeLayout
+  sources: Partial<Record<LayoutKey, NodeDesignSource>>
+}
+
+export function resolveLayout(
+  node: TreeNode,
+  context: ResolveContext,
+): ResolvedLayout {
+  const defaults = DEFAULT_LAYOUT_BY_TYPE[node.type] ?? {}
+  const explicit = node.layout ?? {}
+  const responsiveExplicit =
+    resolveResponsiveLayout(explicit, context.viewport) ?? explicit
+
+  const value: NodeLayout = {}
+  const sources: Partial<Record<LayoutKey, NodeDesignSource>> = {}
+
+  // generic loop이면 NodeLayout key별 enum 타입이 narrow되지 않아 unroll. 4개 키.
+  function pick<K extends LayoutKey>(key: K): void {
+    const explicitValue = explicit[key]
+    const responsiveValue = responsiveExplicit[key]
+    const defaultValue = defaults[key]
+    if (explicitValue !== undefined) {
+      if (responsiveValue !== undefined && responsiveValue !== explicitValue) {
+        value[key] = responsiveValue as NodeLayout[K]
+        sources[key] = 'responsive'
+      } else {
+        value[key] = explicitValue
+        sources[key] = 'explicit'
+      }
+    } else if (responsiveValue !== undefined && responsiveValue !== defaultValue) {
+      // explicit이 없는 노드도 viewport에 따라 layout direction이 바뀔 수 있다
+      // (resolveResponsiveLayout은 mobile에서 explicit row를 column으로 바꾸지만,
+      // explicit 없는 default direction이 'row'면 보정 안 됨 — default 자체는 그대로 유지)
+      // 따라서 이 분기는 사실상 덜 적용되지만 안전망으로 둠.
+      value[key] = responsiveValue as NodeLayout[K]
+      sources[key] = 'responsive'
+    } else if (defaultValue !== undefined) {
+      value[key] = defaultValue
+      sources[key] = 'default'
+    }
+  }
+
+  pick('direction')
+  pick('align')
+  pick('justify')
+  pick('wrap')
 
   return { value, sources }
 }
