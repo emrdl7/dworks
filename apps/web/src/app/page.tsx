@@ -10081,6 +10081,9 @@ function TypographyControls({
           max={120}
           step={1}
           value={typography.fontSize ?? effectiveStyle?.fontSize}
+          isEffective={
+            typography.fontSize === undefined && effectiveStyle?.fontSize !== undefined
+          }
           placeholder={String(defaults.fontSize)}
           onChange={(value) => updateNumberField('fontSize', value, 8, 120)}
         />
@@ -10113,6 +10116,9 @@ function TypographyControls({
           max={3}
           step={0.05}
           value={typography.lineHeight ?? effectiveStyle?.lineHeight}
+          isEffective={
+            typography.lineHeight === undefined && effectiveStyle?.lineHeight !== undefined
+          }
           placeholder={String(defaults.lineHeight)}
           onChange={(value) => updateNumberField('lineHeight', value, 0.8, 3)}
         />
@@ -10123,6 +10129,11 @@ function TypographyControls({
           max={0.2}
           step={0.005}
           value={typography.letterSpacing ?? effectiveStyle?.letterSpacing}
+          isEffective={
+            typography.letterSpacing === undefined &&
+            effectiveStyle?.letterSpacing !== undefined &&
+            effectiveStyle.letterSpacing !== 0
+          }
           placeholder={String(defaults.letterSpacing)}
           onChange={(value) => updateNumberField('letterSpacing', value, -0.1, 0.2)}
         />
@@ -10405,6 +10416,7 @@ function LayoutControls({
           max={200}
           step={1}
           value={effectiveGap}
+          isEffective={spacing.gap === undefined && effectiveGap !== undefined}
           placeholder="0"
           onChange={(value) =>
             onSpacingChange(node, {
@@ -12430,6 +12442,8 @@ function OpacityControl({
 
 interface TypographyNumberFieldProps {
   disabled?: boolean
+  // value가 effective(캔버스 default 측정)에서 왔으면 true. 시각 dot + italic으로 구분.
+  isEffective?: boolean
   label: string
   max: number
   min: number
@@ -12442,6 +12456,7 @@ interface TypographyNumberFieldProps {
 
 function TypographyNumberField({
   disabled = false,
+  isEffective = false,
   label,
   max,
   min,
@@ -12453,10 +12468,21 @@ function TypographyNumberField({
 }: TypographyNumberFieldProps) {
   return (
     <label className={disabled ? 'block opacity-50' : 'block'}>
-      <span className="text-xs font-semibold text-[#898d97]">{label}</span>
+      <span className="flex items-center gap-1 text-xs font-semibold text-[#898d97]">
+        {label}
+        {isEffective ? (
+          <span
+            aria-label="캔버스 default 값"
+            title="캔버스 default 값 (트리에 명시 없음). 입력하면 이 노드 전용으로 override."
+            className="inline-block h-1.5 w-1.5 rounded-full bg-[#5b6069]"
+          />
+        ) : null}
+      </span>
       <span className="mt-2 flex h-10 items-center rounded-md border border-[#2a2e35] bg-[#16181c] focus-within:border-[#6366f1] focus-within:ring-2 focus-within:ring-[#6366f1]/20">
         <input
-          className="h-full min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none disabled:cursor-not-allowed"
+          className={`h-full min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none disabled:cursor-not-allowed ${
+            isEffective ? 'text-[#898d97] italic' : ''
+          }`}
           type="number"
           min={min}
           max={max}
