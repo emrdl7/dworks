@@ -47,8 +47,23 @@ describe('resolveSpacing', () => {
     assert.deepEqual(out.sources, {})
   })
 
-  it('section은 default spacing이 비어있다 (role-aware default는 후속 phase)', () => {
+  it('일반 section은 type default(p-10 gap-8)을 채운다', () => {
     const out = resolveSpacing(makeSection(), { viewport: 'desktop' })
+    assert.equal(out.value.paddingTop, 40)
+    assert.equal(out.value.gap, 32)
+    assert.equal(out.sources.paddingTop, 'default')
+  })
+
+  it('banner role section은 default 적용 안 됨 (page shell)', () => {
+    const node = makeSection({ role: 'banner' } as Partial<TreeNode>)
+    const out = resolveSpacing(node, { viewport: 'desktop' })
+    assert.deepEqual(out.value, {})
+    assert.deepEqual(out.sources, {})
+  })
+
+  it('explicit column direction section은 default 적용 안 됨 (page shell)', () => {
+    const node = makeSection({ layout: { direction: 'column' } })
+    const out = resolveSpacing(node, { viewport: 'desktop' })
     assert.deepEqual(out.value, {})
     assert.deepEqual(out.sources, {})
   })

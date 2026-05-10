@@ -80,7 +80,15 @@ export function resolveSpacing(
   node: TreeNode,
   context: ResolveContext,
 ): ResolvedSpacing {
-  const defaults = DEFAULT_SPACING_BY_TYPE[node.type] ?? {}
+  // section은 일반 branch(p-10/gap-8)만 default 적용. banner role / explicit
+  // column direction(page shell)인 경우 캔버스가 'flex flex-col' className만
+  // 적용하므로 default를 비워야 시각 회귀 없음.
+  const isPageShellSection =
+    node.type === 'section' &&
+    (node.role !== undefined || node.layout?.direction === 'column')
+  const defaults = isPageShellSection
+    ? {}
+    : (DEFAULT_SPACING_BY_TYPE[node.type] ?? {})
   const explicit = node.spacing ?? {}
   const responsiveExplicit =
     resolveResponsiveSpacing(explicit, context.viewport) ?? explicit

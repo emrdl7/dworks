@@ -5804,12 +5804,11 @@ function CanvasNode({
 
   switch (node.type) {
     case 'section': {
-      const isPageShellSection =
-        node.role !== undefined ||
-        node.layout?.direction === 'column'
-      const sectionClass = isPageShellSection
-        ? 'flex flex-col'
-        : 'flex flex-col gap-8 p-10'
+      // Phase 3-2: section className에서 gap-8 p-10 제거 — 일반 section은 resolver
+      // default(padding=40, gap=32)이 boxStyle/childLayoutStyle에 포함. banner role
+      // 또는 explicit column direction(page shell)은 resolveSpacing이 default
+      // 적용 안 함 (canvas-defaults.ts isPageShellSection 분기) → 시각 일치.
+      const sectionClass = 'flex flex-col'
 
       if (node.role === 'banner' && viewport !== 'desktop') {
         return (
@@ -5851,7 +5850,11 @@ function CanvasNode({
       const [firstChild, ...remainingChildren] = node.children
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
-          <section className={sectionClass} style={boxStyle}>
+          {/* gap이 className에서 빠졌으므로 style에 gapSpacingStyle도 합침 */}
+          <section
+            className={sectionClass}
+            style={mergeStyles(boxStyle, gapSpacingStyle)}
+          >
             {firstChild ? (
               <CanvasNode
                 node={firstChild}

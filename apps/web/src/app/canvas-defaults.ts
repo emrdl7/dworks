@@ -20,16 +20,21 @@ import type {
 
 // type별 spacing default — 캔버스 className과 _값 일치_ 보장 필요
 //
-// section: 빈 spacing — branch 분기(banner role / layoutOverride / 일반)에 따라
-//   padding/gap이 다름(0 vs 40/32). role-aware default는 후속 phase. 일반 branch
-//   className의 'gap-8 p-10'은 그대로 유지.
+// section: p-10 gap-8 (40, 32) — 일반 branch만. banner role / explicit column
+//   direction(page shell)일 때는 default 적용 안 함. resolveSpacing에서 분기 처리.
 // hero:    p-12 gap-10                     (48, 40)
 // card:    p-5 gap-3                       (20, 12)
 // list:    p-0 gap-3                       ( 0, 12)
 // form:    p-8 gap-5                       (32, 20)
 // leaf nodes(text/button/image): spacing default 없음
 export const DEFAULT_SPACING_BY_TYPE: Record<TreeNodeType, Spacing> = {
-  section: {},
+  section: {
+    paddingTop: 40,
+    paddingRight: 40,
+    paddingBottom: 40,
+    paddingLeft: 40,
+    gap: 32,
+  },
   hero: {
     paddingTop: 48,
     paddingRight: 48,
