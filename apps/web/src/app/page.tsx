@@ -2007,8 +2007,12 @@ export default function HomePage() {
     )
   }
 
-  function handleSpacingChange(node: TreeNode, patch: Partial<Spacing>) {
-    commitTreeEdit(updateSpacing(tree, node.id, patch))
+  function handleSpacingChange(
+    node: TreeNode,
+    patch: Partial<Spacing>,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateSpacing(tree, node.id, patch), undefined, options)
   }
 
   function handleSpacingReset(node: TreeNode) {
@@ -6645,7 +6649,11 @@ interface NodeInspectorProps {
   onTextChange: (node: TextNode, content: string) => void
   onTextTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
   onTextTypographyReset: (node: TextNode) => void
-  onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
+  onSpacingChange: (
+    node: TreeNode,
+    patch: Partial<Spacing>,
+    options?: CommitTreeEditOptions,
+  ) => void
   onSpacingReset: (node: TreeNode) => void
   onShapeChange: (node: TreeNode, patch: Partial<Shape>) => void
   onShapeReset: (node: TreeNode) => void
@@ -8951,9 +8959,11 @@ function TypographyControls({
     min: number,
     max: number,
   ) {
-    onTypographyChange(node, {
-      [field]: parseOptionalNumber(value, min, max),
-    })
+    onTypographyChange(
+      node,
+      { [field]: parseOptionalNumber(value, min, max) },
+      { mergeKey: getNodeColorMergeKey(node.id, `typography.${field}`) },
+    )
   }
 
   function updateTextShadowMode(mode: 'none' | 'custom') {
@@ -9302,9 +9312,11 @@ function TypographyControls({
           value={sliderFontSize}
           aria-label="글자 크기 슬라이더"
           onChange={(event) =>
-            onTypographyChange(node, {
-              fontSize: Number(event.target.value),
-            })
+            onTypographyChange(
+              node,
+              { fontSize: Number(event.target.value) },
+              { mergeKey: getNodeColorMergeKey(node.id, 'typography.fontSize.slider') },
+            )
           }
         />
       </label>
@@ -9432,7 +9444,11 @@ interface SpacingControlsProps {
   node: TreeNode
   effectiveStyle?: EffectiveCanvasStyle
   resolved?: ResolvedSpacing
-  onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
+  onSpacingChange: (
+    node: TreeNode,
+    patch: Partial<Spacing>,
+    options?: CommitTreeEditOptions,
+  ) => void
   onSpacingReset: (node: TreeNode) => void
 }
 
@@ -9444,7 +9460,11 @@ interface LayoutControlsProps {
   resolvedSpacing?: ResolvedSpacing
   onLayoutChange: (node: TreeNode, patch: Partial<NodeLayout>) => void
   onLayoutReset: (node: TreeNode) => void
-  onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
+  onSpacingChange: (
+    node: TreeNode,
+    patch: Partial<Spacing>,
+    options?: CommitTreeEditOptions,
+  ) => void
 }
 
 function LayoutControls({
@@ -9680,6 +9700,7 @@ function SpacingControls({
       Object.fromEntries(
         fields.map((field) => [field, nextValue]),
       ) as Partial<Spacing>,
+      { mergeKey: getNodeColorMergeKey(node.id, `spacing.${fields.join('+')}`) },
     )
   }
 
@@ -9689,9 +9710,11 @@ function SpacingControls({
     min: number,
     max: number,
   ) {
-    onSpacingChange(node, {
-      [field]: parseOptionalNumber(value, min, max),
-    })
+    onSpacingChange(
+      node,
+      { [field]: parseOptionalNumber(value, min, max) },
+      { mergeKey: getNodeColorMergeKey(node.id, `spacing.${field}`) },
+    )
   }
 
   function renderModeButtons(
@@ -9997,27 +10020,31 @@ function ShapeControls({
 
   function updateBorderWidth(value: string) {
     const nextValue = parseOptionalNumber(value, 0, 20)
+    const mergeOpt = {
+      mergeKey: getNodeColorMergeKey(node.id, 'shape.borderWidth'),
+    }
 
     if (nextValue === undefined) {
-      onShapeChange(node, { borderWidth: undefined })
+      onShapeChange(node, { borderWidth: undefined }, mergeOpt)
       return
     }
 
     if (nextValue === 0) {
-      onShapeChange(node, {
-        borderWidth: 0,
-        borderStyle: 'none',
-      })
+      onShapeChange(node, { borderWidth: 0, borderStyle: 'none' }, mergeOpt)
       return
     }
 
-    onShapeChange(node, {
-      borderWidth: nextValue,
-      borderStyle:
-        shape.borderStyle === undefined || shape.borderStyle === 'none'
-          ? 'solid'
-          : shape.borderStyle,
-    })
+    onShapeChange(
+      node,
+      {
+        borderWidth: nextValue,
+        borderStyle:
+          shape.borderStyle === undefined || shape.borderStyle === 'none'
+            ? 'solid'
+            : shape.borderStyle,
+      },
+      mergeOpt,
+    )
   }
 
   function updateBorderStyle(value: string) {
