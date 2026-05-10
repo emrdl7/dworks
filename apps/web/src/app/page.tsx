@@ -6557,26 +6557,16 @@ function TextPreview({
       )
     case 'heading-2':
       return (
-        <h3
-          className="text-[var(--dw-text-primary)]"
-          style={textStyle}
-        >
-          {content}
-        </h3>
+        // textColor token(textPrimary)은 resolveColor가 처리해 effectiveTextColor로 이미 적용
+        <h3 style={textStyle}>{content}</h3>
       )
     case 'heading-3':
-      return (
-        <h4
-          className="text-[var(--dw-text-primary)]"
-          style={textStyle}
-        >
-          {content}
-        </h4>
-      )
+      return <h4 style={textStyle}>{content}</h4>
     case 'caption':
       return (
+        // caption textColor token(accent)도 resolveColor가 처리. uppercase는 typography 영역 밖이라 className 유지.
         <p
-          className="uppercase text-[var(--dw-accent)]"
+          className="uppercase"
           style={captionTextStyle}
         >
           {content}

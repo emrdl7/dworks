@@ -340,6 +340,38 @@ describe('resolveColor', () => {
     assert.equal(out.sources.textColor, 'token')
   })
 
+  it('text heading-2는 emphasis slot textColor=textPrimary로 token resolved', () => {
+    const node = makeText({ emphasis: 'heading-2' } as Partial<TreeNode>)
+    const out = resolveColor(node, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    // mint preset textPrimary = '#18211d'
+    assert.equal(out.value.textColor, '#18211d')
+    assert.equal(out.sources.textColor, 'token')
+  })
+
+  it('text caption은 emphasis slot textColor=accent로 token resolved', () => {
+    const node = makeText({ emphasis: 'caption' } as Partial<TreeNode>)
+    const out = resolveColor(node, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    // mint preset accent = '#1b7f72'
+    assert.equal(out.value.textColor, '#1b7f72')
+    assert.equal(out.sources.textColor, 'token')
+  })
+
+  it('text body/heading-1은 textColor 미지정 (부모 상속)', () => {
+    const body = makeText({ emphasis: 'body' } as Partial<TreeNode>)
+    const out = resolveColor(body, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.equal(out.value.textColor, undefined)
+    assert.equal(out.sources.textColor, undefined)
+  })
+
   it('colorPreset 미지정 시 token slot은 resolve 안 됨 (explicit만 살아남음)', () => {
     const hero = makeSection({
       type: 'hero',

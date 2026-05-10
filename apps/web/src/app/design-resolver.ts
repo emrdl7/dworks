@@ -30,6 +30,7 @@ import {
   type ResponsiveViewport,
 } from './responsive'
 import {
+  DEFAULT_COLOR_TOKENS_BY_EMPHASIS,
   DEFAULT_COLOR_TOKENS_BY_TYPE,
   DEFAULT_LAYOUT_BY_TYPE,
   DEFAULT_SHAPE_BY_TYPE,
@@ -326,7 +327,14 @@ export interface ResolvedColor {
 }
 
 export function resolveColor(node: TreeNode, context: ResolveContext): ResolvedColor {
-  const tokenSlots = DEFAULT_COLOR_TOKENS_BY_TYPE[node.type] ?? {}
+  // type token slot + (text 노드일 때) emphasis token slot 합친 결과 사용.
+  // emphasis가 type을 _덮어쓰기_ — 같은 키가 양쪽에 있으면 emphasis 우선.
+  const typeSlots = DEFAULT_COLOR_TOKENS_BY_TYPE[node.type] ?? {}
+  const emphasisSlots =
+    node.type === 'text'
+      ? (DEFAULT_COLOR_TOKENS_BY_EMPHASIS[node.emphasis ?? 'body'] ?? {})
+      : {}
+  const tokenSlots = { ...typeSlots, ...emphasisSlots }
   const explicit = node.color ?? {}
   const tokens = context.colorPreset
     ? COLOR_PRESETS[context.colorPreset]

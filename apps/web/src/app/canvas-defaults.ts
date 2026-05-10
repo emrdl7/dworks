@@ -191,3 +191,22 @@ export const DEFAULT_COLOR_TOKENS_BY_TYPE: Record<TreeNodeType, ColorTokenSlots>
   button: {},
   image: {},
 }
+
+// emphasis별 text color token slot — text 노드의 textColor가 emphasis에 따라
+// 다른 token slot을 가리킴. type-level slot으로는 표현 불가능하므로 별도.
+//
+// heading-1: 부모 상속 (TextPreview에 className text 색상 없음 — 부모 hero/section
+//            의 textColor token 또는 inheritedTextColor 사용)
+// heading-2/3: textPrimary token (text-[var(--dw-text-primary)])
+// body:      부모 상속
+// caption:   accent token (text-[var(--dw-accent)])
+//
+// resolveColor에서 text 노드일 때 type slot에 _덮어쓰기_ 형태로 합쳐 사용.
+// explicit > emphasis slot > type slot > undefined.
+export const DEFAULT_COLOR_TOKENS_BY_EMPHASIS: Record<Emphasis, ColorTokenSlots> = {
+  'heading-1': {},
+  'heading-2': { textColor: 'textPrimary' },
+  'heading-3': { textColor: 'textPrimary' },
+  body: {},
+  caption: { textColor: 'accent' },
+}
