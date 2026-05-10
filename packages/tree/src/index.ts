@@ -72,6 +72,9 @@ export {
   COLOR_PRESET_IDS,
   COLOR_PRESETS,
   NODE_POINTER_EVENTS_IDS,
+  NODE_POSITION_IDS,
+  nodePositionSchema,
+  nodeInsetSchema,
 } from './schema.js'
 export type {
   EditKind,
@@ -125,4 +128,6 @@ export type {
   TreeNode,
   TreeNodeType,
   Tree,
+  NodePosition,
+  NodeInset,
 } from './schema.js'

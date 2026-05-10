@@ -5,22 +5,22 @@
   "operations": [
     {
       "type": "updateText",
-      "nodeId": "cards.heading",
+      "nodeId": "intro.title",
       "content": "핵심 기능"
     },
     {
       "type": "updateText",
-      "nodeId": "cards.card-a.title",
+      "nodeId": "card.1.title",
       "content": "AI 디자인 생성"
     },
     {
       "type": "updateText",
-      "nodeId": "cards.card-b.title",
+      "nodeId": "card.2.title",
       "content": "트리 캔버스"
     },
     {
       "type": "updateText",
-      "nodeId": "cards.card-c.title",
+      "nodeId": "card.3.title",
       "content": "다중 익스포트"
     }
   ]

@@ -13,12 +13,15 @@ import type {
   LayoutAlign,
   LayoutJustify,
   NodeColor,
+  NodeInset,
   NodeLayout,
+  NodePosition,
   NodeTransform,
   NodeTransition,
   Shape,
   ShadowPreset,
   Spacing,
+  TreeNode,
 } from '@dworks/tree'
 
 import {
@@ -472,4 +475,41 @@ export function getTransitionStyle(
     style.transitionTimingFunction = transition.timing
   }
   return Object.keys(style).length === 0 ? undefined : style
+}
+
+// ---- positioning (overlay 헤더, sticky 사이드바 등 레이어드 디자인) ----
+
+/**
+ * 노드 자체의 position + inset (top/right/bottom/left/zIndex)를 CSSProperties로.
+ * static / undefined는 결과 없음 (default flow).
+ */
+export function getPositionStyle(
+  position?: NodePosition,
+  inset?: NodeInset,
+): CSSProperties | undefined {
+  if (position === undefined || position === 'static') {
+    return undefined
+  }
+  const style: CSSProperties = { position }
+  if (inset?.top !== undefined) style.top = `${inset.top}px`
+  if (inset?.right !== undefined) style.right = `${inset.right}px`
+  if (inset?.bottom !== undefined) style.bottom = `${inset.bottom}px`
+  if (inset?.left !== undefined) style.left = `${inset.left}px`
+  if (inset?.zIndex !== undefined) style.zIndex = inset.zIndex
+  return style
+}
+
+/**
+ * children 중 position:absolute가 있으면 부모는 position:relative로 자동 컨테이닝.
+ * sticky/fixed는 부모와 무관하므로 검사 X.
+ *
+ * 컨테이너 노드(section/hero/card/list/form) children을 받아 컨테이닝 필요 여부 결정.
+ */
+export function getContainingPositionStyle(
+  children: ReadonlyArray<TreeNode>,
+): CSSProperties | undefined {
+  const hasAbsoluteChild = children.some(
+    (child) => child.position === 'absolute',
+  )
+  return hasAbsoluteChild ? { position: 'relative' } : undefined
 }

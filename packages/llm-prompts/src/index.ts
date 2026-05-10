@@ -1593,6 +1593,7 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - **Generous spacing**: hero \`spacing.padding\` ≥ 96, 섹션 간 \`spacing.gap\` ≥ 64. 정보 밀도 낮추고 호흡.
 - **Single primary CTA per hero**: 1차 CTA 하나 \`variant='primary'\` + \`shape.radius\` 24~48 + \`shadow\`=\`md\`. 보조 ghost.
 - **Mobile-first 의도**: \`layout.direction\`은 column 우선. 헤더만 row + responsive로 mobile 적응.
+- **레이어드 디자인 (Overlay 헤더 패턴)**: 헤더가 항상 hero 위에 _스택_으로 쌓일 필요 없음. 풀-블리드 hero에서는 헤더를 _hero 위에 떠있게_ 만든다. \`section role='banner'\`에 \`position: 'absolute'\` + \`inset: { top: 0, left: 0, right: 0, zIndex: 20 }\` 적용. 배경은 \`color.backgroundOpacity 0.4~0.7\`로 반투명 dark/light fade(또는 transparent로 _color 키 자체 제거_). hero가 banner 영역만큼 _상단 padding 보장_(paddingTop ≥ 96). 다크 hero + 투명 banner에서는 시각적 깊이가 크게 살아남. sticky 헤더는 \`position: 'sticky'\` + \`inset.top: 0\`. (system이 자동으로 부모를 \`position: relative\`로 잡아준다.)
 - **다크 / 럭셔리 / 스타일리시 옵션**: 사용자가 _다크 / 어두운 / 스타일리시 / 럭셔리 / 세련된 / 미드나잇_ 같은 톤을 의도하면 다크 palette로 출력. \`backgroundColor\` deep tone(#0a0a0a~#1a1d22), text bright(#e5e7eb~#f9fafb), accent vivid(#6366f1 / #a78bfa / #34d399 등). 다크에선 shadow가 약해지므로 _bg 톤 차이_ + _border 약간 강화_(#2a2e35~#3a3f48)로 위계. 흰 카드 위 흰 배경 같은 light 패턴은 와이어프레임이므로 금지.
 - **GenZ / playful / 활기 옵션**: \`hero\` background에 vivid gradient(coral~orange, electric blue~purple, mint~lime 등) + 큰 fontSize 72~96 + 강한 shadow. 회색 안전 디자인 회피.
 - **B2B / SaaS / 전문 옵션**: 흰/oat(#f8f5ef) 또는 deep navy(#0f172a~#1e293b) bg + 작은 radius(4~8) + crisp typography(fontSize 정확, lineHeight 1.5) + 데이터 강조 컴포넌트.

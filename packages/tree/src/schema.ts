@@ -278,6 +278,29 @@ export const NODE_CURSOR_IDS = [
 export const nodeCursorSchema = z.enum(NODE_CURSOR_IDS)
 export type NodeCursor = z.infer<typeof nodeCursorSchema>
 
+// 노드 positioning — 레이어드 디자인 (overlay 헤더, sticky 사이드바 등) 지원.
+// static 기본 = 일반 flow. absolute = 부모 안에서 떠있음 (부모는 자동 relative).
+// sticky = 스크롤 시 viewport 상단에 붙음 (top:0).
+// fixed = 뷰포트 기준 고정 (화면에 박힘 — 보통 사용 적음).
+export const NODE_POSITION_IDS = [
+  'static',
+  'absolute',
+  'sticky',
+  'fixed',
+] as const
+export const nodePositionSchema = z.enum(NODE_POSITION_IDS)
+export type NodePosition = z.infer<typeof nodePositionSchema>
+
+// position이 absolute/fixed/sticky일 때 inset 값 (px). undefined면 auto.
+export const nodeInsetSchema = z.object({
+  top: z.number().min(-1000).max(1000).optional(),
+  right: z.number().min(-1000).max(1000).optional(),
+  bottom: z.number().min(-1000).max(1000).optional(),
+  left: z.number().min(-1000).max(1000).optional(),
+  zIndex: z.number().int().min(-100).max(100).optional(),
+})
+export type NodeInset = z.infer<typeof nodeInsetSchema>
+
 export const IMAGE_FIT_IDS = ['cover', 'contain'] as const
 export const imageFitSchema = z.enum(IMAGE_FIT_IDS)
 export type ImageFit = z.infer<typeof imageFitSchema>
@@ -442,6 +465,8 @@ interface BaseNodeMeta {
   layout?: NodeLayout
   transition?: NodeTransition
   transform?: NodeTransform
+  position?: NodePosition
+  inset?: NodeInset
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -531,6 +556,8 @@ const baseShape = {
   transition: nodeTransitionSchema.optional(),
   transform: nodeTransformSchema.optional(),
   cursor: nodeCursorSchema.optional(),
+  position: nodePositionSchema.optional(),
+  inset: nodeInsetSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({

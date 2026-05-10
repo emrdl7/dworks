@@ -162,6 +162,7 @@ import {
   getFocusBackgroundStyle,
   getFocusTextStyle,
   getGapSpacingStyle,
+  getContainingPositionStyle,
   getHoverBackgroundStyle,
   getHoverTextStyle,
   getLayoutStyle,
@@ -5700,6 +5701,12 @@ function CanvasNode({
   const disabledTextStyle = getDisabledTextStyle(node.color)
   const transitionStyle = getTransitionStyle(node.transition)
   const layoutStyle = getLayoutStyle(resolvedLayout)
+  // 레이어드 디자인: containingStyle은 _내부 section_에 적용 (이 노드가 absolute
+  // 자식을 담는 컨테이너가 되므로 자체 relative). 노드 자신의 positionStyle은
+  // SelectableNode wrapper에서 적용 — wrapper가 정상 flow를 떠나야 부모 안에서 떠있음.
+  const containingStyle = isContainerNode(node)
+    ? getContainingPositionStyle(node.children)
+    : undefined
   // resolved textColor를 우선으로 — token-resolved hex이거나 explicit이거나
   // 자식 노드의 inheritedTextColor에 그대로 전달
   const effectiveTextColor =
@@ -5710,8 +5717,18 @@ function CanvasNode({
         )
       : undefined
   const textColorStyle = getTextColorStyle(effectiveTextColor)
-  const boxStyle = mergeStyles(boxSpacingStyle, shapeStyle, colorStyle)
-  const containerStyle = mergeStyles(containerSpacingStyle, shapeStyle, colorStyle)
+  const boxStyle = mergeStyles(
+    boxSpacingStyle,
+    shapeStyle,
+    colorStyle,
+    containingStyle,
+  )
+  const containerStyle = mergeStyles(
+    containerSpacingStyle,
+    shapeStyle,
+    colorStyle,
+    containingStyle,
+  )
   const childLayoutStyle = mergeStyles(gapSpacingStyle, layoutStyle)
 
   switch (node.type) {

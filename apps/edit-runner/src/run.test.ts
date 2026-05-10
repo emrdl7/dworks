@@ -12,6 +12,24 @@ async function readJson<T>(path: string): Promise<T> {
   return JSON.parse(await readFile(path, 'utf8')) as T
 }
 
+interface AnyNode {
+  id?: string
+  type?: string
+  content?: string
+  label?: string
+  children?: AnyNode[]
+}
+
+function findNodeById(node: AnyNode | undefined, id: string): AnyNode | null {
+  if (!node) return null
+  if (node.id === id) return node
+  for (const child of node.children ?? []) {
+    const found = findNodeById(child, id)
+    if (found) return found
+  }
+  return null
+}
+
 async function tempOut(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'dworks-edit-runner-'))
 }
@@ -31,18 +49,26 @@ describe('runEdit', () => {
     assert.equal(result.manifest.status, 'ok')
     assert.equal(result.manifest.sequenceId, 'simple-hero-content')
     assert.equal(result.manifest.operationsCount, 2)
-    assert.deepEqual(result.manifest.operationNodeIds, ['hero.title', 'hero.cta'])
+    assert.deepEqual(result.manifest.operationNodeIds, ['hero.title', 'hero.cta.primary'])
 
     const manifest = await readJson<EditRunnerManifest>(
       join(out, 'simple-hero-content', 'manifest.json'),
     )
     assert.equal(manifest.status, 'ok')
 
-    const after = await readJson<{
-      root: { children: Array<{ id: string; type: string; content?: string; label?: string }> }
-    }>(join(out, 'simple-hero-content', 'after.json'))
-    assert.equal(after.root.children[0]?.content, 'Dworks Studio — 디자인의 시작')
-    assert.equal(after.root.children[2]?.label, '바로 시작하기')
+    const after = await readJson<{ root: AnyNode }>(
+      join(out, 'simple-hero-content', 'after.json'),
+    )
+    // 새 simple-hero는 풀페이지 구조 (root=section, banner/main/footer 자식).
+    // findNodeById로 깊이 탐색.
+    assert.equal(
+      findNodeById(after.root, 'hero.title')?.content,
+      'Dworks Studio — 디자인의 시작',
+    )
+    assert.equal(
+      findNodeById(after.root, 'hero.cta.primary')?.label,
+      '바로 시작하기',
+    )
   })
 
   it('runs an explicit sequence path', async () => {

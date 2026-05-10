@@ -25,7 +25,11 @@ import {
   CanvasSelectionContext,
   CanvasToolbarContext,
 } from './canvas-contexts'
-import { getTransformStyle, getTransitionStyle } from './design-style'
+import {
+  getPositionStyle,
+  getTransformStyle,
+  getTransitionStyle,
+} from './design-style'
 import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
 
 interface CanvasToolbarButtonProps {
@@ -150,6 +154,9 @@ export function SelectableNode({
   const _selectionCtxTopLevel = useContext(CanvasSelectionContext)
   const transformStyle = getTransformStyle(node.transform)
   const transitionStyle = getTransitionStyle(node.transition)
+  // node.position(absolute/sticky/fixed)은 wrapper에 적용 — wrapper가 정상 flow를
+  // 떠나야 부모 안에서 떠있는 layer가 됨. 내부 section에 박으면 wrapper 안에 갇힘.
+  const positionStyle = getPositionStyle(node.position, node.inset)
 
   if (readOnly) {
     const readOnlyStyle: CSSProperties = {
@@ -157,6 +164,7 @@ export function SelectableNode({
       ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
       ...(transitionStyle ?? {}),
       ...(transformStyle ?? {}),
+      ...(positionStyle ?? {}),
     }
     return (
       <div className="border border-transparent" style={readOnlyStyle}>
@@ -176,6 +184,7 @@ export function SelectableNode({
     ...(node.cursor === undefined ? {} : { cursor: node.cursor }),
     ...(transitionStyle ?? {}),
     ...(transformStyle ?? {}),
+    ...(positionStyle ?? {}),
   }
 
   function selectNode(modifiers?: { shift?: boolean; meta?: boolean }) {
