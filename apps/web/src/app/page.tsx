@@ -10772,6 +10772,11 @@ function SpacingControls({
     const rightField = fields[1] as SpacingField
     const bottomField = fields[2] as SpacingField
     const leftField = fields[3] as SpacingField
+    // 사용자가 explicit 박지 않은 필드는 effective(default/token/responsive) 표시
+    const isFieldEffective = (field: SpacingField): boolean =>
+      spacing[field] === undefined && spacingWithEffective[field] !== undefined
+    const isGroupEffective = (groupFields: readonly SpacingField[]): boolean =>
+      groupFields.every(isFieldEffective)
 
     return (
       <div className="rounded-md border border-[#2a2e35] bg-[#16181c] p-3">
@@ -10789,6 +10794,7 @@ function SpacingControls({
               max={max}
               step={1}
               value={getSpacingGroupValue(spacingWithEffective, fields)}
+              isEffective={isGroupEffective(fields)}
               placeholder={placeholder}
               onChange={(value) => updateFields(fields, value, min, max)}
             />
@@ -10803,6 +10809,7 @@ function SpacingControls({
               max={max}
               step={1}
               value={getSpacingGroupValue(spacingWithEffective, horizontalFields)}
+              isEffective={isGroupEffective(horizontalFields)}
               placeholder={placeholder}
               onChange={(value) =>
                 updateFields(horizontalFields, value, min, max)
@@ -10815,6 +10822,7 @@ function SpacingControls({
               max={max}
               step={1}
               value={getSpacingGroupValue(spacingWithEffective, verticalFields)}
+              isEffective={isGroupEffective(verticalFields)}
               placeholder={placeholder}
               onChange={(value) => updateFields(verticalFields, value, min, max)}
             />
@@ -10829,6 +10837,7 @@ function SpacingControls({
               max={max}
               step={1}
               value={spacingWithEffective[topField]}
+              isEffective={isFieldEffective(topField)}
               placeholder={placeholder}
               onChange={(value) => updateField(topField, value, min, max)}
             />
@@ -10839,6 +10848,7 @@ function SpacingControls({
               max={max}
               step={1}
               value={spacingWithEffective[rightField]}
+              isEffective={isFieldEffective(rightField)}
               placeholder={placeholder}
               onChange={(value) => updateField(rightField, value, min, max)}
             />
@@ -10849,6 +10859,7 @@ function SpacingControls({
               max={max}
               step={1}
               value={spacingWithEffective[bottomField]}
+              isEffective={isFieldEffective(bottomField)}
               placeholder={placeholder}
               onChange={(value) => updateField(bottomField, value, min, max)}
             />
@@ -10859,6 +10870,7 @@ function SpacingControls({
               max={max}
               step={1}
               value={spacingWithEffective[leftField]}
+              isEffective={isFieldEffective(leftField)}
               placeholder={placeholder}
               onChange={(value) => updateField(leftField, value, min, max)}
             />
