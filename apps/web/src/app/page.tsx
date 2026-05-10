@@ -209,6 +209,33 @@ import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
 import { SelectableNode } from './selectable-node'
 import { CommandPalette, type CommandPaletteItem } from './command-palette'
 import {
+  DEFAULT_ACCENT_PICKER_COLOR,
+  DEFAULT_COLOR_PICKER_COLOR,
+  DEFAULT_CUSTOM_SHADOW,
+  DEFAULT_IMAGE_OVERLAY_COLOR,
+  DEFAULT_SHAPE_COLOR,
+  DEFAULT_TEXT_PICKER_COLOR,
+  DEFAULT_TEXT_SHADOW,
+  EMPTY_SHAPE,
+  MAX_CUSTOM_SHADOWS,
+  getCustomShadowWithPatch,
+  getGradientWithPatch,
+  getNodeColorMergeKey,
+  getResolvedCustomShadow,
+  getResolvedCustomShadowList,
+  getResolvedGradient,
+  getResolvedTextShadow,
+  getTextShadowWithPatch,
+  getVisibleBorderPatch,
+  hasShapeCustomShadow,
+  isValidHexColor,
+  normalizeHexColor,
+  parseOptionalNumber,
+  parseOptionalOpacity,
+  roundFocalCoordinate,
+  toColorInputValue,
+} from './design-form-utils'
+import {
   DisclosureChevron,
   IconToggleButton,
   InspectorDisclosure,
@@ -677,11 +704,6 @@ const shapeCornerRadiusLabels: Record<ShapeRadiusField, string> = {
   radiusBottomRight: '우하',
 }
 
-const DEFAULT_SHAPE_COLOR = '#d7ddd2'
-const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
-const DEFAULT_TEXT_PICKER_COLOR = '#18211d'
-const DEFAULT_ACCENT_PICKER_COLOR = '#4f46e5'
-
 // renderColorField 아래 quick palette — 캔버스 콘텐츠용 자주 쓰는 10색 (5x2).
 // chrome 토큰(dw-ui-*)이 아니라 generation 결과물에 자연스러운 일반 디자인 색.
 interface QuickPaletteSwatch {
@@ -700,28 +722,6 @@ const QUICK_PALETTE: readonly QuickPaletteSwatch[] = [
   { label: '보라', value: '#8b5cf6' },
   { label: '핑크', value: '#ec4899' },
 ]
-const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
-const DEFAULT_GRADIENT_TO_COLOR = '#000000'
-const DEFAULT_GRADIENT_DIRECTION: GradientDirection = 'to-bottom-right'
-const DEFAULT_GRADIENT_TYPE: GradientType = 'linear'
-const DEFAULT_CUSTOM_SHADOW: CustomShadow = {
-  offsetX: 0,
-  offsetY: 4,
-  blur: 12,
-  spread: 0,
-  color: '#000000',
-  opacity: 0.25,
-}
-const EMPTY_SHAPE: Shape = {}
-const MAX_CUSTOM_SHADOWS = 3
-const DEFAULT_TEXT_SHADOW: TextShadow = {
-  offsetX: 0,
-  offsetY: 2,
-  blur: 4,
-  color: '#000000',
-  opacity: 0.25,
-}
-const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const HISTORY_MERGE_WINDOW_MS = 600
 
 const MAX_HISTORY = 100
@@ -12128,37 +12128,6 @@ function reorderLayerNode(
   return nextTree
 }
 
-function parseOptionalNumber(
-  value: string,
-  min: number,
-  max: number,
-): number | undefined {
-  if (value.trim() === '') {
-    return undefined
-  }
-
-  const parsed = Number(value)
-  if (!Number.isFinite(parsed)) {
-    return undefined
-  }
-
-  return Math.min(max, Math.max(min, parsed))
-}
-
-function parseOptionalOpacity(value: string): number | undefined {
-  const percent = parseOptionalNumber(value, 0, 100)
-  if (percent === undefined || percent === 100) {
-    return undefined
-  }
-
-  return Math.round((percent / 100) * 100) / 100
-}
-
-function roundFocalCoordinate(value: number): number {
-  const clampedValue = Math.min(1, Math.max(0, value))
-  return Math.round(clampedValue * 1000) / 1000
-}
-
 function getImagePresentationResetPatch(): Partial<ImagePresentation> {
   return Object.fromEntries(
     imagePresentationFields.map((field): [ImagePresentationField, undefined] => [
@@ -12168,192 +12137,12 @@ function getImagePresentationResetPatch(): Partial<ImagePresentation> {
   ) as Partial<ImagePresentation>
 }
 
-function isValidHexColor(value: string): boolean {
-  return HEX_COLOR_PATTERN.test(value)
-}
-
-function normalizeHexColor(value: string): string {
-  return value.trim().toLowerCase()
-}
-
-function getNodeColorMergeKey(nodeId: string, field: string): string {
-  return `node:${nodeId}:${field}`
-}
-
-function getResolvedGradient(
-  gradient: Gradient | undefined,
-  fallbackFrom: string,
-  fallbackFromOpacity?: number,
-): Gradient {
-  return {
-    type: gradient?.type ?? DEFAULT_GRADIENT_TYPE,
-    from: gradient?.from ?? normalizeHexColor(fallbackFrom),
-    to: gradient?.to ?? DEFAULT_GRADIENT_TO_COLOR,
-    direction: gradient?.direction ?? DEFAULT_GRADIENT_DIRECTION,
-    ...(gradient?.fromOpacity !== undefined
-      ? { fromOpacity: gradient.fromOpacity }
-      : fallbackFromOpacity !== undefined
-        ? { fromOpacity: fallbackFromOpacity }
-        : {}),
-    ...(gradient?.toOpacity !== undefined ? { toOpacity: gradient.toOpacity } : {}),
-    ...(gradient?.conicFromAngle !== undefined
-      ? { conicFromAngle: gradient.conicFromAngle }
-      : {}),
-    ...(gradient?.conicCenterX !== undefined
-      ? { conicCenterX: gradient.conicCenterX }
-      : {}),
-    ...(gradient?.conicCenterY !== undefined
-      ? { conicCenterY: gradient.conicCenterY }
-      : {}),
-  }
-}
-
-function getGradientWithPatch(
-  gradient: Gradient,
-  patch: Partial<Gradient>,
-): Gradient {
-  const next: Gradient = { ...gradient, ...patch }
-
-  if (next.fromOpacity === undefined) {
-    delete next.fromOpacity
-  }
-
-  if (next.toOpacity === undefined) {
-    delete next.toOpacity
-  }
-
-  if (next.type === undefined) {
-    delete next.type
-  }
-
-  if (next.conicFromAngle === undefined) {
-    delete next.conicFromAngle
-  }
-
-  if (next.conicCenterX === undefined) {
-    delete next.conicCenterX
-  }
-
-  if (next.conicCenterY === undefined) {
-    delete next.conicCenterY
-  }
-
-  return next
-}
-
-
 function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
   if (field === 'backgroundColor') {
     return 'backgroundOpacity'
   }
 
   return field === 'textColor' ? 'textOpacity' : 'accentOpacity'
-}
-
-function toColorInputValue(
-  value: string,
-  fallback = DEFAULT_SHAPE_COLOR,
-): string {
-  const normalizedValue = normalizeHexColor(value)
-  if (!isValidHexColor(normalizedValue)) {
-    return fallback
-  }
-
-  if (normalizedValue.length === 4) {
-    const red = normalizedValue.slice(1, 2)
-    const green = normalizedValue.slice(2, 3)
-    const blue = normalizedValue.slice(3, 4)
-    return `#${red}${red}${green}${green}${blue}${blue}`
-  }
-
-  return normalizedValue
-}
-
-function getVisibleBorderPatch(shape: Partial<Shape>): Partial<Shape> {
-  return {
-    borderStyle:
-      shape.borderStyle === undefined || shape.borderStyle === 'none'
-        ? 'solid'
-        : shape.borderStyle,
-    borderWidth:
-      shape.borderWidth === undefined || shape.borderWidth === 0
-        ? 1
-        : shape.borderWidth,
-  }
-}
-
-function getResolvedCustomShadow(shadow: CustomShadow | undefined): CustomShadow {
-  return shadow ?? DEFAULT_CUSTOM_SHADOW
-}
-
-function hasShapeCustomShadow(shape: Partial<Shape>): boolean {
-  return (
-    shape.customShadow !== undefined ||
-    (shape.customShadows !== undefined && shape.customShadows.length > 0)
-  )
-}
-
-function getResolvedCustomShadowList(shape: Partial<Shape>): CustomShadow[] {
-  if (shape.customShadows !== undefined && shape.customShadows.length > 0) {
-    return shape.customShadows
-      .slice(0, MAX_CUSTOM_SHADOWS)
-      .map((shadow) => getResolvedCustomShadow(shadow))
-  }
-
-  if (shape.customShadow !== undefined) {
-    return [getResolvedCustomShadow(shape.customShadow)]
-  }
-
-  return [DEFAULT_CUSTOM_SHADOW]
-}
-
-function getCustomShadowWithPatch(
-  shadow: CustomShadow,
-  patch: Partial<CustomShadow>,
-): CustomShadow {
-  const hasOpacityPatch = Object.prototype.hasOwnProperty.call(patch, 'opacity')
-  const hasInsetPatch = Object.prototype.hasOwnProperty.call(patch, 'inset')
-
-  return {
-    offsetX: patch.offsetX ?? shadow.offsetX,
-    offsetY: patch.offsetY ?? shadow.offsetY,
-    blur: patch.blur ?? shadow.blur,
-    spread: patch.spread ?? shadow.spread ?? 0,
-    color: patch.color ?? shadow.color,
-    ...(!hasOpacityPatch && shadow.opacity !== undefined
-      ? { opacity: shadow.opacity }
-      : patch.opacity !== undefined
-        ? { opacity: patch.opacity }
-        : {}),
-    ...(!hasInsetPatch && shadow.inset !== undefined
-      ? { inset: shadow.inset }
-      : patch.inset !== undefined
-        ? { inset: patch.inset }
-        : {}),
-  }
-}
-
-function getResolvedTextShadow(shadow: TextShadow | undefined): TextShadow {
-  return shadow ?? DEFAULT_TEXT_SHADOW
-}
-
-function getTextShadowWithPatch(
-  shadow: TextShadow,
-  patch: Partial<TextShadow>,
-): TextShadow {
-  const hasOpacityPatch = Object.prototype.hasOwnProperty.call(patch, 'opacity')
-
-  return {
-    offsetX: patch.offsetX ?? shadow.offsetX,
-    offsetY: patch.offsetY ?? shadow.offsetY,
-    blur: patch.blur ?? shadow.blur,
-    color: patch.color ?? shadow.color,
-    ...(!hasOpacityPatch && shadow.opacity !== undefined
-      ? { opacity: shadow.opacity }
-      : patch.opacity !== undefined
-        ? { opacity: patch.opacity }
-        : {}),
-  }
 }
 
 function getSpacingGroupValue(
