@@ -15,58 +15,30 @@ import {
 } from 'react'
 import Image from 'next/image'
 import {
-  AlignCenter,
-  AlignHorizontalJustifyCenter,
-  AlignHorizontalJustifyEnd,
-  AlignHorizontalJustifyStart,
-  AlignHorizontalSpaceAround,
-  AlignHorizontalSpaceBetween,
-  AlignLeft,
-  AlignRight,
-  AlignVerticalJustifyCenter,
   AlertTriangle,
-  AlignVerticalJustifyEnd,
-  AlignVerticalJustifyStart,
   ArrowDown,
+  ArrowUp,
   ChevronDown,
   ChevronRight,
-  ArrowDownLeft,
-  ArrowDownRight,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  ArrowUpLeft,
-  ArrowUpRight,
-  Columns2,
   Eye,
   EyeOff,
   GripVertical,
   Lock,
   Unlock,
   LayoutGrid,
-  Move,
   PanelLeft,
   PanelRight,
-  PanelTop,
   Pin,
   Plus,
   Redo2,
-  Rows2,
-  Square,
-  StretchHorizontal,
   Menu,
-  StretchVertical,
   Trash2,
   Undo2,
-  WrapText,
   X,
   type LucideIcon,
 } from 'lucide-react'
 import {
   COLOR_PRESETS,
-  BUILT_IN_FONT_FAMILY_IDS,
-  GRADIENT_DIRECTION_IDS,
-  GRADIENT_TYPE_IDS,
   type BorderStyle,
   type ButtonNode,
   type BuiltInFontFamily,
@@ -98,7 +70,6 @@ import {
   type Shape,
   type Spacing,
   type TextNode,
-  type TextAlign,
   type TextShadow,
   type Tree,
   type TreeNode,
@@ -450,259 +421,66 @@ function createOriginalEntry(tree: Tree): GenerationEntry {
 }
 
 
-const imageAspectRatioLabels = {
-  square: '정사각형',
-  landscape: '가로형',
-  portrait: '세로형',
-  wide: '와이드',
-} as const
-
-const imageFitLabels: Record<ImageFit, string> = {
-  cover: '채우기',
-  contain: '맞춤',
-}
-
-const layoutIntentLabels = {
-  stack: '세로 쌓기',
-  grid: '그리드',
-  inline: '가로 배치',
-  split: '분할',
-  'dashboard-grid': '대시보드 그리드',
-} as const
-
-const fontWeightLabels: Record<FontWeight, string> = {
-  '100': '씬',
-  '200': '엑스트라 라이트',
-  '300': '라이트',
-  '400': '보통',
-  '500': '중간',
-  '600': '세미볼드',
-  '700': '볼드',
-  '800': '엑스트라볼드',
-  '900': '블랙',
-}
-
-const textAlignTitles: Record<TextAlign, string> = {
-  left: '왼쪽 정렬',
-  center: '가운데 정렬',
-  right: '오른쪽 정렬',
-}
-const textAlignIcons: Record<TextAlign, LucideIcon> = {
-  left: AlignLeft,
-  center: AlignCenter,
-  right: AlignRight,
-}
-
-const borderStyleLabels: Record<BorderStyle, string> = {
-  solid: '실선',
-  dashed: '점선',
-  none: '없음',
-}
-
-const shadowPresetLabels: Record<ShadowPreset, string> = {
-  none: '없음',
-  sm: '옅게',
-  md: '기본',
-  lg: '진하게',
-  xl: '매우 진하게',
-}
-
-// swatch grid 아래 짧은 레이블 — 5개 그리드 폭 안에 들어가도록 단어 단축.
-const shadowPresetShortLabels: Record<ShadowPreset, string> = {
-  none: '없음',
-  sm: 'S',
-  md: 'M',
-  lg: 'L',
-  xl: 'XL',
-}
-
-const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
-  sans: '산세리프',
-  serif: '세리프',
-  mono: '고정폭',
-}
-
-
-const nodeTransitionTimingLabels: Record<NodeTransitionTiming, string> = {
-  linear: '선형',
-  ease: '기본',
-  'ease-in': '시작 가속',
-  'ease-out': '끝 가속',
-  'ease-in-out': '양쪽 가속',
-  custom: '사용자 지정',
-  'step-start': '즉시',
-  'step-end': '도약',
-}
-
-const layoutDirectionLabels: Record<LayoutDirection, string> = {
-  row: '가로',
-  column: '세로',
-}
-const layoutDirectionIcons: Record<LayoutDirection, LucideIcon> = {
-  row: Columns2,
-  column: Rows2,
-}
-
-const layoutAlignLabels: Record<LayoutAlign, string> = {
-  start: '시작',
-  center: '가운데',
-  end: '끝',
-  stretch: '채움',
-}
-const layoutAlignIcons: Record<LayoutAlign, LucideIcon> = {
-  start: AlignVerticalJustifyStart,
-  center: AlignVerticalJustifyCenter,
-  end: AlignVerticalJustifyEnd,
-  stretch: StretchVertical,
-}
-
-const layoutJustifyLabels: Record<LayoutJustify, string> = {
-  start: '시작',
-  center: '가운데',
-  end: '끝',
-  between: '양끝',
-  evenly: '균등',
-}
-const layoutJustifyIcons: Record<LayoutJustify, LucideIcon> = {
-  start: AlignHorizontalJustifyStart,
-  center: AlignHorizontalJustifyCenter,
-  end: AlignHorizontalJustifyEnd,
-  between: AlignHorizontalSpaceBetween,
-  evenly: AlignHorizontalSpaceAround,
-}
-
-const layoutWrapLabels: Record<LayoutWrap, string> = {
-  nowrap: '고정',
-  wrap: '줄바꿈',
-}
-const layoutWrapIcons: Record<LayoutWrap, LucideIcon> = {
-  nowrap: StretchHorizontal,
-  wrap: WrapText,
-}
-
-const gradientDirectionLabels: Record<GradientDirection, string> = {
-  'to-top': '위로',
-  'to-top-right': '우상',
-  'to-right': '오른쪽',
-  'to-bottom-right': '우하',
-  'to-bottom': '아래로',
-  'to-bottom-left': '좌하',
-  'to-left': '왼쪽',
-  'to-top-left': '좌상',
-}
-const gradientDirectionIcons: Record<GradientDirection, LucideIcon> = {
-  'to-top': ArrowUp,
-  'to-top-right': ArrowUpRight,
-  'to-right': ArrowRight,
-  'to-bottom-right': ArrowDownRight,
-  'to-bottom': ArrowDown,
-  'to-bottom-left': ArrowDownLeft,
-  'to-left': ArrowLeft,
-  'to-top-left': ArrowUpLeft,
-}
-const gradientTypeLabels: Record<GradientType, string> = {
-  linear: '선형',
-  radial: '원형',
-  conic: '원뿔형',
-}
-
-const fontWeightOptions: FontWeight[] = [
-  '100',
-  '200',
-  '300',
-  '400',
-  '500',
-  '600',
-  '700',
-  '800',
-  '900',
-]
-const textAlignOptions: TextAlign[] = ['left', 'center', 'right']
-const borderStyleOptions: BorderStyle[] = ['solid', 'dashed', 'none']
-const shadowPresetOptions: ShadowPreset[] = ['none', 'sm', 'md', 'lg', 'xl']
-const imageAspectRatioOptions: ImageAspectRatio[] = [
-  'square',
-  'landscape',
-  'portrait',
-  'wide',
-]
-const imageFitOptions: ImageFit[] = ['cover', 'contain']
-const builtInFontFamilyOptions = [...BUILT_IN_FONT_FAMILY_IDS]
-const layoutDirectionOptions: LayoutDirection[] = ['row', 'column']
-const layoutAlignOptions: LayoutAlign[] = ['start', 'center', 'end', 'stretch']
-const layoutJustifyOptions: LayoutJustify[] = [
-  'start',
-  'center',
-  'end',
-  'between',
-  'evenly',
-]
-const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
-const gradientDirectionOptions: GradientDirection[] = [...GRADIENT_DIRECTION_IDS]
-const gradientTypeOptions: GradientType[] = [...GRADIENT_TYPE_IDS]
-const REGISTERED_FONT_FAMILY_OPTION_PREFIX = 'registered-family:'
-const MAX_FONT_UPLOAD_FILES = 20
-type SpacingMode = 'all' | 'axis' | 'sides'
-type ShapeRadiusMode = 'all' | 'corners'
-type GradientColorStopField = 'from' | 'to'
-type GradientOpacityStopField = 'fromOpacity' | 'toOpacity'
-type ColorMode = 'solid' | 'gradient'
-type TextShadowNumberField = 'offsetX' | 'offsetY' | 'blur'
-
-const spacingModes: SpacingMode[] = ['all', 'axis', 'sides']
-const spacingModeLabels: Record<SpacingMode, string> = {
-  all: '전체',
-  axis: 'X-Y',
-  sides: '4면',
-}
-const spacingModeIcons: Record<SpacingMode, LucideIcon> = {
-  all: Square,
-  axis: Move,
-  sides: PanelTop,
-}
 import {
   responsiveViewportPresets,
   type ResponsiveViewport,
 } from './responsive.js'
-const responsiveViewportOptions: ResponsiveViewport[] = [
-  'mobile',
-  'tablet',
-  'desktop',
-]
-const paddingSpacingFields: readonly SpacingField[] = [
-  'paddingTop',
-  'paddingRight',
-  'paddingBottom',
-  'paddingLeft',
-]
-const marginSpacingFields: readonly SpacingField[] = [
-  'marginTop',
-  'marginRight',
-  'marginBottom',
-  'marginLeft',
-]
-const paddingHorizontalFields: readonly SpacingField[] = [
-  'paddingLeft',
-  'paddingRight',
-]
-const paddingVerticalFields: readonly SpacingField[] = [
-  'paddingTop',
-  'paddingBottom',
-]
-const marginHorizontalFields: readonly SpacingField[] = [
-  'marginLeft',
-  'marginRight',
-]
-const marginVerticalFields: readonly SpacingField[] = [
-  'marginTop',
-  'marginBottom',
-]
-const shapeCornerRadiusLabels: Record<ShapeRadiusField, string> = {
-  radiusTopLeft: '좌상',
-  radiusTopRight: '우상',
-  radiusBottomLeft: '좌하',
-  radiusBottomRight: '우하',
-}
+import {
+  borderStyleLabels,
+  borderStyleOptions,
+  builtInFontFamilyLabels,
+  builtInFontFamilyOptions,
+  fontWeightLabels,
+  fontWeightOptions,
+  gradientDirectionIcons,
+  gradientDirectionLabels,
+  gradientDirectionOptions,
+  gradientTypeLabels,
+  gradientTypeOptions,
+  imageAspectRatioLabels,
+  imageAspectRatioOptions,
+  imageFitLabels,
+  imageFitOptions,
+  layoutAlignIcons,
+  layoutAlignLabels,
+  layoutAlignOptions,
+  layoutDirectionIcons,
+  layoutDirectionLabels,
+  layoutDirectionOptions,
+  layoutIntentLabels,
+  layoutJustifyIcons,
+  layoutJustifyLabels,
+  layoutJustifyOptions,
+  layoutWrapIcons,
+  layoutWrapLabels,
+  layoutWrapOptions,
+  marginHorizontalFields,
+  marginSpacingFields,
+  marginVerticalFields,
+  MAX_FONT_UPLOAD_FILES,
+  nodeTransitionTimingLabels,
+  paddingHorizontalFields,
+  paddingSpacingFields,
+  paddingVerticalFields,
+  REGISTERED_FONT_FAMILY_OPTION_PREFIX,
+  responsiveViewportOptions,
+  shadowPresetLabels,
+  shadowPresetOptions,
+  shadowPresetShortLabels,
+  shapeCornerRadiusLabels,
+  spacingModeIcons,
+  spacingModeLabels,
+  spacingModes,
+  textAlignIcons,
+  textAlignOptions,
+  textAlignTitles,
+  type ColorMode,
+  type GradientColorStopField,
+  type GradientOpacityStopField,
+  type ShapeRadiusMode,
+  type SpacingMode,
+  type TextShadowNumberField,
+} from './inspector-presets.js'
 
 // renderColorField 아래 quick palette — 캔버스 콘텐츠용 자주 쓰는 10색 (5x2).
 // chrome 토큰(dw-ui-*)이 아니라 generation 결과물에 자연스러운 일반 디자인 색.
