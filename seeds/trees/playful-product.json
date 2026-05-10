@@ -1,0 +1,338 @@
+{
+  "version": "1",
+  "root": {
+    "id": "page",
+    "type": "section",
+    "editKind": "structure",
+    "color": { "backgroundColor": "#fff7ed" },
+    "spacing": { "paddingTop": 0, "paddingBottom": 0, "paddingLeft": 0, "paddingRight": 0, "gap": 0 },
+    "children": [
+      {
+        "id": "page.banner",
+        "type": "section",
+        "role": "banner",
+        "editKind": "structure",
+        "layout": { "direction": "row", "justify": "between", "align": "center" },
+        "spacing": { "paddingTop": 24, "paddingBottom": 24, "paddingLeft": 48, "paddingRight": 48, "gap": 24 },
+        "color": { "backgroundColor": "#fff7ed" },
+        "children": [
+          {
+            "id": "banner.logo",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "heading-3",
+            "content": "BLOOM",
+            "typography": { "fontSize": 24, "fontWeight": "900", "letterSpacing": 0.04 },
+            "color": { "textColor": "#7c2d12" }
+          },
+          {
+            "id": "banner.nav",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 28 },
+            "children": [
+              { "id": "banner.nav.shop", "type": "text", "editKind": "text", "content": "Shop", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "700" }, "color": { "textColor": "#9a3412" } },
+              { "id": "banner.nav.story", "type": "text", "editKind": "text", "content": "Story", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "700" }, "color": { "textColor": "#9a3412" } },
+              { "id": "banner.nav.journal", "type": "text", "editKind": "text", "content": "Journal", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "700" }, "color": { "textColor": "#9a3412" } }
+            ]
+          },
+          {
+            "id": "banner.cta",
+            "type": "button",
+            "editKind": "text",
+            "variant": "primary",
+            "label": "Bag · 0",
+            "color": { "backgroundColor": "#7c2d12", "textColor": "#fff7ed", "hoverBackgroundColor": "#9a3412" },
+            "shape": { "radius": 100, "shadow": "md" },
+            "spacing": { "paddingLeft": 22, "paddingRight": 22, "paddingTop": 11, "paddingBottom": 11 },
+            "typography": { "fontSize": 14, "fontWeight": "800" },
+            "transition": { "duration": 160, "timing": "ease-out" }
+          }
+        ]
+      },
+      {
+        "id": "page.main",
+        "type": "section",
+        "role": "main",
+        "editKind": "structure",
+        "spacing": { "gap": 0 },
+        "children": [
+          {
+            "id": "hero",
+            "type": "hero",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 80, "paddingBottom": 80, "paddingLeft": 56, "paddingRight": 56, "gap": 32 },
+            "color": {
+              "backgroundGradient": {
+                "type": "linear",
+                "from": "#fb923c",
+                "to": "#ec4899",
+                "direction": "to-bottom-right"
+              },
+              "textColor": "#ffffff"
+            },
+            "responsive": { "mobile": "fontSize 60, padding 56/24" },
+            "children": [
+              {
+                "id": "hero.tag",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "caption",
+                "content": "🌷 Spring 2026 drop",
+                "typography": { "fontSize": 14, "fontWeight": "700", "letterSpacing": 0.06, "textAlign": "center" },
+                "color": { "textColor": "#fef3c7" }
+              },
+              {
+                "id": "hero.title",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "heading-1",
+                "content": "Smile loud,\nbloom louder.",
+                "typography": { "fontSize": 96, "fontWeight": "900", "lineHeight": 0.95, "letterSpacing": -0.04, "textAlign": "center", "textShadow": { "offsetX": 0, "offsetY": 4, "blur": 20, "color": "#7c2d12", "opacity": 0.3 } }
+              },
+              {
+                "id": "hero.subtitle",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "body",
+                "content": "Loud color, loud joy. 100% bio cotton tees & tote bags for people who don't whisper.",
+                "typography": { "fontSize": 20, "fontWeight": "500", "lineHeight": 1.5, "textAlign": "center" },
+                "color": { "textColor": "#fef3c7" }
+              },
+              {
+                "id": "hero.actions",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "row", "align": "center" },
+                "spacing": { "gap": 16, "paddingTop": 8 },
+                "children": [
+                  {
+                    "id": "hero.cta.shop",
+                    "type": "button",
+                    "editKind": "text",
+                    "variant": "primary",
+                    "label": "Shop the drop →",
+                    "color": { "backgroundColor": "#fef3c7", "textColor": "#7c2d12", "hoverBackgroundColor": "#fde68a" },
+                    "shape": { "radius": 32, "shadow": "xl" },
+                    "spacing": { "paddingLeft": 32, "paddingRight": 32, "paddingTop": 18, "paddingBottom": 18 },
+                    "typography": { "fontSize": 17, "fontWeight": "800" },
+                    "transition": { "duration": 180, "timing": "ease-out" },
+                    "transform": { "rotate": -2 }
+                  },
+                  {
+                    "id": "hero.cta.lookbook",
+                    "type": "button",
+                    "editKind": "text",
+                    "variant": "ghost",
+                    "label": "Watch lookbook",
+                    "color": { "backgroundColor": "#7c2d12", "textColor": "#ffffff", "hoverBackgroundColor": "#9a3412" },
+                    "shape": { "radius": 32, "borderWidth": 2, "borderStyle": "solid", "borderColor": "#fef3c7" },
+                    "spacing": { "paddingLeft": 28, "paddingRight": 28, "paddingTop": 16, "paddingBottom": 16 },
+                    "typography": { "fontSize": 15, "fontWeight": "700" }
+                  }
+                ]
+              },
+              {
+                "id": "hero.image",
+                "type": "image",
+                "editKind": "media",
+                "src": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1600&q=80",
+                "alt": "BLOOM 시그니처 컬러 티셔츠와 토트백 컬렉션",
+                "aspectRatio": "wide",
+                "shape": { "radius": 36, "shadow": "xl" }
+              }
+            ]
+          },
+          {
+            "id": "marquee",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center", "justify": "between" },
+            "spacing": { "paddingTop": 28, "paddingBottom": 28, "paddingLeft": 56, "paddingRight": 56, "gap": 32 },
+            "color": { "backgroundColor": "#fde047" },
+            "children": [
+              { "id": "marquee.1", "type": "text", "editKind": "text", "content": "✿ Free shipping over ₩50,000", "typography": { "fontSize": 16, "fontWeight": "700", "letterSpacing": 0.02 }, "color": { "textColor": "#7c2d12" } },
+              { "id": "marquee.2", "type": "text", "editKind": "text", "content": "✿ 100% organic cotton", "typography": { "fontSize": 16, "fontWeight": "700", "letterSpacing": 0.02 }, "color": { "textColor": "#7c2d12" } },
+              { "id": "marquee.3", "type": "text", "editKind": "text", "content": "✿ Pre-order now, ships March 14", "typography": { "fontSize": 16, "fontWeight": "700", "letterSpacing": 0.02 }, "color": { "textColor": "#7c2d12" } }
+            ]
+          },
+          {
+            "id": "products",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 96, "paddingLeft": 56, "paddingRight": 56, "gap": 56 },
+            "color": { "backgroundColor": "#fff7ed" },
+            "children": [
+              {
+                "id": "products.head",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column", "align": "center" },
+                "spacing": { "gap": 12 },
+                "children": [
+                  {
+                    "id": "products.title",
+                    "type": "text",
+                    "editKind": "text",
+                    "emphasis": "heading-2",
+                    "content": "this drop's loudest 3.",
+                    "typography": { "fontSize": 56, "fontWeight": "900", "lineHeight": 1.05, "letterSpacing": -0.03, "textAlign": "center" },
+                    "color": { "textColor": "#7c2d12" }
+                  },
+                  {
+                    "id": "products.subtitle",
+                    "type": "text",
+                    "editKind": "text",
+                    "emphasis": "body",
+                    "content": "한정 800장. 소진 시 다음 시즌까지 X.",
+                    "typography": { "fontSize": 16, "fontWeight": "500", "lineHeight": 1.6, "textAlign": "center" },
+                    "color": { "textColor": "#9a3412" }
+                  }
+                ]
+              },
+              {
+                "id": "products.grid",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "row", "align": "stretch" },
+                "spacing": { "gap": 28 },
+                "responsive": { "mobile": "1열 stack" },
+                "children": [
+                  {
+                    "id": "product.1",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "paddingBottom": 24, "gap": 16 },
+                    "color": { "backgroundColor": "#fed7aa" },
+                    "shape": { "radius": 28, "shadow": "lg" },
+                    "transform": { "rotate": -1 },
+                    "children": [
+                      { "id": "product.1.image", "type": "image", "editKind": "media", "src": "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=900&q=80", "alt": "산호색 그래픽 티셔츠", "aspectRatio": "square", "shape": { "radius": 24 } },
+                      { "id": "product.1.name", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "Sunburst Tee", "typography": { "fontSize": 22, "fontWeight": "800", "letterSpacing": -0.01 }, "color": { "textColor": "#7c2d12" } },
+                      { "id": "product.1.desc", "type": "text", "editKind": "text", "emphasis": "caption", "content": "Coral / boxy fit / unisex", "typography": { "fontSize": 13, "lineHeight": 1.55, "fontWeight": "500" }, "color": { "textColor": "#9a3412" } },
+                      { "id": "product.1.price", "type": "text", "editKind": "text", "content": "₩42,000", "typography": { "fontSize": 18, "fontWeight": "800" }, "color": { "textColor": "#7c2d12" } }
+                    ]
+                  },
+                  {
+                    "id": "product.2",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "paddingBottom": 24, "gap": 16 },
+                    "color": { "backgroundColor": "#a5f3fc" },
+                    "shape": { "radius": 28, "shadow": "lg" },
+                    "transform": { "rotate": 1.5 },
+                    "children": [
+                      { "id": "product.2.image", "type": "image", "editKind": "media", "src": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80", "alt": "민트색 보가드 토트백", "aspectRatio": "square", "shape": { "radius": 24 } },
+                      { "id": "product.2.name", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "Splash Tote", "typography": { "fontSize": 22, "fontWeight": "800", "letterSpacing": -0.01 }, "color": { "textColor": "#155e75" } },
+                      { "id": "product.2.desc", "type": "text", "editKind": "text", "emphasis": "caption", "content": "Mint / canvas 12oz / oversize", "typography": { "fontSize": 13, "lineHeight": 1.55, "fontWeight": "500" }, "color": { "textColor": "#0e7490" } },
+                      { "id": "product.2.price", "type": "text", "editKind": "text", "content": "₩38,000", "typography": { "fontSize": 18, "fontWeight": "800" }, "color": { "textColor": "#155e75" } }
+                    ]
+                  },
+                  {
+                    "id": "product.3",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "paddingBottom": 24, "gap": 16 },
+                    "color": { "backgroundColor": "#fbcfe8" },
+                    "shape": { "radius": 28, "shadow": "lg" },
+                    "transform": { "rotate": -1.2 },
+                    "children": [
+                      { "id": "product.3.image", "type": "image", "editKind": "media", "src": "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=900&q=80", "alt": "핑크 비니 모자", "aspectRatio": "square", "shape": { "radius": 24 } },
+                      { "id": "product.3.name", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "Flutter Beanie", "typography": { "fontSize": 22, "fontWeight": "800", "letterSpacing": -0.01 }, "color": { "textColor": "#9d174d" } },
+                      { "id": "product.3.desc", "type": "text", "editKind": "text", "emphasis": "caption", "content": "Pink / merino blend / one size", "typography": { "fontSize": 13, "lineHeight": 1.55, "fontWeight": "500" }, "color": { "textColor": "#be185d" } },
+                      { "id": "product.3.price", "type": "text", "editKind": "text", "content": "₩28,000", "typography": { "fontSize": 18, "fontWeight": "800" }, "color": { "textColor": "#9d174d" } }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "newsletter",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 96, "paddingLeft": 56, "paddingRight": 56, "gap": 24 },
+            "color": {
+              "backgroundGradient": {
+                "type": "linear",
+                "from": "#a78bfa",
+                "to": "#fb923c",
+                "direction": "to-right"
+              },
+              "textColor": "#ffffff"
+            },
+            "children": [
+              {
+                "id": "newsletter.title",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "heading-1",
+                "content": "first dibs, first laughs.",
+                "typography": { "fontSize": 56, "fontWeight": "900", "lineHeight": 1.0, "letterSpacing": -0.03, "textAlign": "center" }
+              },
+              {
+                "id": "newsletter.desc",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "body",
+                "content": "이메일로 새 드롭과 메이킹 영상 가장 먼저. 매주 금요일 한 번.",
+                "typography": { "fontSize": 17, "fontWeight": "500", "lineHeight": 1.5, "textAlign": "center" },
+                "color": { "textColor": "#fef9c3" }
+              },
+              {
+                "id": "newsletter.cta",
+                "type": "button",
+                "editKind": "text",
+                "variant": "primary",
+                "label": "구독하기 ✿",
+                "color": { "backgroundColor": "#7c2d12", "textColor": "#fef3c7", "hoverBackgroundColor": "#9a3412" },
+                "shape": { "radius": 100, "shadow": "xl" },
+                "spacing": { "paddingLeft": 32, "paddingRight": 32, "paddingTop": 18, "paddingBottom": 18 },
+                "typography": { "fontSize": 16, "fontWeight": "800" },
+                "transition": { "duration": 200, "timing": "ease-out" }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "page.footer",
+        "type": "section",
+        "role": "contentinfo",
+        "editKind": "structure",
+        "layout": { "direction": "row", "align": "center", "justify": "between" },
+        "spacing": { "paddingTop": 32, "paddingBottom": 32, "paddingLeft": 56, "paddingRight": 56, "gap": 24 },
+        "color": { "backgroundColor": "#7c2d12", "textColor": "#fef3c7" },
+        "children": [
+          {
+            "id": "footer.copy",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "caption",
+            "content": "© 2026 BLOOM Studio · 한정 800장",
+            "typography": { "fontSize": 13, "fontWeight": "600" }
+          },
+          {
+            "id": "footer.links",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 24 },
+            "children": [
+              { "id": "footer.links.shipping", "type": "text", "editKind": "text", "content": "배송", "contentRole": "label", "typography": { "fontSize": 13, "fontWeight": "600" } },
+              { "id": "footer.links.returns", "type": "text", "editKind": "text", "content": "교환", "contentRole": "label", "typography": { "fontSize": 13, "fontWeight": "600" } },
+              { "id": "footer.links.instagram", "type": "text", "editKind": "text", "content": "Instagram", "contentRole": "label", "typography": { "fontSize": 13, "fontWeight": "600" } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,290 @@
+{
+  "version": "1",
+  "root": {
+    "id": "page",
+    "type": "section",
+    "editKind": "structure",
+    "color": { "backgroundColor": "#fafaf9", "textColor": "#18181b" },
+    "spacing": { "paddingTop": 0, "paddingBottom": 0, "paddingLeft": 0, "paddingRight": 0, "gap": 0 },
+    "children": [
+      {
+        "id": "page.banner",
+        "type": "section",
+        "role": "banner",
+        "editKind": "structure",
+        "layout": { "direction": "row", "justify": "between", "align": "center" },
+        "spacing": { "paddingTop": 32, "paddingBottom": 32, "paddingLeft": 80, "paddingRight": 80, "gap": 32 },
+        "color": { "backgroundColor": "#fafaf9" },
+        "responsive": { "mobile": "padding 24/16, nav text 축소" },
+        "children": [
+          {
+            "id": "banner.logo",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "heading-3",
+            "content": "Yuna Park",
+            "typography": { "fontSize": 18, "fontWeight": "500", "letterSpacing": -0.01, "fontFamily": "serif" },
+            "color": { "textColor": "#18181b" }
+          },
+          {
+            "id": "banner.nav",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 32 },
+            "children": [
+              { "id": "banner.nav.work", "type": "text", "editKind": "text", "content": "Work", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "400", "letterSpacing": 0.04 }, "color": { "textColor": "#52525b" } },
+              { "id": "banner.nav.about", "type": "text", "editKind": "text", "content": "About", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "400", "letterSpacing": 0.04 }, "color": { "textColor": "#52525b" } },
+              { "id": "banner.nav.contact", "type": "text", "editKind": "text", "content": "Contact", "contentRole": "label", "typography": { "fontSize": 14, "fontWeight": "400", "letterSpacing": 0.04 }, "color": { "textColor": "#52525b" } }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "page.main",
+        "type": "section",
+        "role": "main",
+        "editKind": "structure",
+        "spacing": { "gap": 0 },
+        "children": [
+          {
+            "id": "hero",
+            "type": "hero",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "start" },
+            "spacing": { "paddingTop": 160, "paddingBottom": 120, "paddingLeft": 80, "paddingRight": 80, "gap": 40 },
+            "color": { "backgroundColor": "#fafaf9" },
+            "children": [
+              {
+                "id": "hero.eyebrow",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "caption",
+                "content": "Independent designer & art director",
+                "typography": { "fontSize": 14, "fontWeight": "400", "letterSpacing": 0.06 },
+                "color": { "textColor": "#71717a" }
+              },
+              {
+                "id": "hero.title",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "heading-1",
+                "content": "Crafting quiet\ndigital experiences\nsince 2017.",
+                "typography": { "fontSize": 88, "fontWeight": "400", "lineHeight": 1.05, "letterSpacing": -0.04, "fontFamily": "serif" },
+                "color": { "textColor": "#18181b" }
+              },
+              {
+                "id": "hero.meta",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "row", "align": "center" },
+                "spacing": { "gap": 32, "paddingTop": 24 },
+                "children": [
+                  { "id": "hero.meta.location", "type": "text", "editKind": "text", "content": "Seoul, KR", "typography": { "fontSize": 13, "letterSpacing": 0.04 }, "color": { "textColor": "#71717a" } },
+                  { "id": "hero.meta.dot", "type": "text", "editKind": "text", "content": "·", "typography": { "fontSize": 13 }, "color": { "textColor": "#a1a1aa" } },
+                  { "id": "hero.meta.status", "type": "text", "editKind": "text", "content": "Available — Spring 2026", "typography": { "fontSize": 13, "fontWeight": "500", "letterSpacing": 0.04 }, "color": { "textColor": "#16a34a" } }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "selected-works",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 120, "paddingLeft": 80, "paddingRight": 80, "gap": 64 },
+            "color": { "backgroundColor": "#fafaf9", "borderColor": "#e7e5e4" },
+            "shape": { "borderWidth": 1, "borderStyle": "solid" },
+            "children": [
+              {
+                "id": "selected-works.head",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "row", "align": "end", "justify": "between" },
+                "spacing": { "gap": 24 },
+                "children": [
+                  {
+                    "id": "selected-works.title",
+                    "type": "text",
+                    "editKind": "text",
+                    "emphasis": "heading-2",
+                    "content": "Selected works",
+                    "typography": { "fontSize": 36, "fontWeight": "400", "letterSpacing": -0.02, "fontFamily": "serif" },
+                    "color": { "textColor": "#18181b" }
+                  },
+                  {
+                    "id": "selected-works.label",
+                    "type": "text",
+                    "editKind": "text",
+                    "emphasis": "caption",
+                    "content": "2024 — 2025",
+                    "typography": { "fontSize": 13, "letterSpacing": 0.06 },
+                    "color": { "textColor": "#71717a" }
+                  }
+                ]
+              },
+              {
+                "id": "works.grid",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "row", "align": "stretch" },
+                "spacing": { "gap": 32 },
+                "responsive": { "mobile": "1열 stack" },
+                "children": [
+                  {
+                    "id": "works.1",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "gap": 14 },
+                    "color": { "backgroundColor": "#fafaf9" },
+                    "shape": { "radius": 0, "borderWidth": 0, "borderStyle": "none", "shadow": "none" },
+                    "children": [
+                      {
+                        "id": "works.1.image",
+                        "type": "image",
+                        "editKind": "media",
+                        "src": "https://images.unsplash.com/photo-1481349518771-20055b2a7b24?auto=format&fit=crop&w=1200&q=80",
+                        "alt": "Editorial layout — pale neutral palette, gallery grid",
+                        "aspectRatio": "portrait",
+                        "shape": { "radius": 4 }
+                      },
+                      { "id": "works.1.kicker", "type": "text", "editKind": "text", "content": "01 — Editorial", "typography": { "fontSize": 12, "letterSpacing": 0.08 }, "color": { "textColor": "#a1a1aa" } },
+                      { "id": "works.1.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "Pale Quarterly No.6", "typography": { "fontSize": 22, "fontWeight": "500", "letterSpacing": -0.01, "fontFamily": "serif" }, "color": { "textColor": "#18181b" } },
+                      { "id": "works.1.client", "type": "text", "editKind": "text", "content": "Pale Studio · 2024", "typography": { "fontSize": 13, "letterSpacing": 0.02 }, "color": { "textColor": "#71717a" } }
+                    ]
+                  },
+                  {
+                    "id": "works.2",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "gap": 14 },
+                    "color": { "backgroundColor": "#fafaf9" },
+                    "shape": { "radius": 0, "borderWidth": 0, "borderStyle": "none", "shadow": "none" },
+                    "children": [
+                      {
+                        "id": "works.2.image",
+                        "type": "image",
+                        "editKind": "media",
+                        "src": "https://images.unsplash.com/photo-1481277542470-605612bd2d61?auto=format&fit=crop&w=1200&q=80",
+                        "alt": "Brand identity for ceramic studio — soft beige textures",
+                        "aspectRatio": "portrait",
+                        "shape": { "radius": 4 }
+                      },
+                      { "id": "works.2.kicker", "type": "text", "editKind": "text", "content": "02 — Identity", "typography": { "fontSize": 12, "letterSpacing": 0.08 }, "color": { "textColor": "#a1a1aa" } },
+                      { "id": "works.2.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "Soan Ceramics", "typography": { "fontSize": 22, "fontWeight": "500", "letterSpacing": -0.01, "fontFamily": "serif" }, "color": { "textColor": "#18181b" } },
+                      { "id": "works.2.client", "type": "text", "editKind": "text", "content": "Soan · 2024", "typography": { "fontSize": 13, "letterSpacing": 0.02 }, "color": { "textColor": "#71717a" } }
+                    ]
+                  },
+                  {
+                    "id": "works.3",
+                    "type": "card",
+                    "editKind": "structure",
+                    "layout": { "direction": "column" },
+                    "spacing": { "gap": 14 },
+                    "color": { "backgroundColor": "#fafaf9" },
+                    "shape": { "radius": 0, "borderWidth": 0, "borderStyle": "none", "shadow": "none" },
+                    "children": [
+                      {
+                        "id": "works.3.image",
+                        "type": "image",
+                        "editKind": "media",
+                        "src": "https://images.unsplash.com/photo-1495465798138-718f86d1a4bc?auto=format&fit=crop&w=1200&q=80",
+                        "alt": "Architecture-led art direction for hotel — warm minimalism",
+                        "aspectRatio": "portrait",
+                        "shape": { "radius": 4 }
+                      },
+                      { "id": "works.3.kicker", "type": "text", "editKind": "text", "content": "03 — Art Direction", "typography": { "fontSize": 12, "letterSpacing": 0.08 }, "color": { "textColor": "#a1a1aa" } },
+                      { "id": "works.3.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "Hotel Onnuri", "typography": { "fontSize": 22, "fontWeight": "500", "letterSpacing": -0.01, "fontFamily": "serif" }, "color": { "textColor": "#18181b" } },
+                      { "id": "works.3.client", "type": "text", "editKind": "text", "content": "Onnuri · 2025", "typography": { "fontSize": 13, "letterSpacing": 0.02 }, "color": { "textColor": "#71717a" } }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "about",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "start", "justify": "between" },
+            "spacing": { "paddingTop": 120, "paddingBottom": 120, "paddingLeft": 80, "paddingRight": 80, "gap": 80 },
+            "color": { "backgroundColor": "#f5f5f4" },
+            "responsive": { "mobile": "1열 stack" },
+            "children": [
+              {
+                "id": "about.label",
+                "type": "text",
+                "editKind": "text",
+                "emphasis": "caption",
+                "content": "About",
+                "typography": { "fontSize": 13, "letterSpacing": 0.08 },
+                "color": { "textColor": "#71717a" }
+              },
+              {
+                "id": "about.body",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 24 },
+                "children": [
+                  {
+                    "id": "about.lead",
+                    "type": "text",
+                    "editKind": "text",
+                    "emphasis": "heading-2",
+                    "content": "I work with cultural studios, ceramic ateliers, and quiet hospitality brands — translating careful materials into careful screens.",
+                    "typography": { "fontSize": 28, "fontWeight": "400", "lineHeight": 1.4, "letterSpacing": -0.01, "fontFamily": "serif" },
+                    "color": { "textColor": "#18181b" }
+                  },
+                  {
+                    "id": "about.body.text",
+                    "type": "text",
+                    "editKind": "text",
+                    "emphasis": "body",
+                    "content": "Eight years between Seoul and Lisbon. Background in editorial, now mostly art direction for digital. Currently taking on two retainers + one identity per quarter.",
+                    "typography": { "fontSize": 15, "lineHeight": 1.7 },
+                    "color": { "textColor": "#52525b" }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "page.footer",
+        "type": "section",
+        "role": "contentinfo",
+        "editKind": "structure",
+        "layout": { "direction": "row", "align": "center", "justify": "between" },
+        "spacing": { "paddingTop": 48, "paddingBottom": 48, "paddingLeft": 80, "paddingRight": 80, "gap": 32 },
+        "color": { "backgroundColor": "#fafaf9", "borderColor": "#e7e5e4" },
+        "shape": { "borderWidth": 1, "borderStyle": "solid" },
+        "children": [
+          {
+            "id": "footer.copy",
+            "type": "text",
+            "editKind": "text",
+            "emphasis": "caption",
+            "content": "© 2026 Yuna Park · All works on commission",
+            "typography": { "fontSize": 12, "letterSpacing": 0.04 },
+            "color": { "textColor": "#71717a" }
+          },
+          {
+            "id": "footer.links",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "row", "align": "center" },
+            "spacing": { "gap": 24 },
+            "children": [
+              { "id": "footer.links.email", "type": "text", "editKind": "text", "content": "hello@yuna.studio", "contentRole": "label", "typography": { "fontSize": 12, "fontWeight": "500", "letterSpacing": 0.04 }, "color": { "textColor": "#18181b" } },
+              { "id": "footer.links.instagram", "type": "text", "editKind": "text", "content": "Instagram", "contentRole": "label", "typography": { "fontSize": 12, "letterSpacing": 0.04 }, "color": { "textColor": "#71717a" } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
