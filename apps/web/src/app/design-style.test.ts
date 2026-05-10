@@ -8,12 +8,26 @@ import {
   GRADIENT_DIRECTION_CSS,
   SHADOW_VALUES,
   customShadowToCss,
+  getAccentBackgroundStyle,
+  getAccentTextColorStyle,
+  getActiveBackgroundStyle,
+  getActiveTextStyle,
   getBoxSpacingStyle,
+  getColorStyle,
   getContainerSpacingStyle,
+  getDisabledBackgroundStyle,
+  getDisabledTextStyle,
+  getFocusBackgroundStyle,
+  getFocusTextStyle,
   getGapSpacingStyle,
+  getHoverBackgroundStyle,
+  getHoverTextStyle,
   getLayoutStyle,
   getResolvedCornerRadius,
   getShapeStyle,
+  getTextColorStyle,
+  getTransformStyle,
+  getTransitionStyle,
   gradientToCss,
   hasCornerRadiusOverride,
   hasLayoutOverride,
@@ -335,5 +349,271 @@ describe('gradientToCss', () => {
       css,
       'linear-gradient(to bottom right, rgba(0,0,0,0.5), rgba(255,255,255,0.8))',
     )
+  })
+})
+
+describe('getColorStyle', () => {
+  it('빈 color → undefined', () => {
+    assert.equal(getColorStyle(undefined), undefined)
+    assert.equal(getColorStyle({}), undefined)
+  })
+
+  it('backgroundColor + opacity → bg + rgba', () => {
+    const style = getColorStyle({
+      backgroundColor: '#ff0000',
+      backgroundOpacity: 0.5,
+    })
+    assert.equal(style?.backgroundColor, 'rgba(255,0,0,0.5)')
+  })
+
+  it('backgroundGradient가 backgroundColor보다 우선 (gradient 있을 때 bg 무시)', () => {
+    const style = getColorStyle({
+      backgroundColor: '#ff0000',
+      backgroundGradient: {
+        type: 'linear',
+        from: '#000000',
+        to: '#ffffff',
+        direction: 'to-right',
+      },
+    })
+    assert.equal(style?.backgroundImage, 'linear-gradient(to right, #000000, #ffffff)')
+    assert.equal(style?.backgroundColor, undefined)
+  })
+
+  it('textColor 명시 → color 적용', () => {
+    const style = getColorStyle({ textColor: '#abcdef', textOpacity: 0.5 })
+    assert.equal(style?.color, 'rgba(171,205,239,0.5)')
+  })
+
+  it('inheritedTextColor — 명시 없을 때 부모 색 상속', () => {
+    const style = getColorStyle({}, '#aabbcc')
+    assert.equal(style?.color, '#aabbcc')
+  })
+
+  it('inheritedTextColor — 명시 textColor가 우선', () => {
+    const style = getColorStyle({ textColor: '#111111' }, '#aabbcc')
+    assert.equal(style?.color, '#111111')
+  })
+})
+
+describe('getAccentBackgroundStyle', () => {
+  it('accentColor 없음 → undefined', () => {
+    assert.equal(getAccentBackgroundStyle({}), undefined)
+    assert.equal(getAccentBackgroundStyle(undefined), undefined)
+  })
+
+  it('accentColor + opacity → backgroundColor rgba', () => {
+    const style = getAccentBackgroundStyle({
+      accentColor: '#ff0000',
+      accentOpacity: 0.5,
+    })
+    assert.equal(style?.backgroundColor, 'rgba(255,0,0,0.5)')
+  })
+})
+
+describe('getAccentTextColorStyle', () => {
+  it('accentColor 없음 → undefined', () => {
+    assert.equal(getAccentTextColorStyle({}), undefined)
+  })
+
+  it('accentColor + opacity → color rgba', () => {
+    const style = getAccentTextColorStyle({
+      accentColor: '#00ff00',
+      accentOpacity: 0.7,
+    })
+    assert.equal(style?.color, 'rgba(0,255,0,0.7)')
+  })
+})
+
+describe('getTextColorStyle', () => {
+  it('빈 → undefined', () => {
+    assert.equal(getTextColorStyle(undefined), undefined)
+    assert.equal(getTextColorStyle(''), undefined)
+  })
+
+  it('값 있으면 { color: value } (opacity 적용 X — 단순 lookup)', () => {
+    assert.deepEqual(getTextColorStyle('#abc'), { color: '#abc' })
+  })
+})
+
+describe('state color helpers (hover/active/focus/disabled × bg/text = 8개)', () => {
+  it('hover background → CSS var', () => {
+    const style = getHoverBackgroundStyle({ hoverBackgroundColor: '#ff0000' })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-hover-bg'],
+      '#ff0000',
+    )
+  })
+
+  it('hover text → CSS var', () => {
+    const style = getHoverTextStyle({ hoverTextColor: '#00ff00' })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-hover-text'],
+      '#00ff00',
+    )
+  })
+
+  it('active background → CSS var', () => {
+    const style = getActiveBackgroundStyle({ activeBackgroundColor: '#ff00ff' })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-active-bg'],
+      '#ff00ff',
+    )
+  })
+
+  it('active text → CSS var', () => {
+    const style = getActiveTextStyle({ activeTextColor: '#ffff00' })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-active-text'],
+      '#ffff00',
+    )
+  })
+
+  it('focus background → CSS var', () => {
+    const style = getFocusBackgroundStyle({ focusBackgroundColor: '#00ffff' })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-focus-bg'],
+      '#00ffff',
+    )
+  })
+
+  it('focus text → CSS var', () => {
+    const style = getFocusTextStyle({ focusTextColor: '#0000ff' })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-focus-text'],
+      '#0000ff',
+    )
+  })
+
+  it('disabled background → CSS var', () => {
+    const style = getDisabledBackgroundStyle({
+      disabledBackgroundColor: '#888888',
+    })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-disabled-bg'],
+      '#888888',
+    )
+  })
+
+  it('disabled text → CSS var', () => {
+    const style = getDisabledTextStyle({ disabledTextColor: '#cccccc' })
+    assert.equal(
+      (style as Record<string, unknown>)?.['--dw-disabled-text'],
+      '#cccccc',
+    )
+  })
+
+  it('빈 color → 모두 undefined', () => {
+    assert.equal(getHoverBackgroundStyle({}), undefined)
+    assert.equal(getHoverTextStyle({}), undefined)
+    assert.equal(getActiveBackgroundStyle({}), undefined)
+    assert.equal(getActiveTextStyle({}), undefined)
+    assert.equal(getFocusBackgroundStyle({}), undefined)
+    assert.equal(getFocusTextStyle({}), undefined)
+    assert.equal(getDisabledBackgroundStyle({}), undefined)
+    assert.equal(getDisabledTextStyle({}), undefined)
+  })
+})
+
+describe('getTransformStyle', () => {
+  it('undefined → undefined', () => {
+    assert.equal(getTransformStyle(undefined), undefined)
+  })
+
+  it('빈 객체 → undefined (아무 transform도 없으면)', () => {
+    assert.equal(getTransformStyle({}), undefined)
+  })
+
+  it('translate/rotate/scale 명시 → CSS transform 문자열 (정해진 순서)', () => {
+    const style = getTransformStyle({
+      translateX: 10,
+      translateY: 20,
+      rotate: 45,
+      scale: 1.5,
+    })
+    // perspective → translateX → translateY → rotate → scale → skew → rotate3d 순서
+    assert.equal(
+      style?.transform,
+      'translateX(10px) translateY(20px) rotate(45deg) scale(1.5)',
+    )
+  })
+
+  it('perspective는 가장 먼저 (3D 변환)', () => {
+    const style = getTransformStyle({
+      perspective: 800,
+      rotateX: 30,
+      translateX: 5,
+    })
+    assert.equal(
+      style?.transform,
+      'perspective(800px) translateX(5px) rotateX(30deg)',
+    )
+  })
+
+  it('skew + rotate3d', () => {
+    const style = getTransformStyle({
+      skewX: 5,
+      skewY: 10,
+      rotateX: 15,
+      rotateY: 20,
+    })
+    assert.equal(
+      style?.transform,
+      'skewX(5deg) skewY(10deg) rotateX(15deg) rotateY(20deg)',
+    )
+  })
+
+  it('originX/Y 명시 → transformOrigin', () => {
+    const style = getTransformStyle({ originX: 25, originY: 75 })
+    assert.equal(style?.transformOrigin, '25% 75%')
+  })
+
+  it('originX만 있고 originY 없으면 50% default', () => {
+    const style = getTransformStyle({ originX: 25 })
+    assert.equal(style?.transformOrigin, '25% 50%')
+  })
+
+  it('transform 부분 + origin 모두 결과 객체에', () => {
+    const style = getTransformStyle({
+      translateX: 10,
+      originX: 50,
+      originY: 50,
+    })
+    assert.equal(style?.transform, 'translateX(10px)')
+    assert.equal(style?.transformOrigin, '50% 50%')
+  })
+})
+
+describe('getTransitionStyle', () => {
+  it('undefined → undefined', () => {
+    assert.equal(getTransitionStyle(undefined), undefined)
+  })
+
+  it('빈 객체 → undefined (duration도 timing도 없으면)', () => {
+    assert.equal(getTransitionStyle({}), undefined)
+  })
+
+  it('duration → transitionDuration ms', () => {
+    const style = getTransitionStyle({ duration: 200 })
+    assert.equal(style?.transitionDuration, '200ms')
+  })
+
+  it('preset timing → transitionTimingFunction (CSS name 그대로)', () => {
+    const style = getTransitionStyle({ duration: 100, timing: 'ease-in-out' })
+    assert.equal(style?.transitionTimingFunction, 'ease-in-out')
+  })
+
+  it('custom timing + cubicBezier → cubic-bezier()', () => {
+    const style = getTransitionStyle({
+      duration: 100,
+      timing: 'custom',
+      cubicBezier: { x1: 0.4, y1: 0, x2: 0.2, y2: 1 },
+    })
+    assert.equal(style?.transitionTimingFunction, 'cubic-bezier(0.4, 0, 0.2, 1)')
+  })
+
+  it('custom timing + cubicBezier 없으면 ease로 fallback', () => {
+    const style = getTransitionStyle({ duration: 100, timing: 'custom' })
+    assert.equal(style?.transitionTimingFunction, 'ease')
   })
 })
