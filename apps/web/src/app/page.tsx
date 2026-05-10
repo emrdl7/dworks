@@ -6302,6 +6302,41 @@ function SelectableNode({
           meta: event.metaKey || event.ctrlKey,
         })
       }}
+      onDoubleClick={(event) => {
+        // 텍스트/버튼/이미지: 더블클릭 → 인스펙터의 콘텐츠 input/textarea로 focus 이동
+        // 사용자가 캔버스에서 직접 편집하는 mental model
+        event.stopPropagation()
+        if (selectionCtx.isPanActive) return
+        if (
+          node.type !== 'text' &&
+          node.type !== 'button' &&
+          node.type !== 'image'
+        )
+          return
+        // 1) 노드 선택 (보통 이미 선택됨)
+        onSelect(node.id)
+        // 2) 다음 frame에서 콘텐츠 input 찾아 focus + select
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const aside = document.querySelector<HTMLElement>(
+              'aside[aria-label="속성 패널"]',
+            )
+            if (!aside) return
+            const target =
+              aside.querySelector<HTMLTextAreaElement | HTMLInputElement>(
+                'details[open] textarea, details[open] input[type="text"]',
+              ) ?? aside.querySelector<HTMLTextAreaElement>('textarea')
+            if (target) {
+              target.focus()
+              if (target instanceof HTMLTextAreaElement) {
+                target.select()
+              } else if (target instanceof HTMLInputElement) {
+                target.select()
+              }
+            }
+          })
+        })
+      }}
       onKeyDown={handleKeyDown}
     >
       {isPrimary ? (
