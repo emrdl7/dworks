@@ -794,6 +794,11 @@ export default function HomePage() {
     width: number
     height: number
   } | null>(null)
+  // 캔버스 hover cursor 좌표 (canvas 내부 기준 logical px)
+  const [canvasCursor, setCanvasCursor] = useState<{
+    x: number
+    y: number
+  } | null>(null)
   // 캔버스 렌더링 default 값(Tailwind class에서 오는 padding/gap/color/font 등)을
   // inspector placeholder로 노출하기 위한 effective style. tree props가 비어있어도
   // 사용자가 _현재 렌더되고 있는 값_을 즉시 확인 가능 (Codex P1 회신).
@@ -4499,6 +4504,19 @@ export default function HomePage() {
                 scrollTop: el.scrollTop,
               }
             }}
+            onMouseMove={(event) => {
+              if (compareMode) return
+              const el = canvasScrollRef.current
+              if (!el) return
+              // logical 좌표 = (canvas 안 픽셀 / canvasZoom)
+              const rect = el.getBoundingClientRect()
+              const z = canvasZoom > 0 ? canvasZoom : 1
+              setCanvasCursor({
+                x: Math.round((event.clientX - rect.left + el.scrollLeft) / z),
+                y: Math.round((event.clientY - rect.top + el.scrollTop) / z),
+              })
+            }}
+            onMouseLeave={() => setCanvasCursor(null)}
             onClick={(event) => {
               // 패닝 중이면 클릭 무시 (드래그 끝난 mouseup이 click을 발생시킬 수 있음)
               if (isPanning || isSpacePressed) return
@@ -4645,6 +4663,17 @@ export default function HomePage() {
                   <>
                     <span aria-hidden="true">·</span>
                     <span className="tabular-nums">grid {canvasGridSize}px</span>
+                  </>
+                ) : null}
+                {canvasCursor !== null ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span
+                      className="hidden tabular-nums sm:inline"
+                      title="cursor 좌표 (logical px, zoom 무관)"
+                    >
+                      {canvasCursor.x},{canvasCursor.y}
+                    </span>
                   </>
                 ) : null}
                 {isSpacePressed ? (
