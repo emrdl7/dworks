@@ -922,6 +922,31 @@ export default function HomePage() {
     row?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [selectedNodeId, tree.root.id, leftPanelTab])
 
+  // 캔버스 자동 reveal — 선택 노드가 캔버스 viewport 밖이면 부드럽게 스크롤.
+  // 단, panning/zoom 중에는 사용자 의도 존중 + 직접 scroll 보정 우선이라 skip.
+  useEffect(() => {
+    if (selectedNodeId === '' || selectedNodeId === tree.root.id) return
+    if (isPanning || pendingZoomAnchorRef.current || pendingDirectScrollRef.current)
+      return
+    const wrapper = document.querySelector<HTMLElement>(
+      `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
+    )
+    if (!wrapper) return
+    const container = canvasScrollRef.current
+    if (!container) return
+    // 노드가 viewport 밖에 있을 때만 scroll (이미 보이면 jitter 방지)
+    const wRect = wrapper.getBoundingClientRect()
+    const cRect = container.getBoundingClientRect()
+    const margin = 40 // 가장자리 padding
+    const fullyVisible =
+      wRect.top >= cRect.top + margin &&
+      wRect.bottom <= cRect.bottom - margin &&
+      wRect.left >= cRect.left + margin &&
+      wRect.right <= cRect.right - margin
+    if (fullyVisible) return
+    wrapper.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+  }, [selectedNodeId, tree, isPanning])
+
   // 선택 노드의 effective canvas style 측정 — Tailwind/CSS class에서 오는 default 값
   useEffect(() => {
     function measureEffective(): void {
