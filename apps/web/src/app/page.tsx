@@ -4751,7 +4751,7 @@ export default function HomePage() {
         <aside
           aria-label="속성 패널"
           aria-hidden={!inspectorDrawerOpen}
-          className={`fixed bottom-0 right-0 top-14 z-40 block min-h-0 w-[360px] overflow-hidden border-l border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out xl:relative xl:z-auto xl:block xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
+          className={`fixed bottom-0 right-0 top-14 z-40 flex min-h-0 w-[360px] flex-col overflow-hidden border-l border-[#2a2e35] bg-[#16181c] shadow-xl transition-transform duration-200 ease-out xl:relative xl:z-auto xl:flex xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
             inspectorDrawerOpen
               ? 'translate-x-0'
               : 'translate-x-full xl:translate-x-0'
@@ -6809,7 +6809,7 @@ function NodeInspector({
 
   const NodeTypeIcon = nodeTypeIcons[node.type]
   return (
-    <section className="flex h-full min-h-0 flex-col">
+    <section className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0 border-b border-[#2a2e35] px-4 pb-0 pt-4">
         <div className="flex items-center justify-between gap-3 px-0">
           <div className="flex min-w-0 items-center gap-2">
