@@ -188,12 +188,25 @@ import {
   rgbToHex,
 } from './style-utils'
 import {
+  getAccentBackgroundStyle,
+  getAccentTextColorStyle,
+  getActiveBackgroundStyle,
+  getActiveTextStyle,
   getBoxSpacingStyle,
+  getColorStyle,
   getContainerSpacingStyle,
+  getDisabledBackgroundStyle,
+  getDisabledTextStyle,
+  getFocusBackgroundStyle,
+  getFocusTextStyle,
   getGapSpacingStyle,
+  getHoverBackgroundStyle,
+  getHoverTextStyle,
   getLayoutStyle,
   getResolvedCornerRadius,
   getShapeStyle,
+  getTextColorStyle,
+  gradientToCss,
   hasCornerRadiusOverride,
   hasLayoutOverride,
 } from './design-style'
@@ -687,16 +700,6 @@ const DEFAULT_TEXT_SHADOW: TextShadow = {
 }
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const HISTORY_MERGE_WINDOW_MS = 600
-const GRADIENT_DIRECTION_CSS: Record<GradientDirection, string> = {
-  'to-top': 'to top',
-  'to-top-right': 'to top right',
-  'to-right': 'to right',
-  'to-bottom-right': 'to bottom right',
-  'to-bottom': 'to bottom',
-  'to-bottom-left': 'to bottom left',
-  'to-left': 'to left',
-  'to-top-left': 'to top left',
-}
 
 const MAX_HISTORY = 100
 
@@ -6475,119 +6478,6 @@ function highlightSearchMatch(text: string, query: string): ReactNode {
 }
 
 
-function getColorStyle(
-  color?: NodeColor,
-  inheritedTextColor?: string,
-): CSSProperties | undefined {
-  const effectiveTextColor =
-    color?.textColor !== undefined || inheritedTextColor !== undefined
-      ? getCssColorWithOpacity(
-          color?.textColor ?? inheritedTextColor ?? '',
-          color?.textOpacity,
-        )
-      : undefined
-  const style: CSSProperties = {
-    ...(color?.backgroundGradient !== undefined
-      ? { backgroundImage: gradientToCss(color.backgroundGradient) }
-      : {}),
-    ...(color?.backgroundGradient === undefined &&
-    color?.backgroundColor !== undefined
-      ? {
-          backgroundColor: getCssColorWithOpacity(
-            color.backgroundColor,
-            color.backgroundOpacity,
-          ),
-        }
-      : {}),
-    ...(effectiveTextColor !== undefined ? { color: effectiveTextColor } : {}),
-  }
-
-  return Object.keys(style).length > 0 ? style : undefined
-}
-
-function getAccentBackgroundStyle(color?: NodeColor): CSSProperties | undefined {
-  return color?.accentColor === undefined
-    ? undefined
-    : {
-        backgroundColor: getCssColorWithOpacity(
-          color.accentColor,
-          color.accentOpacity,
-        ),
-      }
-}
-
-function getHoverBackgroundStyle(color?: NodeColor): CSSProperties | undefined {
-  return color?.hoverBackgroundColor === undefined
-    ? undefined
-    : ({
-        '--dw-hover-bg': getCssColorWithOpacity(color.hoverBackgroundColor),
-      } as CSSProperties)
-}
-
-function getHoverTextStyle(color?: NodeColor): CSSProperties | undefined {
-  return color?.hoverTextColor === undefined
-    ? undefined
-    : ({
-        '--dw-hover-text': getCssColorWithOpacity(color.hoverTextColor),
-      } as CSSProperties)
-}
-
-function getActiveBackgroundStyle(
-  color?: NodeColor,
-): CSSProperties | undefined {
-  return color?.activeBackgroundColor === undefined
-    ? undefined
-    : ({
-        '--dw-active-bg': getCssColorWithOpacity(color.activeBackgroundColor),
-      } as CSSProperties)
-}
-
-function getActiveTextStyle(color?: NodeColor): CSSProperties | undefined {
-  return color?.activeTextColor === undefined
-    ? undefined
-    : ({
-        '--dw-active-text': getCssColorWithOpacity(color.activeTextColor),
-      } as CSSProperties)
-}
-
-function getFocusBackgroundStyle(
-  color?: NodeColor,
-): CSSProperties | undefined {
-  return color?.focusBackgroundColor === undefined
-    ? undefined
-    : ({
-        '--dw-focus-bg': getCssColorWithOpacity(color.focusBackgroundColor),
-      } as CSSProperties)
-}
-
-function getFocusTextStyle(color?: NodeColor): CSSProperties | undefined {
-  return color?.focusTextColor === undefined
-    ? undefined
-    : ({
-        '--dw-focus-text': getCssColorWithOpacity(color.focusTextColor),
-      } as CSSProperties)
-}
-
-function getDisabledBackgroundStyle(
-  color?: NodeColor,
-): CSSProperties | undefined {
-  return color?.disabledBackgroundColor === undefined
-    ? undefined
-    : ({
-        '--dw-disabled-bg': getCssColorWithOpacity(
-          color.disabledBackgroundColor,
-        ),
-      } as CSSProperties)
-}
-
-function getDisabledTextStyle(color?: NodeColor): CSSProperties | undefined {
-  return color?.disabledTextColor === undefined
-    ? undefined
-    : ({
-        '--dw-disabled-text': getCssColorWithOpacity(color.disabledTextColor),
-      } as CSSProperties)
-}
-
 function NodeTransformInput({
   label,
   max,
@@ -6818,18 +6708,6 @@ function getTransitionStyle(
     style.transitionTimingFunction = transition.timing
   }
   return Object.keys(style).length === 0 ? undefined : style
-}
-
-function getAccentTextColorStyle(color?: NodeColor): CSSProperties | undefined {
-  return color?.accentColor === undefined
-    ? undefined
-    : {
-        color: getCssColorWithOpacity(color.accentColor, color.accentOpacity),
-      }
-}
-
-function getTextColorStyle(textColor?: string): CSSProperties | undefined {
-  return textColor ? { color: textColor } : undefined
 }
 
 interface RegisteredFontGroup {
@@ -12787,24 +12665,6 @@ function getGradientWithPatch(
   }
 
   return next
-}
-
-function gradientToCss(gradient: Gradient): string {
-  const from = getCssColorWithOpacity(gradient.from, gradient.fromOpacity)
-  const to = getCssColorWithOpacity(gradient.to, gradient.toOpacity)
-
-  if (gradient.type === 'radial') {
-    return `radial-gradient(circle, ${from}, ${to})`
-  }
-
-  if (gradient.type === 'conic') {
-    const angle = gradient.conicFromAngle ?? 0
-    const x = gradient.conicCenterX ?? 50
-    const y = gradient.conicCenterY ?? 50
-    return `conic-gradient(from ${angle}deg at ${x}% ${y}%, ${from}, ${to})`
-  }
-
-  return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${from}, ${to})`
 }
 
 

@@ -8,8 +8,11 @@ import type { CSSProperties } from 'react'
 
 import type {
   CustomShadow,
+  Gradient,
+  GradientDirection,
   LayoutAlign,
   LayoutJustify,
+  NodeColor,
   NodeLayout,
   Shape,
   ShadowPreset,
@@ -229,4 +232,175 @@ export function getLayoutStyle(
   }
 
   return style
+}
+
+// gradient direction enum → CSS linear-gradient 표현.
+export const GRADIENT_DIRECTION_CSS: Record<GradientDirection, string> = {
+  'to-top': 'to top',
+  'to-top-right': 'to top right',
+  'to-right': 'to right',
+  'to-bottom-right': 'to bottom right',
+  'to-bottom': 'to bottom',
+  'to-bottom-left': 'to bottom left',
+  'to-left': 'to left',
+  'to-top-left': 'to top left',
+}
+
+export function gradientToCss(gradient: Gradient): string {
+  const from = getCssColorWithOpacity(gradient.from, gradient.fromOpacity)
+  const to = getCssColorWithOpacity(gradient.to, gradient.toOpacity)
+
+  if (gradient.type === 'radial') {
+    return `radial-gradient(circle, ${from}, ${to})`
+  }
+
+  if (gradient.type === 'conic') {
+    const angle = gradient.conicFromAngle ?? 0
+    const x = gradient.conicCenterX ?? 50
+    const y = gradient.conicCenterY ?? 50
+    return `conic-gradient(from ${angle}deg at ${x}% ${y}%, ${from}, ${to})`
+  }
+
+  return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${from}, ${to})`
+}
+
+export function getColorStyle(
+  color?: NodeColor,
+  inheritedTextColor?: string,
+): CSSProperties | undefined {
+  const effectiveTextColor =
+    color?.textColor !== undefined || inheritedTextColor !== undefined
+      ? getCssColorWithOpacity(
+          color?.textColor ?? inheritedTextColor ?? '',
+          color?.textOpacity,
+        )
+      : undefined
+  const style: CSSProperties = {
+    ...(color?.backgroundGradient !== undefined
+      ? { backgroundImage: gradientToCss(color.backgroundGradient) }
+      : {}),
+    ...(color?.backgroundGradient === undefined &&
+    color?.backgroundColor !== undefined
+      ? {
+          backgroundColor: getCssColorWithOpacity(
+            color.backgroundColor,
+            color.backgroundOpacity,
+          ),
+        }
+      : {}),
+    ...(effectiveTextColor !== undefined ? { color: effectiveTextColor } : {}),
+  }
+
+  return Object.keys(style).length > 0 ? style : undefined
+}
+
+export function getAccentBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.accentColor === undefined
+    ? undefined
+    : {
+        backgroundColor: getCssColorWithOpacity(
+          color.accentColor,
+          color.accentOpacity,
+        ),
+      }
+}
+
+export function getAccentTextColorStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.accentColor === undefined
+    ? undefined
+    : {
+        color: getCssColorWithOpacity(color.accentColor, color.accentOpacity),
+      }
+}
+
+export function getTextColorStyle(
+  textColor?: string,
+): CSSProperties | undefined {
+  return textColor ? { color: textColor } : undefined
+}
+
+export function getHoverBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.hoverBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-hover-bg': getCssColorWithOpacity(color.hoverBackgroundColor),
+      } as CSSProperties)
+}
+
+export function getHoverTextStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.hoverTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-hover-text': getCssColorWithOpacity(color.hoverTextColor),
+      } as CSSProperties)
+}
+
+export function getActiveBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.activeBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-active-bg': getCssColorWithOpacity(color.activeBackgroundColor),
+      } as CSSProperties)
+}
+
+export function getActiveTextStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.activeTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-active-text': getCssColorWithOpacity(color.activeTextColor),
+      } as CSSProperties)
+}
+
+export function getFocusBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.focusBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-focus-bg': getCssColorWithOpacity(color.focusBackgroundColor),
+      } as CSSProperties)
+}
+
+export function getFocusTextStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.focusTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-focus-text': getCssColorWithOpacity(color.focusTextColor),
+      } as CSSProperties)
+}
+
+export function getDisabledBackgroundStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.disabledBackgroundColor === undefined
+    ? undefined
+    : ({
+        '--dw-disabled-bg': getCssColorWithOpacity(
+          color.disabledBackgroundColor,
+        ),
+      } as CSSProperties)
+}
+
+export function getDisabledTextStyle(
+  color?: NodeColor,
+): CSSProperties | undefined {
+  return color?.disabledTextColor === undefined
+    ? undefined
+    : ({
+        '--dw-disabled-text': getCssColorWithOpacity(color.disabledTextColor),
+      } as CSSProperties)
 }
