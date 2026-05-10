@@ -182,6 +182,7 @@ import {
 import { extractDominantColors, pickAspectRatio } from './image-color'
 import {
   resolveLayout,
+  resolveShape,
   resolveSpacing,
   resolveTypography,
   type ResolvedLayout,
@@ -4703,22 +4704,24 @@ export default function HomePage() {
                 }}
               >
                 <CanvasViewportContext.Provider value={responsiveViewport}>
-                  <CanvasToolbarContext.Provider
-                    value={{
-                      selectedNodeId,
-                      selectedStructureInfo,
-                      onMoveUp: () => handleMoveSelected('up'),
-                      onMoveDown: () => handleMoveSelected('down'),
-                      onDuplicate: handleDuplicateSelected,
-                      onDelete: handleDeleteSelected,
-                    }}
-                  >
-                    <CanvasNode
-                      node={tree.root}
-                      selectedNodeId={selectedNodeId}
-                      onSelect={setSelectedNodeId}
-                    />
-                  </CanvasToolbarContext.Provider>
+                  <CanvasColorPresetContext.Provider value={colorPreset}>
+                    <CanvasToolbarContext.Provider
+                      value={{
+                        selectedNodeId,
+                        selectedStructureInfo,
+                        onMoveUp: () => handleMoveSelected('up'),
+                        onMoveDown: () => handleMoveSelected('down'),
+                        onDuplicate: handleDuplicateSelected,
+                        onDelete: handleDeleteSelected,
+                      }}
+                    >
+                      <CanvasNode
+                        node={tree.root}
+                        selectedNodeId={selectedNodeId}
+                        onSelect={setSelectedNodeId}
+                      />
+                    </CanvasToolbarContext.Provider>
+                  </CanvasColorPresetContext.Provider>
                 </CanvasViewportContext.Provider>
               </div>
             </div>
@@ -5723,6 +5726,8 @@ function getContextMenuItems(menu: HTMLDivElement | null): HTMLButtonElement[] {
 
 const CanvasReadOnlyContext = createContext(false)
 const CanvasViewportContext = createContext<ResponsiveViewport>('desktop')
+// design-resolver가 token slot → hex 변환에 필요. 'mint'는 globals.css의 default fallback.
+const CanvasColorPresetContext = createContext<ColorPreset>('mint')
 
 interface CanvasHoverContextValue {
   hoveredNodeId: string | null
@@ -5764,20 +5769,23 @@ function CanvasNode({
   onSelect,
 }: CanvasNodeProps) {
   const viewport = useContext(CanvasViewportContext)
+  const colorPreset = useContext(CanvasColorPresetContext)
 
   if (node.hidden === true) {
     return null
   }
 
-  // Phase 3-1: design-resolver 사용 — explicit + canvas-defaults + responsive 보정 합본.
-  // 결과 spacing/layout은 type default까지 포함해 다음 단계(className에서 default 빼기) 안전망.
-  // 현재 캔버스 className에 박힌 default와 _이중_으로 적용되지만 값 일치라 시각 회귀 없음.
-  const resolvedSpacing = resolveSpacing(node, { viewport }).value
-  const resolvedLayout = resolveLayout(node, { viewport }).value
+  // design-resolver 사용 — explicit + canvas-defaults + responsive 보정 합본.
+  // 결과는 type default까지 포함해 캔버스 className에서 default를 뺀 후에도
+  // 시각 결과 동일.
+  const ctx = { viewport, colorPreset }
+  const resolvedSpacing = resolveSpacing(node, ctx).value
+  const resolvedLayout = resolveLayout(node, ctx).value
+  const resolvedShape = resolveShape(node, ctx).value
   const boxSpacingStyle = getBoxSpacingStyle(resolvedSpacing)
   const gapSpacingStyle = getGapSpacingStyle(resolvedSpacing)
   const containerSpacingStyle = getContainerSpacingStyle(resolvedSpacing)
-  const shapeStyle = getShapeStyle(node.shape)
+  const shapeStyle = getShapeStyle(resolvedShape)
   const colorStyle = getColorStyle(node.color, inheritedTextColor)
   const accentBackgroundStyle = getAccentBackgroundStyle(node.color)
   const accentTextColorStyle = getAccentTextColorStyle(node.color)
@@ -5974,8 +5982,11 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <article
-            // Phase 3-2: p-5 제거 — resolver default(padding=20)가 boxStyle로 적용
-            className="h-full rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] shadow-sm"
+            // Phase 3-2: shape token(rounded-lg/border/shadow-sm) 제거 — resolveShape이
+            // radius=8/borderWidth=1/borderStyle=solid/borderColor(token→hex)/shadow=sm을
+            // boxStyle로 산출. backgroundColor token(bg-[var(--dw-surface-muted)])은
+            // 후속 color token 마이그레이션 단계에서 제거.
+            className="h-full bg-[var(--dw-surface-muted)]"
             style={boxStyle}
           >
             {/* gap-3 제거 — resolver default(gap=12)가 childLayoutStyle로 적용 */}
@@ -6019,9 +6030,9 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <form
-            // Phase 3-2: p-8 gap-5 제거 — resolver default(padding=32, gap=20)가 style로 적용
-            // border/bg는 token이라 className 유지 (color/shape resolver token 마이그레이션은 후속)
-            className="mx-auto flex max-w-[520px] flex-col rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface-muted)] shadow-sm"
+            // Phase 3-2: padding/gap + shape token 제거 — resolver가 모두 처리.
+            // backgroundColor token(bg-...)은 후속 color token 마이그레이션
+            className="mx-auto flex max-w-[520px] flex-col bg-[var(--dw-surface-muted)]"
             style={mergeStyles(containerStyle, childLayoutStyle)}
           >
             {node.children.map((child) => (

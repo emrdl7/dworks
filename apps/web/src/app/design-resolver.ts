@@ -260,13 +260,20 @@ const SHAPE_KEYS: ShapeKey[] = [
   'customShadows',
 ]
 
-export function resolveShape(node: TreeNode): ResolvedShape {
+export function resolveShape(
+  node: TreeNode,
+  context?: ResolveContext,
+): ResolvedShape {
   const defaults = DEFAULT_SHAPE_BY_TYPE[node.type] ?? {}
   const explicit = node.shape ?? {}
+  const tokenSlots = DEFAULT_COLOR_TOKENS_BY_TYPE[node.type] ?? {}
+  const tokens = context?.colorPreset
+    ? COLOR_PRESETS[context.colorPreset]
+    : undefined
   const value: Shape = {}
   const sources: Partial<Record<ShapeKey, NodeDesignSource>> = {}
 
-  function pick<K extends ShapeKey>(key: K): void {
+  function pickRegular<K extends Exclude<ShapeKey, 'borderColor'>>(key: K): void {
     const explicitValue = explicit[key]
     const defaultValue = defaults[key]
     if (explicitValue !== undefined) {
@@ -278,8 +285,21 @@ export function resolveShape(node: TreeNode): ResolvedShape {
     }
   }
 
+  // borderColor는 token 기반 — DEFAULT_COLOR_TOKENS_BY_TYPE에서 token 키를 받아
+  // colorPreset과 합쳐 hex로 변환
+  const explicitBorderColor = explicit.borderColor
+  if (explicitBorderColor !== undefined) {
+    value.borderColor = explicitBorderColor
+    sources.borderColor = 'explicit'
+  } else if (tokenSlots.borderColor !== undefined && tokens) {
+    value.borderColor = tokens[tokenSlots.borderColor]
+    sources.borderColor = 'token'
+  }
+
+  // borderColor 외 모든 shape 키 처리
   for (const key of SHAPE_KEYS) {
-    pick(key)
+    if (key === 'borderColor') continue
+    pickRegular(key as Exclude<ShapeKey, 'borderColor'>)
   }
 
   return { value, sources }

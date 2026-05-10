@@ -264,11 +264,29 @@ describe('resolveShape', () => {
     assert.equal(out.sources.borderWidth, 'default')
   })
 
-  it('borderColor는 default 없음 (token resolver 영역)', () => {
+  it('borderColor는 colorPreset 미지정 시 undefined', () => {
     const card = makeSection({ type: 'card', id: 'n-card' } as Partial<TreeNode>)
     const out = resolveShape(card)
     assert.equal(out.value.borderColor, undefined)
     assert.equal(out.sources.borderColor, undefined)
+  })
+
+  it('card는 mint preset에서 border token(#d7ddd2)을 borderColor로 resolve', () => {
+    const card = makeSection({ type: 'card', id: 'n-card' } as Partial<TreeNode>)
+    const out = resolveShape(card, { viewport: 'desktop', colorPreset: 'mint' })
+    assert.equal(out.value.borderColor, '#d7ddd2')
+    assert.equal(out.sources.borderColor, 'token')
+  })
+
+  it('explicit borderColor는 token을 덮음', () => {
+    const card = makeSection({
+      type: 'card',
+      id: 'n-card',
+      shape: { borderColor: '#123456' },
+    } as Partial<TreeNode>)
+    const out = resolveShape(card, { viewport: 'desktop', colorPreset: 'mint' })
+    assert.equal(out.value.borderColor, '#123456')
+    assert.equal(out.sources.borderColor, 'explicit')
   })
 })
 
