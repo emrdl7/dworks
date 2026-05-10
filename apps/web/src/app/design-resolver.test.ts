@@ -384,4 +384,93 @@ describe('resolveColor', () => {
     assert.equal(out.value.textColor, undefined)
     assert.equal(out.sources.textColor, undefined)
   })
+
+  // 코덱스 P1 회귀 방지 — explicit gradient/opacity/state colors가 보존되어야 한다.
+  it('explicit backgroundGradient는 resolved value에 보존', () => {
+    const hero = makeSection({
+      type: 'hero',
+      id: 'n-hero',
+      color: {
+        backgroundGradient: {
+          type: 'linear',
+          direction: 'to-bottom-right',
+          from: '#111111',
+          to: '#eeeeee',
+        },
+      },
+    } as Partial<TreeNode>)
+    const out = resolveColor(hero, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.deepEqual(out.value.backgroundGradient, {
+      type: 'linear',
+      direction: 'to-bottom-right',
+      from: '#111111',
+      to: '#eeeeee',
+    })
+  })
+
+  it('explicit backgroundOpacity / textOpacity 보존', () => {
+    const hero = makeSection({
+      type: 'hero',
+      id: 'n-hero',
+      color: { backgroundColor: '#ff0000', backgroundOpacity: 0.5, textOpacity: 0.8 },
+    } as Partial<TreeNode>)
+    const out = resolveColor(hero, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.equal(out.value.backgroundOpacity, 0.5)
+    assert.equal(out.value.textOpacity, 0.8)
+  })
+
+  it('explicit hover/active/focus/disabled state colors 보존', () => {
+    const button = makeSection({
+      type: 'button',
+      id: 'n-btn',
+      color: {
+        hoverBackgroundColor: '#abc123',
+        activeTextColor: '#def456',
+        focusBackgroundColor: '#fedcba',
+        disabledTextColor: '#789012',
+      },
+    } as Partial<TreeNode>)
+    const out = resolveColor(button, {
+      viewport: 'desktop',
+      colorPreset: 'mint',
+    })
+    assert.equal(out.value.hoverBackgroundColor, '#abc123')
+    assert.equal(out.value.activeTextColor, '#def456')
+    assert.equal(out.value.focusBackgroundColor, '#fedcba')
+    assert.equal(out.value.disabledTextColor, '#789012')
+  })
+})
+
+describe('resolveLayout — 코덱스 P1 회귀 방지', () => {
+  it('layout 명시 없는 hero는 mobile에서도 빈 layout (responsive 가짜 column 박지 않음)', () => {
+    const hero = makeSection({ type: 'hero', id: 'n-hero' } as Partial<TreeNode>)
+    const out = resolveLayout(hero, { viewport: 'mobile' })
+    // hero default layout은 빈 {}이고, explicit이 없으므로 responsive 보정도 안 됨
+    assert.equal(out.value.direction, undefined)
+    assert.equal(out.sources.direction, undefined)
+  })
+
+  it('layout 명시 없는 card도 mobile에서 빈 layout', () => {
+    const card = makeSection({ type: 'card', id: 'n-card' } as Partial<TreeNode>)
+    const out = resolveLayout(card, { viewport: 'mobile' })
+    assert.equal(out.value.direction, undefined)
+    assert.equal(out.sources.direction, undefined)
+  })
+
+  it('explicit layout(direction:row)이 있는 hero는 mobile에서 column 보정', () => {
+    const hero = makeSection({
+      type: 'hero',
+      id: 'n-hero',
+      layout: { direction: 'row' },
+    } as Partial<TreeNode>)
+    const out = resolveLayout(hero, { viewport: 'mobile' })
+    assert.equal(out.value.direction, 'column')
+    assert.equal(out.sources.direction, 'responsive')
+  })
 })

@@ -147,9 +147,14 @@ export function resolveLayout(
   context: ResolveContext,
 ): ResolvedLayout {
   const defaults = DEFAULT_LAYOUT_BY_TYPE[node.type] ?? {}
+  // 코덱스 P1: node.layout이 undefined인 경우 viewport 보정도 안 한다. 빈 explicit{}을
+  // 넘기면 resolveResponsiveLayout이 mobile에서 direction='column'을 _가짜로_ 박아
+  // hero/card가 인스펙터에 가짜 column으로 표시됨. 명시 layout이 있을 때만 보정.
   const explicit = node.layout ?? {}
-  const responsiveExplicit =
-    resolveResponsiveLayout(explicit, context.viewport) ?? explicit
+  const hasExplicitLayout = node.layout !== undefined
+  const responsiveExplicit = hasExplicitLayout
+    ? (resolveResponsiveLayout(explicit, context.viewport) ?? explicit)
+    : explicit
 
   const value: NodeLayout = {}
   const sources: Partial<Record<LayoutKey, NodeDesignSource>> = {}
@@ -340,13 +345,15 @@ export function resolveColor(node: TreeNode, context: ResolveContext): ResolvedC
     ? COLOR_PRESETS[context.colorPreset]
     : undefined
 
-  const value: NodeColor = {}
+  // 핵심: explicit NodeColor 전체를 _기본 보존_. token slot은 background/text/accent에만
+  // 적용하되 explicit 우선순위가 위. 이렇게 하지 않으면 backgroundGradient /
+  // backgroundOpacity / textOpacity / state colors(hover/active/...)가 캔버스
+  // 렌더에서 사라진다 (코덱스 P1).
+  const value: NodeColor = { ...explicit }
   const sources: Partial<Record<ColorKey, NodeDesignSource>> = {}
 
   function pick(key: ColorKey): void {
-    const explicitValue = explicit[key]
-    if (explicitValue !== undefined) {
-      value[key] = explicitValue
+    if (explicit[key] !== undefined) {
       sources[key] = 'explicit'
       return
     }
