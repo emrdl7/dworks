@@ -8205,6 +8205,8 @@ interface InspectorDisclosureProps {
   children: ReactNode
   defaultOpen?: boolean
   description?: string
+  // 노드에 명시 override가 있는 영역인지 — true면 title 옆에 작은 dot으로 표시
+  hasExplicit?: boolean
   isActionDisabled?: boolean
   onAction?: () => void
   onOpenChange?: (next: boolean) => void
@@ -8218,6 +8220,7 @@ function InspectorDisclosure({
   children,
   defaultOpen = true,
   description,
+  hasExplicit = false,
   isActionDisabled = false,
   onAction,
   onOpenChange,
@@ -8245,7 +8248,16 @@ function InspectorDisclosure({
     >
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1] [&::-webkit-details-marker]:hidden">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-[#ebecef]">{title}</h3>
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[#ebecef]">
+            {title}
+            {hasExplicit ? (
+              <span
+                aria-label="명시 override 있음"
+                title="이 노드에 명시 override가 박혀있음 (AI 또는 사용자가 박은 값)"
+                className="inline-block h-1.5 w-1.5 rounded-full bg-[#6366f1]"
+              />
+            ) : null}
+          </h3>
           {description ? (
             <p className="mt-1 truncate text-xs text-[#898d97]">{description}</p>
           ) : null}
@@ -9030,6 +9042,7 @@ function NodeColorControls({
       title="색상"
       description="선택한 노드의 배경, 글자, 강조"
       onAction={() => onNodeColorReset(node)}
+      hasExplicit={Object.keys(node.color ?? {}).length > 0}
       {...disclosure}
     >
       {textContrast ? (
@@ -10119,6 +10132,7 @@ function TypographyControls({
       title="타이포그래피"
       description="선택한 텍스트만 조정"
       onAction={() => onTypographyReset(node)}
+      hasExplicit={Object.keys(typography).length > 0}
       {...disclosure}
     >
       <div
@@ -10613,6 +10627,7 @@ function LayoutControls({
       isActionDisabled={!canEditLayout}
       onAction={() => onLayoutReset(node)}
       defaultOpen={canEditLayout}
+      hasExplicit={Object.keys(layout).length > 0}
       {...disclosure}
     >
 
@@ -10894,6 +10909,7 @@ function SpacingControls({
       description="선택한 노드의 여백 조정"
       defaultOpen={false}
       onAction={() => onSpacingReset(node)}
+      hasExplicit={Object.keys(spacing).length > 0}
       {...disclosure}
     >
       <div className="space-y-3">
@@ -11327,6 +11343,7 @@ function ShapeControls({
       description="선택한 노드의 테두리와 그림자"
       defaultOpen={false}
       onAction={() => onShapeReset(node)}
+      hasExplicit={Object.keys(node.shape ?? {}).length > 0}
       {...disclosure}
     >
       <div className="grid grid-cols-2 gap-3">
