@@ -192,6 +192,9 @@ import {
   getContainerSpacingStyle,
   getGapSpacingStyle,
   getLayoutStyle,
+  getResolvedCornerRadius,
+  getShapeStyle,
+  hasCornerRadiusOverride,
   hasLayoutOverride,
 } from './design-style'
 import { TextPreview } from './text-preview'
@@ -684,13 +687,6 @@ const DEFAULT_TEXT_SHADOW: TextShadow = {
 }
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
 const HISTORY_MERGE_WINDOW_MS = 600
-const SHADOW_VALUES: Record<ShadowPreset, string> = {
-  none: 'none',
-  sm: '0 1px 2px rgba(0, 0, 0, 0.06)',
-  md: '0 4px 12px rgba(0, 0, 0, 0.08)',
-  lg: '0 12px 32px rgba(0, 0, 0, 0.12)',
-  xl: '0 24px 64px rgba(0, 0, 0, 0.16)',
-}
 const GRADIENT_DIRECTION_CSS: Record<GradientDirection, string> = {
   'to-top': 'to top',
   'to-top-right': 'to top right',
@@ -6478,80 +6474,6 @@ function highlightSearchMatch(text: string, query: string): ReactNode {
   )
 }
 
-
-function getShapeStyle(shape?: Shape): CSSProperties | undefined {
-  if (!shape) {
-    return undefined
-  }
-
-  const borderRadius = getBorderRadiusValue(shape)
-  const hasBorderDetail =
-    shape.borderWidth !== undefined ||
-    shape.borderColor !== undefined ||
-    shape.borderStyle !== undefined
-  const effectiveBorderStyle =
-    shape.borderStyle ?? (hasBorderDetail ? 'solid' : undefined)
-  const effectiveBorderWidth =
-    effectiveBorderStyle === undefined
-      ? undefined
-      : effectiveBorderStyle === 'none'
-        ? 0
-        : (shape.borderWidth ?? 1)
-  const effectiveBorderColor =
-    effectiveBorderStyle === undefined
-      ? undefined
-      : effectiveBorderStyle === 'none'
-        ? 'transparent'
-        : getCssColorWithOpacity(
-            shape.borderColor ?? 'var(--dw-border)',
-            shape.borderOpacity,
-          )
-  const boxShadow = getShapeBoxShadow(shape)
-
-  const style: CSSProperties = {
-    ...(borderRadius !== undefined ? { borderRadius } : {}),
-    ...(effectiveBorderStyle !== undefined
-      ? { borderStyle: effectiveBorderStyle }
-      : {}),
-    ...(effectiveBorderWidth !== undefined
-      ? { borderWidth: `${effectiveBorderWidth}px` }
-      : {}),
-    ...(effectiveBorderColor !== undefined
-      ? { borderColor: effectiveBorderColor }
-      : {}),
-    ...(boxShadow !== undefined ? { boxShadow } : {}),
-  }
-
-  return Object.keys(style).length > 0 ? style : undefined
-}
-
-function getShapeBoxShadow(shape: Shape): string | undefined {
-  const customShadows = shape.customShadows?.filter(Boolean) ?? []
-  if (customShadows.length > 0) {
-    return customShadows.map(customShadowToCss).join(', ')
-  }
-
-  if (shape.customShadow !== undefined) {
-    return customShadowToCss(shape.customShadow)
-  }
-
-  return shape.shadow !== undefined ? SHADOW_VALUES[shape.shadow] : undefined
-}
-
-function getBorderRadiusValue(shape: Shape): string | undefined {
-  if (hasCornerRadiusOverride(shape)) {
-    return [
-      getResolvedCornerRadius(shape, 'radiusTopLeft'),
-      getResolvedCornerRadius(shape, 'radiusTopRight'),
-      getResolvedCornerRadius(shape, 'radiusBottomRight'),
-      getResolvedCornerRadius(shape, 'radiusBottomLeft'),
-    ]
-      .map((value) => `${value}px`)
-      .join(' ')
-  }
-
-  return shape.radius !== undefined ? `${shape.radius}px` : undefined
-}
 
 function getColorStyle(
   color?: NodeColor,
@@ -12633,17 +12555,6 @@ function isEditableNode(node: TreeNode): boolean {
   return node.type === 'text' || node.type === 'button' || node.type === 'image'
 }
 
-function hasCornerRadiusOverride(shape: Partial<Shape>): boolean {
-  return shapeCornerRadiusFields.some((field) => shape[field] !== undefined)
-}
-
-function getResolvedCornerRadius(
-  shape: Partial<Shape>,
-  field: ShapeRadiusField,
-): number {
-  return shape[field] ?? shape.radius ?? 0
-}
-
 function canUseAccentColor(node: TreeNode): boolean {
   return (
     (node.type === 'button' && node.variant === 'primary') ||
@@ -12896,16 +12807,6 @@ function gradientToCss(gradient: Gradient): string {
   return `linear-gradient(${GRADIENT_DIRECTION_CSS[gradient.direction]}, ${from}, ${to})`
 }
 
-function customShadowToCss(shadow: CustomShadow): string {
-  const parts = [
-    `${shadow.offsetX}px`,
-    `${shadow.offsetY}px`,
-    `${shadow.blur}px`,
-    `${shadow.spread ?? 0}px`,
-    getCssColorWithOpacity(shadow.color, shadow.opacity),
-  ]
-  return shadow.inset === true ? `inset ${parts.join(' ')}` : parts.join(' ')
-}
 
 function getPairedColorOpacityField(field: ColorField): ColorOpacityField {
   if (field === 'backgroundColor') {
