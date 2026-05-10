@@ -63,6 +63,7 @@ export interface NodeMetaPatch {
   position?: TreeNode['position']
   inset?: TreeNode['inset']
   hideOn?: TreeNode['hideOn']
+  responsiveStyle?: TreeNode['responsiveStyle']
 }
 
 export interface UpdateNodeMetaOperation {
@@ -871,6 +872,14 @@ function withNodeMetaPatch<T extends TreeNode>(
       delete next.hideOn
     } else {
       next.hideOn = patch.hideOn
+    }
+  }
+
+  if ('responsiveStyle' in patch) {
+    if (patch.responsiveStyle === undefined) {
+      delete next.responsiveStyle
+    } else {
+      next.responsiveStyle = patch.responsiveStyle
     }
   }
 

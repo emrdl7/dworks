@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import type { Tree } from '@dworks/tree'
+import type { Tree, TreeNode } from '@dworks/tree'
 
 import {
   addContainerSibling,
@@ -469,6 +469,57 @@ describe('tree editor operations', () => {
         assert.equal(resetCard.transition, undefined)
         assert.equal(resetCard.transform, undefined)
       }
+    }
+  })
+
+  it('updates and clears responsiveStyle metadata', () => {
+    const tree = fixtureTree()
+    const edited = updateNodeMeta(tree, 'landing.title', {
+      responsiveStyle: {
+        mobile: {
+          typography: { fontSize: 36 },
+          spacing: { paddingTop: 24 },
+        },
+        tablet: {
+          typography: { fontSize: 48 },
+        },
+      },
+    })
+    const reset = updateNodeMeta(edited, 'landing.title', {
+      responsiveStyle: undefined,
+    })
+
+    if (
+      tree.root.type === 'section' &&
+      edited.root.type === 'section' &&
+      reset.root.type === 'section'
+    ) {
+      // landing.title 위치 — fixtures.ts의 _자동 빌드_ 에 의존하므로
+      // 트리 traverse 함수로 찾는다
+      const findById = (n: TreeNode, id: string): TreeNode | undefined => {
+        if (n.id === id) return n
+        if ('children' in n) {
+          for (const c of n.children) {
+            const found = findById(c, id)
+            if (found) return found
+          }
+        }
+        return undefined
+      }
+      const original = findById(tree.root, 'landing.title')
+      const modified = findById(edited.root, 'landing.title')
+      const cleared = findById(reset.root, 'landing.title')
+      assert.equal(original?.responsiveStyle, undefined)
+      assert.deepEqual(modified?.responsiveStyle, {
+        mobile: {
+          typography: { fontSize: 36 },
+          spacing: { paddingTop: 24 },
+        },
+        tablet: {
+          typography: { fontSize: 48 },
+        },
+      })
+      assert.equal(cleared?.responsiveStyle, undefined)
     }
   })
 

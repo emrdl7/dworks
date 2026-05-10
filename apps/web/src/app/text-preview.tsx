@@ -9,6 +9,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import type { FontFamily, TextNode, TextShadow, Typography } from '@dworks/tree'
 
 import { resolveTypography } from './design-resolver'
+import type { ResponsiveViewport } from './responsive'
 import { getCssColorWithOpacity, mergeStyles } from './style-utils'
 
 const KOREAN_SANS_FALLBACK_STACK =
@@ -172,14 +173,18 @@ export function TextPreview({
   accentColorStyle,
   node,
   textColorStyle,
+  viewport,
 }: {
   accentColorStyle?: CSSProperties
   node: TextNode
   textColorStyle?: CSSProperties
+  viewport?: ResponsiveViewport
 }) {
-  // resolveTypography 결과(emphasis-driven default + explicit)를 style로 적용.
+  // resolveTypography 결과(emphasis-driven default + explicit + viewport override)를 style로.
   // text color token(var(--dw-*))은 부모 컨테이너 / resolveColor의 emphasis token slot이 처리.
-  const typographyStyle = getTypographyStyle(resolveTypography(node).value)
+  const typographyStyle = getTypographyStyle(
+    resolveTypography(node, viewport ? { viewport } : undefined).value,
+  )
   const textStyle = mergeStyles(typographyStyle, textColorStyle)
   const captionTextStyle = mergeStyles(textStyle, accentColorStyle)
   const content = parseInlineMarkdown(node.content)

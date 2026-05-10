@@ -18,6 +18,7 @@ import type {
   ColorPreset,
   NodeColor,
   NodeLayout,
+  ResponsiveOverride,
   Shape,
   Spacing,
   TreeNode,
@@ -29,6 +30,18 @@ import {
   resolveResponsiveSpacing,
   type ResponsiveViewport,
 } from './responsive'
+
+// node + viewport → 사용자 명시 viewport override (mobile/tablet 한정).
+// desktop에서는 root prop이 default 의도이므로 override 없음.
+// resolveX 함수들이 base explicit과 _부분 머지_해 사용 (override가 우선).
+function getResponsiveOverride<K extends keyof ResponsiveOverride>(
+  node: TreeNode,
+  viewport: ResponsiveViewport,
+  key: K,
+): ResponsiveOverride[K] | undefined {
+  if (viewport === 'desktop') return undefined
+  return node.responsiveStyle?.[viewport]?.[key]
+}
 import {
   DEFAULT_COLOR_TOKENS_BY_EMPHASIS,
   DEFAULT_COLOR_TOKENS_BY_TYPE,
@@ -91,8 +104,16 @@ export function resolveSpacing(
     ? {}
     : (DEFAULT_SPACING_BY_TYPE[node.type] ?? {})
   const explicit = node.spacing ?? {}
-  const responsiveExplicit =
+  // 자동 보정(padding ≥32 → 24 등) → 사용자 viewport override 머지.
+  // 사용자 override가 자동 보정을 _이긴다_.
+  const automaticResponsive =
     resolveResponsiveSpacing(explicit, context.viewport) ?? explicit
+  const userOverrideSpacing =
+    getResponsiveOverride(node, context.viewport, 'spacing') ?? {}
+  const responsiveExplicit: Spacing = {
+    ...automaticResponsive,
+    ...userOverrideSpacing,
+  }
 
   const value: Spacing = {}
   const sources: Partial<Record<SpacingKey, NodeDesignSource>> = {}
@@ -113,14 +134,15 @@ export function resolveSpacing(
     const explicitValue = explicit[key]
     const responsiveValue = responsiveExplicit[key]
     const defaultValue = defaults[key]
-    if (explicitValue !== undefined) {
-      // explicit이 있는데 responsive 보정으로 다른 값이 나오면 source는 responsive
-      if (responsiveValue !== undefined && responsiveValue !== explicitValue) {
-        value[key] = responsiveValue
-        sources[key] = 'responsive'
-      } else {
+    // responsive 단계는 user override + 자동 보정의 합. explicit이 없는 키도
+    // user override만 들어오면 적용돼야 한다.
+    if (responsiveValue !== undefined) {
+      if (explicitValue !== undefined && responsiveValue === explicitValue) {
         value[key] = explicitValue
         sources[key] = 'explicit'
+      } else {
+        value[key] = responsiveValue
+        sources[key] = 'responsive'
       }
     } else if (defaultValue !== undefined) {
       value[key] = defaultValue
@@ -152,9 +174,15 @@ export function resolveLayout(
   // hero/card가 인스펙터에 가짜 column으로 표시됨. 명시 layout이 있을 때만 보정.
   const explicit = node.layout ?? {}
   const hasExplicitLayout = node.layout !== undefined
-  const responsiveExplicit = hasExplicitLayout
+  const automaticResponsive = hasExplicitLayout
     ? (resolveResponsiveLayout(explicit, context.viewport) ?? explicit)
     : explicit
+  const userOverrideLayout =
+    getResponsiveOverride(node, context.viewport, 'layout') ?? {}
+  const responsiveExplicit: NodeLayout = {
+    ...automaticResponsive,
+    ...userOverrideLayout,
+  }
 
   const value: NodeLayout = {}
   const sources: Partial<Record<LayoutKey, NodeDesignSource>> = {}
@@ -204,7 +232,10 @@ export interface ResolvedTypography {
   sources: Partial<Record<TypographyKey, NodeDesignSource>>
 }
 
-export function resolveTypography(node: TreeNode): ResolvedTypography {
+export function resolveTypography(
+  node: TreeNode,
+  context?: ResolveContext,
+): ResolvedTypography {
   if (node.type !== 'text') {
     return { value: {}, sources: {} }
   }
@@ -212,17 +243,28 @@ export function resolveTypography(node: TreeNode): ResolvedTypography {
   // EmphasisTypographyDefaults에 textShadow가 없어 generic indexed access가 깨지므로
   // Partial<Typography>로 좁혀 사용 (textShadow는 default 없음 — explicit-only).
   const defaults: Partial<Typography> = DEFAULT_TYPOGRAPHY_BY_EMPHASIS[emphasis]
-  const explicit = node.typography ?? {}
+  const baseExplicit = node.typography ?? {}
+  // viewport override 부분 머지 — fontSize만 override하고 나머지는 base 유지.
+  const userOverrideTypography = context
+    ? (getResponsiveOverride(node, context.viewport, 'typography') ?? {})
+    : {}
+  const explicit: Typography = { ...baseExplicit, ...userOverrideTypography }
 
   const value: Typography = {}
   const sources: Partial<Record<TypographyKey, NodeDesignSource>> = {}
 
   function pick<K extends TypographyKey>(key: K): void {
+    const baseValue = baseExplicit[key]
     const explicitValue = explicit[key]
     const defaultValue = defaults[key]
     if (explicitValue !== undefined) {
       value[key] = explicitValue
-      sources[key] = 'explicit'
+      sources[key] =
+        baseValue !== undefined && explicitValue === baseValue
+          ? 'explicit'
+          : userOverrideTypography[key] !== undefined
+            ? 'responsive'
+            : 'explicit'
     } else if (defaultValue !== undefined) {
       value[key] = defaultValue
       sources[key] = 'default'
@@ -271,7 +313,12 @@ export function resolveShape(
   context?: ResolveContext,
 ): ResolvedShape {
   const defaults = DEFAULT_SHAPE_BY_TYPE[node.type] ?? {}
-  const explicit = node.shape ?? {}
+  const baseExplicit = node.shape ?? {}
+  // viewport override 부분 머지 (radius만 override하고 border/shadow는 base 유지)
+  const userOverrideShape = context
+    ? (getResponsiveOverride(node, context.viewport, 'shape') ?? {})
+    : {}
+  const explicit: Shape = { ...baseExplicit, ...userOverrideShape }
   const tokenSlots = DEFAULT_COLOR_TOKENS_BY_TYPE[node.type] ?? {}
   const tokens = context?.colorPreset
     ? COLOR_PRESETS[context.colorPreset]
@@ -340,7 +387,11 @@ export function resolveColor(node: TreeNode, context: ResolveContext): ResolvedC
       ? (DEFAULT_COLOR_TOKENS_BY_EMPHASIS[node.emphasis ?? 'body'] ?? {})
       : {}
   const tokenSlots = { ...typeSlots, ...emphasisSlots }
-  const explicit = node.color ?? {}
+  const baseExplicit = node.color ?? {}
+  // viewport override 부분 머지 (textColor만 override하는 등)
+  const userOverrideColor =
+    getResponsiveOverride(node, context.viewport, 'color') ?? {}
+  const explicit: NodeColor = { ...baseExplicit, ...userOverrideColor }
   const tokens = context.colorPreset
     ? COLOR_PRESETS[context.colorPreset]
     : undefined

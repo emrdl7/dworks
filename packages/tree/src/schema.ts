@@ -312,6 +312,38 @@ export const nodeInsetSchema = z.object({
 })
 export type NodeInset = z.infer<typeof nodeInsetSchema>
 
+// responsiveStyle — 노드별 viewport-specific prop override.
+// 데스크탑은 root prop이 default 의도이므로 여기엔 mobile/tablet만.
+// resolver가 desktop은 root prop을 그대로, mobile/tablet은 "root prop ∪ override"를
+// merge한다 (override 우선). Partial 머지 — fontSize만 override하고 나머지는 base 유지.
+//
+// 사용 예:
+//   responsiveStyle: {
+//     mobile: {
+//       typography: { fontSize: 32 },           // 데스크탑 64 → 모바일 32
+//       spacing: { paddingTop: 24 },            // 데스크탑 80 → 모바일 24
+//       shape: { radius: 8 },                   // 데스크탑 24 → 모바일 8
+//       layout: { direction: 'column' },        // 데스크탑 row → 모바일 column
+//     }
+//   }
+export const responsiveOverrideSchema = z.object({
+  typography: typographySchema.optional(),
+  spacing: spacingSchema.optional(),
+  shape: shapeSchema.optional(),
+  color: nodeColorSchema.optional(),
+  layout: nodeLayoutSchema.optional(),
+  transform: nodeTransformSchema.optional(),
+})
+export type ResponsiveOverride = z.infer<typeof responsiveOverrideSchema>
+
+export const responsiveStyleSchema = z
+  .object({
+    mobile: responsiveOverrideSchema.optional(),
+    tablet: responsiveOverrideSchema.optional(),
+  })
+  .optional()
+export type ResponsiveStyle = z.infer<typeof responsiveStyleSchema>
+
 export const IMAGE_FIT_IDS = ['cover', 'contain'] as const
 export const imageFitSchema = z.enum(IMAGE_FIT_IDS)
 export type ImageFit = z.infer<typeof imageFitSchema>
@@ -479,6 +511,7 @@ interface BaseNodeMeta {
   position?: NodePosition
   inset?: NodeInset
   hideOn?: ResponsiveHidden
+  responsiveStyle?: ResponsiveStyle
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -571,6 +604,7 @@ const baseShape = {
   position: nodePositionSchema.optional(),
   inset: nodeInsetSchema.optional(),
   hideOn: responsiveHiddenSchema,
+  responsiveStyle: responsiveStyleSchema,
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({

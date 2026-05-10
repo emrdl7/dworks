@@ -17,6 +17,7 @@ import {
   nodeTransitionSchema,
   opacitySchema,
   responsiveHiddenSchema,
+  responsiveStyleSchema,
   shapeSchema,
   spacingSchema,
   styleTokensSchema,
@@ -96,6 +97,7 @@ export const updateNodeMetaOperationSchema: z.ZodType<UpdateNodeMetaOperation> =
       position: nodePositionSchema.optional(),
       inset: nodeInsetSchema.optional(),
       hideOn: responsiveHiddenSchema,
+      responsiveStyle: responsiveStyleSchema,
     }),
   })
 
@@ -187,6 +189,7 @@ export const editOperationSchema = z.discriminatedUnion('type', [
       position: z.ZodOptional<typeof nodePositionSchema>
       inset: z.ZodOptional<typeof nodeInsetSchema>
       hideOn: typeof responsiveHiddenSchema
+      responsiveStyle: typeof responsiveStyleSchema
     }>
   }>,
   updateButtonLabelOperationSchema as z.ZodObject<{

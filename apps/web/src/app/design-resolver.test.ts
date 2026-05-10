@@ -474,3 +474,99 @@ describe('resolveLayout — 코덱스 P1 회귀 방지', () => {
     assert.equal(out.sources.direction, 'responsive')
   })
 })
+
+describe('responsiveStyle viewport override', () => {
+  it('typography fontSize override가 mobile에서 적용되고 desktop에서 base 유지', () => {
+    const text = makeText({
+      typography: { fontSize: 64, fontWeight: '800' },
+      responsiveStyle: { mobile: { typography: { fontSize: 36 } } },
+    } as Partial<TreeNode>)
+    const desktop = resolveTypography(text, { viewport: 'desktop' })
+    const mobile = resolveTypography(text, { viewport: 'mobile' })
+    const tablet = resolveTypography(text, { viewport: 'tablet' })
+    assert.equal(desktop.value.fontSize, 64)
+    assert.equal(mobile.value.fontSize, 36)
+    assert.equal(tablet.value.fontSize, 64)
+    // base의 다른 키(fontWeight)는 모든 viewport에서 유지 — 부분 머지
+    assert.equal(mobile.value.fontWeight, '800')
+    // override된 키는 sources='responsive'
+    assert.equal(mobile.sources.fontSize, 'responsive')
+    assert.equal(desktop.sources.fontSize, 'explicit')
+  })
+
+  it('spacing 부분 override — paddingTop만 override, paddingLeft는 base 유지', () => {
+    const section = makeSection({
+      id: 'n',
+      type: 'card',
+      spacing: { paddingTop: 80, paddingLeft: 56 },
+      responsiveStyle: { mobile: { spacing: { paddingTop: 24 } } },
+    } as Partial<TreeNode>)
+    const desktop = resolveSpacing(section, { viewport: 'desktop' })
+    const mobile = resolveSpacing(section, { viewport: 'mobile' })
+    assert.equal(desktop.value.paddingTop, 80)
+    assert.equal(desktop.value.paddingLeft, 56)
+    // mobile: paddingTop은 user override 적용, paddingLeft는 자동 보정(56→24)
+    assert.equal(mobile.value.paddingTop, 24)
+    assert.equal(mobile.value.paddingLeft, 24)
+    assert.equal(mobile.sources.paddingTop, 'responsive')
+  })
+
+  it('user override가 자동 보정을 이긴다 (mobile padding 60 그대로)', () => {
+    const section = makeSection({
+      id: 'n',
+      type: 'card',
+      spacing: { paddingTop: 80 },
+      // mobile에서 자동 보정은 ≥80을 60으로 줄이지만 user override가 우선
+      responsiveStyle: { mobile: { spacing: { paddingTop: 60 } } },
+    } as Partial<TreeNode>)
+    const out = resolveSpacing(section, { viewport: 'mobile' })
+    assert.equal(out.value.paddingTop, 60)
+    assert.equal(out.sources.paddingTop, 'responsive')
+  })
+
+  it('shape radius mobile override', () => {
+    const card = makeSection({
+      id: 'n',
+      type: 'card',
+      shape: { radius: 24 },
+      responsiveStyle: { mobile: { shape: { radius: 8 } } },
+    } as Partial<TreeNode>)
+    const desktop = resolveShape(card, { viewport: 'desktop' })
+    const mobile = resolveShape(card, { viewport: 'mobile' })
+    assert.equal(desktop.value.radius, 24)
+    assert.equal(mobile.value.radius, 8)
+  })
+
+  it('layout direction tablet override', () => {
+    const hero = makeSection({
+      type: 'hero',
+      id: 'n',
+      layout: { direction: 'row' },
+      responsiveStyle: { tablet: { layout: { direction: 'column' } } },
+    } as Partial<TreeNode>)
+    const desktop = resolveLayout(hero, { viewport: 'desktop' })
+    const tablet = resolveLayout(hero, { viewport: 'tablet' })
+    assert.equal(desktop.value.direction, 'row')
+    assert.equal(tablet.value.direction, 'column')
+    assert.equal(tablet.sources.direction, 'responsive')
+  })
+
+  it('color textColor mobile override', () => {
+    const text = makeText({
+      color: { textColor: '#0f172a' },
+      responsiveStyle: { mobile: { color: { textColor: '#dc2626' } } },
+    } as Partial<TreeNode>)
+    const desktop = resolveColor(text, { viewport: 'desktop' })
+    const mobile = resolveColor(text, { viewport: 'mobile' })
+    assert.equal(desktop.value.textColor, '#0f172a')
+    assert.equal(mobile.value.textColor, '#dc2626')
+  })
+
+  it('responsiveStyle 없으면 기존 동작 그대로', () => {
+    const text = makeText({
+      typography: { fontSize: 48 },
+    } as Partial<TreeNode>)
+    const out = resolveTypography(text, { viewport: 'mobile' })
+    assert.equal(out.value.fontSize, 48)
+  })
+})

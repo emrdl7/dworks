@@ -5982,6 +5982,7 @@ function CanvasNode({
           <div style={boxStyle}>
             <TextPreview
               node={node}
+              viewport={viewport}
               accentColorStyle={accentTextColorStyle}
               textColorStyle={textColorStyle}
             />

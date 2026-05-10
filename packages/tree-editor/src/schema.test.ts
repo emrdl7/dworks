@@ -224,6 +224,36 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateNodeMeta operation with responsiveStyle', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateNodeMeta',
+      nodeId: 'hero.title',
+      patch: {
+        responsiveStyle: {
+          mobile: {
+            typography: { fontSize: 36, fontWeight: '800' },
+            spacing: { paddingTop: 24 },
+            shape: { radius: 8 },
+            layout: { direction: 'column' },
+          },
+          tablet: {
+            typography: { fontSize: 56 },
+          },
+        },
+      },
+    })
+
+    assert.equal(op.type, 'updateNodeMeta')
+    if (op.type === 'updateNodeMeta') {
+      assert.equal(op.patch.responsiveStyle?.mobile?.typography?.fontSize, 36)
+      assert.equal(op.patch.responsiveStyle?.mobile?.typography?.fontWeight, '800')
+      assert.equal(op.patch.responsiveStyle?.mobile?.spacing?.paddingTop, 24)
+      assert.equal(op.patch.responsiveStyle?.mobile?.shape?.radius, 8)
+      assert.equal(op.patch.responsiveStyle?.mobile?.layout?.direction, 'column')
+      assert.equal(op.patch.responsiveStyle?.tablet?.typography?.fontSize, 56)
+    }
+  })
+
   it('parses updateNodeMeta operation with position/inset/hideOn', () => {
     const op = editOperationSchema.parse({
       type: 'updateNodeMeta',

@@ -76,6 +76,8 @@ export {
   nodePositionSchema,
   nodeInsetSchema,
   responsiveHiddenSchema,
+  responsiveOverrideSchema,
+  responsiveStyleSchema,
 } from './schema.js'
 export type {
   EditKind,
@@ -132,4 +134,6 @@ export type {
   NodePosition,
   NodeInset,
   ResponsiveHidden,
+  ResponsiveOverride,
+  ResponsiveStyle,
 } from './schema.js'
