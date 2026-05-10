@@ -2998,6 +2998,20 @@ export default function HomePage() {
         setPanelsHidden((v) => !v)
         return
       }
+      // ⌘F — 레이어 검색 input으로 focus
+      if (meta && event.key.toLowerCase() === 'f') {
+        event.preventDefault()
+        setLeftPanelTab('layers')
+        // 다음 frame에서 검색 input 찾아 focus
+        requestAnimationFrame(() => {
+          const search = document.querySelector<HTMLInputElement>(
+            'aside[aria-label="AI 디자인 브리프 패널"] input[type="search"]',
+          )
+          search?.focus()
+          search?.select()
+        })
+        return
+      }
       // ⌘0 — 캔버스 줌 100% 리셋 (Figma/Sketch 표준)
       if (meta && event.key === '0') {
         event.preventDefault()
@@ -4942,6 +4956,7 @@ export default function HomePage() {
                   items: [
                     { keys: ['Esc'], label: '선택 해제 / 닫기' },
                     { keys: ['?'], label: '이 도움말 토글' },
+                    { keys: ['⌘', 'F'], label: '레이어 검색 focus' },
                     { keys: ['⌘', '\\'], label: '좌/우 패널 hide (집중 모드)' },
                   ],
                 },
