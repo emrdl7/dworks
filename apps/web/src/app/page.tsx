@@ -3350,7 +3350,7 @@ export default function HomePage() {
         <aside
           aria-label="AI 디자인 브리프 패널"
           aria-hidden={!briefDrawerOpen}
-          className={`fixed bottom-0 left-0 top-14 z-40 flex min-h-0 w-[280px] flex-col border-r border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] shadow-xl transition-transform duration-200 ease-out md:relative md:z-auto md:w-auto md:translate-x-0 md:shadow-none md:transition-none ${
+          className={`fixed bottom-0 left-0 top-14 z-40 flex min-h-0 w-[280px] flex-col border-r border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] shadow-xl transition-transform duration-200 ease-out md:relative md:bottom-auto md:left-auto md:top-auto md:z-auto md:w-auto md:translate-x-0 md:shadow-none md:transition-none ${
             briefDrawerOpen
               ? 'translate-x-0'
               : '-translate-x-full md:translate-x-0'
@@ -4143,7 +4143,7 @@ export default function HomePage() {
             </p>
           ) : null}
           <nav
-            className="flex-1 overflow-auto overscroll-contain p-2"
+            className="min-h-0 flex-1 overflow-auto overscroll-contain p-2"
             onKeyDown={(event) => {
               if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
                 return
@@ -4729,7 +4729,7 @@ export default function HomePage() {
         <aside
           aria-label="속성 패널"
           aria-hidden={!inspectorDrawerOpen}
-          className={`fixed bottom-0 right-0 top-14 z-40 flex min-h-0 w-[360px] flex-col overflow-hidden border-l border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] shadow-xl transition-transform duration-200 ease-out xl:relative xl:z-auto xl:flex xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
+          className={`fixed bottom-0 right-0 top-14 z-40 flex min-h-0 w-[360px] flex-col overflow-hidden border-l border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] shadow-xl transition-transform duration-200 ease-out xl:relative xl:bottom-auto xl:right-auto xl:top-auto xl:z-auto xl:flex xl:w-auto xl:translate-x-0 xl:shadow-none xl:transition-none ${
             inspectorDrawerOpen
               ? 'translate-x-0'
               : 'translate-x-full xl:translate-x-0'
