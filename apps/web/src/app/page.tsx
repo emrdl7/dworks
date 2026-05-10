@@ -201,6 +201,8 @@ import {
   gradientToCss,
   hasCornerRadiusOverride,
   hasLayoutOverride,
+  customShadowToCss,
+  SHADOW_VALUES,
 } from './design-style'
 import { TextPreview } from './text-preview'
 import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
@@ -477,6 +479,15 @@ const shadowPresetLabels: Record<ShadowPreset, string> = {
   xl: '매우 진하게',
 }
 
+// swatch grid 아래 짧은 레이블 — 5개 그리드 폭 안에 들어가도록 단어 단축.
+const shadowPresetShortLabels: Record<ShadowPreset, string> = {
+  none: '없음',
+  sm: 'S',
+  md: 'M',
+  lg: 'L',
+  xl: 'XL',
+}
+
 const builtInFontFamilyLabels: Record<BuiltInFontFamily, string> = {
   sans: '산세리프',
   serif: '세리프',
@@ -669,6 +680,25 @@ const DEFAULT_SHAPE_COLOR = '#d7ddd2'
 const DEFAULT_COLOR_PICKER_COLOR = '#ffffff'
 const DEFAULT_TEXT_PICKER_COLOR = '#18211d'
 const DEFAULT_ACCENT_PICKER_COLOR = '#4f46e5'
+
+// renderColorField 아래 quick palette — 캔버스 콘텐츠용 자주 쓰는 10색 (5x2).
+// chrome 토큰(dw-ui-*)이 아니라 generation 결과물에 자연스러운 일반 디자인 색.
+interface QuickPaletteSwatch {
+  label: string
+  value: string
+}
+const QUICK_PALETTE: readonly QuickPaletteSwatch[] = [
+  { label: '흰색', value: '#ffffff' },
+  { label: '검정', value: '#000000' },
+  { label: '회색', value: '#6b7280' },
+  { label: '빨강', value: '#ef4444' },
+  { label: '주황', value: '#f97316' },
+  { label: '노랑', value: '#eab308' },
+  { label: '초록', value: '#22c55e' },
+  { label: '파랑', value: '#3b82f6' },
+  { label: '보라', value: '#8b5cf6' },
+  { label: '핑크', value: '#ec4899' },
+]
 const DEFAULT_IMAGE_OVERLAY_COLOR = '#000000'
 const DEFAULT_GRADIENT_TO_COLOR = '#000000'
 const DEFAULT_GRADIENT_DIRECTION: GradientDirection = 'to-bottom-right'
@@ -8010,6 +8040,32 @@ function NodeColorControls({
             </span>
           ) : null}
         </label>
+        <div
+          role="group"
+          aria-label={`${label} 빠른 선택`}
+          className="grid grid-cols-10 gap-1"
+        >
+          {QUICK_PALETTE.map((swatch) => {
+            const isActive =
+              inputValue.trim().toLowerCase() === swatch.value.toLowerCase()
+            return (
+              <button
+                key={swatch.value}
+                type="button"
+                aria-label={`${label} → ${swatch.label}`}
+                title={swatch.label}
+                aria-pressed={isActive}
+                className={`h-5 w-5 rounded-[var(--dw-radius-sm)] border transition-[border-color,transform] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--dw-ui-accent)] active:scale-90 ${
+                  isActive
+                    ? 'border-[var(--dw-ui-accent)] ring-2 ring-[color:var(--dw-ui-accent)]/40'
+                    : 'border-[var(--dw-ui-border)] hover:border-[var(--dw-ui-text-muted)]'
+                }`}
+                style={{ backgroundColor: swatch.value }}
+                onClick={() => updateColorFromPicker(colorField, swatch.value)}
+              />
+            )
+          })}
+        </div>
         <OpacityControl
           label={opacityLabel}
           value={opacityValue}
@@ -10480,23 +10536,50 @@ function ShapeControls({
           </div>
 
           {shadowMode === 'preset' ? (
-            <label className="block">
-              <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
-                그림자 종류
-              </span>
-              <select
-                className="mt-2 h-10 w-full rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 text-sm outline-none focus:border-[var(--dw-ui-accent)] focus:ring-2 focus:ring-[color:var(--dw-ui-accent)]/40"
-                value={shape.shadow ?? ''}
-                onChange={(event) => updateShadow(event.target.value)}
-              >
-                <option value="">기본</option>
-                {shadowPresetOptions.map((shadow) => (
-                  <option key={shadow} value={shadow}>
-                    {shadowPresetLabels[shadow]}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div
+              role="radiogroup"
+              aria-label="그림자 강도"
+              className="grid grid-cols-5 gap-2"
+            >
+              {shadowPresetOptions.map((preset) => {
+                const isSelected = (shape.shadow ?? '') === preset
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    title={shadowPresetLabels[preset]}
+                    className={`group flex flex-col items-center gap-1.5 rounded-[var(--dw-radius-sm)] border p-2 transition-[background-color,border-color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                      isSelected
+                        ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)]'
+                        : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                    }`}
+                    onClick={() => updateShadow(preset)}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="block h-9 w-9 rounded-md border border-[var(--dw-ui-border)] bg-white"
+                      style={{
+                        boxShadow:
+                          preset === 'none'
+                            ? 'none'
+                            : SHADOW_VALUES[preset],
+                      }}
+                    />
+                    <span
+                      className={`text-[10px] font-[number:var(--dw-font-weight-label)] tracking-wide ${
+                        isSelected
+                          ? 'text-[var(--dw-ui-accent-text)]'
+                          : 'text-[var(--dw-ui-text-muted)]'
+                      }`}
+                    >
+                      {shadowPresetShortLabels[preset]}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           ) : (
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
@@ -10525,7 +10608,12 @@ function ShapeControls({
                     className="rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] p-3"
                   >
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+                      <span className="flex items-center gap-2 text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+                        <span
+                          aria-hidden="true"
+                          className="block h-6 w-6 rounded border border-[var(--dw-ui-border)] bg-white"
+                          style={{ boxShadow: customShadowToCss(customShadow) }}
+                        />
                         그림자 {index + 1}
                       </span>
                       <div className="flex items-center gap-1">
