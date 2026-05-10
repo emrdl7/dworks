@@ -60,7 +60,8 @@ export const DEFAULT_SPACING_BY_TYPE: Record<TreeNodeType, Spacing> = {
     gap: 20,
   },
   text: {},
-  button: {},
+  // button: px-5 = padding-x 20px. vertical은 min-h-11(44px)로 처리 — spacing 영역 밖.
+  button: { paddingLeft: 20, paddingRight: 20 },
   image: {},
 }
 

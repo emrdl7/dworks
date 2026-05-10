@@ -6064,10 +6064,11 @@ function CanvasNode({
     case 'button':
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          {/* Phase 3-2: px-5 제거 — resolver button default(paddingLeft/Right=20)가 boxStyle로 적용 */}
           <span
             data-disabled={node.disabled === true ? 'true' : undefined}
             aria-disabled={node.disabled === true ? true : undefined}
-            className={`inline-flex min-h-11 items-center rounded-md px-5 text-sm font-semibold transition ${
+            className={`inline-flex min-h-11 items-center rounded-md text-sm font-semibold transition ${
               node.variant === 'secondary'
                 ? 'border border-current bg-[var(--dw-surface-muted)] text-[var(--dw-text-primary)]'
                 : 'bg-[var(--dw-accent)] text-[var(--dw-accent-text)]'
