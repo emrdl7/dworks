@@ -7659,7 +7659,11 @@ function NodeInspector({
   const [openSectionsByNode, setOpenSectionsByNode] = useState<
     Record<string, Record<string, boolean>>
   >(() => ({
-    [node.id]: computeInspectorSmartDefaults(node.type, isSelectedNodeContainer),
+    [node.id]: computeInspectorSmartDefaults(
+      node.type,
+      isSelectedNodeContainer,
+      node,
+    ),
   }))
 
   useEffect(() => {
@@ -7672,14 +7676,15 @@ function NodeInspector({
         [node.id]: computeInspectorSmartDefaults(
           node.type,
           isSelectedNodeContainer,
+          node,
         ),
       }
     })
-  }, [node.id, node.type, isSelectedNodeContainer])
+  }, [node, isSelectedNodeContainer])
 
   const openSections =
     openSectionsByNode[node.id] ??
-    computeInspectorSmartDefaults(node.type, isSelectedNodeContainer)
+    computeInspectorSmartDefaults(node.type, isSelectedNodeContainer, node)
 
   function bindSection(title: string) {
     return {
@@ -13408,23 +13413,41 @@ function isContainerNode(node: TreeNode): node is ContainerNode {
   return 'children' in node
 }
 
+// 노드의 _명시 design override_가 있는 영역을 자동 펼침 — AI가 의도한 디자인이
+// 노드 선택 즉시 보이게. resolver default만 채워진 영역은 펼치지 않음 (와이어프레임처럼
+// 보이지 않게).
 function computeInspectorSmartDefaults(
   nodeType: TreeNode['type'],
   isContainer: boolean,
+  node?: TreeNode,
 ): Record<string, boolean> {
-  if (nodeType === 'text') {
-    return { 내용: true, 타이포그래피: true }
+  // type 기반 base
+  const base: Record<string, boolean> =
+    nodeType === 'text'
+      ? { 내용: true, 타이포그래피: true }
+      : nodeType === 'image'
+        ? { 이미지: true }
+        : nodeType === 'button'
+          ? { 내용: true }
+          : isContainer
+            ? { 레이아웃: true }
+            : {}
+
+  // 노드 명시 prop 기반 보강 — 명시된 영역은 자동 펼침
+  if (node) {
+    const hasExplicit = (obj: object | undefined): boolean =>
+      obj !== undefined && Object.keys(obj).length > 0
+    if (hasExplicit(node.spacing)) base['간격'] = true
+    if (hasExplicit(node.color)) base['색상'] = true
+    if (hasExplicit(node.shape)) base['모양'] = true
+    if (hasExplicit(node.layout)) base['레이아웃'] = true
+    if (nodeType === 'text' && hasExplicit((node as TextNode).typography)) {
+      base['타이포그래피'] = true
+    }
+    if (node.transform !== undefined) base['변환'] = true
   }
-  if (nodeType === 'image') {
-    return { 이미지: true }
-  }
-  if (nodeType === 'button') {
-    return { 내용: true }
-  }
-  if (isContainer) {
-    return { 레이아웃: true }
-  }
-  return {}
+
+  return base
 }
 
 // inspector 탭 — Figma 표준에 가까운 3분할(디자인/레이아웃/콘텐츠)
