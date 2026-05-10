@@ -3814,9 +3814,21 @@ export default function HomePage() {
               {generateStage === 'intent' ? (
                 <>
                   <label className="block">
-                    <span className="text-xs font-semibold text-[#898d97]">
-                      의도 *
-                    </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-[#898d97]">
+                        의도 *
+                      </span>
+                      <span
+                        className={`text-[10px] tabular-nums ${
+                          briefIntent.length >= 480
+                            ? 'text-[#fbbf24]'
+                            : 'text-[#5b6069]'
+                        }`}
+                        aria-label={`${briefIntent.length}/500자`}
+                      >
+                        {briefIntent.length}/500
+                      </span>
+                    </div>
                     <textarea
                       rows={4}
                       maxLength={500}
