@@ -196,6 +196,21 @@ import {
 } from './design-style'
 import { TextPreview } from './text-preview'
 import {
+  type ColorField,
+  type ColorOpacityField,
+  type CustomShadowNumberField,
+  type ImagePresentationField,
+  type ShapeRadiusField,
+  type SpacingField,
+  colorFields,
+  imagePresentationFields,
+  layoutFields,
+  shapeCornerRadiusFields,
+  shapeFields,
+  spacingFields,
+  typographyFields,
+} from './schema-fields'
+import {
   resolveColor,
   resolveLayout,
   resolveShape,
@@ -580,79 +595,6 @@ const gradientDirectionOptions: GradientDirection[] = [...GRADIENT_DIRECTION_IDS
 const gradientTypeOptions: GradientType[] = [...GRADIENT_TYPE_IDS]
 const REGISTERED_FONT_FAMILY_OPTION_PREFIX = 'registered-family:'
 const MAX_FONT_UPLOAD_FILES = 20
-const typographyFields = [
-  'fontSize',
-  'fontWeight',
-  'lineHeight',
-  'letterSpacing',
-  'textAlign',
-  'fontFamily',
-  'textShadow',
-] as const
-const spacingFields = [
-  'paddingTop',
-  'paddingRight',
-  'paddingBottom',
-  'paddingLeft',
-  'marginTop',
-  'marginRight',
-  'marginBottom',
-  'marginLeft',
-  'gap',
-] as const
-const shapeFields = [
-  'radius',
-  'radiusTopLeft',
-  'radiusTopRight',
-  'radiusBottomRight',
-  'radiusBottomLeft',
-  'borderWidth',
-  'borderColor',
-  'borderOpacity',
-  'borderStyle',
-  'shadow',
-  'customShadow',
-] as const
-const colorFields = [
-  'backgroundColor',
-  'backgroundOpacity',
-  'backgroundGradient',
-  'hoverBackgroundColor',
-  'hoverTextColor',
-  'activeBackgroundColor',
-  'activeTextColor',
-  'focusBackgroundColor',
-  'focusTextColor',
-  'disabledBackgroundColor',
-  'disabledTextColor',
-  'textColor',
-  'textOpacity',
-  'accentColor',
-  'accentOpacity',
-] as const
-const layoutFields = ['direction', 'align', 'justify', 'wrap'] as const
-const imagePresentationFields = [
-  'fit',
-  'overlayColor',
-  'overlayOpacity',
-  'overlayGradient',
-  'filter',
-] as const
-type SpacingField = (typeof spacingFields)[number]
-type ColorField = Extract<
-  (typeof colorFields)[number],
-  'backgroundColor' | 'textColor' | 'accentColor'
->
-type ColorOpacityField = Extract<
-  (typeof colorFields)[number],
-  'backgroundOpacity' | 'textOpacity' | 'accentOpacity'
->
-type ShapeRadiusField = Extract<
-  (typeof shapeFields)[number],
-  'radiusTopLeft' | 'radiusTopRight' | 'radiusBottomRight' | 'radiusBottomLeft'
->
-type CustomShadowNumberField = 'offsetX' | 'offsetY' | 'blur' | 'spread'
-type ImagePresentationField = (typeof imagePresentationFields)[number]
 type SpacingMode = 'all' | 'axis' | 'sides'
 type ShapeRadiusMode = 'all' | 'corners'
 type GradientColorStopField = 'from' | 'to'
@@ -707,12 +649,6 @@ const marginHorizontalFields: readonly SpacingField[] = [
 const marginVerticalFields: readonly SpacingField[] = [
   'marginTop',
   'marginBottom',
-]
-const shapeCornerRadiusFields: readonly ShapeRadiusField[] = [
-  'radiusTopLeft',
-  'radiusTopRight',
-  'radiusBottomLeft',
-  'radiusBottomRight',
 ]
 const shapeCornerRadiusLabels: Record<ShapeRadiusField, string> = {
   radiusTopLeft: '좌상',
