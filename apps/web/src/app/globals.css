@@ -27,6 +27,57 @@
   --dw-ui-danger-bg-strong: #4a1f1f;
   --dw-ui-danger-text: #fca5a5;
   --dw-ui-danger-border: #7f1d1d;
+
+  /* Typography scale — Figma/Adobe 인스펙터 기준
+     section-heading: 12 semibold (disclosure title)
+     label: 11 semibold (input label, tab)
+     value: 13 normal (input text, body)
+     caption: 11 normal (description, hint) */
+  --dw-text-section-heading: 12px;
+  --dw-text-label: 11px;
+  --dw-text-value: 13px;
+  --dw-text-caption: 11px;
+  --dw-text-mono-value: 12px;
+  --dw-font-weight-label: 600;
+  --dw-font-weight-value: 400;
+
+  /* Spacing scale — 4pt grid (Figma 표준)
+     1=4 / 2=8 / 3=12 / 4=16 / 5=20 / 6=24 / 7=32 / 8=40 */
+  --dw-space-1: 4px;
+  --dw-space-2: 8px;
+  --dw-space-3: 12px;
+  --dw-space-4: 16px;
+  --dw-space-5: 20px;
+  --dw-space-6: 24px;
+  --dw-space-7: 32px;
+  --dw-space-8: 40px;
+
+  /* Radius scale — 기성 툴 표준
+     sm: 4 (인풋, small button)
+     md: 6 (카드, disclosure)
+     lg: 8 (모달, large card)
+     pill: 9999 (chip, badge) */
+  --dw-radius-sm: 4px;
+  --dw-radius-md: 6px;
+  --dw-radius-lg: 8px;
+  --dw-radius-pill: 9999px;
+
+  /* Shadow scale — 다크 UI 호환 (light mode와 다른 깊이감)
+     elev-1: 작은 분리 (input focus, hover lift)
+     elev-2: 중간 (popover, dropdown)
+     elev-3: 큰 (modal, command palette) */
+  --dw-shadow-elev-1: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --dw-shadow-elev-2: 0 4px 8px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --dw-shadow-elev-3: 0 12px 32px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.3);
+
+  /* Focus ring — 키보드 접근성 (Figma/Claude/Adobe 모두 2px ring + 약한 outline) */
+  --dw-focus-ring: 0 0 0 2px var(--dw-ui-bg), 0 0 0 4px var(--dw-ui-accent);
+
+  /* Motion — 마이크로 인터랙션 표준 (기성 툴 모두 100~200ms 사이) */
+  --dw-motion-fast: 80ms;
+  --dw-motion-base: 140ms;
+  --dw-motion-slow: 220ms;
+  --dw-motion-ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* 페이지 자체 스크롤바 차단 — 패널 내부에서만 스크롤되도록.

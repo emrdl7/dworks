@@ -63,7 +63,7 @@ export function InspectorDisclosure({
 
   return (
     <details
-      className="rounded-md border border-[#2a2e35] bg-[#16181c] [&[open]>summary_.dw-chevron]:rotate-180"
+      className="rounded-[var(--dw-radius-md)] border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] transition-[border-color] duration-[var(--dw-motion-base)] [&[open]>summary_.dw-chevron]:rotate-180 [&[open]]:border-[var(--dw-ui-strong)]"
       open={detailsOpen}
       onToggle={
         isControlled
@@ -76,27 +76,35 @@ export function InspectorDisclosure({
           : undefined
       }
     >
-      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#6366f1] [&::-webkit-details-marker]:hidden">
+      <summary
+        className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 transition-colors duration-[var(--dw-motion-fast)] hover:bg-[var(--dw-ui-elevated)]/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--dw-ui-accent)] [&::-webkit-details-marker]:hidden"
+      >
         <div className="min-w-0">
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[#ebecef]">
+          <h3
+            className="flex items-center gap-1.5 font-[number:var(--dw-font-weight-label)] text-[length:var(--dw-text-section-heading)] uppercase tracking-[0.04em] text-[var(--dw-ui-text-body)]"
+          >
             {title}
             {hasExplicit ? (
               <span
                 aria-label="명시 override 있음"
                 title="이 노드에 명시 override가 박혀있음 (AI 또는 사용자가 박은 값)"
-                className="inline-block h-1.5 w-1.5 rounded-full bg-[#6366f1]"
+                className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--dw-ui-accent)] shadow-[0_0_6px_var(--dw-ui-accent)]"
               />
             ) : null}
           </h3>
           {description ? (
-            <p className="mt-1 truncate text-xs text-[#898d97]">{description}</p>
+            <p
+              className="mt-0.5 truncate text-[length:var(--dw-text-caption)] text-[var(--dw-ui-text-faint)]"
+            >
+              {description}
+            </p>
           ) : null}
         </div>
         <span className="flex shrink-0 items-center gap-2">
           {onAction ? (
             <button
               type="button"
-              className="text-xs font-semibold text-[#a5b4fc] underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] disabled:cursor-not-allowed disabled:text-[#3a3f48] disabled:hover:no-underline"
+              className="rounded-[var(--dw-radius-sm)] px-1.5 py-0.5 text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] text-[var(--dw-ui-accent-text)] transition-colors duration-[var(--dw-motion-fast)] hover:bg-[var(--dw-ui-accent-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] disabled:cursor-not-allowed disabled:text-[var(--dw-ui-text-disabled)] disabled:hover:bg-transparent"
               disabled={isActionDisabled}
               onClick={(event) => {
                 event.preventDefault()
@@ -112,7 +120,7 @@ export function InspectorDisclosure({
           <DisclosureChevron />
         </span>
       </summary>
-      <div className="border-t border-[#2a2e35] p-4">{children}</div>
+      <div className="border-t border-[var(--dw-ui-border)] p-3">{children}</div>
     </details>
   )
 }
@@ -145,20 +153,26 @@ export function TypographyNumberField({
 }: TypographyNumberFieldProps) {
   return (
     <label className={disabled ? 'block opacity-50' : 'block'}>
-      <span className="flex items-center gap-1 text-xs font-semibold text-[#898d97]">
+      <span
+        className="flex items-center gap-1 font-[number:var(--dw-font-weight-label)] text-[length:var(--dw-text-label)] tracking-wide text-[var(--dw-ui-text-muted)]"
+      >
         {label}
         {isEffective ? (
           <span
             aria-label="캔버스 default 값"
             title="캔버스 default 값 (트리에 명시 없음). 입력하면 이 노드 전용으로 override."
-            className="inline-block h-1.5 w-1.5 rounded-full bg-[#5b6069]"
+            className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--dw-ui-text-faint)]"
           />
         ) : null}
       </span>
-      <span className="mt-2 flex h-10 items-center rounded-md border border-[#2a2e35] bg-[#16181c] focus-within:border-[#6366f1] focus-within:ring-2 focus-within:ring-[#6366f1]/20">
+      <span
+        className="mt-1.5 flex h-8 items-center rounded-[var(--dw-radius-sm)] border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] transition-[border-color,box-shadow] duration-[var(--dw-motion-base)] focus-within:border-[var(--dw-ui-accent)] focus-within:bg-[var(--dw-ui-bg)] focus-within:shadow-[0_0_0_1px_var(--dw-ui-accent)] hover:border-[var(--dw-ui-strong)]"
+      >
         <input
-          className={`h-full min-w-0 flex-1 rounded-md bg-transparent px-3 text-sm outline-none disabled:cursor-not-allowed ${
-            isEffective ? 'text-[#898d97] italic' : ''
+          className={`h-full min-w-0 flex-1 rounded-[var(--dw-radius-sm)] bg-transparent px-2.5 font-mono text-[length:var(--dw-text-mono-value)] tabular-nums outline-none disabled:cursor-not-allowed ${
+            isEffective
+              ? 'text-[var(--dw-ui-text-muted)] italic'
+              : 'text-[var(--dw-ui-text-primary)]'
           }`}
           type="number"
           min={min}
@@ -170,7 +184,7 @@ export function TypographyNumberField({
           onChange={(event) => onChange(event.target.value)}
         />
         {unit ? (
-          <span className="shrink-0 px-2 text-xs font-semibold text-[#898d97]">
+          <span className="shrink-0 px-2 font-mono text-[10px] font-medium text-[var(--dw-ui-text-faint)]">
             {unit}
           </span>
         ) : null}
@@ -196,11 +210,11 @@ export function TypographyToggleButton({
     <button
       type="button"
       aria-pressed={isSelected}
-      className={`h-9 rounded-md border px-2 text-xs font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
+      className={`h-8 rounded-[var(--dw-radius-sm)] border px-2 text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
         isSelected
-          ? 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
-          : 'border-[#2a2e35] bg-[#16181c] text-[#c5c8cf] hover:bg-[#1d2025]'
-      } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#16181c]`}
+          ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+          : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+      } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-[var(--dw-ui-border)] disabled:hover:bg-[var(--dw-ui-panel)]`}
       disabled={disabled}
       onClick={onClick}
     >
@@ -237,13 +251,13 @@ export function IconToggleButton({
           ? `${label} (캔버스 default — 클릭하면 명시 박힘)`
           : label
       }
-      className={`flex h-9 items-center justify-center rounded-md border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#6366f1] ${
+      className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
         isSelected
           ? isEffective
-            ? 'border-[#3a3f55] bg-[#1a1c24] text-[#7e8395]'
-            : 'border-[#6366f1] bg-[#1e1f3a] text-[#a5b4fc]'
-          : 'border-[#2a2e35] bg-[#16181c] text-[#c5c8cf] hover:bg-[#1d2025]'
-      } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#16181c]`}
+            ? 'border-[var(--dw-ui-strong)] bg-[var(--dw-ui-elevated)] text-[var(--dw-ui-text-faint)]'
+            : 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+          : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+      } disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-[var(--dw-ui-border)] disabled:hover:bg-[var(--dw-ui-panel)]`}
       disabled={disabled}
       onClick={onClick}
     >
