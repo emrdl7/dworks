@@ -142,6 +142,19 @@
                 "alt": "BLOOM 시그니처 컬러 티셔츠와 토트백 컬렉션",
                 "aspectRatio": "wide",
                 "shape": { "radius": 36, "shadow": "xl" }
+              },
+              {
+                "id": "hero.badge",
+                "type": "text",
+                "editKind": "text",
+                "content": "SALE\n−30%",
+                "typography": { "fontSize": 22, "fontWeight": "900", "lineHeight": 1.05, "letterSpacing": 0.04, "textAlign": "center" },
+                "color": { "backgroundColor": "#fef3c7", "textColor": "#7c2d12" },
+                "shape": { "radius": 100, "shadow": "lg" },
+                "spacing": { "paddingTop": 18, "paddingBottom": 18, "paddingLeft": 18, "paddingRight": 18 },
+                "transform": { "rotate": -12 },
+                "position": "absolute",
+                "inset": { "top": 56, "right": 56, "zIndex": 30 }
               }
             ]
           },
@@ -332,6 +345,20 @@
             ]
           }
         ]
+      },
+      {
+        "id": "page.fab",
+        "type": "button",
+        "editKind": "text",
+        "variant": "primary",
+        "label": "Buy now ✿",
+        "color": { "backgroundColor": "#ec4899", "textColor": "#fff7ed", "hoverBackgroundColor": "#be185d" },
+        "shape": { "radius": 100, "shadow": "xl" },
+        "spacing": { "paddingLeft": 28, "paddingRight": 28, "paddingTop": 18, "paddingBottom": 18 },
+        "typography": { "fontSize": 16, "fontWeight": "800" },
+        "transition": { "duration": 200, "timing": "ease-out" },
+        "position": "fixed",
+        "inset": { "bottom": 32, "right": 32, "zIndex": 80 }
       }
     ]
   }

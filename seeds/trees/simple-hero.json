@@ -15,6 +15,8 @@
         "layout": { "direction": "row", "justify": "between", "align": "center" },
         "spacing": { "paddingTop": 18, "paddingBottom": 18, "paddingLeft": 56, "paddingRight": 56, "gap": 32 },
         "color": { "backgroundColor": "#fafaf9" },
+        "position": "sticky",
+        "inset": { "top": 0, "zIndex": 50 },
         "responsive": { "mobile": "햄버거 메뉴, padding 24/16" },
         "children": [
           {
