@@ -4061,17 +4061,29 @@ export default function HomePage() {
 
                   <button
                     type="button"
-                    className="w-full rounded-md bg-[#6366f1] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4f46e5] disabled:opacity-50"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[#6366f1] px-3 py-2 text-xs font-semibold text-white hover:bg-[#4f46e5] disabled:opacity-50"
                     disabled={generateLoading}
                     onClick={() => void handleGenerateTree()}
                   >
-                    {generateLoading
-                      ? briefVariantCount > 1
-                        ? `${briefVariantCount}개 생성 중…`
-                        : '생성 중…'
-                      : briefVariantCount > 1
-                        ? `디자인 ${briefVariantCount}개 생성`
-                        : '디자인 생성'}
+                    {generateLoading ? (
+                      <>
+                        <span
+                          aria-hidden="true"
+                          className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                        />
+                        <span>
+                          {briefVariantCount > 1
+                            ? `${briefVariantCount}개 생성 중…`
+                            : '생성 중…'}
+                        </span>
+                      </>
+                    ) : (
+                      <span>
+                        {briefVariantCount > 1
+                          ? `디자인 ${briefVariantCount}개 생성`
+                          : '디자인 생성'}
+                      </span>
+                    )}
                   </button>
                 </>
               )}
