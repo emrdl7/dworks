@@ -30,7 +30,7 @@ export function DisclosureChevron() {
   return (
     <svg
       aria-hidden="true"
-      className="dw-chevron h-4 w-4 text-[#898d97] transition-transform"
+      className="dw-chevron h-4 w-4 text-[var(--dw-ui-text-muted)] transition-transform"
       fill="none"
       viewBox="0 0 24 24"
     >
@@ -275,8 +275,8 @@ export function InspectorRow({
 }) {
   return (
     <div className="flex justify-between gap-3">
-      <dt className="text-[#898d97]">{label}</dt>
-      <dd className="break-all text-right font-medium text-[#ebecef]">
+      <dt className="text-[var(--dw-ui-text-muted)]">{label}</dt>
+      <dd className="break-all text-right font-medium text-[var(--dw-ui-text-primary)]">
         {value}
       </dd>
     </div>
@@ -318,7 +318,7 @@ export function OpacityControl({
       <label className="mt-2 block">
         <span className="sr-only">{label} 슬라이더</span>
         <input
-          className="w-full accent-[#6366f1] disabled:cursor-not-allowed"
+          className="w-full accent-[var(--dw-ui-accent)] disabled:cursor-not-allowed"
           type="range"
           min={0}
           max={100}

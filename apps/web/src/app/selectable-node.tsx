@@ -47,15 +47,15 @@ function CanvasToolbarButton({
 }: CanvasToolbarButtonProps) {
   const toneClass =
     tone === 'danger'
-      ? 'text-[#fca5a5] hover:bg-[#3a1717] focus-visible:bg-[#3a1717]'
-      : 'text-[#c5c8cf] hover:bg-[#2a2e35] focus-visible:bg-[#2a2e35]'
+      ? 'text-[var(--dw-ui-danger-text)] hover:bg-[var(--dw-ui-danger-bg)] focus-visible:bg-[var(--dw-ui-danger-bg)]'
+      : 'text-[var(--dw-ui-text-body)] hover:bg-[var(--dw-ui-soft)] focus-visible:bg-[var(--dw-ui-soft)]'
 
   return (
     <button
       type="button"
       aria-label={ariaLabel}
       title={shortcut ? `${ariaLabel} (${shortcut})` : ariaLabel}
-      className={`inline-flex h-6 w-6 items-center justify-center rounded outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--dw-accent)] disabled:cursor-not-allowed disabled:text-[#5b6069] disabled:hover:bg-transparent ${toneClass}`}
+      className={`inline-flex h-6 w-6 items-center justify-center rounded outline-none transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--dw-accent)] disabled:cursor-not-allowed disabled:text-[var(--dw-ui-text-faint)] disabled:hover:bg-transparent ${toneClass}`}
       disabled={disabled}
       onClick={(event) => {
         event.stopPropagation()
@@ -97,7 +97,7 @@ function CanvasNodeToolbar({ nodeId }: { nodeId: string }) {
     <div
       role="toolbar"
       aria-label="선택 노드 툴바"
-      className="pointer-events-auto absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded-md border border-[#2a2e35] bg-[#1d2025] px-1 py-0.5 shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+      className="pointer-events-auto absolute -top-3 right-2 z-10 flex items-center gap-0.5 rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-elevated)] px-1 py-0.5 shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
       onClick={(event) => event.stopPropagation()}
       onContextMenu={(event) => event.stopPropagation()}
     >

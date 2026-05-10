@@ -21,6 +21,7 @@
   --dw-ui-accent-text-strong: #c7d2fe;
   --dw-ui-accent-border: #4338ca;
   --dw-ui-warn-bg: #3a2e0a;
+  --dw-ui-warn-bg-strong: #4a3812;
   --dw-ui-warn-text: #fbbf24;
   --dw-ui-warn-border: #a3741f;
   --dw-ui-danger-bg: #3a1717;
@@ -93,13 +94,13 @@ body {
 input[type='range'],
 input[type='checkbox'],
 input[type='radio'] {
-  accent-color: #6366f1;
+  accent-color: var(--dw-ui-accent);
 }
 
 /* 다크 친화 스크롤바 — 패널/캔버스 안에서 stationary chrome */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2a2e35 transparent;
+  scrollbar-color: var(--dw-ui-soft) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -112,7 +113,7 @@ input[type='radio'] {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #2a2e35;
+  background: var(--dw-ui-soft);
   border-radius: 6px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -120,7 +121,7 @@ input[type='radio'] {
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #3a3f48;
+  background: var(--dw-ui-strong);
   background-clip: padding-box;
 }
 
