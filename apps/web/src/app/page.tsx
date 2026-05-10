@@ -183,6 +183,7 @@ import { extractDominantColors, pickAspectRatio } from './image-color'
 import {
   resolveLayout,
   resolveSpacing,
+  resolveTypography,
   type ResolvedLayout,
   type ResolvedSpacing,
 } from './design-resolver'
@@ -6524,7 +6525,11 @@ function TextPreview({
   node: TextNode
   textColorStyle?: CSSProperties
 }) {
-  const typographyStyle = getTypographyStyle(node.typography)
+  // Phase 3-2 typography: resolveTypography 결과(emphasis-driven default + explicit)를
+  // style로 적용. className에서 text-Xxl/font-semibold/leading-X 제거 — resolved
+  // value가 fontSize/fontWeight/lineHeight를 채움. text color token(var(--dw-*))은
+  // 후속 token resolver로 마이그레이션.
+  const typographyStyle = getTypographyStyle(resolveTypography(node).value)
   const textStyle = mergeStyles(typographyStyle, textColorStyle)
   const captionTextStyle = mergeStyles(textStyle, accentColorStyle)
   const content = parseInlineMarkdown(node.content)
@@ -6533,7 +6538,7 @@ function TextPreview({
     case 'heading-1':
       return (
         <h2
-          className="max-w-3xl text-5xl font-semibold leading-tight"
+          className="max-w-3xl"
           style={textStyle}
         >
           {content}
@@ -6542,7 +6547,7 @@ function TextPreview({
     case 'heading-2':
       return (
         <h3
-          className="text-2xl font-semibold text-[var(--dw-text-primary)]"
+          className="text-[var(--dw-text-primary)]"
           style={textStyle}
         >
           {content}
@@ -6551,7 +6556,7 @@ function TextPreview({
     case 'heading-3':
       return (
         <h4
-          className="text-lg font-semibold text-[var(--dw-text-primary)]"
+          className="text-[var(--dw-text-primary)]"
           style={textStyle}
         >
           {content}
@@ -6560,7 +6565,7 @@ function TextPreview({
     case 'caption':
       return (
         <p
-          className="text-xs font-semibold uppercase text-[var(--dw-accent)]"
+          className="uppercase text-[var(--dw-accent)]"
           style={captionTextStyle}
         >
           {content}
@@ -6569,7 +6574,7 @@ function TextPreview({
     case 'body':
     default:
       return (
-        <p className="max-w-2xl text-base leading-7" style={textStyle}>
+        <p className="max-w-2xl" style={textStyle}>
           {content}
         </p>
       )
