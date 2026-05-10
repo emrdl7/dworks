@@ -180,14 +180,18 @@ import {
   type UserFixture,
 } from './user-fixtures'
 import { extractDominantColors, pickAspectRatio } from './image-color'
+import { normalizeDesignTree } from './generation-normalize'
 import {
   resolveColor,
   resolveLayout,
   resolveShape,
   resolveSpacing,
   resolveTypography,
+  type ResolvedColor,
   type ResolvedLayout,
+  type ResolvedShape,
   type ResolvedSpacing,
+  type ResolvedTypography,
 } from './design-resolver'
 import {
   DEFAULT_TYPOGRAPHY_BY_EMPHASIS,
@@ -2007,10 +2011,11 @@ export default function HomePage() {
       }
       snapshotActiveGeneration(tree)
       const now = Date.now()
+      // LLM 응답을 normalize — id 중복 제거 + root section 보강
       const newEntries: GenerationEntry[] = successes.map((success) => ({
         id: createGenerationEntryId(),
         label: '',
-        tree: success.tree,
+        tree: normalizeDesignTree(success.tree),
         immutable: false,
         brief: submitted,
         questions: clarifyQuestions,
