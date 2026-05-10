@@ -5990,8 +5990,9 @@ function CanvasNode({
       return (
         <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
           <div
-            className="flex flex-col gap-3"
-            style={mergeStyles(containerStyle, layoutStyle)}
+            // Phase 3-2: gap-3 제거 — resolver default(gap=12)가 childLayoutStyle에 포함
+            className="flex flex-col"
+            style={mergeStyles(containerStyle, childLayoutStyle)}
           >
             {node.children.map((child) => (
               <CanvasNode
