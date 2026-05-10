@@ -14,7 +14,13 @@
 //   Phase 4: Inspector가 resolver 결과 표시 (effectiveStyle 제거).
 //   Phase 5: AI 생성 후 normalize에 resolver 적용.
 
-import type { NodeLayout, Spacing, TreeNode, Typography } from '@dworks/tree'
+import type {
+  NodeLayout,
+  Shape,
+  Spacing,
+  TreeNode,
+  Typography,
+} from '@dworks/tree'
 import {
   resolveResponsiveLayout,
   resolveResponsiveSpacing,
@@ -22,6 +28,7 @@ import {
 } from './responsive'
 import {
   DEFAULT_LAYOUT_BY_TYPE,
+  DEFAULT_SHAPE_BY_TYPE,
   DEFAULT_SPACING_BY_TYPE,
   DEFAULT_TYPOGRAPHY_BY_EMPHASIS,
 } from './canvas-defaults'
@@ -208,6 +215,57 @@ export function resolveTypography(node: TreeNode): ResolvedTypography {
   pick('textAlign')
   pick('fontFamily')
   pick('textShadow')
+
+  return { value, sources }
+}
+
+// resolved shape — radius / border / shadow.
+//   1) type default
+//   2) explicit override
+// borderColor는 token 기반(CSS var)이라 default 안 받음 — token resolver(후속) 영역.
+export type ShapeKey = keyof Shape
+
+export interface ResolvedShape {
+  value: Shape
+  sources: Partial<Record<ShapeKey, NodeDesignSource>>
+}
+
+const SHAPE_KEYS: ShapeKey[] = [
+  'radius',
+  'radiusTopLeft',
+  'radiusTopRight',
+  'radiusBottomRight',
+  'radiusBottomLeft',
+  'borderWidth',
+  'borderColor',
+  'borderOpacity',
+  'borderStyle',
+  'shadow',
+  'customShadow',
+  'customShadows',
+]
+
+export function resolveShape(node: TreeNode): ResolvedShape {
+  const defaults = DEFAULT_SHAPE_BY_TYPE[node.type] ?? {}
+  const explicit = node.shape ?? {}
+  const value: Shape = {}
+  const sources: Partial<Record<ShapeKey, NodeDesignSource>> = {}
+
+  function pick<K extends ShapeKey>(key: K): void {
+    const explicitValue = explicit[key]
+    const defaultValue = defaults[key]
+    if (explicitValue !== undefined) {
+      value[key] = explicitValue
+      sources[key] = 'explicit'
+    } else if (defaultValue !== undefined) {
+      value[key] = defaultValue
+      sources[key] = 'default'
+    }
+  }
+
+  for (const key of SHAPE_KEYS) {
+    pick(key)
+  }
 
   return { value, sources }
 }

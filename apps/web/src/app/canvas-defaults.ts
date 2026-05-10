@@ -11,6 +11,7 @@
 import type {
   Emphasis,
   NodeLayout,
+  Shape,
   Spacing,
   TreeNodeType,
   Typography,
@@ -138,6 +139,25 @@ export const DEFAULT_LAYOUT_BY_TYPE: Record<TreeNodeType, NodeLayout> = {
   card: {},
   list: { direction: 'column', wrap: 'nowrap' },
   form: { direction: 'column', wrap: 'nowrap' },
+  text: {},
+  button: {},
+  image: {},
+}
+
+// type별 shape default — radius / border / shadow.
+//
+// card: rounded-lg(8) border(1px) border-[var(--dw-border)] shadow-sm
+// form: rounded-lg(8) border(1px) border-[var(--dw-border)] shadow-sm
+// 나머지: 명시 shape 없음
+//
+// borderColor는 CSS var(theme token) — 후속 token resolver가 hex로 변환. 지금은
+// 미정의(undefined)로 두어 캔버스가 className의 token을 그대로 사용.
+export const DEFAULT_SHAPE_BY_TYPE: Record<TreeNodeType, Shape> = {
+  section: {},
+  hero: {},
+  card: { radius: 8, borderWidth: 1, borderStyle: 'solid', shadow: 'sm' },
+  list: {},
+  form: { radius: 8, borderWidth: 1, borderStyle: 'solid', shadow: 'sm' },
   text: {},
   button: {},
   image: {},

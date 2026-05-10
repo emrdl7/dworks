@@ -12,6 +12,7 @@ import {
 } from './canvas-defaults.js'
 import {
   resolveLayout,
+  resolveShape,
   resolveSpacing,
   resolveTypography,
 } from './design-resolver.js'
@@ -201,5 +202,47 @@ describe('resolveTypography', () => {
     const out = resolveTypography(node)
     assert.equal(out.value.fontSize, 12)
     assert.equal(out.value.fontWeight, '600')
+  })
+})
+
+describe('resolveShape', () => {
+  it('section/list/leaf는 빈 shape (default 없음)', () => {
+    const out = resolveShape(makeSection())
+    assert.deepEqual(out.value, {})
+    assert.deepEqual(out.sources, {})
+  })
+
+  it('card default는 radius 8 borderWidth 1 solid shadow sm', () => {
+    const card = makeSection({ type: 'card', id: 'n-card' } as Partial<TreeNode>)
+    const out = resolveShape(card)
+    assert.equal(out.value.radius, 8)
+    assert.equal(out.value.borderWidth, 1)
+    assert.equal(out.value.borderStyle, 'solid')
+    assert.equal(out.value.shadow, 'sm')
+    assert.equal(out.sources.radius, 'default')
+    assert.equal(out.sources.shadow, 'default')
+  })
+
+  it('explicit override는 default를 덮음', () => {
+    const card = makeSection({
+      type: 'card',
+      id: 'n-card',
+      shape: { radius: 16, shadow: 'lg' },
+    } as Partial<TreeNode>)
+    const out = resolveShape(card)
+    assert.equal(out.value.radius, 16)
+    assert.equal(out.value.shadow, 'lg')
+    assert.equal(out.sources.radius, 'explicit')
+    assert.equal(out.sources.shadow, 'explicit')
+    // 명시 안 한 키는 default
+    assert.equal(out.value.borderWidth, 1)
+    assert.equal(out.sources.borderWidth, 'default')
+  })
+
+  it('borderColor는 default 없음 (token resolver 영역)', () => {
+    const card = makeSection({ type: 'card', id: 'n-card' } as Partial<TreeNode>)
+    const out = resolveShape(card)
+    assert.equal(out.value.borderColor, undefined)
+    assert.equal(out.sources.borderColor, undefined)
   })
 })
