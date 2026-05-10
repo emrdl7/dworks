@@ -75,6 +75,7 @@ export {
   NODE_POSITION_IDS,
   nodePositionSchema,
   nodeInsetSchema,
+  responsiveHiddenSchema,
 } from './schema.js'
 export type {
   EditKind,
@@ -130,4 +131,5 @@ export type {
   Tree,
   NodePosition,
   NodeInset,
+  ResponsiveHidden,
 } from './schema.js'

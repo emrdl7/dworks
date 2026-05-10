@@ -5675,6 +5675,10 @@ function CanvasNode({
   if (node.hidden === true) {
     return null
   }
+  // viewport별 hide — 반응형 패턴 (모바일 sidebar 숨김, 데스크탑 hamburger 숨김 등)
+  if (node.hideOn?.[viewport] === true) {
+    return null
+  }
 
   // design-resolver 사용 — explicit + canvas-defaults + responsive 보정 합본.
   // 결과는 type default까지 포함해 캔버스 className에서 default를 뺀 후에도
