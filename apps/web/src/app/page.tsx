@@ -182,16 +182,19 @@ import {
 import { extractDominantColors, pickAspectRatio } from './image-color'
 import { normalizeDesignTree } from './generation-normalize'
 import {
+  getCssColorWithOpacity,
+  hexToRgba,
+  mergeStyles,
+  rgbToHex,
+} from './style-utils'
+import {
   resolveColor,
   resolveLayout,
   resolveShape,
   resolveSpacing,
   resolveTypography,
-  type ResolvedColor,
   type ResolvedLayout,
-  type ResolvedShape,
   type ResolvedSpacing,
-  type ResolvedTypography,
 } from './design-resolver'
 import {
   DEFAULT_TYPOGRAPHY_BY_EMPHASIS,
@@ -7224,13 +7227,6 @@ function getTextColorStyle(textColor?: string): CSSProperties | undefined {
   return textColor ? { color: textColor } : undefined
 }
 
-function mergeStyles(
-  ...styles: Array<CSSProperties | undefined>
-): CSSProperties | undefined {
-  const merged = Object.assign({}, ...styles.filter(Boolean))
-  return Object.keys(merged).length > 0 ? merged : undefined
-}
-
 const KOREAN_SANS_FALLBACK_STACK =
   '"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Helvetica Neue", "Segoe UI", Arial, sans-serif'
 
@@ -13859,18 +13855,6 @@ function getCanvasStyle(colorPreset: ColorPreset): CSSProperties {
   } as CSSProperties
 }
 
-function getCssColorWithOpacity(color: string, opacity?: number): string {
-  if (opacity === undefined || opacity >= 1) {
-    return color
-  }
-
-  if (opacity <= 0) {
-    return hexToRgba(color, 0)
-  }
-
-  return hexToRgba(color, opacity)
-}
-
 // 캔버스 노드 effective style — Tailwind class에서 오는 padding/gap/color/font 등을
 // inspector placeholder로 노출 (Codex 회신: 사용자가 _현재 렌더 중_인 값 즉시 확인).
 interface EffectiveCanvasStyle {
@@ -13898,46 +13882,6 @@ interface EffectiveCanvasStyle {
   justifyContent?: string
   alignItems?: string
   flexWrap?: string
-}
-
-// computed style의 'rgb(R, G, B)' / 'rgba(R, G, B, A)'를 #RRGGBB로 정규화.
-// 투명(alpha 0) 또는 'transparent' 등은 undefined 반환.
-function rgbToHex(rgb: string): string | undefined {
-  if (!rgb || rgb === 'transparent' || rgb === 'rgba(0, 0, 0, 0)') return undefined
-  const m = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/)
-  if (!m) return undefined
-  const r = Number(m[1])
-  const g = Number(m[2])
-  const b = Number(m[3])
-  const a = m[4] !== undefined ? Number(m[4]) : 1
-  if (a < 0.05) return undefined
-  const toHex = (n: number) => n.toString(16).padStart(2, '0')
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
-}
-
-function hexToRgba(hex: string, alpha: number): string {
-  const normalized = hex.replace('#', '')
-  if (normalized.length !== 3 && normalized.length !== 6) {
-    return hex
-  }
-
-  const expanded =
-    normalized.length === 3
-      ? normalized
-          .split('')
-          .map((digit) => `${digit}${digit}`)
-          .join('')
-      : normalized
-  const value = Number.parseInt(expanded, 16)
-  if (!Number.isFinite(value)) {
-    return hex
-  }
-
-  const red = (value >> 16) & 255
-  const green = (value >> 8) & 255
-  const blue = value & 255
-
-  return `rgba(${red},${green},${blue},${alpha})`
 }
 
 interface VariantCompareGridProps {
