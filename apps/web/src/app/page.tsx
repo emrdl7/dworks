@@ -180,6 +180,7 @@ import {
   type UserFixture,
 } from './user-fixtures'
 import { extractDominantColors, pickAspectRatio } from './image-color'
+import { resolveSpacing, type ResolvedSpacing } from './design-resolver'
 
 type ContainerNode = Extract<TreeNode, { children: TreeNode[] }>
 
@@ -4837,6 +4838,7 @@ export default function HomePage() {
             node={selectedNode}
             tree={tree}
             effectiveStyle={effectiveStyle}
+            viewport={responsiveViewport}
             onTextChange={handleTextChange}
             onTextTypographyChange={handleTextTypographyChange}
             onTextTypographyReset={handleTextTypographyReset}
@@ -7563,6 +7565,7 @@ interface NodeInspectorProps {
   tree: Tree
   colorPreset: ColorPreset
   effectiveStyle: EffectiveCanvasStyle
+  viewport: ResponsiveViewport
   onTextChange: (node: TextNode, content: string) => void
   onTextTypographyChange: (node: TextNode, patch: Partial<Typography>) => void
   onTextTypographyReset: (node: TextNode) => void
@@ -7598,6 +7601,7 @@ function NodeInspector({
   tree,
   colorPreset,
   effectiveStyle,
+  viewport,
   onTextChange,
   onTextTypographyChange,
   onTextTypographyReset,
@@ -7842,6 +7846,7 @@ function NodeInspector({
             <SpacingControls
               node={node}
               effectiveStyle={effectiveStyle}
+              resolved={resolveSpacing(node, { viewport })}
               disclosure={bindSection('간격')}
               onSpacingChange={onSpacingChange}
               onSpacingReset={onSpacingReset}
@@ -10436,6 +10441,7 @@ interface SpacingControlsProps {
   disclosure?: InspectorDisclosureControl
   node: TreeNode
   effectiveStyle?: EffectiveCanvasStyle
+  resolved?: ResolvedSpacing
   onSpacingChange: (node: TreeNode, patch: Partial<Spacing>) => void
   onSpacingReset: (node: TreeNode) => void
 }
@@ -10638,6 +10644,7 @@ function SpacingControls({
   disclosure,
   node,
   effectiveStyle,
+  resolved,
   onSpacingChange,
   onSpacingReset,
 }: SpacingControlsProps) {
@@ -10645,18 +10652,20 @@ function SpacingControls({
   const [marginMode, setMarginMode] = useState<SpacingMode>('all')
   const spacing = node.spacing ?? {}
   const canEditGap = isContainerNode(node)
-  // tree 값 || 캔버스 렌더 default — 사용자가 _현재 보이는 값_을 input에 직접 보고 즉시 수정
+  // 우선순위: explicit(spacing) > resolver default(canvas-defaults) > DOM 측정(effectiveStyle)
+  // 마이그레이션 단계상 resolved가 누락한 키는 effectiveStyle로 fallback (회귀 방지망)
   const eff = effectiveStyle ?? {}
+  const r = resolved?.value ?? {}
   const spacingWithEffective: Spacing = {
-    paddingTop: spacing.paddingTop ?? eff.paddingTop,
-    paddingRight: spacing.paddingRight ?? eff.paddingRight,
-    paddingBottom: spacing.paddingBottom ?? eff.paddingBottom,
-    paddingLeft: spacing.paddingLeft ?? eff.paddingLeft,
-    marginTop: spacing.marginTop ?? eff.marginTop,
-    marginRight: spacing.marginRight ?? eff.marginRight,
-    marginBottom: spacing.marginBottom ?? eff.marginBottom,
-    marginLeft: spacing.marginLeft ?? eff.marginLeft,
-    gap: spacing.gap ?? eff.gap,
+    paddingTop: spacing.paddingTop ?? r.paddingTop ?? eff.paddingTop,
+    paddingRight: spacing.paddingRight ?? r.paddingRight ?? eff.paddingRight,
+    paddingBottom: spacing.paddingBottom ?? r.paddingBottom ?? eff.paddingBottom,
+    paddingLeft: spacing.paddingLeft ?? r.paddingLeft ?? eff.paddingLeft,
+    marginTop: spacing.marginTop ?? r.marginTop ?? eff.marginTop,
+    marginRight: spacing.marginRight ?? r.marginRight ?? eff.marginRight,
+    marginBottom: spacing.marginBottom ?? r.marginBottom ?? eff.marginBottom,
+    marginLeft: spacing.marginLeft ?? r.marginLeft ?? eff.marginLeft,
+    gap: spacing.gap ?? r.gap ?? eff.gap,
   }
 
   function updateFields(
