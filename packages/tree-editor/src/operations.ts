@@ -60,6 +60,9 @@ export interface NodeMetaPatch {
   transition?: TreeNode['transition']
   transform?: TreeNode['transform']
   cursor?: TreeNode['cursor']
+  position?: TreeNode['position']
+  inset?: TreeNode['inset']
+  hideOn?: TreeNode['hideOn']
 }
 
 export interface UpdateNodeMetaOperation {
@@ -844,6 +847,30 @@ function withNodeMetaPatch<T extends TreeNode>(
       delete next.transform
     } else {
       next.transform = patch.transform
+    }
+  }
+
+  if ('position' in patch) {
+    if (patch.position === undefined) {
+      delete next.position
+    } else {
+      next.position = patch.position
+    }
+  }
+
+  if ('inset' in patch) {
+    if (patch.inset === undefined) {
+      delete next.inset
+    } else {
+      next.inset = patch.inset
+    }
+  }
+
+  if ('hideOn' in patch) {
+    if (patch.hideOn === undefined) {
+      delete next.hideOn
+    } else {
+      next.hideOn = patch.hideOn
     }
   }
 

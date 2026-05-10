@@ -9,11 +9,14 @@ import {
   imagePresentationSchema,
   nodeColorSchema,
   nodeCursorSchema,
+  nodeInsetSchema,
   nodeLayoutSchema,
   nodePointerEventsSchema,
+  nodePositionSchema,
   nodeTransformSchema,
   nodeTransitionSchema,
   opacitySchema,
+  responsiveHiddenSchema,
   shapeSchema,
   spacingSchema,
   styleTokensSchema,
@@ -90,6 +93,9 @@ export const updateNodeMetaOperationSchema: z.ZodType<UpdateNodeMetaOperation> =
       transition: nodeTransitionSchema.optional(),
       transform: nodeTransformSchema.optional(),
       cursor: nodeCursorSchema.optional(),
+      position: nodePositionSchema.optional(),
+      inset: nodeInsetSchema.optional(),
+      hideOn: responsiveHiddenSchema,
     }),
   })
 
@@ -178,6 +184,9 @@ export const editOperationSchema = z.discriminatedUnion('type', [
       transition: z.ZodOptional<typeof nodeTransitionSchema>
       transform: z.ZodOptional<typeof nodeTransformSchema>
       cursor: z.ZodOptional<typeof nodeCursorSchema>
+      position: z.ZodOptional<typeof nodePositionSchema>
+      inset: z.ZodOptional<typeof nodeInsetSchema>
+      hideOn: typeof responsiveHiddenSchema
     }>
   }>,
   updateButtonLabelOperationSchema as z.ZodObject<{

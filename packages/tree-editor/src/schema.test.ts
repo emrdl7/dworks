@@ -224,6 +224,25 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateNodeMeta operation with position/inset/hideOn', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateNodeMeta',
+      nodeId: 'page.banner',
+      patch: {
+        position: 'absolute',
+        inset: { top: 0, left: 0, right: 0, zIndex: 20 },
+        hideOn: { mobile: true },
+      },
+    })
+
+    assert.equal(op.type, 'updateNodeMeta')
+    if (op.type === 'updateNodeMeta') {
+      assert.equal(op.patch.position, 'absolute')
+      assert.deepEqual(op.patch.inset, { top: 0, left: 0, right: 0, zIndex: 20 })
+      assert.deepEqual(op.patch.hideOn, { mobile: true })
+    }
+  })
+
   it('parses updateNodeMeta operation with step transition timing', () => {
     const stepStart = editOperationSchema.parse({
       type: 'updateNodeMeta',

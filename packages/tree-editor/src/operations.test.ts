@@ -472,6 +472,65 @@ describe('tree editor operations', () => {
     }
   })
 
+  it('updates and clears position/inset/hideOn metadata', () => {
+    const tree = fixtureTree()
+    const edited = updateNodeMeta(tree, 'landing.card', {
+      position: 'absolute',
+      inset: { top: 12, left: 0, right: 0, zIndex: 20 },
+      hideOn: { mobile: true, tablet: true },
+    })
+    const stickied = updateNodeMeta(edited, 'landing.card', {
+      position: 'sticky',
+      inset: { top: 0 },
+    })
+    const reset = updateNodeMeta(edited, 'landing.card', {
+      position: undefined,
+      inset: undefined,
+      hideOn: undefined,
+    })
+
+    assert.equal(tree.root.type, 'section')
+    assert.equal(edited.root.type, 'section')
+    assert.equal(stickied.root.type, 'section')
+    assert.equal(reset.root.type, 'section')
+    if (
+      tree.root.type === 'section' &&
+      edited.root.type === 'section' &&
+      stickied.root.type === 'section' &&
+      reset.root.type === 'section'
+    ) {
+      const originalCard = tree.root.children[3]
+      const editedCard = edited.root.children[3]
+      const stickiedCard = stickied.root.children[3]
+      const resetCard = reset.root.children[3]
+      if (
+        originalCard?.type === 'card' &&
+        editedCard?.type === 'card' &&
+        stickiedCard?.type === 'card' &&
+        resetCard?.type === 'card'
+      ) {
+        assert.equal(originalCard.position, undefined)
+        assert.equal(originalCard.inset, undefined)
+        assert.equal(originalCard.hideOn, undefined)
+        assert.equal(editedCard.position, 'absolute')
+        assert.deepEqual(editedCard.inset, {
+          top: 12,
+          left: 0,
+          right: 0,
+          zIndex: 20,
+        })
+        assert.deepEqual(editedCard.hideOn, { mobile: true, tablet: true })
+        assert.equal(stickiedCard.position, 'sticky')
+        assert.deepEqual(stickiedCard.inset, { top: 0 })
+        // 이전에 박힌 hideOn은 stickied에 patch 안 줬으므로 그대로 유지
+        assert.deepEqual(stickiedCard.hideOn, { mobile: true, tablet: true })
+        assert.equal(resetCard.position, undefined)
+        assert.equal(resetCard.inset, undefined)
+        assert.equal(resetCard.hideOn, undefined)
+      }
+    }
+  })
+
   it('replaces text by id through the compatibility helper', () => {
     const updated = replaceTextById(fixtureTree(), 'landing.title', '새 이름')
 

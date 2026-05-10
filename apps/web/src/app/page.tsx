@@ -61,8 +61,11 @@ import {
   type ImageFilter,
   type ImageDropShadow,
   type NodeColor,
+  type NodeInset,
+  type NodePosition,
   type NodeTransform,
   type NodeTransitionTiming,
+  type ResponsiveHidden,
   type TransitionCubicBezier,
   NODE_TRANSITION_TIMING_IDS,
   type NodeLayout,
@@ -459,11 +462,16 @@ import {
   marginSpacingFields,
   marginVerticalFields,
   MAX_FONT_UPLOAD_FILES,
+  nodePositionDescriptions,
+  nodePositionIcons,
+  nodePositionLabels,
+  nodePositionOptions,
   nodeTransitionTimingLabels,
   paddingHorizontalFields,
   paddingSpacingFields,
   paddingVerticalFields,
   REGISTERED_FONT_FAMILY_OPTION_PREFIX,
+  responsiveViewportLabels,
   responsiveViewportOptions,
   shadowPresetLabels,
   shadowPresetOptions,
@@ -6954,6 +6962,18 @@ function NodeInspector({
               onSpacingChange={onSpacingChange}
             />
 
+            <PositionControls
+              node={node}
+              disclosure={bindSection('위치')}
+              onNodeMetaChange={onNodeMetaChange}
+            />
+
+            <ResponsiveHideControls
+              node={node}
+              disclosure={bindSection('반응형 숨김')}
+              onNodeMetaChange={onNodeMetaChange}
+            />
+
             <SpacingControls
               node={node}
               effectiveStyle={effectiveStyle}
@@ -9676,6 +9696,241 @@ function LayoutControls({
             })
           }
         />
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface PositionControlsProps {
+  disclosure?: InspectorDisclosureControl
+  node: TreeNode
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: NodeMetaPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+// 노드 자신의 position + inset (top/right/bottom/left/zIndex).
+// schema/style은 이미 있고 GUI만 누락됐던 것 — overlay 헤더, sticky CTA 등
+// 레이어드 디자인 패턴을 캔버스에서 만들 수 있도록 노출.
+function PositionControls({
+  disclosure,
+  node,
+  onNodeMetaChange,
+}: PositionControlsProps) {
+  const position = node.position ?? 'static'
+  const inset = node.inset ?? {}
+  const hasExplicit = node.position !== undefined || node.inset !== undefined
+  const isPositioned = position !== 'static'
+
+  function setPosition(next: NodePosition) {
+    if (next === 'static') {
+      // static = default. position + inset 모두 제거.
+      onNodeMetaChange(
+        node,
+        { position: undefined, inset: undefined },
+        { mergeKey: getNodeColorMergeKey(node.id, 'meta.position') },
+      )
+      return
+    }
+    onNodeMetaChange(
+      node,
+      { position: next },
+      { mergeKey: getNodeColorMergeKey(node.id, 'meta.position') },
+    )
+  }
+
+  function setInsetField(field: keyof NodeInset, value: string) {
+    const min = field === 'zIndex' ? -100 : -1000
+    const max = field === 'zIndex' ? 100 : 1000
+    const parsed = parseOptionalNumber(value, min, max)
+    const nextInset: NodeInset = { ...inset, [field]: parsed }
+    // 모든 키가 undefined면 inset 자체 제거.
+    const hasAny = (Object.keys(nextInset) as Array<keyof NodeInset>).some(
+      (k) => nextInset[k] !== undefined,
+    )
+    onNodeMetaChange(
+      node,
+      { inset: hasAny ? nextInset : undefined },
+      { mergeKey: getNodeColorMergeKey(node.id, `meta.inset.${field}`) },
+    )
+  }
+
+  function reset() {
+    onNodeMetaChange(node, { position: undefined, inset: undefined })
+  }
+
+  return (
+    <InspectorDisclosure
+      title="위치"
+      description="기본/떠있음/스크롤 고정 — 오버레이 헤더 같은 레이어드 패턴"
+      onAction={reset}
+      isActionDisabled={!hasExplicit}
+      hasExplicit={hasExplicit}
+      defaultOpen={false}
+      {...disclosure}
+    >
+      <div className="mt-3 space-y-3">
+        <div>
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            모드
+          </span>
+          <div className="mt-2 grid grid-cols-4 gap-1">
+            {nodePositionOptions.map((option) => (
+              <IconToggleButton
+                key={option}
+                icon={nodePositionIcons[option]}
+                isSelected={position === option}
+                label={`위치: ${nodePositionLabels[option]} — ${nodePositionDescriptions[option]}`}
+                onClick={() => setPosition(option)}
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-[var(--dw-ui-text-faint)]">
+            {nodePositionDescriptions[position]}
+          </p>
+        </div>
+
+        {isPositioned ? (
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <TypographyNumberField
+                label="위 (top)"
+                unit="px"
+                min={-1000}
+                max={1000}
+                step={1}
+                value={inset.top}
+                placeholder="auto"
+                onChange={(value) => setInsetField('top', value)}
+              />
+              <TypographyNumberField
+                label="오른쪽"
+                unit="px"
+                min={-1000}
+                max={1000}
+                step={1}
+                value={inset.right}
+                placeholder="auto"
+                onChange={(value) => setInsetField('right', value)}
+              />
+              <TypographyNumberField
+                label="아래 (bottom)"
+                unit="px"
+                min={-1000}
+                max={1000}
+                step={1}
+                value={inset.bottom}
+                placeholder="auto"
+                onChange={(value) => setInsetField('bottom', value)}
+              />
+              <TypographyNumberField
+                label="왼쪽"
+                unit="px"
+                min={-1000}
+                max={1000}
+                step={1}
+                value={inset.left}
+                placeholder="auto"
+                onChange={(value) => setInsetField('left', value)}
+              />
+            </div>
+            <TypographyNumberField
+              label="z-index (위에 쌓일수록 큰 수)"
+              min={-100}
+              max={100}
+              step={1}
+              value={inset.zIndex}
+              placeholder="0"
+              onChange={(value) => setInsetField('zIndex', value)}
+            />
+          </>
+        ) : (
+          <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
+            {`"떠있음" 이상을 선택하면 top/right/bottom/left와 z-index를 지정할 수 있습니다.`}
+          </p>
+        )}
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface ResponsiveHideControlsProps {
+  disclosure?: InspectorDisclosureControl
+  node: TreeNode
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: NodeMetaPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+// hideOn — viewport별 노드 숨김. 모바일 nav vs 데스크탑 햄버거 패턴 등.
+function ResponsiveHideControls({
+  disclosure,
+  node,
+  onNodeMetaChange,
+}: ResponsiveHideControlsProps) {
+  const hideOn = node.hideOn
+  const hasAnyHidden =
+    hideOn?.mobile === true ||
+    hideOn?.tablet === true ||
+    hideOn?.desktop === true
+
+  function toggleViewport(viewport: ResponsiveViewport) {
+    const current = hideOn?.[viewport] === true
+    const nextHidden: NonNullable<ResponsiveHidden> = {
+      ...(hideOn ?? {}),
+      [viewport]: current ? undefined : true,
+    }
+    // 모두 undefined면 hideOn 자체 제거.
+    const stillAny =
+      nextHidden.mobile === true ||
+      nextHidden.tablet === true ||
+      nextHidden.desktop === true
+    onNodeMetaChange(node, { hideOn: stillAny ? nextHidden : undefined })
+  }
+
+  function reset() {
+    onNodeMetaChange(node, { hideOn: undefined })
+  }
+
+  return (
+    <InspectorDisclosure
+      title="반응형 숨김"
+      description="특정 viewport에서만 숨기기 (모바일 햄버거 등)"
+      onAction={reset}
+      isActionDisabled={!hasAnyHidden}
+      hasExplicit={hasAnyHidden}
+      defaultOpen={false}
+      {...disclosure}
+    >
+      <div className="mt-3 space-y-2">
+        <p className="text-[11px] leading-relaxed text-[var(--dw-ui-text-faint)]">
+          체크된 viewport에서 이 노드는 렌더되지 않습니다. 노드 전체 숨기기는
+          헤더의 가시성 토글을 사용하세요.
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {responsiveViewportOptions.map((vp) => {
+            const isHidden = hideOn?.[vp] === true
+            return (
+              <button
+                key={vp}
+                type="button"
+                aria-pressed={isHidden}
+                onClick={() => toggleViewport(vp)}
+                className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                  isHidden
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                }`}
+              >
+                {responsiveViewportLabels[vp]}
+              </button>
+            )
+          })}
+        </div>
       </div>
     </InspectorDisclosure>
   )

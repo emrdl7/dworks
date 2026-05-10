@@ -26,9 +26,12 @@ import {
   ArrowUp,
   ArrowUpLeft,
   ArrowUpRight,
+  Box,
   Columns2,
+  Layers,
   Move,
   PanelTop,
+  Pin,
   Rows2,
   Square,
   StretchHorizontal,
@@ -48,6 +51,7 @@ import type {
   LayoutDirection,
   LayoutJustify,
   LayoutWrap,
+  NodePosition,
   NodeTransitionTiming,
   ShadowPreset,
   TextAlign,
@@ -258,6 +262,40 @@ export const layoutJustifyOptions: LayoutJustify[] = [
   'evenly',
 ]
 export const layoutWrapOptions: LayoutWrap[] = ['nowrap', 'wrap']
+
+// ---- positioning (overlay 헤더, sticky CTA 등 레이어드 디자인) ----
+
+export const nodePositionLabels: Record<NodePosition, string> = {
+  static: '기본',
+  absolute: '떠있음',
+  sticky: '고정',
+  fixed: '뷰포트',
+}
+export const nodePositionDescriptions: Record<NodePosition, string> = {
+  static: '일반 흐름 (기본)',
+  absolute: '부모 안에서 떠있음 (오버레이 헤더 등)',
+  sticky: '스크롤 시 상단/지정 위치에 붙음',
+  fixed: '뷰포트 기준 고정 (화면에 박힘)',
+}
+export const nodePositionIcons: Record<NodePosition, LucideIcon> = {
+  static: Box,
+  absolute: Layers,
+  sticky: PanelTop,
+  fixed: Pin,
+}
+export const nodePositionOptions: NodePosition[] = [
+  'static',
+  'absolute',
+  'sticky',
+  'fixed',
+]
+
+// hideOn 라벨 — viewport options는 아래 ---- responsive ---- 섹션에 이미 있음.
+export const responsiveViewportLabels: Record<ResponsiveViewport, string> = {
+  mobile: '모바일',
+  tablet: '태블릿',
+  desktop: '데스크탑',
+}
 
 // ---- gradient ----
 
