@@ -51,6 +51,7 @@ import type {
   NodeTransitionTiming,
   ShadowPreset,
   TextAlign,
+  Typography,
 } from '@dworks/tree'
 import {
   BUILT_IN_FONT_FAMILY_IDS,
@@ -346,3 +347,60 @@ export const responsiveViewportOptions: ResponsiveViewport[] = [
   'tablet',
   'desktop',
 ]
+
+// ---- transform origin (3x3 grid presets) ----
+
+export interface TransformOriginPreset {
+  id: string
+  label: string
+  x: number
+  y: number
+}
+
+export const TRANSFORM_ORIGIN_PRESETS: ReadonlyArray<TransformOriginPreset> = [
+  { id: 'top-left', label: '좌상', x: 0, y: 0 },
+  { id: 'top', label: '상', x: 50, y: 0 },
+  { id: 'top-right', label: '우상', x: 100, y: 0 },
+  { id: 'left', label: '좌', x: 0, y: 50 },
+  { id: 'center', label: '중앙', x: 50, y: 50 },
+  { id: 'right', label: '우', x: 100, y: 50 },
+  { id: 'bottom-left', label: '좌하', x: 0, y: 100 },
+  { id: 'bottom', label: '하', x: 50, y: 100 },
+  { id: 'bottom-right', label: '우하', x: 100, y: 100 },
+]
+
+// ---- typography presets (chip 형태로 인스펙터에서 표시) ----
+
+export interface TypographyPreset {
+  id: string
+  label: string
+  typography: Partial<Typography>
+}
+
+export const TYPOGRAPHY_PRESETS = [
+  {
+    id: 'caption',
+    label: '캡션',
+    typography: { fontSize: 13, fontWeight: '400', lineHeight: 1.4, letterSpacing: 0 },
+  },
+  {
+    id: 'body',
+    label: '본문',
+    typography: { fontSize: 16, fontWeight: '400', lineHeight: 1.5, letterSpacing: 0 },
+  },
+  {
+    id: 'subtitle',
+    label: '소제목',
+    typography: { fontSize: 18, fontWeight: '600', lineHeight: 1.4, letterSpacing: 0 },
+  },
+  {
+    id: 'heading',
+    label: '제목',
+    typography: { fontSize: 24, fontWeight: '700', lineHeight: 1.3, letterSpacing: 0 },
+  },
+  {
+    id: 'display',
+    label: '큰 제목',
+    typography: { fontSize: 36, fontWeight: '700', lineHeight: 1.2, letterSpacing: 0 },
+  },
+] as const satisfies readonly TypographyPreset[]
