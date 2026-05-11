@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
 import { handleClarify } from './clarify.js'
+import { handleListDesignSystems } from './design-systems.js'
 import { handleGenerate } from './generate.js'
 
 const app = new Hono()
@@ -20,6 +21,11 @@ app.use(
 app.get('/health', (c) =>
   c.json({ status: 'ok', service: 'dworks-api', stage: 'M3' }),
 )
+
+app.get('/design-systems', (c) => {
+  const result = handleListDesignSystems()
+  return c.json(result.body, result.status)
+})
 
 app.post('/clarify', async (c) => {
   let rawBody: unknown

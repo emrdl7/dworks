@@ -65,7 +65,25 @@ export interface DesignSystemMeta {
   category: string | null
 }
 
-export function describeDesignSystem(id: DesignSystemId): DesignSystemMeta | null {
+export interface DesignSystemMetaExtended extends DesignSystemMeta {
+  /** Primary CTA / accent hex (Agent Prompt Guide 의 Primary CTA 라인에서 추출). null 이면 swatch 표시 X. */
+  accent: string | null
+  /** Page Background hex (있으면 picker preview 배경에 활용). */
+  bg: string | null
+  /** DESIGN.md 의 첫 ## Visual Theme 단락 한 줄 요약 (~120자). */
+  blurb: string | null
+}
+
+const HEX_PATTERN = /#[0-9a-fA-F]{3,8}/
+
+function extractFirstHex(text: string): string | null {
+  const match = text.match(HEX_PATTERN)
+  return match === null ? null : match[0].toLowerCase()
+}
+
+export function describeDesignSystem(
+  id: DesignSystemId,
+): DesignSystemMeta | null {
   const content = loadDesignSystem(id)
   if (content === null) return null
   const lines = content.split('\n')
@@ -76,4 +94,67 @@ export function describeDesignSystem(id: DesignSystemId): DesignSystemMeta | nul
     ? null
     : catLine.replace(/^.*Category:\s*/i, '').trim() || null
   return { id, title, category }
+}
+
+/** 메타 + accent/bg/blurb 추출 (picker UI 용). */
+export function describeDesignSystemExtended(
+  id: DesignSystemId,
+): DesignSystemMetaExtended | null {
+  const content = loadDesignSystem(id)
+  if (content === null) return null
+  const base = describeDesignSystem(id)
+  if (base === null) return null
+  // Section 9 "Agent Prompt Guide > Quick Color Reference" 가장 신뢰성 높음.
+  // 형식: `- Primary CTA: Label (`#hex`)` / `- Page Background: Label (`#hex`)`.
+  // Section 9 우선 파싱, 없으면 fallback 으로 prose 검색.
+  let accent: string | null = null
+  let bg: string | null = null
+  const sec9Idx = content.indexOf('## 9.')
+  const sec9 = sec9Idx >= 0 ? content.slice(sec9Idx) : null
+  if (sec9 !== null) {
+    const ctaLine = sec9.match(
+      /-\s*(?:Primary\s*CTA|Primary\s*action|Brand\s*color)[^\n]*?(#[0-9a-fA-F]{3,8})/i,
+    )
+    if (ctaLine !== null) accent = ctaLine[1]?.toLowerCase() ?? null
+    const bgLine = sec9.match(
+      /-\s*(?:Page\s*Background|Body\s*background|Surface)[^\n]*?(#[0-9a-fA-F]{3,8})/i,
+    )
+    if (bgLine !== null) bg = bgLine[1]?.toLowerCase() ?? null
+  }
+  // Fallback — Section 9 없는 시스템은 prose / 다른 list 패턴 검색.
+  if (accent === null) {
+    // "- Primary action: Label (#hex)" 또는 "- Brand <X>: ... `#hex`"
+    const m = content.match(
+      /^-\s*(?:Primary\s*(?:CTA|action|brand)|Brand\s+\w+|Accent)\s*:?[^\n]*?(#[0-9a-fA-F]{3,8})/im,
+    )
+    if (m !== null) accent = m[1]?.toLowerCase() ?? null
+  }
+  if (bg === null) {
+    const m = content.match(
+      /(?:^|\n)-?\s*(?:marketing\s+background|page\s+background|body\s+bg|primary\s+bg)[^\n]*?(#[0-9a-fA-F]{3,8})/i,
+    )
+    if (m !== null) bg = m[1]?.toLowerCase() ?? null
+  }
+  // blurb — "Visual Theme" 섹션 첫 문장 또는 카테고리 다음 줄
+  let blurb: string | null = null
+  const themeIdx = content.indexOf('## 1. Visual Theme')
+  if (themeIdx >= 0) {
+    const after = content.slice(themeIdx).split('\n').filter((l) => l.trim().length > 0)
+    const firstParaLine = after.find(
+      (l, i) => i > 0 && !l.startsWith('#') && !l.startsWith('-'),
+    )
+    if (firstParaLine !== undefined) {
+      // 첫 문장만 추출
+      const sentence = firstParaLine.split(/\.\s/)[0]?.trim() ?? firstParaLine.trim()
+      blurb = sentence.length > 140 ? sentence.slice(0, 137) + '...' : sentence
+    }
+  }
+  return { ...base, accent, bg, blurb }
+}
+
+/** 전체 design system 메타 배열 — picker UI 가 한 번 fetch 해서 캐시. */
+export function listDesignSystemsExtended(): DesignSystemMetaExtended[] {
+  return availableDesignSystems()
+    .map((id) => describeDesignSystemExtended(id))
+    .filter((m): m is DesignSystemMetaExtended => m !== null)
 }

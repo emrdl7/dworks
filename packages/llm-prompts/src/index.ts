@@ -3,7 +3,18 @@
 
 import { type Tree } from '@dworks/tree'
 
-import { loadDesignSystem } from './design-systems/loader'
+import { loadDesignSystem } from './design-systems/loader.js'
+
+export {
+  availableDesignSystems,
+  describeDesignSystem,
+  describeDesignSystemExtended,
+  listDesignSystemsExtended,
+  loadDesignSystem,
+  type DesignSystemId,
+  type DesignSystemMeta,
+  type DesignSystemMetaExtended,
+} from './design-systems/loader.js'
 
 export const PACKAGE_NAME = '@dworks/llm-prompts'
 

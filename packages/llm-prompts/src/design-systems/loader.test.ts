@@ -1,12 +1,14 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { formatBriefAsUserPrompt } from '../index.ts'
+import { formatBriefAsUserPrompt } from '../index.js'
 import {
   availableDesignSystems,
   describeDesignSystem,
+  describeDesignSystemExtended,
+  listDesignSystemsExtended,
   loadDesignSystem,
-} from './loader.ts'
+} from './loader.js'
 
 test('availableDesignSystems lists linear-app', () => {
   const list = availableDesignSystems()
@@ -65,4 +67,36 @@ test('formatBriefAsUserPrompt with unknown system silently skips inject', () => 
     activeDesignSystem: 'nonexistent-system-zz',
   })
   assert.ok(!prompt.includes('활성 디자인 시스템'))
+})
+
+test('availableDesignSystems imports all 149 from Open Design', () => {
+  const list = availableDesignSystems()
+  assert.ok(
+    list.length >= 100,
+    `expected >=100 design systems, got ${list.length}`,
+  )
+  // 대표 시스템들이 모두 존재해야 함
+  for (const id of ['linear-app', 'stripe', 'vercel', 'apple', 'anthropic', 'notion']) {
+    assert.ok(list.includes(id), `missing ${id} in catalog`)
+  }
+})
+
+test('describeDesignSystemExtended extracts accent + bg + blurb for linear-app', () => {
+  const meta = describeDesignSystemExtended('linear-app')
+  assert.notEqual(meta, null)
+  if (meta === null) return
+  assert.equal(meta.id, 'linear-app')
+  assert.ok(meta.accent !== null, 'accent should be present for linear-app')
+  assert.ok(meta.accent && /^#[0-9a-f]{3,8}$/i.test(meta.accent))
+  assert.ok(meta.blurb !== null && meta.blurb.length > 10)
+})
+
+test('listDesignSystemsExtended returns all valid metadata entries', () => {
+  const list = listDesignSystemsExtended()
+  assert.ok(list.length >= 100)
+  // 모든 entry 가 id + title 보유
+  for (const entry of list) {
+    assert.ok(entry.id.length > 0)
+    assert.ok(entry.title.length > 0)
+  }
 })

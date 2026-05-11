@@ -1,0 +1,2839 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dworks Design Systems — 149개 카탈로그</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,sans-serif;background:#0d0e10;color:#ebecef;padding:24px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1{font-size:28px;font-weight:700;margin-bottom:8px}
+  h1 small{font-size:14px;font-weight:400;color:#898d97;margin-left:8px}
+  .lede{color:#c5c8cf;font-size:14px;margin-bottom:32px;max-width:720px}
+  .lede a{color:#a5b4fc}
+  h2{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#898d97;margin:32px 0 12px;border-bottom:1px solid #2a2e35;padding-bottom:6px}
+  h2 small{font-weight:400;font-size:12px;text-transform:none;letter-spacing:0;color:#5b6069;margin-left:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .card{border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-height:160px;transition:transform 0.15s ease}
+  .card:hover{transform:translateY(-2px)}
+  .card header{display:flex;align-items:center;gap:8px}
+  .swatch{display:inline-block;width:16px;height:16px;border-radius:4px;flex-shrink:0}
+  .title{font-size:14px;font-weight:600;line-height:1.2}
+  .meta{font-size:11px;opacity:0.7;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .meta code{font-family:ui-monospace,SF Mono,Menlo,monospace;font-size:10px;opacity:0.8}
+  .blurb{font-size:11px;opacity:0.7;line-height:1.4;flex:1}
+  .sample{display:flex;align-items:center;gap:8px;margin-top:auto}
+  .sample button{border:0;border-radius:4px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+  .text-sample{font-size:11px;opacity:0.6}
+  footer{margin-top:48px;padding-top:16px;border-top:1px solid #2a2e35;color:#5b6069;font-size:11px}
+  footer a{color:#a5b4fc}
+</style>
+</head>
+<body>
+<h1>Dworks Design Systems <small>149개 · Open Design 흡수 · Apache 2.0</small></h1>
+<p class="lede">
+  v2.1 작업 — <code>packages/llm-prompts/src/design-systems/</code> 의 <strong>149 디자인 시스템</strong> 시각 카탈로그.
+  각 시스템의 <code>DESIGN.md</code> 를 <code>DesignBrief.activeDesignSystem</code> 로 활성화하면 LLM prompt 에 9 섹션 명세가 자동 inject 된다.
+  원본: <a href="https://github.com/nexu-io/open-design">nexu-io/open-design</a> · 자동 생성: <code>pnpm --filter @dworks/llm-prompts exec tsx scripts/build-preview.ts</code>
+</p>
+
+
+<h2>AI &amp; LLM <small>14개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#f5f4ed;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#c96442;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Claude (Anthropic)</span>
+      </header>
+      <p class="meta">
+        <code>claude</code>
+        <span>#c96442</span>
+        <span>#f5f4ed</span>
+      </p>
+      <p class="blurb">Claude&#39;s interface is a literary salon reimagined as a product page — warm, unhurried, and quietly intellectual</p>
+      <div class="sample">
+        <button style="background:#c96442;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Cohere</span>
+      </header>
+      <p class="meta">
+        <code>cohere</code>
+        
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Cohere&#39;s interface is a polished enterprise command deck — confident, clean, and designed to make AI feel like serious infrastructure rat...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by ElevenLabs</span>
+      </header>
+      <p class="meta">
+        <code>elevenlabs</code>
+        
+        
+      </p>
+      <p class="blurb">ElevenLabs&#39; website is a study in restrained elegance — a near-white canvas (`#ffffff`, `#f5f5f5`) where typography and subtle shadows do...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Hugging Face</span>
+      </header>
+      <p class="meta">
+        <code>huggingface</code>
+        
+        
+      </p>
+      <p class="blurb">Hugging Face is the rare ML brand that refuses to look serious</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#1456f0;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by MiniMax</span>
+      </header>
+      <p class="meta">
+        <code>minimax</code>
+        <span>#1456f0</span>
+        
+      </p>
+      <p class="blurb">MiniMax&#39;s website is a clean, product-showcase platform for a Chinese AI technology company that bridges consumer-friendly appeal with te...</p>
+      <div class="sample">
+        <button style="background:#1456f0;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#fffaeb;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#fa520f;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Mistral AI</span>
+      </header>
+      <p class="meta">
+        <code>mistral-ai</code>
+        <span>#fa520f</span>
+        <span>#fffaeb</span>
+      </p>
+      <p class="blurb">Mistral AI&#39;s interface is a sun-drenched landscape rendered in code — a warm, bold, unapologetically European design that trades the typi...</p>
+      <div class="sample">
+        <button style="background:#fa520f;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Ollama</span>
+      </header>
+      <p class="meta">
+        <code>ollama</code>
+        
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Ollama&#39;s interface is radical minimalism taken to its logical conclusion — a pure-white void where content floats without decoration, sha...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by OpenAI</span>
+      </header>
+      <p class="meta">
+        <code>openai</code>
+        
+        
+      </p>
+      <p class="blurb">OpenAI&#39;s product surface reads like a research lab dressed for the public — clinical, restrained, deliberately quiet</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#201d1d;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#007aff;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by OpenCode</span>
+      </header>
+      <p class="meta">
+        <code>opencode-ai</code>
+        <span>#007aff</span>
+        <span>#201d1d</span>
+      </p>
+      <p class="blurb">OpenCode&#39;s website embodies a terminal-native, monospace-first aesthetic that reflects its identity as an open source AI coding agent</p>
+      <div class="sample">
+        <button style="background:#007aff;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ea2804;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Replicate</span>
+      </header>
+      <p class="meta">
+        <code>replicate</code>
+        <span>#ea2804</span>
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Replicate&#39;s interface is a developer playground crackling with creative energy — a bold, high-contrast design that feels more like a musi...</p>
+      <div class="sample">
+        <button style="background:#ea2804;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Runway</span>
+      </header>
+      <p class="meta">
+        <code>runwayml</code>
+        
+        
+      </p>
+      <p class="blurb">Runway&#39;s interface is a cinematic reel brought to life as a website — a dark, editorial, film-production-grade design where full-bleed ph...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ef2cc1;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Together AI</span>
+      </header>
+      <p class="meta">
+        <code>together-ai</code>
+        <span>#ef2cc1</span>
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Together AI&#39;s interface is a pastel-gradient dreamscape built for enterprise AI infrastructure — a design that somehow makes GPU clusters...</p>
+      <div class="sample">
+        <button style="background:#ef2cc1;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#050507;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#00d992;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by VoltAgent</span>
+      </header>
+      <p class="meta">
+        <code>voltagent</code>
+        <span>#00d992</span>
+        <span>#050507</span>
+      </p>
+      <p class="blurb">VoltAgent&#39;s interface is a deep-space command terminal for the AI age — a developer-facing darkness built on near-pure-black surfaces (`#...</p>
+      <div class="sample">
+        <button style="background:#00d992;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by xAI</span>
+      </header>
+      <p class="meta">
+        <code>x-ai</code>
+        
+        
+      </p>
+      <p class="blurb">xAI&#39;s website is a masterclass in dark-first, monospace-driven brutalist minimalism -- a design system that feels like it was built by en...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Automotive <small>7개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#1c69d4;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by BMW</span>
+      </header>
+      <p class="meta">
+        <code>bmw</code>
+        <span>#1c69d4</span>
+        
+      </p>
+      <p class="blurb">BMW&#39;s website is automotive engineering made visual — a design system that communicates precision, performance, and German industrial con...</p>
+      <div class="sample">
+        <button style="background:#1c69d4;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by BMW M</span>
+      </header>
+      <p class="meta">
+        <code>bmw-m</code>
+        
+        
+      </p>
+      <p class="blurb">BMW M&#39;s analyzed editorial and marketing pages lean on a near-pure black canvas (`{colors.canvas}` — #000) holding white BMW Type Next La...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Bugatti</span>
+      </header>
+      <p class="meta">
+        <code>bugatti</code>
+        
+        
+      </p>
+      <p class="blurb">Bugatti.com does not behave like a website — it behaves like a feature-length car film that a visitor happens to be standing inside</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#da291c;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Ferrari</span>
+      </header>
+      <p class="meta">
+        <code>ferrari</code>
+        <span>#da291c</span>
+        
+      </p>
+      <p class="blurb">Ferrari&#39;s website is a digital editorial — a curated magazine where the Prancing Horse brand is presented with the gravitas of an art ins...</p>
+      <div class="sample">
+        <button style="background:#da291c;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#202020;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#ffc000;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by Lamborghini</span>
+      </header>
+      <p class="meta">
+        <code>lamborghini</code>
+        <span>#ffc000</span>
+        <span>#202020</span>
+      </p>
+      <p class="blurb">Lamborghini&#39;s website is a cathedral of darkness — a digital stage where jet-black surfaces stretch infinitely and every element emerges ...</p>
+      <div class="sample">
+        <button style="background:#ffc000;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#efdf00;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Renault</span>
+      </header>
+      <p class="meta">
+        <code>renault</code>
+        <span>#efdf00</span>
+        
+      </p>
+      <p class="blurb">Renault&#39;s website is a vibrant digital showroom that balances French automotive elegance with bold, forward-leaning energy — a departure ...</p>
+      <div class="sample">
+        <button style="background:#efdf00;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#3e6ae1;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Tesla</span>
+      </header>
+      <p class="meta">
+        <code>tesla</code>
+        <span>#3e6ae1</span>
+        
+      </p>
+      <p class="blurb">Tesla&#39;s website is an exercise in radical subtraction — a digital showroom where the product is everything and the interface is almost no...</p>
+      <div class="sample">
+        <button style="background:#3e6ae1;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Backend &amp; Data <small>9개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Cisco</span>
+      </header>
+      <p class="meta">
+        <code>cisco</code>
+        
+        
+      </p>
+      <p class="blurb">Cisco&#39;s current public web presence is enterprise infrastructure rendered with cinematic restraint</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#000000;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#faff69;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by ClickHouse</span>
+      </header>
+      <p class="meta">
+        <code>clickhouse</code>
+        <span>#faff69</span>
+        <span>#000000</span>
+      </p>
+      <p class="blurb">ClickHouse&#39;s interface is a high-performance cockpit rendered in acid yellow-green on obsidian black — a design that screams &quot;speed&quot; befo...</p>
+      <div class="sample">
+        <button style="background:#faff69;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#0f0f0f;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#ffffff;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by Composio</span>
+      </header>
+      <p class="meta">
+        <code>composio</code>
+        <span>#ffffff</span>
+        <span>#0f0f0f</span>
+      </p>
+      <p class="blurb">Composio&#39;s interface is a nocturnal command center — a dense, developer-focused darkness punctuated by electric cyan and deep cobalt signals</p>
+      <div class="sample">
+        <button style="background:#ffffff;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by HashiCorp</span>
+      </header>
+      <p class="meta">
+        <code>hashicorp</code>
+        
+        
+      </p>
+      <p class="blurb">HashiCorp&#39;s website is enterprise infrastructure made tangible — a design system that must communicate the complexity of cloud infrastruc...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#00ed64;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by MongoDB</span>
+      </header>
+      <p class="meta">
+        <code>mongodb</code>
+        <span>#00ed64</span>
+        
+      </p>
+      <p class="blurb">MongoDB&#39;s website is a deep-forest-meets-terminal experience — a design system rooted in the darkest teal-black (`#001e2b`) that evokes b...</p>
+      <div class="sample">
+        <button style="background:#00ed64;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#fdfdf8;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by PostHog</span>
+      </header>
+      <p class="meta">
+        <code>posthog</code>
+        
+        <span>#fdfdf8</span>
+      </p>
+      <p class="blurb">PostHog&#39;s website feels like a startup&#39;s internal wiki that escaped into the wild — warm, irreverent, and deliberately anti-corporate</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Sanity</span>
+      </header>
+      <p class="meta">
+        <code>sanity</code>
+        
+        
+      </p>
+      <p class="blurb">Sanity&#39;s website is a developer-content platform rendered as a nocturnal command center -- dark, precise, and deeply structured</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#c2ef4e;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Sentry</span>
+      </header>
+      <p class="meta">
+        <code>sentry</code>
+        <span>#c2ef4e</span>
+        
+      </p>
+      <p class="blurb">Sentry&#39;s website is a dark-mode-first developer tool interface that speaks the language of code editors and terminal windows</p>
+      <div class="sample">
+        <button style="background:#c2ef4e;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#3ecf8e;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Supabase</span>
+      </header>
+      <p class="meta">
+        <code>supabase</code>
+        <span>#3ecf8e</span>
+        
+      </p>
+      <p class="blurb">Supabase&#39;s website is a dark-mode-native developer platform that channels the aesthetic of a premium code editor — deep black backgrounds...</p>
+      <div class="sample">
+        <button style="background:#3ecf8e;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Bold &amp; Expressive <small>8개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Bold</span>
+      </header>
+      <p class="meta">
+        <code>bold</code>
+        
+        
+      </p>
+      <p class="blurb">Strong visual presence with heavyweight typography, high-contrast colors, and commanding layouts.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Brutalism</span>
+      </header>
+      <p class="meta">
+        <code>brutalism</code>
+        
+        
+      </p>
+      <p class="blurb">Raw, anti-design aesthetic inspired by concrete architecture with unadorned elements, jarring layouts, and functional minimalism.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Colorful</span>
+      </header>
+      <p class="meta">
+        <code>colorful</code>
+        
+        
+      </p>
+      <p class="blurb">Vibrant, high-contrast palettes and gradients for engaging, memorable, and modern user experiences.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Dramatic</span>
+      </header>
+      <p class="meta">
+        <code>dramatic</code>
+        
+        
+      </p>
+      <p class="blurb">High-contrast, theatrical design with bold layouts, immersive visuals, and unconventional compositions that command attention.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Energetic</span>
+      </header>
+      <p class="meta">
+        <code>energetic</code>
+        
+        
+      </p>
+      <p class="blurb">Dynamic, vibrant style with thick borders, geometric shapes, high-contrast colors, and expressive typography conveying motion and vitality.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Expressive</span>
+      </header>
+      <p class="meta">
+        <code>expressive</code>
+        
+        
+      </p>
+      <p class="blurb">Vibrant, personality-driven design with bold colors, playful graphics, and dynamic layouts that balance creativity with structure.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Neobrutalism</span>
+      </header>
+      <p class="meta">
+        <code>neobrutalism</code>
+        
+        
+      </p>
+      <p class="blurb">Modern take on brutalism with bold borders, vivid accent colors, and raw, high-contrast layouts on warm surfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Vibrant</span>
+      </header>
+      <p class="meta">
+        <code>vibrant</code>
+        
+        
+      </p>
+      <p class="blurb">Lively, colorful design with bold playful typography, warm accents, and dynamic visual energy.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Creative &amp; Artistic <small>11개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Artistic</span>
+      </header>
+      <p class="meta">
+        <code>artistic</code>
+        
+        
+      </p>
+      <p class="blurb">High-contrast, expressive style with creative typography and bold color choices for visually striking interfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Cafe</span>
+      </header>
+      <p class="meta">
+        <code>cafe</code>
+        
+        
+      </p>
+      <p class="blurb">Cozy cafe-inspired interface with warm tones, soft typography, and clean layouts for a relaxed browsing experience.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Cosmic</span>
+      </header>
+      <p class="meta">
+        <code>cosmic</code>
+        
+        
+      </p>
+      <p class="blurb">Futuristic sci-fi aesthetic with dark themes, vibrant neon accents, and immersive spatial elements.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Creative</span>
+      </header>
+      <p class="meta">
+        <code>creative</code>
+        
+        
+      </p>
+      <p class="blurb">Playful, character-driven design with expressive typography and bold graphics for landing pages and creative projects.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Doodle</span>
+      </header>
+      <p class="meta">
+        <code>doodle</code>
+        
+        
+      </p>
+      <p class="blurb">Hand-drawn, sketch-like style with doodles, handwritten fonts, and imperfect lines for a playful, informal feel.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Editorial</span>
+      </header>
+      <p class="meta">
+        <code>editorial</code>
+        
+        
+      </p>
+      <p class="blurb">Magazine-inspired editorial layout with refined serif typography, structured grids, and elegant reading experiences.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Fantasy</span>
+      </header>
+      <p class="meta">
+        <code>fantasy</code>
+        
+        
+      </p>
+      <p class="blurb">Game-inspired fantasy aesthetic with bold, premium visuals, rich color palettes, and immersive thematic elements.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Friendly</span>
+      </header>
+      <p class="meta">
+        <code>friendly</code>
+        
+        
+      </p>
+      <p class="blurb">Approachable, intuitive design with rounded elements, ample whitespace, and soft pastel color palettes.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Lingo</span>
+      </header>
+      <p class="meta">
+        <code>lingo</code>
+        
+        
+      </p>
+      <p class="blurb">Playful, minimal design with bright colors, rounded shapes, tactile 3D borders, and friendly illustrations for approachable interfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Publication</span>
+      </header>
+      <p class="meta">
+        <code>publication</code>
+        
+        
+      </p>
+      <p class="blurb">Print-inspired visual language for books, magazines, and reports with editorial grids and expressive typography.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Storytelling</span>
+      </header>
+      <p class="meta">
+        <code>storytelling</code>
+        
+        
+      </p>
+      <p class="blurb">Narrative-driven design using visuals, copy, and interaction to guide users through engaging, emotionally resonant journeys.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Design &amp; Creative <small>7개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Airtable</span>
+      </header>
+      <p class="meta">
+        <code>airtable</code>
+        
+        
+      </p>
+      <p class="blurb">Airtable&#39;s website is a clean, enterprise-friendly platform that communicates &quot;sophisticated simplicity&quot; through a white canvas with deep...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Canva</span>
+      </header>
+      <p class="meta">
+        <code>canva</code>
+        
+        
+      </p>
+      <p class="blurb">Canva is the friendly face of design tools — the brand makes a point of looking inviting where Adobe looks intimidating</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Clay</span>
+      </header>
+      <p class="meta">
+        <code>clay</code>
+        
+        
+      </p>
+      <p class="blurb">Clay&#39;s website is a warm, playful celebration of color that treats B2B data enrichment like a craft rather than an enterprise chore</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Figma</span>
+      </header>
+      <p class="meta">
+        <code>figma</code>
+        
+        
+      </p>
+      <p class="blurb">Figma&#39;s interface is the design tool that designed itself — a masterclass in typographic sophistication where a custom variable font (fig...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#0099ff;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Framer</span>
+      </header>
+      <p class="meta">
+        <code>framer</code>
+        <span>#0099ff</span>
+        
+      </p>
+      <p class="blurb">Framer&#39;s website is a cinematic, tool-obsessed dark canvas that radiates the confidence of a design tool built by designers who worship c...</p>
+      <div class="sample">
+        <button style="background:#0099ff;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Miro</span>
+      </header>
+      <p class="meta">
+        <code>miro</code>
+        
+        
+      </p>
+      <p class="blurb">Miro&#39;s website is a clean, collaborative-tool-forward platform that communicates &quot;visual thinking&quot; through generous whitespace, pastel ac...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Webflow</span>
+      </header>
+      <p class="meta">
+        <code>webflow</code>
+        
+        
+      </p>
+      <p class="blurb">Webflow&#39;s website is a visually rich, tool-forward platform that communicates &quot;design without code&quot; through clean white surfaces, the sig...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Developer Tools <small>9개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#f2f1ed;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ebeae5;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Cursor</span>
+      </header>
+      <p class="meta">
+        <code>cursor</code>
+        <span>#ebeae5</span>
+        <span>#f2f1ed</span>
+      </p>
+      <p class="blurb">Cursor&#39;s website is a study in warm minimalism meets code-editor elegance</p>
+      <div class="sample">
+        <button style="background:#ebeae5;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#f0f0f3;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#000000;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Expo</span>
+      </header>
+      <p class="meta">
+        <code>expo</code>
+        <span>#000000</span>
+        <span>#f0f0f3</span>
+      </p>
+      <p class="blurb">Expo&#39;s interface is a luminous, confidence-radiating developer platform built on the premise that tools for building apps should feel as ...</p>
+      <div class="sample">
+        <button style="background:#000000;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by GitHub</span>
+      </header>
+      <p class="meta">
+        <code>github</code>
+        
+        
+      </p>
+      <p class="blurb">GitHub&#39;s surface is engineered, not decorated</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#1c1c1c;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Lovable</span>
+      </header>
+      <p class="meta">
+        <code>lovable</code>
+        <span>#1c1c1c</span>
+        
+      </p>
+      <p class="blurb">Lovable&#39;s website radiates warmth through restraint</p>
+      <div class="sample">
+        <button style="background:#1c1c1c;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ff6363;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Raycast</span>
+      </header>
+      <p class="meta">
+        <code>raycast</code>
+        <span>#ff6363</span>
+        
+      </p>
+      <p class="blurb">Raycast&#39;s marketing site feels like the dark interior of a precision instrument — a Swiss watch case carved from obsidian</p>
+      <div class="sample">
+        <button style="background:#ff6363;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cbb7fb;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Superhuman</span>
+      </header>
+      <p class="meta">
+        <code>superhuman</code>
+        <span>#cbb7fb</span>
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Superhuman&#39;s website feels like opening a luxury envelope — predominantly white, immaculately clean, with a single dramatic gesture of co...</p>
+      <div class="sample">
+        <button style="background:#cbb7fb;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#171717;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Vercel</span>
+      </header>
+      <p class="meta">
+        <code>vercel</code>
+        <span>#171717</span>
+        
+      </p>
+      <p class="blurb">Vercel&#39;s website is the visual thesis of developer infrastructure made invisible — a design system so restrained it borders on philosophical</p>
+      <div class="sample">
+        <button style="background:#171717;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Warp</span>
+      </header>
+      <p class="meta">
+        <code>warp</code>
+        
+        
+      </p>
+      <p class="blurb">Warp&#39;s website feels like sitting at a campfire in a deep forest — warm, dark, and alive with quiet confidence</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Mission Control Design System</span>
+      </header>
+      <p class="meta">
+        <code>mission-control</code>
+        
+        
+      </p>
+      <p class="blurb">A **deep space command center** — dark, information-dense, unambiguous</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>E-Commerce &amp; Retail <small>5개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ff385c;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Airbnb</span>
+      </header>
+      <p class="meta">
+        <code>airbnb</code>
+        <span>#ff385c</span>
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Airbnb&#39;s 2026 design feels like a travel magazine that happens to be an app — pristine white canvases give way to full-bleed photography,...</p>
+      <div class="sample">
+        <button style="background:#ff385c;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#0064e0;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Meta (Store)</span>
+      </header>
+      <p class="meta">
+        <code>meta</code>
+        <span>#0064e0</span>
+        
+      </p>
+      <p class="blurb">The Meta Store is a product-forward retail experience built to sell hardware — Quest VR headsets, Ray-Ban Meta smart glasses, and accesso...</p>
+      <div class="sample">
+        <button style="background:#0064e0;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#111111;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Nike</span>
+      </header>
+      <p class="meta">
+        <code>nike</code>
+        <span>#111111</span>
+        
+      </p>
+      <p class="blurb">Nike.com is a kinetic retail cathedral — a site that channels the explosive energy of sport into a digital shopping experience</p>
+      <div class="sample">
+        <button style="background:#111111;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#000000;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#ffffff;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by Shopify</span>
+      </header>
+      <p class="meta">
+        <code>shopify</code>
+        <span>#ffffff</span>
+        <span>#000000</span>
+      </p>
+      <p class="blurb">Shopify.com is a dark-first digital theatre — a website that stages its commerce platform like a cinematic premiere</p>
+      <div class="sample">
+        <button style="background:#ffffff;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#00754a;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Starbucks</span>
+      </header>
+      <p class="meta">
+        <code>starbucks</code>
+        <span>#00754a</span>
+        
+      </p>
+      <p class="blurb">Starbucks&#39; design system is a **warm, confident retail flagship** wearing the green of their storefront apron across every surface</p>
+      <div class="sample">
+        <button style="background:#00754a;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Editorial · Studio <small>1개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Atelier Zero</span>
+      </header>
+      <p class="meta">
+        <code>atelier-zero</code>
+        
+        
+      </p>
+      <p class="blurb">A small, high-craft studio&#39;s annual report rendered as a webpage</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Editorial / Personal / Publication <small>1개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Urdu Modern (Indus Script System)</span>
+      </header>
+      <p class="meta">
+        <code>urdu</code>
+        
+        
+      </p>
+      <p class="blurb">**&quot;Digital Heritage&quot;** — A clean, spacious, and respectful aesthetic that bridges traditional Urdu calligraphy and contemporary minimal d...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Editorial &amp; Print <small>1개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#f5f4ed;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by kami (紙 / 纸)</span>
+      </header>
+      <p class="meta">
+        <code>kami</code>
+        
+        <span>#f5f4ed</span>
+      </p>
+      <p class="blurb">kami compresses into one sentence: **warm parchment canvas, ink-blue accent, serif carries hierarchy, no cool grays, no hard shadows.** I...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Fintech &amp; Crypto <small>7개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#f0b90b;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Binance.US</span>
+      </header>
+      <p class="meta">
+        <code>binance</code>
+        <span>#f0b90b</span>
+        
+      </p>
+      <p class="blurb">Binance.US radiates the polished urgency of a digital trading floor — a space where money moves and decisions happen in seconds</p>
+      <div class="sample">
+        <button style="background:#f0b90b;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Coinbase</span>
+      </header>
+      <p class="meta">
+        <code>coinbase</code>
+        
+        
+      </p>
+      <p class="blurb">Coinbase&#39;s website is a clean, trustworthy crypto platform that communicates financial reliability through a blue-and-white binary palette</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Kraken</span>
+      </header>
+      <p class="meta">
+        <code>kraken</code>
+        
+        
+      </p>
+      <p class="blurb">Kraken&#39;s website is a clean, trustworthy crypto exchange that uses purple as its commanding brand color</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#141413;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Mastercard</span>
+      </header>
+      <p class="meta">
+        <code>mastercard</code>
+        <span>#141413</span>
+        
+      </p>
+      <p class="blurb">Mastercard&#39;s experience reads like a warm, editorial magazine built from soft stone and signal orange</p>
+      <div class="sample">
+        <button style="background:#141413;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#f4f4f4;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Revolut</span>
+      </header>
+      <p class="meta">
+        <code>revolut</code>
+        
+        <span>#f4f4f4</span>
+      </p>
+      <p class="blurb">Revolut&#39;s website is fintech confidence distilled into pixels — a design system that communicates &quot;your money is in capable hands&quot; throug...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#533afd;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Stripe</span>
+      </header>
+      <p class="meta">
+        <code>stripe</code>
+        <span>#533afd</span>
+        
+      </p>
+      <p class="blurb">Stripe&#39;s website is the gold standard of fintech design -- a system that manages to feel simultaneously technical and luxurious, precise ...</p>
+      <div class="sample">
+        <button style="background:#533afd;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#9fe870;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Wise</span>
+      </header>
+      <p class="meta">
+        <code>wise</code>
+        <span>#9fe870</span>
+        
+      </p>
+      <p class="blurb">Wise&#39;s website is a bold, confident fintech platform that communicates &quot;money without borders&quot; through massive typography and a distincti...</p>
+      <div class="sample">
+        <button style="background:#9fe870;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Layout &amp; Structure <small>4개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Bento</span>
+      </header>
+      <p class="meta">
+        <code>bento</code>
+        
+        
+      </p>
+      <p class="blurb">Modular grid layout with card-like blocks, clear hierarchy, soft spacing, and subtle visual contrast for organized, scannable interfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Levels</span>
+      </header>
+      <p class="meta">
+        <code>levels</code>
+        
+        
+      </p>
+      <p class="blurb">Conversion-focused design that removes friction and guides users toward action through clarity, trust, and speed.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Perspective</span>
+      </header>
+      <p class="meta">
+        <code>perspective</code>
+        
+        
+      </p>
+      <p class="blurb">Spatial depth design with isometric views, vanishing points, and layered elements that guide attention through 3D-like realism.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Spacious</span>
+      </header>
+      <p class="meta">
+        <code>spacious</code>
+        
+        
+      </p>
+      <p class="blurb">Generous whitespace, consistent padding, and grid-based layouts for clean, readable, and breathing interfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Media &amp; Consumer <small>12개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#0071e3;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Apple</span>
+      </header>
+      <p class="meta">
+        <code>apple</code>
+        <span>#0071e3</span>
+        
+      </p>
+      <p class="blurb">Apple&#39;s web language is a precision editorial system that alternates between gallery-like calm and retail-density information blocks</p>
+      <div class="sample">
+        <button style="background:#0071e3;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#f4f4f4;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#0f62fe;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by IBM</span>
+      </header>
+      <p class="meta">
+        <code>ibm</code>
+        <span>#0f62fe</span>
+        <span>#f4f4f4</span>
+      </p>
+      <p class="blurb">IBM&#39;s website is the digital embodiment of enterprise authority built on the Carbon Design System — a design language so methodically str...</p>
+      <div class="sample">
+        <button style="background:#0f62fe;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by NVIDIA</span>
+      </header>
+      <p class="meta">
+        <code>nvidia</code>
+        
+        
+      </p>
+      <p class="blurb">NVIDIA&#39;s website is a high-contrast, technology-forward experience that communicates raw computational power through design restraint</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Pinterest</span>
+      </header>
+      <p class="meta">
+        <code>pinterest</code>
+        
+        
+      </p>
+      <p class="blurb">Pinterest&#39;s website is a warm, inspiration-driven canvas that treats visual discovery like a lifestyle magazine</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by PlayStation</span>
+      </header>
+      <p class="meta">
+        <code>playstation</code>
+        
+        
+      </p>
+      <p class="blurb">PlayStation.com carries itself like the marketing wing of a premium consumer-electronics brand that happens to sell entertainment</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by SpaceX</span>
+      </header>
+      <p class="meta">
+        <code>spacex</code>
+        
+        
+      </p>
+      <p class="blurb">SpaceX&#39;s website is a full-screen cinematic experience that treats aerospace engineering like a film — every section is a scene, every ph...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#181818;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#1ed760;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by Spotify</span>
+      </header>
+      <p class="meta">
+        <code>spotify</code>
+        <span>#1ed760</span>
+        <span>#181818</span>
+      </p>
+      <p class="blurb">Spotify&#39;s web interface is a dark, immersive music player that wraps listeners in a near-black cocoon (`#121212`, `#181818`, `#1f1f1f`) w...</p>
+      <div class="sample">
+        <button style="background:#1ed760;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by The Verge</span>
+      </header>
+      <p class="meta">
+        <code>theverge</code>
+        
+        
+      </p>
+      <p class="blurb">The Verge&#39;s 2024 redesign feels like somebody wired a Condé Nast magazine to a chiptune soundboard</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Uber</span>
+      </header>
+      <p class="meta">
+        <code>uber</code>
+        
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Uber&#39;s design language is a masterclass in confident minimalism -- a black-and-white universe where every pixel serves a purpose and noth...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#e60000;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Vodafone</span>
+      </header>
+      <p class="meta">
+        <code>vodafone</code>
+        <span>#e60000</span>
+        
+      </p>
+      <p class="blurb">Vodafone&#39;s corporate web system carries the confident, broadcast-scale presence of a global telecom brand — built around a single, fierce...</p>
+      <div class="sample">
+        <button style="background:#e60000;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by WIRED</span>
+      </header>
+      <p class="meta">
+        <code>wired</code>
+        
+        
+      </p>
+      <p class="blurb">WIRED&#39;s homepage feels like a printed broadsheet that someone has plugged into a wall socket</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ff2442;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Xiaohongshu</span>
+      </header>
+      <p class="meta">
+        <code>xiaohongshu</code>
+        <span>#ff2442</span>
+        <span>#ffffff</span>
+      </p>
+      <p class="blurb">Xiaohongshu (小红书 / RED) is the visual opposite of a SaaS console</p>
+      <div class="sample">
+        <button style="background:#ff2442;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Modern &amp; Minimal <small>10개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Clean</span>
+      </header>
+      <p class="meta">
+        <code>clean</code>
+        
+        
+      </p>
+      <p class="blurb">Simplicity-focused design with ample whitespace, legible typography, and a limited color palette to reduce visual clutter.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Contemporary</span>
+      </header>
+      <p class="meta">
+        <code>contemporary</code>
+        
+        
+      </p>
+      <p class="blurb">Current-era minimalist design with bento grids, dark mode support, and high-performance accessible layouts.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Flat</span>
+      </header>
+      <p class="meta">
+        <code>flat</code>
+        
+        
+      </p>
+      <p class="blurb">Two-dimensional minimalist style with vibrant colors, clean typography, and no 3D effects for fast, user-friendly interfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Minimal</span>
+      </header>
+      <p class="meta">
+        <code>minimal</code>
+        
+        
+      </p>
+      <p class="blurb">Stripped-back design emphasizing whitespace, clean typography, and restrained color for maximum clarity and focus.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Modern</span>
+      </header>
+      <p class="meta">
+        <code>modern</code>
+        
+        
+      </p>
+      <p class="blurb">Contemporary editorial style with serif typography, minimal palettes, and clean layouts for polished digital products.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Mono</span>
+      </header>
+      <p class="meta">
+        <code>mono</code>
+        
+        
+      </p>
+      <p class="blurb">Monospace-driven, matrix-inspired design with high-contrast elements, compact density, and a hacker-chic aesthetic.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Refined</span>
+      </header>
+      <p class="meta">
+        <code>refined</code>
+        
+        
+      </p>
+      <p class="blurb">Carefully curated, modern minimal style with elegant serif typography and understated, sophisticated palettes.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Shadcn</span>
+      </header>
+      <p class="meta">
+        <code>shadcn</code>
+        
+        
+      </p>
+      <p class="blurb">Shadcn/ui-inspired design with minimal, clean components, monochrome palette, and utility-first patterns.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Simple</span>
+      </header>
+      <p class="meta">
+        <code>simple</code>
+        
+        
+      </p>
+      <p class="blurb">Straightforward, no-frills design with clean typography, neutral colors, and intuitive layouts that stay out of the way.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Sleek</span>
+      </header>
+      <p class="meta">
+        <code>sleek</code>
+        
+        
+      </p>
+      <p class="blurb">Modern minimalist aesthetic with clean lines, intentional color palette, subtle interactions, and consistent spacing.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Morphism &amp; Effects <small>6개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Claymorphism</span>
+      </header>
+      <p class="meta">
+        <code>claymorphism</code>
+        
+        
+      </p>
+      <p class="blurb">Soft, rounded 3D-like shapes mimicking malleable clay with playful, puffy elements and colorful surfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Glassmorphism</span>
+      </header>
+      <p class="meta">
+        <code>glassmorphism</code>
+        
+        
+      </p>
+      <p class="blurb">Frosted glass effect with translucent layers, subtle blur, and luminous borders for depth and modern elegance.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Gradient</span>
+      </header>
+      <p class="meta">
+        <code>gradient</code>
+        
+        
+      </p>
+      <p class="blurb">Smooth color transitions and gradient-rich surfaces for modern, playful interfaces with visual depth.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Neon</span>
+      </header>
+      <p class="meta">
+        <code>neon</code>
+        
+        
+      </p>
+      <p class="blurb">Electric neon glow effects with high-contrast color pairings for bold, attention-grabbing interfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Neumorphism</span>
+      </header>
+      <p class="meta">
+        <code>neumorphism</code>
+        
+        
+      </p>
+      <p class="blurb">Soft, extruded UI elements with inner and outer shadows on monochromatic surfaces for a tactile, embedded look.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Skeumorphism</span>
+      </header>
+      <p class="meta">
+        <code>skeumorphism</code>
+        
+        
+      </p>
+      <p class="blurb">Real-world mimicry with textured surfaces, 3D effects, and familiar physical metaphors for intuitive digital interfaces.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Productivity &amp; SaaS <small>12개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Arc Browser</span>
+      </header>
+      <p class="meta">
+        <code>arc</code>
+        
+        
+      </p>
+      <p class="blurb">Arc Browser dissolves the boundary between the chrome and the page</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Cal.com</span>
+      </header>
+      <p class="meta">
+        <code>cal</code>
+        
+        
+      </p>
+      <p class="blurb">Cal.com&#39;s website is a masterclass in monochromatic restraint — a grayscale world where boldness comes not from color but from the sheer ...</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Discord</span>
+      </header>
+      <p class="meta">
+        <code>discord</code>
+        
+        
+      </p>
+      <p class="blurb">Discord&#39;s product is engineered for evenings, raids, and group voice — so the entire surface is dark-first</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Duolingo</span>
+      </header>
+      <p class="meta">
+        <code>duolingo</code>
+        
+        
+      </p>
+      <p class="blurb">Duolingo is gamification rendered as visual language</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ff5600;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Intercom</span>
+      </header>
+      <p class="meta">
+        <code>intercom</code>
+        <span>#ff5600</span>
+        
+      </p>
+      <p class="blurb">Intercom&#39;s website is a warm, confident customer service platform that communicates &quot;AI-first helpdesk&quot; through a clean, editorial design...</p>
+      <div class="sample">
+        <button style="background:#ff5600;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#08090a;color:#ffffff;">
+      <header>
+        <span class="swatch" style="background:#5e6ad2;border:1px solid rgba(255,255,255,0.2);"></span>
+        <span class="title">Design System Inspired by Linear</span>
+      </header>
+      <p class="meta">
+        <code>linear-app</code>
+        <span>#5e6ad2</span>
+        <span>#08090a</span>
+      </p>
+      <p class="blurb">Linear&#39;s website is a masterclass in dark-mode-first product design — a near-black canvas (`#08090a`) where content emerges from darkness...</p>
+      <div class="sample">
+        <button style="background:#5e6ad2;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#0d0d0d;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Mintlify</span>
+      </header>
+      <p class="meta">
+        <code>mintlify</code>
+        <span>#0d0d0d</span>
+        
+      </p>
+      <p class="blurb">Mintlify&#39;s website is a study in documentation-as-product design — a white, airy, information-rich surface that treats clarity as its hig...</p>
+      <div class="sample">
+        <button style="background:#0d0d0d;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#0075de;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Notion</span>
+      </header>
+      <p class="meta">
+        <code>notion</code>
+        <span>#0075de</span>
+        
+      </p>
+      <p class="blurb">Notion&#39;s website embodies the philosophy of the tool itself: a blank canvas that gets out of your way</p>
+      <div class="sample">
+        <button style="background:#0075de;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Resend</span>
+      </header>
+      <p class="meta">
+        <code>resend</code>
+        
+        
+      </p>
+      <p class="blurb">Resend&#39;s website is a dark, cinematic canvas that treats email infrastructure like a luxury product</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Slack</span>
+      </header>
+      <p class="meta">
+        <code>slack</code>
+        
+        
+      </p>
+      <p class="blurb">Slack&#39;s identity is built around the idea that work should feel human and even a little fun</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#64b4fa;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#1170cf;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Webex</span>
+      </header>
+      <p class="meta">
+        <code>webex</code>
+        <span>#1170cf</span>
+        <span>#64b4fa</span>
+      </p>
+      <p class="blurb">Webex is cleaner, friendlier, and more product-led than Cisco corporate while still living inside the same trust-oriented universe</p>
+      <div class="sample">
+        <button style="background:#1170cf;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#ff4f00;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Zapier</span>
+      </header>
+      <p class="meta">
+        <code>zapier</code>
+        <span>#ff4f00</span>
+        
+      </p>
+      <p class="blurb">Zapier&#39;s website radiates warm, approachable professionalism</p>
+      <div class="sample">
+        <button style="background:#ff4f00;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Professional &amp; Corporate <small>10개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Ant</span>
+      </header>
+      <p class="meta">
+        <code>ant</code>
+        
+        
+      </p>
+      <p class="blurb">Structured, enterprise-focused design system emphasizing clarity, consistency, and efficiency for data-dense web applications.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Application</span>
+      </header>
+      <p class="meta">
+        <code>application</code>
+        
+        
+      </p>
+      <p class="blurb">App dashboard with purple-themed aesthetic, top-bar navigation, card-based layouts, and developer-first workflows.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Corporate</span>
+      </header>
+      <p class="meta">
+        <code>corporate</code>
+        
+        
+      </p>
+      <p class="blurb">Professional, brand-aligned design with structured grids, minimalist layouts, and consistent enterprise patterns.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Dashboard</span>
+      </header>
+      <p class="meta">
+        <code>dashboard</code>
+        
+        
+      </p>
+      <p class="blurb">Dark-themed cloud-platform aesthetic with modular grids, glass-like panels, and strong data hierarchy for productivity dashboards.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Elegant</span>
+      </header>
+      <p class="meta">
+        <code>elegant</code>
+        
+        
+      </p>
+      <p class="blurb">Graceful, refined aesthetic with delicate typography, minimal palettes, and polished layouts that exude sophistication.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Enterprise</span>
+      </header>
+      <p class="meta">
+        <code>enterprise</code>
+        
+        
+      </p>
+      <p class="blurb">Clean, high-contrast enterprise design for data-driven workflows with intuitive drag-and-drop patterns and structured layouts.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Luxury</span>
+      </header>
+      <p class="meta">
+        <code>luxury</code>
+        
+        
+      </p>
+      <p class="blurb">High-end dark aesthetic with bold headings, monochromatic palette, and premium feel for luxury brand experiences.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Material</span>
+      </header>
+      <p class="meta">
+        <code>material</code>
+        
+        
+      </p>
+      <p class="blurb">Google&#39;s Material Design with layered surfaces, dynamic theming, built-in motion, and responsive cross-platform patterns.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Premium</span>
+      </header>
+      <p class="meta">
+        <code>premium</code>
+        
+        
+      </p>
+      <p class="blurb">Apple-inspired premium aesthetic with precise spacing, modern typography, and a refined, polished visual language.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Professional</span>
+      </header>
+      <p class="meta">
+        <code>professional</code>
+        
+        
+      </p>
+      <p class="blurb">Polished, business-ready design with modern typography, structured layouts, and a trustworthy visual identity.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Retro &amp; Nostalgic <small>4개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Dithered</span>
+      </header>
+      <p class="meta">
+        <code>dithered</code>
+        
+        
+      </p>
+      <p class="blurb">Dot-pattern rendering technique that simulates shades with a limited palette for nostalgic, retro, high-contrast visuals.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Paper</span>
+      </header>
+      <p class="meta">
+        <code>paper</code>
+        
+        
+      </p>
+      <p class="blurb">Paper-textured, print-inspired design with minimal colors, clean serif/sans typography, and tactile surface qualities.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Retro</span>
+      </header>
+      <p class="meta">
+        <code>retro</code>
+        
+        
+      </p>
+      <p class="blurb">Throwback design with vintage-inspired typography, high-contrast retro palettes, and nostalgic visual elements.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Vintage</span>
+      </header>
+      <p class="meta">
+        <code>vintage</code>
+        
+        
+      </p>
+      <p class="blurb">1950s-1990s nostalgia with skeuomorphic touches, grainy textures, retro color palettes, and pixel-style typography.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Social &amp; Messaging <small>1개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">WeChat Design System</span>
+      </header>
+      <p class="meta">
+        <code>wechat</code>
+        
+        
+      </p>
+      
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Starter <small>2개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Neutral Modern</span>
+      </header>
+      <p class="meta">
+        <code>default</code>
+        
+        
+      </p>
+      
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Warm Editorial</span>
+      </header>
+      <p class="meta">
+        <code>warm-editorial</code>
+        
+        
+      </p>
+      
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<h2>Themed &amp; Unique <small>8개</small></h2>
+<div class="grid">
+  
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">---</span>
+      </header>
+      <p class="meta">
+        <code>totality-festival</code>
+        
+        
+      </p>
+      <p class="blurb">&quot;Cosmic Premium&quot; — the visceral tension and awe of a solar eclipse</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Agentic</span>
+      </header>
+      <p class="meta">
+        <code>agentic</code>
+        
+        
+      </p>
+      <p class="blurb">Conversational AI-first interface with minimal controls, clear outcomes, and delegated task flows for agentic workflows.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Futuristic</span>
+      </header>
+      <p class="meta">
+        <code>futuristic</code>
+        
+        
+      </p>
+      <p class="blurb">Forward-looking design with tech-inspired typography, modern layouts, and a sleek, innovation-driven aesthetic.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Pacman</span>
+      </header>
+      <p class="meta">
+        <code>pacman</code>
+        
+        
+      </p>
+      <p class="blurb">Retro arcade-inspired design with pixel fonts, dotted borders, playful high-contrast colors, and 8-bit game aesthetics.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Design System Inspired by Tetris</span>
+      </header>
+      <p class="meta">
+        <code>tetris</code>
+        
+        
+      </p>
+      <p class="blurb">Classic block-game inspired design with playful colors, bold display fonts, and compact, high-energy layouts.</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">HUD Design System</span>
+      </header>
+      <p class="meta">
+        <code>hud</code>
+        
+        
+      </p>
+      <p class="blurb">A **combat pilot&#39;s glass cockpit** — everything readable in a split second, in any light condition, under any G-load</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Loom Design System</span>
+      </header>
+      <p class="meta">
+        <code>loom</code>
+        
+        
+      </p>
+      <p class="blurb">A friendly, fast video-first async communication tool</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+
+    <article class="card" style="background:#ffffff;color:#1a1a1a;">
+      <header>
+        <span class="swatch" style="background:#cccccc;border:1px solid rgba(0,0,0,0.1);"></span>
+        <span class="title">Trading Terminal Design System</span>
+      </header>
+      <p class="meta">
+        <code>trading-terminal</code>
+        
+        
+      </p>
+      <p class="blurb">A professional-grade financial data terminal</p>
+      <div class="sample">
+        <button style="background:#cccccc;color:#fff;">Action</button>
+        <span class="text-sample">Heading + body</span>
+      </div>
+    </article>
+  
+</div>
+
+
+<footer>
+  <p>149 systems · accent detected: 44 · bg detected: 25 · category coverage: 149</p>
+  <p>Generated 2026-05-11T12:07:21.455Z · <a href="../../README.md">@dworks/llm-prompts</a></p>
+</footer>
+</body>
+</html>

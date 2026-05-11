@@ -16,9 +16,24 @@ Apache License 2.0 — Copyright 2026 Open Design contributors.
 
 ## 흡수된 시스템 목록
 
-| Dworks 폴더 | Open Design 원본 | 추가일 |
-|-------------|------------------|--------|
-| `linear-app/` | `nexu-io/open-design:design-systems/linear-app/DESIGN.md` | 2026-05-11 |
+**총 149 시스템 (2026-05-11 일괄 import)** — 각 폴더의 `DESIGN.md` 는 `nexu-io/open-design:design-systems/{folder}/DESIGN.md` verbatim.
+
+대표 시스템 (사용 빈도 순):
+
+| Dworks 폴더 | Open Design 원본 | Category |
+|-------------|------------------|----------|
+| `linear-app/` | linear-app | Productivity & SaaS |
+| `stripe/` · `stripe-app/` | stripe* | Finance / Developer tools |
+| `vercel/` | vercel | Developer tools |
+| `apple/` · `apple-hig/` | apple* | Consumer |
+| `anthropic/` · `claude/` | anthropic/claude | AI |
+| `notion/` | notion | Productivity |
+| `figma/` | figma | Design tools |
+| `airbnb/` | airbnb | Travel / Consumer |
+| `tesla/` · `bmw/` · `bmw-m/` · `bugatti/` | (automotive) | Automotive |
+| ... | 145 systems total | |
+
+전체 목록: `ls packages/llm-prompts/src/design-systems/` 또는 `availableDesignSystems()` 호출.
 
 ## 동기화
 

@@ -38,6 +38,16 @@ export const briefSchema = z.object({
   notes: z.string().trim().max(300).optional(),
   imageReference: imageReferenceSchema.optional(),
   imageReferences: z.array(imageReferenceSchema).min(1).max(3).optional(),
+  // Open Design 흡수 — 활성 design system id (예: 'linear-app', 'stripe', 'apple-hig').
+  // 미지정시 기존 톤 매핑만 사용. 지정시 design-systems/{id}/DESIGN.md 가 prompt 에 inject.
+  // 형식 가드: 소문자 영문/숫자/하이픈/언더스코어만.
+  activeDesignSystem: z
+    .string()
+    .trim()
+    .min(1)
+    .max(60)
+    .regex(/^[a-z0-9][a-z0-9_-]*$/)
+    .optional(),
 })
 export type GenerateBrief = z.infer<typeof briefSchema>
 

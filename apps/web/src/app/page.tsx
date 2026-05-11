@@ -225,6 +225,7 @@ import {
 } from './command-palette'
 import { BoxSelectOverlay, findNodesInBox } from './box-select-overlay'
 import { SpacingOverlay } from './spacing-overlay'
+import { DesignSystemPicker } from './design-system-picker'
 import { GridOverlay, computeColumnSpan } from './grid-overlay'
 import { Minimap } from './minimap'
 import { ToastProvider, useToast } from './toast-context'
@@ -376,6 +377,8 @@ interface SubmittedDesignBrief {
   /** @deprecated imageReferences[0]을 권장 (legacy 단일 호환). */
   imageReference?: ImageReferenceSeed
   imageReferences?: ImageReferenceSeed[]
+  /** Open Design 흡수 — 활성 design system id ('linear-app', 'stripe', …). */
+  activeDesignSystem?: string
 }
 
 interface ClarifyTurn {
@@ -748,6 +751,10 @@ function HomePageInner() {
   const [generateStage, setGenerateStage] = useState<GenerateStage>('intent')
   const [briefIntent, setBriefIntent] = useState('')
   const [briefNotes, setBriefNotes] = useState('')
+  // Open Design 흡수 — 활성 design system id. localStorage 영속화.
+  const [activeDesignSystem, setActiveDesignSystem] = useState<string | null>(
+    null,
+  )
   const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
   const [userFixtures, setUserFixtures] = useState<UserFixture[]>([])
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null)
@@ -1077,6 +1084,8 @@ function HomePageInner() {
           gridOverlayEnabled?: boolean
           // VIS-03 — 좌하단 미니맵 토글 상태(D-08, D-12).
           minimapEnabled?: boolean
+          // Open Design 흡수 — 활성 design system id (예: 'linear-app').
+          activeDesignSystem?: string | null
         }
         // 신규(canvasGridSize) 우선, 없으면 legacy boolean 마이그레이션
         if (
@@ -1129,6 +1138,13 @@ function HomePageInner() {
         if (typeof saved.minimapEnabled === 'boolean') {
           setMinimapEnabled(saved.minimapEnabled)
         }
+        // Open Design 흡수 — 활성 design system 복원.
+        if (
+          typeof saved.activeDesignSystem === 'string' &&
+          /^[a-z0-9][a-z0-9_-]*$/.test(saved.activeDesignSystem)
+        ) {
+          setActiveDesignSystem(saved.activeDesignSystem)
+        }
       }
     } catch {
       // localStorage 접근 실패는 무시 — default 상태 유지
@@ -1152,6 +1168,8 @@ function HomePageInner() {
           gridOverlayEnabled,
           // VIS-03 — 좌하단 미니맵 토글 상태(D-08, D-12).
           minimapEnabled,
+          // Open Design 흡수 — 활성 design system id (null 도 저장 — 해제 복원용).
+          activeDesignSystem,
         }),
       )
     } catch {
@@ -1167,6 +1185,7 @@ function HomePageInner() {
     rightPanelWidth,
     gridOverlayEnabled,
     minimapEnabled,
+    activeDesignSystem,
   ])
 
   useEffect(() => {
@@ -1569,10 +1588,15 @@ function HomePageInner() {
         : imageReference !== undefined
           ? [imageReference]
           : undefined
+    const dsField =
+      activeDesignSystem !== null && activeDesignSystem.length > 0
+        ? { activeDesignSystem }
+        : {}
     if (generateStage === 'intent') {
       return {
         intent,
         ...(imageReferences !== undefined ? { imageReferences } : {}),
+        ...dsField,
       }
     }
     const answerMap = new Map<string, BriefAnswer>()
@@ -1596,6 +1620,7 @@ function HomePageInner() {
       ...(answers.length > 0 ? { answers } : {}),
       ...(notes !== undefined ? { notes } : {}),
       ...(imageReferences !== undefined ? { imageReferences } : {}),
+      ...dsField,
     }
   }
 
@@ -4614,6 +4639,15 @@ function HomePageInner() {
                       }}
                     />
                   </label>
+                  {/* Open Design 흡수 — 디자인 시스템 picker (149 systems). */}
+                  <DesignSystemPicker
+                    apiBase={
+                      process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
+                    }
+                    value={activeDesignSystem}
+                    onChange={(id) => setActiveDesignSystem(id)}
+                    disabled={clarifyLoading || generateLoading}
+                  />
                   <button
                     type="button"
                     className="w-full rounded-md bg-[var(--dw-ui-accent)] px-3 py-2 text-xs font-semibold text-white hover:bg-[var(--dw-ui-accent-hover)] disabled:opacity-50"
