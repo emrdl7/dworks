@@ -186,11 +186,20 @@ function hasAnyInteractive(node: TreeNode): boolean {
   return false
 }
 
+/**
+ * ME-02: makeInteractiveNode 자동 id 의 같은 ms 충돌 회피용 모듈 카운터.
+ * 변형 4개 병렬 normalize 등 같은 ms 에서 두 노드가 같은 id 를 얻을 수 있어
+ * 단조 증가 카운터 suffix 를 붙여 unique 보장.
+ */
+let interactiveNodeCounter = 0
+
 /** 빈 interactive 노드 fabricate — 한국어 placeholder 포함. D-06 사용자 편집 anchor. */
 function makeInteractiveNode(
   type: 'carousel' | 'tabs' | 'accordion' | 'modal',
 ): TreeNode {
-  const id = `auto-${type}-${Date.now().toString(36)}`
+  interactiveNodeCounter += 1
+  // ME-02: ms 기반 id 에 counter suffix — 같은 ms 에서도 unique.
+  const id = `auto-${type}-${Date.now().toString(36)}-${interactiveNodeCounter}`
   const placeholder = '인터랙티브 요소 — 도메인에 맞게 편집하세요'
   // schema 호환: carousel/tabs/accordion 은 items, modal 은 children + label.
   if (type === 'modal') {
