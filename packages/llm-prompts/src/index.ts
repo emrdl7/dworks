@@ -14,6 +14,13 @@ export interface BriefAnswer {
   answer: string | string[]
 }
 
+/** 참고 이미지의 레이아웃 의도 (apps/web image-color.ts:extractLayoutIntent 결과와 동일 union). */
+export type LayoutIntent =
+  | 'centered'
+  | 'left-aligned'
+  | 'grid'
+  | 'asymmetric'
+
 /**
  * 사용자 참고 이미지에서 추출한 색감/비율 시드.
  * vision-LLM 미사용 PoC에서도 텍스트 시그널로 LLM에 전달된다.
@@ -23,6 +30,10 @@ export interface ImageReference {
   colors: string[]
   /** 'square' | 'landscape' | 'portrait' | 'wide' 중 가장 가까운 비율. */
   aspectRatio?: 'square' | 'landscape' | 'portrait' | 'wide'
+  /** 5색 dominant + light/dark/neutral 분류 hex list (v2 신규 — image-color.analyzeDominantColors 결과). */
+  dominantColors?: string[]
+  /** 레이아웃 의도 (v2 신규 — image-color.extractLayoutIntent 결과). */
+  layoutIntent?: LayoutIntent
 }
 
 export interface DesignBrief {
@@ -150,6 +161,23 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
       lines.push(
         '  (참고 이미지에서 추출. 그대로 베끼지 말고 디자인 팔레트의 시드로 활용. raw hex 강제 X)',
       )
+      // <reference_image_analysis> 블록 — D-16. dominantColors 또는 layoutIntent 가 있으면 노출.
+      // 보조 시그널 — LLM 은 이 신호를 _보조_ 로 사용 (의도 우선).
+      if (
+        ref.dominantColors !== undefined ||
+        ref.layoutIntent !== undefined
+      ) {
+        lines.push('', `<reference_image_analysis>`)
+        if (ref.dominantColors !== undefined) {
+          lines.push(
+            `dominantColors: [${ref.dominantColors.join(', ')}]`,
+          )
+        }
+        if (ref.layoutIntent !== undefined) {
+          lines.push(`layoutIntent: '${ref.layoutIntent}'`)
+        }
+        lines.push(`</reference_image_analysis>`)
+      }
     }
   } else if (refs.length > 1) {
     lines.push('', `### 참고 이미지 시드 (${refs.length}장)`)
