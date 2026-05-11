@@ -5391,6 +5391,37 @@ function NodeContextMenu({
   structureInfo,
 }: NodeContextMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null)
+  // viewport boundary 검사 후 보정된 position. 처음엔 raw position으로 mount,
+  // mount 후 메뉴 크기 측정 + viewport 초과 시 flip/clamp. (사용자 비판 UX-01:
+  // 우측/하단 가까이 우클릭 시 메뉴가 화면 밖으로 나가 항목 안 보임)
+  const [adjustedPosition, setAdjustedPosition] = useState(position)
+  useEffect(() => {
+    const el = menuRef.current
+    if (!el) {
+      setAdjustedPosition(position)
+      return
+    }
+    const rect = el.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const margin = 8
+    let left = position.x
+    let top = position.y
+    // 우측 초과: 메뉴 폭만큼 좌측으로 flip (cursor 왼쪽으로 펼침)
+    if (left + rect.width + margin > vw) {
+      left = Math.max(margin, vw - rect.width - margin)
+    }
+    // 하단 초과: 메뉴 높이만큼 위로 flip
+    if (top + rect.height + margin > vh) {
+      top = Math.max(margin, vh - rect.height - margin)
+    }
+    if (left !== position.x || top !== position.y) {
+      setAdjustedPosition({ x: left, y: top })
+    } else {
+      setAdjustedPosition(position)
+    }
+  }, [position])
+
   const canMoveUp = !structureInfo.isRoot && (structureInfo.index ?? 0) > 0
   const canMoveDown =
     !structureInfo.isRoot &&
@@ -5464,8 +5495,8 @@ function NodeContextMenu({
       aria-label={`${node.id} 컨텍스트 메뉴`}
       className="fixed z-50 min-w-56 rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-elevated)] p-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
       style={{
-        left: position.x,
-        top: position.y,
+        left: adjustedPosition.x,
+        top: adjustedPosition.y,
         animation: 'dw-fade-up 140ms ease-out both',
       }}
       onContextMenu={(event) => event.preventDefault()}
