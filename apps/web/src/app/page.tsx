@@ -229,6 +229,8 @@ import { Minimap } from './minimap'
 import { ToastProvider, useToast } from './toast-context'
 import { ToastHost } from './toast-host'
 import { ThemeProvider, useTheme } from './theme-context'
+import { PaletteProvider } from './palette-context'
+import { PaletteManagerDialog } from './palette-manager-dialog'
 import { useAlignDistribute } from './use-align-distribute'
 import { useQuickAddShortcuts } from './use-quick-add'
 import {
@@ -627,15 +629,19 @@ type ModalEditPatch = Pick<
   | 'open'
 >
 
-// HomePage 는 ThemeProvider + ToastProvider 로 HomePageInner 를 감싸 useTheme()/useToast() 가
-// 컴포넌트 함수 body 에서 호출 가능하도록 한다 (DS-01 테마 swap, UX-03 변환 손실 toast 등).
+// HomePage 는 ThemeProvider + PaletteProvider + ToastProvider 로 HomePageInner 를 감싸
+// useTheme()/usePalettes()/useToast() 가 컴포넌트 함수 body 에서 호출 가능하도록 한다
+// (DS-01 테마 swap, DS-02 custom palette, UX-03 변환 손실 toast 등).
 // ThemeProvider 가 더 바깥 — 테마 초기 hydration 이 toast 보다 우선이고, toast UI 도 chrome 토큰 사용.
+// PaletteProvider 는 ToastProvider 보다 바깥 — palette CRUD 는 toast 를 호출하지 않음 (dialog 컴포넌트에서만 사용).
 export default function HomePage() {
   return (
     <ThemeProvider>
-      <ToastProvider>
-        <HomePageInner />
-      </ToastProvider>
+      <PaletteProvider>
+        <ToastProvider>
+          <HomePageInner />
+        </ToastProvider>
+      </PaletteProvider>
     </ThemeProvider>
   )
 }
@@ -825,6 +831,8 @@ function HomePageInner() {
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false)
   // ⌘K 명령 팔레트
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  // DS-02 — 팔레트 관리 dialog (⌘K '팔레트 관리' 액션에서 토글).
+  const [paletteDialogOpen, setPaletteDialogOpen] = useState(false)
   // 레이어 트리 collapse 상태 — 컨테이너 노드 ID 집합. 기본 모두 펼침.
   const [collapsedLayerNodeIds, setCollapsedLayerNodeIds] = useState<
     Set<string>
@@ -3872,6 +3880,14 @@ function HomePageInner() {
       keywords: ['theme', 'sepia', '세피아', '테마', 'mode', '베이지'],
       action: () => setTheme('sepia'),
     },
+    // DS-02 — 사용자 정의 팔레트 관리 dialog 열기. localStorage 'dw:palettes:v1' 동기.
+    {
+      id: 'palette-manager',
+      label: '팔레트 관리',
+      group: '팔레트',
+      keywords: ['palette', '팔레트', '색', 'color', 'custom', '사용자', '관리'],
+      action: () => setPaletteDialogOpen(true),
+    },
     // 도움말 — UX-06 D-19: ⌘K → "단축키" 검색으로 cheatsheet 노출.
     {
       id: 'shortcut-help',
@@ -5809,6 +5825,11 @@ function HomePageInner() {
         open={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         items={commandItems}
+      />
+      {/* DS-02 — 사용자 정의 팔레트 관리 dialog (⌘K '팔레트 관리' 에서 열림). */}
+      <PaletteManagerDialog
+        open={paletteDialogOpen}
+        onClose={() => setPaletteDialogOpen(false)}
       />
       {/* VIS-03 좌하단 미니맵 — fixed bottom-4 left-4, 큰 트리 navigate 용 (D-08..D-12). */}
       <Minimap
