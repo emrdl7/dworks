@@ -150,6 +150,9 @@ export function Minimap(props: MinimapProps) {
 
   // scroll/resize listener — rAF throttle (T-03-03-01 mitigate).
   // 노드 박스는 재측정 안 함 — viewport rect 만 갱신.
+  // WR-02 fix: treeRevision 을 dep 에 추가 — wrapper 가 conditional render 로
+  // remount 될 경우 tree 변경 신호와 함께 listener 가 새 element 에 재부착된다.
+  // (canvasScrollRef 객체 identity 자체는 안 바뀌므로 dep 만으론 부족.)
   useEffect(() => {
     if (!open) return
     const wrapper = canvasScrollRef.current
@@ -171,7 +174,7 @@ export function Minimap(props: MinimapProps) {
         rafRef.current = null
       }
     }
-  }, [open, canvasScrollRef, measureViewport])
+  }, [open, canvasScrollRef, measureViewport, treeRevision])
 
   if (!open) return null
 
