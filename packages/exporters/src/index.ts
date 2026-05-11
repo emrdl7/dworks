@@ -2,5 +2,13 @@
 // 변환기 후보: plain / jabworks / infoUX / KRDS.
 // 각 변환기가 자체 변환 + 자체 검증 + 자체 정렬 책임.
 // M0 단계 placeholder. plain HTML 변환기는 M5에서 도입.
+// Phase 4 (EXP-01/02/03) — exportTreeToHtml: Embla + vanilla JS + IntersectionObserver wrap.
+
+export {
+  exportTreeToHtml,
+  detectFeatures,
+  type ExportFeatures,
+  type ExportHtmlOptions,
+} from './html'
 
 export const PACKAGE_NAME = '@dworks/exporters'
