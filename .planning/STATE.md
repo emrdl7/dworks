@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: ready_to_plan
-last_updated: "2026-05-11T09:05:00.000Z"
+status: unknown
+last_updated: "2026-05-11T09:04:30.057Z"
 progress:
   total_phases: 5
-  completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
-  percent: 80
+  completed_phases: 3
+  total_plans: 18
+  completed_plans: 17
+  percent: 94
 ---
 
 # Dworks v2.0 STATE
@@ -25,7 +25,7 @@ progress:
 | 1 | UX 핵심 fix + 측정 도구 | 🟡 진행 중 (5/7 plan 완료, 01-01/01-04 잔여) |
 | 2 | AI 생성 품질 자동 검증 | 🟢 plans 5/5 완료 (02-05 wiring gap closure 완료) |
 | 3 | 시각 보조 도구 | 🟢 plans 3/3 완료 (VIS-01 + VIS-02 + VIS-03 done) |
-| 4 | export 깊이 | ⚪ pending |
+| 4 | export 깊이 | 🟡 진행 중 (1/3 plan 완료 — 04-01 tree-renderer 확장 done) |
 | 5 | 디자인 시스템 깊이 | ⚪ pending |
 
 ## Active Work
@@ -43,7 +43,8 @@ progress:
 - ✅ 03-01 (VIS-01 12-col grid overlay + snap helper + column-span label) — 2026-05-11. grid-overlay.tsx 신규(153줄) + helper 3종 + 14 unit tests + page.tsx 5+ site 통합 + command-palette '시각 보조' group. commits 3dc8405 + 99122d6. 25분. Snap 컴퓨트 site 는 자유위치 드래그 미존재로 deferred(인프라/helper only).
 - ✅ 03-02 (VIS-02 viewport 중앙 pivot 줌 통일) — 2026-05-11. setZoomWithCenterPivot useCallback helper + 5 진입점(toolbar +/- / ⌘0/⌘+/⌘- / ⌘K zoom-100 / GlobalContextMenu reset) wiring. wheel cursor-pivot 보존. commits 7ab2cf5 + 280884c. 8분.
 - ✅ 03-03 (VIS-03 좌하단 미니맵) — 2026-05-11. minimap.tsx 신규(311줄) — 노드 outlined rectangle + viewport rect + 클릭 navigate + Shift+M + toolbar 버튼 + commandPalette + dw:uiPrefs:v1 영속화. rAF throttle + treeRevision trigger 패턴. Map import → MapIcon alias 로 global Map constructor shadowing 회피. commits b945001 + 6d4780e + 6c030cf. 25분.
-- 잔여: Phase 4 (export 깊이) + Phase 5 (디자인 시스템) — 다음 phase.
+- ✅ 04-01 (EXP-01/02 tree-renderer 4 interactive 노드 확장) — 2026-05-11. renderCarousel/Tabs/Accordion/Modal 전체 slide+item 렌더 + data-dworks-* attr + 한국어 aria(이전/다음 슬라이드/닫기) + hidden attr 토글 + data-expand-mode single/multiple. 8 신규 테스트 (23/23 pass). schema 불일치 4건 Rule 3 정규화. commits b46259d + 7fa6ad9. 18분.
+- 잔여: Phase 4 (04-02 exporters + 04-03 web 어댑터) + Phase 5 (디자인 시스템) — 다음.
 
 ## Decisions Log
 
@@ -73,6 +74,9 @@ progress:
 - [Phase 3 / Plan 03] Map (lucide-react) import → MapIcon alias — global `Map` constructor 5곳(`new Map<string, V>()`)이 lucide Map 컴포넌트와 shadowing 충돌 (TS7009/TS2558). alias 로 namespace 분리.
 - [Phase 3 / Plan 03] treeRevision useState + tree dep effect 패턴 — useRef.current++ 만으로는 re-render 안 일어남. setState((r)=>r+1) 로 minimap 의 measureNodes effect 가 안정적으로 재실행.
 - [Phase 3 / Plan 03] Shift+M 단축키 — modal `M` quick-add 와 충돌 회피 (D-12). modifier 검사 strict (`shift=true, meta/alt=false`).
+- [Phase 4 / Plan 01] data-dworks-* namespace 신설 — 인스펙터 마커 data-dw-* 와 분리하여 vanilla JS / Embla interactive hook 전용
+- [Phase 4 / Plan 01] plan 가상 schema 필드 vs 실제 schema 불일치 4건 (CarouselNode.slides→items, TabsNode.tabs→items+content string, AccordionNode.expandMode→allowMultiple, ModalNode.triggerLabel/children 부재) 모두 Rule 3 으로 정규화 — schema 사전 검증 필요 신호
+- [Phase 4 / Plan 01] renderTabs hidden attr 토글 패턴 — vanilla JS 가 panel 표시/숨김을 HTML hidden attr 만 토글하면 됨 (CSS 강제)
 
 ## Performance Metrics
 
@@ -91,6 +95,7 @@ progress:
 | Phase 03 P01 | 25min | 3 tasks | 4 files |
 | Phase 03 P02 | 8min | 2 tasks | 1 files |
 | Phase 03 P03 | 25min | 3 tasks | 3 files |
+| Phase 04-export-depth P01 | 18min | 2 tasks | 2 files |
 
 ## v1 Final State (참조)
 
@@ -107,4 +112,4 @@ v1에서 확보한 것 (PROJECT.md Validated 참조):
 3. Phase 1 시작: `/gsd-discuss-phase 1 --auto` (사용자 자리 비움 mandate, --auto 또는 --power 권장)
 4. 또는 한 번에: `/gsd-autonomous` (모든 phase 자율 진행)
 
-**Planned Phase:** 3 (시각 보조 도구) — 3 plans — 2026-05-11T08:21:49.840Z
+**Planned Phase:** 4 (export 깊이) — 3 plans — 2026-05-11T09:00:10.443Z
