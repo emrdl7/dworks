@@ -11,4 +11,12 @@ export {
   type ExportHtmlOptions,
 } from './html'
 
+// DS-03 — 디자인 토큰 추출 + Tailwind/CSS export.
+export {
+  extractDesignTokens,
+  exportDesignTokens,
+  type ExtractedTokens,
+  type TokenExportFormat,
+} from './tokens'
+
 export const PACKAGE_NAME = '@dworks/exporters'
