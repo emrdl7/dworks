@@ -59,7 +59,7 @@ Plans:
 4. prompt에 _도메인×톤 매트릭스_ 표 추가 (e-commerce dark / SaaS playful 등 조합 + fixture 표본)
 5. 참조 이미지에서 dominant color 5색 + 레이아웃 의도 (centered/left-aligned/grid) 추출해 prompt에 전달
 
-**Plans:** 4 plans
+**Plans:** 5 plans
 
 ```
 Plans:
@@ -67,6 +67,7 @@ Plans:
 - [ ] 02-02-PLAN.md — AI-04 도메인×톤 6×5 매트릭스 prompt 섹션 (Wave 1, prompt-only)
 - [ ] 02-03-PLAN.md — AI-05 image-color analyzeDominantColors + extractLayoutIntent + prompt inject (Wave 2)
 - [ ] 02-04-PLAN.md — AI-01b/AI-02/AI-03 generation-normalize enforceRichness hook + interactive + animation (Wave 2)
+- [x] 02-05-PLAN.md — Gap closure: AI-01/02/03 + AI-05 production wiring in page.tsx (Wave 7, gap_closure) — 2026-05-11
 ```
 
 ---

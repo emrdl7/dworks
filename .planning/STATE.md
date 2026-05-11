@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T05:24:12.354Z"
+last_updated: "2026-05-11T07:00:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 2
@@ -23,7 +23,7 @@ progress:
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | UX 핵심 fix + 측정 도구 | 🟡 진행 중 (5/7 plan 완료, 01-01/01-04 잔여) |
-| 2 | AI 생성 품질 자동 검증 | 🟡 진행 중 (02-01..02-04 완료, 02-05 잔여) |
+| 2 | AI 생성 품질 자동 검증 | 🟢 plans 5/5 완료 (02-05 wiring gap closure 완료) |
 | 3 | 시각 보조 도구 | ⚪ pending |
 | 4 | export 깊이 | ⚪ pending |
 | 5 | 디자인 시스템 깊이 | ⚪ pending |
@@ -39,7 +39,8 @@ progress:
 - ✅ 01-07 (UX-05 박스 선택 + 정렬/분포) — 2026-05-11. BoxSelectOverlay + useAlignDistribute (8 단축키) + aria-live 한국어 알림. commits 8912300..a895e00. 8분.
 - ✅ 02-01 (AI-01 richness 13 신호 + validateTreeRichness) — 2026-05-11. 신호 #9~#13 + missing[] API + 11 테스트. commits 75ea025..d264ebc. 5분.
 - ✅ 02-04 (AI-01/02/03 enforceRichness + interactive + entranceAnimation) — 2026-05-11. enforceRichness orchestrator + inferDomain 5종 + ensureInteractiveComponent + ensureEntranceAnimations D-09 우선순위 3단계. commits 99e2e02..8a20010. 4분.
-- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02 (도메인×톤 매트릭스?), 02-03 (이미지 분석?), 02-05 (?)
+- ✅ 02-05 (AI-01/02/03/05 production wiring gap closure) — 2026-05-11. page.tsx 두 호출 site 패치 — normalizeDesignTree({prompt: submitted.intent}) + extractFromDataUrl 가 analyzeDominantColors + extractLayoutIntent 호출 + ImageReferenceSeed 확장. commits 9cb2818 + 1518289. 12분.
+- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02 (도메인×톤 매트릭스?), 02-03 (이미지 분석?)
 
 ## Decisions Log
 
@@ -59,6 +60,8 @@ progress:
 - [Phase 2 / Plan 04] 도메인 5종 매핑 (D-05) — ecommerce→carousel/saas→tabs/faq→accordion/auth→modal/default→accordion. pure regex match.
 - [Phase 2 / Plan 04] entranceAnimation D-09 3단 우선순위 — hero.title 700 load + cards 600 staggered scroll (delay 0/150/300, STAGGER_DELAY_MS=150) + final 500 fade. MAX_ANIMATIONS=8.
 - [Phase 2 / Plan 04] D-07 + D-10 idempotent guards — hasAnyInteractive / hasEntranceAnimation 으로 기존 값 덮어쓰지 않음. normalizeDesignTree 두 번 호출 결과 deepEqual.
+- [Phase 2 / Plan 05] production wiring gap closure — generation-normalize.ts:78 backward compat (`context.prompt === undefined → early return`) 보존, 호출 측 page.tsx 에서 명시적 `{ prompt: submitted.intent }` 전달
+- [Phase 2 / Plan 05] extractFromDataUrl 의 동일 pixelSource 재사용 — 3 함수 (extractDominantColors, analyzeDominantColors, extractLayoutIntent) 가 같은 imageData 객체 전달받아 canvas 디코딩 1회 유지
 
 ## Performance Metrics
 
@@ -73,6 +76,7 @@ progress:
 | Phase 02-ai-quality P01 | 5min | 2 tasks | 5 files |
 | Phase 02-ai-quality P03 | 8min | 2 tasks | 3 files |
 | Phase 02 P04 | 4 | 3 tasks | 2 files |
+| Phase 02 P05 | 12min | 2 tasks | 1 files |
 
 ## v1 Final State (참조)
 
