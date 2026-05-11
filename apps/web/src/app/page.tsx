@@ -158,6 +158,7 @@ import {
   buildExportPayload,
   parseImportPayload,
 } from './generation-export'
+import { downloadGenerationAsHtml } from './html-export'
 import {
   createUserFixtureId,
   readUserFixtures,
@@ -1696,6 +1697,27 @@ function HomePageInner() {
       anchor.remove()
     } finally {
       URL.revokeObjectURL(href)
+    }
+  }
+
+  // EXP-01/02/03 — 활성 generation 의 tree 를 _작동하는_ HTML 문서로 내보낸다.
+  // JSON 내보내기와 별개 — Embla + vanilla JS + IntersectionObserver wrap 결과.
+  // 성공 시 Korean toast, 실패 시 error toast.
+  function handleExportGenerationHtml(): void {
+    const active = generations.find((entry) => entry.id === activeGenerationId)
+    if (active === undefined) return
+    const exportedAt = new Date()
+    try {
+      const { filename } = downloadGenerationAsHtml(
+        { tree: active.tree, label: active.label },
+        exportedAt,
+      )
+      showToast(`${filename} 다운로드`, 'success')
+    } catch (error) {
+      showToast(
+        `HTML 내보내기 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+        'error',
+      )
     }
   }
 
@@ -4303,6 +4325,16 @@ function HomePageInner() {
                   title="활성 디자인을 JSON 파일로 내보냅니다."
                 >
                   내보내기
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 font-semibold text-[var(--dw-ui-text-muted)] hover:border-[var(--dw-ui-accent)] hover:text-[var(--dw-ui-accent-text-strong)] disabled:opacity-40"
+                  onClick={handleExportGenerationHtml}
+                  disabled={compareMode}
+                  aria-label="HTML 내보내기"
+                  title="활성 디자인을 작동하는 HTML 파일로 내보냅니다 (Embla + vanilla JS wrap)."
+                >
+                  HTML 내보내기
                 </button>
                 <label className="cursor-pointer rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 font-semibold text-[var(--dw-ui-text-muted)] hover:border-[var(--dw-ui-accent)] hover:text-[var(--dw-ui-accent-text-strong)]">
                   불러오기
