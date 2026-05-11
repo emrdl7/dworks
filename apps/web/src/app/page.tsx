@@ -121,6 +121,10 @@ import {
   treeFixtures,
 } from './tree-fixtures'
 import {
+  ComponentLibraryPanel,
+  type ComponentLibraryDragPayload,
+} from './component-library-panel'
+import {
   deleteRegisteredFont,
   generateFontId,
   getDefaultFontDisplayName,
@@ -724,6 +728,13 @@ function HomePageInner() {
   const [inspectorDrawerOpen, setInspectorDrawerOpen] = useState(false)
   // ⌘\ — 데스크톱에서 좌/우 패널 동시 hide (집중 모드 / Figma 표준)
   const [panelsHidden, setPanelsHidden] = useState(false)
+  // UX-04 — 좌측 컴포넌트 라이브러리 패널 열림 여부. 기본 펼침 (D-08).
+  // 토글 단축키: [ (대괄호) — global keydown handler 에 등록.
+  const [componentPanelOpen, setComponentPanelOpen] = useState(true)
+  // UX-04 — drop target 컨테이너 노드 outline 시각화용. dragover 중 elementsFromPoint 으로 매칭.
+  const [dropTargetNodeId, setDropTargetNodeId] = useState<string | null>(null)
+  // UX-04 — 빈 캔버스에서 dragover 중일 때 '여기에 놓으세요' placeholder 노출 (UI-SPEC line 204-205).
+  const [isDraggingOverCanvas, setIsDraggingOverCanvas] = useState(false)
   // 좌측 패널 탭 — 브리프/레이어 풀 높이 전환
   const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
   // 캔버스 grid — 디자인 정밀도용 격자 (off / 8 / 16 / 24 px cycle)
@@ -2764,6 +2775,52 @@ function HomePageInner() {
     closeContextMenu()
   }
 
+  // UX-04 — 컴포넌트 라이브러리에서 노드/패턴 추가.
+  //   payload.type      : 12 기본 노드 — leaf/container 분기해 기존 helper 호출.
+  //                       carousel/tabs/accordion/modal 은 tree-editor 가 미지원 → toast 안내.
+  //   payload.fixtureId : 패턴 fixture — appendFixtureToTarget 로 자식 노드 전체 복제 추가.
+  function handleAddFromLibrary(
+    payload: ComponentLibraryDragPayload,
+    targetParentId?: string,
+  ) {
+    const parentId = targetParentId ?? selectedNodeId ?? tree.root.id
+
+    if (payload.type) {
+      const t = payload.type
+      // tree-editor 의 leaf/container 분기.
+      if (t === 'text' || t === 'button' || t === 'image') {
+        handleAddLeafChild(parentId, t)
+        return
+      }
+      if (t === 'section' || t === 'hero' || t === 'card' || t === 'list' || t === 'form') {
+        handleAddContainerChild(parentId, t)
+        return
+      }
+      // carousel / tabs / accordion / modal — 별도 helper 없음. 안내 toast 후 종료.
+      showToast(`${nodeTypeLabels[t]} 노드는 패턴 카드에서 추가하세요`, 'warn')
+      return
+    }
+
+    if (payload.fixtureId) {
+      const fixture = getTreeFixture(payload.fixtureId)
+      if (!fixture) {
+        showToast('패턴을 찾을 수 없습니다', 'error')
+        return
+      }
+      try {
+        const { nextTree, firstNewChildId } = appendFixtureToTarget(
+          tree,
+          parentId,
+          fixture.tree.root,
+        )
+        commitTreeEdit(nextTree, firstNewChildId)
+      } catch {
+        showToast('여기에는 추가할 수 없습니다', 'error')
+      }
+      return
+    }
+  }
+
   function handleToggleNodeVisibility(node: TreeNode) {
     handleNodeMetaChange(node, {
       hidden: node.hidden === true ? undefined : true,
@@ -3067,6 +3124,12 @@ function HomePageInner() {
         setCanvasZoom((z) =>
           Math.max(0.25, Math.round((z - 0.1) * 100) / 100),
         )
+        return
+      }
+      // UX-04 — [ 컴포넌트 라이브러리 패널 토글 (modifier 없는 단일 키, D-08).
+      if (event.key === '[' && !meta && !event.altKey && !event.shiftKey) {
+        event.preventDefault()
+        setComponentPanelOpen((v) => !v)
         return
       }
     }
@@ -4752,7 +4815,16 @@ function HomePageInner() {
           ) : null}
         </aside>
 
-        <section className="flex min-h-0 min-w-0 flex-col bg-[var(--dw-ui-bg)]">
+        <section className="flex min-h-0 min-w-0 flex-row bg-[var(--dw-ui-bg)]">
+          {/* UX-04 — 좌측 컴포넌트 라이브러리 패널 (240px 펼침 / 32px 접힘, [ 토글). */}
+          {compareMode ? null : (
+            <ComponentLibraryPanel
+              open={componentPanelOpen}
+              onToggle={() => setComponentPanelOpen((v) => !v)}
+              onAddByKeyboard={(payload) => handleAddFromLibrary(payload)}
+            />
+          )}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {compareMode ? null : (
             <div className="flex h-10 shrink-0 items-center gap-2 overflow-x-auto whitespace-nowrap border-b border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 lg:gap-3 lg:px-4 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-[var(--dw-ui-soft)]">
               <div className="flex shrink-0 items-center gap-2 lg:gap-3">
@@ -4807,6 +4879,60 @@ function HomePageInner() {
                   ? 'cursor-grab select-none [&_*]:!cursor-grab'
                   : ''
             }`}
+            onDragOver={(event) => {
+              // UX-04 — 컴포넌트 라이브러리 카드 드래그 중일 때만 처리.
+              if (!event.dataTransfer.types.includes('application/x-dworks-node')) {
+                return
+              }
+              event.preventDefault()
+              event.dataTransfer.dropEffect = 'copy'
+              if (!isDraggingOverCanvas) setIsDraggingOverCanvas(true)
+              // 커서 위치에서 가장 가까운 컨테이너 노드 찾기 — elementsFromPoint.
+              const stack = document.elementsFromPoint(event.clientX, event.clientY)
+              let matchedId: string | null = null
+              for (const el of stack) {
+                if (!(el instanceof HTMLElement)) continue
+                const id = el.dataset.dworksNodeId
+                if (!id) continue
+                const node = findNodeByIdLocal(tree.root, id)
+                if (node && isContainerNode(node)) {
+                  matchedId = id
+                  break
+                }
+              }
+              if (matchedId !== dropTargetNodeId) {
+                setDropTargetNodeId(matchedId)
+              }
+            }}
+            onDragLeave={(event) => {
+              // 캔버스 wrapper 밖으로 나갈 때만 reset — 자식 사이 이동은 무시.
+              if (event.currentTarget === event.target) {
+                setIsDraggingOverCanvas(false)
+                setDropTargetNodeId(null)
+              }
+            }}
+            onDrop={(event) => {
+              if (!event.dataTransfer.types.includes('application/x-dworks-node')) {
+                return
+              }
+              event.preventDefault()
+              const raw = event.dataTransfer.getData('application/x-dworks-node')
+              setIsDraggingOverCanvas(false)
+              const target = dropTargetNodeId ?? tree.root.id
+              setDropTargetNodeId(null)
+              if (!raw) {
+                showToast('여기에는 추가할 수 없습니다', 'error')
+                return
+              }
+              let payload: ComponentLibraryDragPayload
+              try {
+                payload = JSON.parse(raw) as ComponentLibraryDragPayload
+              } catch {
+                showToast('여기에는 추가할 수 없습니다', 'error')
+                return
+              }
+              handleAddFromLibrary(payload, target)
+            }}
             onMouseDown={(event) => {
               // 스페이스+드래그 또는 가운데 버튼(button=1) → 패닝
               const isMiddleButton = event.button === 1
@@ -4975,6 +5101,23 @@ function HomePageInner() {
             altKeyPressed={altKeyPressed}
             canvasWrapperRef={canvasScrollRef}
           />
+          {/* UX-04 — drop target outline. 드래그 중 hover 한 컨테이너 노드를 accent 2px dashed 로 강조 (D-10). */}
+          {dropTargetNodeId !== null && (
+            <DropTargetOutline
+              targetNodeId={dropTargetNodeId}
+              canvasWrapperRef={canvasScrollRef}
+            />
+          )}
+          {/* UX-04 — 빈 캔버스 dragover 중 '여기에 놓으세요' placeholder (UI-SPEC line 204-205).
+              root 가 컨테이너이고 children 이 비어있을 때만 노출. */}
+          {isDraggingOverCanvas && isContainerNode(tree.root) && tree.root.children.length === 0 && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-4 flex items-center justify-center rounded-lg border-2 border-dashed border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)]/30 text-[length:var(--dw-text-value)] font-semibold text-[var(--dw-ui-accent-text)]"
+            >
+              여기에 놓으세요
+            </div>
+          )}
           </div>
           {compareMode ? null : (
             <div className="flex h-7 shrink-0 items-center justify-between gap-3 border-t border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-4 text-[11px] text-[var(--dw-ui-text-faint)]">
@@ -5038,6 +5181,7 @@ function HomePageInner() {
               </div>
             </div>
           )}
+          </div>
         </section>
 
         {compareMode ? null : (
@@ -5215,6 +5359,34 @@ interface HistoryButtonProps {
   icon: LucideIcon
   onClick: () => void
   shortcut?: string
+}
+
+// UX-04 — drop target 컨테이너 노드 외곽 outline.
+//   canvasScrollRef wrapper 내부 absolute 자식. DOM 측정(getBoundingClientRect) 기반.
+function DropTargetOutline({
+  targetNodeId,
+  canvasWrapperRef,
+}: {
+  targetNodeId: string
+  canvasWrapperRef: React.RefObject<HTMLDivElement | null>
+}) {
+  const wrapper = canvasWrapperRef.current
+  if (typeof window === 'undefined' || !wrapper) return null
+  const el = wrapper.querySelector<HTMLElement>(
+    `[data-dworks-node-id="${CSS.escape(targetNodeId)}"]`,
+  )
+  if (!el) return null
+  const wrapperRect = wrapper.getBoundingClientRect()
+  const rect = el.getBoundingClientRect()
+  const left = rect.left - wrapperRect.left + wrapper.scrollLeft
+  const top = rect.top - wrapperRect.top + wrapper.scrollTop
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute z-[150] rounded-[2px] border-2 border-dashed border-[var(--dw-ui-accent)]"
+      style={{ left, top, width: rect.width, height: rect.height }}
+    />
+  )
 }
 
 function HistoryButton({
@@ -13918,6 +14090,118 @@ function collectNodeIds(node: TreeNode, ids = new Set<string>()): Set<string> {
 
 function isContainerNode(node: TreeNode): node is ContainerNode {
   return 'children' in node
+}
+
+// UX-04 — fixture 의 root 자식 노드들을 target 컨테이너 children 끝에 append.
+//   - fixture root 자체는 _제외_ — children 만 import (root 가 page 컨테이너인 경우 중복 회피).
+//   - 모든 id 에 unique prefix 부여 (`pasted-{n}.`) — 기존 tree 와 충돌 방지.
+//   - target 이 컨테이너가 아니면 root.id 로 fallback (D-10).
+function appendFixtureToTarget(
+  tree: Tree,
+  targetParentId: string,
+  fixtureRoot: TreeNode,
+): { nextTree: Tree; firstNewChildId: string | undefined } {
+  const fixtureChildren = isContainerNode(fixtureRoot) ? fixtureRoot.children : []
+  if (fixtureChildren.length === 0) {
+    // root 가 leaf 면 root 자체를 단일 자식으로 import.
+    if (!isContainerNode(fixtureRoot)) {
+      const cloned = cloneFixtureNodeWithPrefix(fixtureRoot, tree.root, '')
+      const target = findContainerOrFallback(tree, targetParentId)
+      const root = appendChildrenToContainer(tree.root, target, [cloned])
+      return { nextTree: { ...tree, root }, firstNewChildId: cloned.id }
+    }
+    return { nextTree: tree, firstNewChildId: undefined }
+  }
+
+  // unique prefix 산출 — 기존 tree id 와 충돌 안 나는 첫 번째 'pasted-{n}'.
+  const existingIds = collectNodeIds(tree.root)
+  let counter = 1
+  while (existingIds.has(`pasted-${counter}`)) counter += 1
+  const prefix = `pasted-${counter}.`
+  const target = findContainerOrFallback(tree, targetParentId)
+  // 각 child 를 deep clone + prefix.
+  const clonedChildren = fixtureChildren.map((child) =>
+    cloneFixtureNodeWithPrefix(child, tree.root, prefix),
+  )
+  const root = appendChildrenToContainer(tree.root, target, clonedChildren)
+  return {
+    nextTree: { ...tree, root },
+    firstNewChildId: clonedChildren[0]?.id,
+  }
+}
+
+// target id 가 컨테이너 노드면 그대로, 아니면 root id 로 fallback (D-10).
+function findContainerOrFallback(tree: Tree, targetId: string): string {
+  const found = findNodeByIdLocal(tree.root, targetId)
+  if (found && isContainerNode(found)) return targetId
+  return tree.root.id
+}
+
+function findNodeByIdLocal(node: TreeNode, id: string): TreeNode | undefined {
+  if (node.id === id) return node
+  if (isContainerNode(node)) {
+    for (const child of node.children) {
+      const found = findNodeByIdLocal(child, id)
+      if (found) return found
+    }
+  }
+  return undefined
+}
+
+// deep clone + 모든 id 에 prefix. existing tree id 와 충돌 시 추가 suffix.
+function cloneFixtureNodeWithPrefix(
+  node: TreeNode,
+  treeRoot: TreeNode,
+  idPrefix: string,
+): TreeNode {
+  const existing = collectNodeIds(treeRoot)
+  function rename(original: string): string {
+    let candidate = `${idPrefix}${original}`
+    let suffix = 1
+    while (existing.has(candidate)) {
+      candidate = `${idPrefix}${original}-${suffix}`
+      suffix += 1
+    }
+    existing.add(candidate)
+    return candidate
+  }
+  function recurse(current: TreeNode): TreeNode {
+    const renamed = { ...current, id: rename(current.id) }
+    if (isContainerNode(current)) {
+      ;(renamed as ContainerNode).children = current.children.map(recurse)
+    }
+    return renamed
+  }
+  return recurse(node)
+}
+
+// immutable — target 컨테이너 노드의 children 끝에 new children append.
+function appendChildrenToContainer(
+  root: TreeNode,
+  targetId: string,
+  newChildren: TreeNode[],
+): TreeNode {
+  if (root.id === targetId && isContainerNode(root)) {
+    return {
+      ...root,
+      children: [...root.children, ...newChildren],
+    } as TreeNode
+  }
+  if (isContainerNode(root)) {
+    const nextChildren = root.children.map((child) =>
+      appendChildrenToContainer(child, targetId, newChildren),
+    )
+    // children 동등 비교 — 변경 없으면 동일 reference 유지.
+    let changed = false
+    for (let i = 0; i < root.children.length; i += 1) {
+      if (root.children[i] !== nextChildren[i]) {
+        changed = true
+        break
+      }
+    }
+    return changed ? ({ ...root, children: nextChildren } as TreeNode) : root
+  }
+  return root
 }
 
 // 노드의 _명시 design override_가 있는 영역을 자동 펼침 — AI가 의도한 디자인이
