@@ -67,6 +67,8 @@ import {
   type NodeTransform,
   type NodeTransitionTiming,
   type ResponsiveHidden,
+  type ResponsiveOverride,
+  type ResponsiveStyle,
   type TransitionCubicBezier,
   NODE_TRANSITION_TIMING_IDS,
   type NodeLayout,
@@ -2009,11 +2011,72 @@ export default function HomePage() {
     commitTreeEdit(updateText(tree, node.id, content))
   }
 
+  // viewport-aware patch handlers — desktop이면 base prop에 박고,
+  // mobile/tablet이면 responsiveStyle.{viewport}.{prop}로 박는다.
+  // 사용자가 viewport switcher로 모바일/태블릿 미리보기 중일 때 인스펙터 입력은
+  // 자동으로 _override_가 되어 base는 유지, viewport-specific만 변경.
+  function buildResponsiveStyleWithPatch<K extends keyof ResponsiveOverride>(
+    current: ResponsiveStyle | undefined,
+    viewport: 'mobile' | 'tablet',
+    key: K,
+    patch: Partial<NonNullable<ResponsiveOverride[K]>>,
+  ): ResponsiveStyle | undefined {
+    const baseRS: Record<string, Record<string, Record<string, unknown>>> =
+      (current ?? {}) as never
+    const baseVP: Record<string, Record<string, unknown>> =
+      baseRS[viewport] ?? {}
+    const baseProp: Record<string, unknown> = baseVP[key as string] ?? {}
+    const merged: Record<string, unknown> = {
+      ...baseProp,
+      ...(patch as Record<string, unknown>),
+    }
+    for (const k of Object.keys(merged)) {
+      if (merged[k] === undefined) delete merged[k]
+    }
+    const nextVP: Record<string, Record<string, unknown>> = { ...baseVP }
+    if (Object.keys(merged).length > 0) {
+      nextVP[key as string] = merged
+    } else {
+      delete nextVP[key as string]
+    }
+    const nextRS: Record<string, Record<string, Record<string, unknown>>> = {
+      ...baseRS,
+    }
+    if (Object.keys(nextVP).length > 0) {
+      nextRS[viewport] = nextVP
+    } else {
+      delete nextRS[viewport]
+    }
+    return Object.keys(nextRS).length > 0 ? (nextRS as ResponsiveStyle) : undefined
+  }
+
+  function commitResponsivePatch<K extends keyof ResponsiveOverride>(
+    node: TreeNode,
+    key: K,
+    patch: Partial<NonNullable<ResponsiveOverride[K]>>,
+    options?: CommitTreeEditOptions,
+  ) {
+    if (responsiveViewport === 'desktop') return false
+    const nextRS = buildResponsiveStyleWithPatch(
+      node.responsiveStyle,
+      responsiveViewport,
+      key,
+      patch,
+    )
+    commitTreeEdit(
+      updateNodeMeta(tree, node.id, { responsiveStyle: nextRS }),
+      undefined,
+      options,
+    )
+    return true
+  }
+
   function handleTextTypographyChange(
     node: TextNode,
     patch: Partial<Typography>,
     options?: CommitTreeEditOptions,
   ) {
+    if (commitResponsivePatch(node, 'typography', patch, options)) return
     commitTreeEdit(updateTextTypography(tree, node.id, patch), undefined, options)
   }
 
@@ -2034,6 +2097,7 @@ export default function HomePage() {
     patch: Partial<Spacing>,
     options?: CommitTreeEditOptions,
   ) {
+    if (commitResponsivePatch(node, 'spacing', patch, options)) return
     commitTreeEdit(updateSpacing(tree, node.id, patch), undefined, options)
   }
 
@@ -2054,6 +2118,7 @@ export default function HomePage() {
     patch: Partial<Shape>,
     options?: CommitTreeEditOptions,
   ) {
+    if (commitResponsivePatch(node, 'shape', patch, options)) return
     commitTreeEdit(updateShape(tree, node.id, patch), undefined, options)
   }
 
@@ -2074,6 +2139,7 @@ export default function HomePage() {
     patch: Partial<NodeColor>,
     options?: CommitTreeEditOptions,
   ) {
+    if (commitResponsivePatch(node, 'color', patch, options)) return
     commitTreeEdit(updateColor(tree, node.id, patch), undefined, options)
   }
 
@@ -2102,6 +2168,7 @@ export default function HomePage() {
   }
 
   function handleLayoutChange(node: TreeNode, patch: Partial<NodeLayout>) {
+    if (commitResponsivePatch(node, 'layout', patch)) return
     commitTreeEdit(updateLayout(tree, node.id, patch))
   }
 
@@ -7039,6 +7106,22 @@ function NodeInspector({
           })}
         </div>
       </div>
+
+      {viewport !== 'desktop' ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mx-4 mt-3 rounded-md border border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] px-3 py-2 text-[length:var(--dw-text-caption)] leading-snug text-[var(--dw-ui-accent-text)]"
+        >
+          <span className="font-semibold">
+            {viewport === 'mobile' ? '📱 모바일' : '📐 태블릿'} override 모드
+          </span>
+          <span className="ml-1 text-[var(--dw-ui-text-muted)]">
+            — 입력은 데스크탑(base) 값 대신 _이 viewport 전용 override_로 박힙니다.
+            데스크탑 base를 편집하려면 데스크탑 viewport로 전환하세요.
+          </span>
+        </div>
+      ) : null}
 
       <div
         key={activeTab}
