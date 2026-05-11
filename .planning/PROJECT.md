@@ -1,7 +1,18 @@
-# Dworks v2.0 — 기성 디자인툴 수준의 완성된 툴
+# Dworks — 기성 디자인툴 수준의 완성된 디자인 시안 도구
 
-> **상태**: 초기화 (2026-05-11). v1 (M0~현재)에서 12 노드 타입 + 인스펙터 + AI 생성 + responsiveStyle/animation/4 인터랙티브 컴포넌트까지 확보. v2.0은 기성 툴(Figma/Stitch/Sketch/Webflow) 사용성/완성도로 도약.
-> **이전 산출물**: 루트 `PLAN.md`(v1 라운드 1~5 합의), `docs/DECISIONS.md`, `docs/HANDOVER-2026-05-11-late.md`(v1 마지막 사이클).
+> **현재 상태**: v2.0 완료 (2026-05-11 ship). v1 의 _기능 풍부도_ + v2.0 의 _사용성/완성도_ 모두 확보. 5 phase / 21 plan / 19 requirement 100% 구현. Tech debt 3건 (v3+ 영역). Human 시각 검증 35건 deferred (autonomous YOLO mandate 후속 spot-check 권장).
+> **다음**: v3.0 — 협업 / 백엔드 통합 / 코드 export / 모바일 / 시스템 추출 영역 본격화 (`/gsd-new-milestone` 으로 시작).
+> **이전 산출물**: 루트 `PLAN.md`(v1 라운드 1~5), `docs/DECISIONS.md`, `docs/HANDOVER-2026-05-11-late.md`(v1 마지막 사이클), `.planning/milestones/v2.0-*`(v2.0 archive).
+
+## v2.0 Highlights (shipped 2026-05-11)
+
+- **UX 핵심 fix** — context menu auto-flip, spacing overlay (Alt 가이드), type conversion 3-route (메뉴/인스펙터/⌘K), 좌측 컴포넌트 라이브러리 패널 (12 basic + 10 patterns drag), Shift+drag 박스 선택 + 8 align/distribute shortcuts, T/B/I/R/C 등 quick-add (8/12 키 작동)
+- **AI 품질 자동 enforce** — 13 신호 validator (`enforceRichness`), 도메인-적합 interactive 자동 추가, entranceAnimation staggered 자동 박기, 6×5 도메인×톤 매트릭스 prompt, image dominant 5색 + layout intent
+- **시각 표준** — 12-col grid overlay + snap helper, cursor-pivot zoom (5+ 진입점), 좌하단 미니맵 navigate
+- **인터랙티브 export** — Embla carousel CDN + 자동 init, vanilla JS tabs/modal/accordion wrap (라이브러리 의존 없음), IntersectionObserver entrance + reduced-motion 존중
+- **디자인 시스템** — 3 theme (dark/light/sepia) 토큰 swap, 사용자 정의 palette 8개 (5-10색 each), Tailwind config + CSS variables 토큰 export
+
+
 
 ---
 
