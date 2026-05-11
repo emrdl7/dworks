@@ -7,6 +7,7 @@
 //   - root이 section이 아닌 경우 wrapper section 보강 (LLM이 단편 응답 시)
 //   - 풍부도 13 신호 자동 보강 (validateTreeRichness missing[] 기반 — idempotent + safe 변환만)
 //   - ensureInteractiveComponent: AI-02 — main 직계 마지막 section 직전에 도메인-적합 interactive 1개 삽입
+//   - ensureEntranceAnimations: AI-03 — hero.title slide-up 700 load + cards staggered slide-up 600 scroll + final heading fade-in 500 (총 ≤8개, idempotent)
 //
 // AI 자유도 ↑로 LLM이 _자유롭게 override_를 박아도 resolver와 정합 — 이 normalize
 // 의 역할은 _구조적 안전망_에 그친다.
@@ -272,7 +273,170 @@ function ensureInteractiveComponent(tree: Tree, domain: DomainKey): Tree {
   }
 }
 
+/** D-09 entranceAnimation prop shape — schema (packages/tree) 와 일치. */
+export interface EntranceAnimation {
+  type: 'slide-up' | 'fade-in' | 'slide-left' | 'slide-right' | 'scale-up'
+  duration: number
+  delay?: number
+  trigger: 'load' | 'scroll'
+}
+
+const MAX_ANIMATIONS = 8
+const STAGGER_DELAY_MS = 150
+
+/** TreeNode 의 entranceAnimation prop 이 이미 있는지 — D-10 덮어쓰기 방지 guard. */
+function hasEntranceAnimation(node: TreeNode): boolean {
+  const n = node as unknown as Record<string, unknown>
+  return n.entranceAnimation !== undefined && n.entranceAnimation !== null
+}
+
+/** 노드에 entranceAnimation 부착 — 기존 값 있으면 그대로 둠 (D-10). */
+function withEntranceAnimation(
+  node: TreeNode,
+  anim: EntranceAnimation,
+): TreeNode {
+  if (hasEntranceAnimation(node)) return node
+  return { ...node, entranceAnimation: anim } as unknown as TreeNode
+}
+
+/** heading 자식 찾기 — emphasis === 'heading-1' 우선, 없으면 첫 text. */
+function findHeadingChild(container: TreeNode): TreeNode | undefined {
+  if (
+    !('children' in container) ||
+    !Array.isArray((container as { children?: TreeNode[] }).children)
+  ) {
+    return undefined
+  }
+  const children = (container as { children: TreeNode[] }).children
+  for (const c of children) {
+    const n = c as unknown as Record<string, unknown>
+    if (n.emphasis === 'heading-1') return c
+  }
+  for (const c of children) {
+    if (c.type === 'text') return c
+  }
+  return undefined
+}
+
+/** main 직계 section/hero 들 반환. */
+function findMainDirectSections(tree: Tree): TreeNode[] {
+  const main = findMainContainer(tree.root)
+  if (main === undefined) return []
+  if (
+    !('children' in main) ||
+    !Array.isArray((main as { children?: TreeNode[] }).children)
+  ) {
+    return []
+  }
+  return (main as { children: TreeNode[] }).children.filter(
+    (c) => c.type === 'section' || c.type === 'hero',
+  )
+}
+
+/** 트리 전체 재귀로 특정 id 의 노드를 변환 함수로 교체. */
+function transformNode(
+  node: TreeNode,
+  targetId: string,
+  transform: (n: TreeNode) => TreeNode,
+): TreeNode {
+  if (node.id === targetId) return transform(node)
+  if (
+    'children' in node &&
+    Array.isArray((node as { children?: TreeNode[] }).children)
+  ) {
+    const children = (node as { children: TreeNode[] }).children
+    return {
+      ...node,
+      children: children.map((c) => transformNode(c, targetId, transform)),
+    } as TreeNode
+  }
+  return node
+}
+
 function ensureEntranceAnimations(tree: Tree): Tree {
-  // Task 3 에서 구현. 현재는 그대로 반환 (no-op stub).
-  return tree
+  let placed = 0
+  let next = tree
+  const mainSections = findMainDirectSections(tree)
+  if (mainSections.length === 0) return tree
+
+  // 우선순위 1: 첫 hero 의 heading → slide-up 700 trigger:load
+  const firstHero = mainSections.find((s) => s.type === 'hero')
+  if (firstHero !== undefined) {
+    const heroHeading = findHeadingChild(firstHero)
+    if (heroHeading !== undefined && !hasEntranceAnimation(heroHeading)) {
+      next = {
+        ...next,
+        root: transformNode(next.root, heroHeading.id, (n) =>
+          withEntranceAnimation(n, {
+            type: 'slide-up',
+            duration: 700,
+            trigger: 'load',
+          }),
+        ),
+      }
+      placed += 1
+    }
+  }
+
+  // 우선순위 2: main 직계 section/hero 의 _직접 자식_ 카드들 staggered slide-up 600 scroll
+  // (첫 hero 의 heading 자식과 충돌 회피)
+  for (const sec of mainSections) {
+    if (placed >= MAX_ANIMATIONS) break
+    if (
+      !('children' in sec) ||
+      !Array.isArray((sec as { children?: TreeNode[] }).children)
+    ) {
+      continue
+    }
+    const sectionChildren = (sec as { children: TreeNode[] }).children
+    let staggerIdx = 0
+    for (const card of sectionChildren) {
+      if (placed >= MAX_ANIMATIONS) break
+      if (hasEntranceAnimation(card)) continue
+      // 첫 hero 의 heading text 자식이면 skip (이미 우선순위 1 에서 처리)
+      if (sec === firstHero && card.type === 'text') continue
+      const delay = staggerIdx * STAGGER_DELAY_MS
+      const cardId = card.id
+      next = {
+        ...next,
+        root: transformNode(next.root, cardId, (n) =>
+          withEntranceAnimation(n, {
+            type: 'slide-up',
+            duration: 600,
+            delay,
+            trigger: 'scroll',
+          }),
+        ),
+      }
+      placed += 1
+      staggerIdx += 1
+    }
+  }
+
+  // 우선순위 3: 마지막 section/hero 의 heading → fade-in 500 scroll
+  if (placed < MAX_ANIMATIONS) {
+    const last = mainSections[mainSections.length - 1]
+    if (last !== undefined) {
+      const lastHeading = findHeadingChild(last)
+      if (
+        lastHeading !== undefined &&
+        !hasEntranceAnimation(lastHeading) &&
+        placed < MAX_ANIMATIONS
+      ) {
+        next = {
+          ...next,
+          root: transformNode(next.root, lastHeading.id, (n) =>
+            withEntranceAnimation(n, {
+              type: 'fade-in',
+              duration: 500,
+              trigger: 'scroll',
+            }),
+          ),
+        }
+        placed += 1
+      }
+    }
+  }
+
+  return next
 }
