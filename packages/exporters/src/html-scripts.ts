@@ -62,13 +62,12 @@ export const MODAL_SCRIPT = `
       if (dialog) dialog.close();
     });
   });
-  // backdrop 클릭 close — dialog 자체 영역(content rect) 바깥이면 close.
+  // backdrop 클릭 close — <dialog> 의 ::backdrop 영역 클릭 시 event.target 이 dialog 자기 자신으로 잡힌다.
+  // WR-02: 이전 getBoundingClientRect 비교는 진입 애니메이션(scale 0.95→1) 중 rect 가 축소되어 false-positive
+  //         + 텍스트 selection drag-release 시 의도치 않은 close 발생. e.target === dialog 검사가 표준 패턴.
   document.querySelectorAll('[data-dworks-modal]').forEach(function(dialog){
     dialog.addEventListener('click', function(e){
-      var rect = dialog.getBoundingClientRect();
-      var inside = e.clientX >= rect.left && e.clientX <= rect.right
-                && e.clientY >= rect.top && e.clientY <= rect.bottom;
-      if (!inside) dialog.close();
+      if (e.target === dialog) dialog.close();
     });
   });
 })();
