@@ -159,6 +159,7 @@ import {
   parseImportPayload,
 } from './generation-export'
 import { downloadGenerationAsHtml } from './html-export'
+import { downloadTokens } from './token-export'
 import {
   createUserFixtureId,
   readUserFixtures,
@@ -1730,6 +1731,46 @@ function HomePageInner() {
     } catch (error) {
       showToast(
         `HTML 내보내기 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+        'error',
+      )
+    }
+  }
+
+  // DS-03 — 활성 generation 트리에서 디자인 토큰을 CSS variables 파일로 내보낸다.
+  // 트리 순회 → hex/spacing/radius/fontSize/fontFamily 추출 → :root { --dw-token-* } 형식.
+  function handleExportGenerationTokensCss(): void {
+    const active = generations.find((entry) => entry.id === activeGenerationId)
+    if (active === undefined) return
+    try {
+      const { filename } = downloadTokens(
+        { tree: active.tree, label: active.label },
+        'css',
+        new Date(),
+      )
+      showToast(`${filename} 다운로드`, 'success')
+    } catch (error) {
+      showToast(
+        `토큰 (CSS) 내보내기 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+        'error',
+      )
+    }
+  }
+
+  // DS-03 — 활성 generation 트리에서 디자인 토큰을 Tailwind config (.ts) 로 내보낸다.
+  // theme.extend.{colors,spacing,borderRadius,fontSize,fontFamily} 채움.
+  function handleExportGenerationTokensTailwind(): void {
+    const active = generations.find((entry) => entry.id === activeGenerationId)
+    if (active === undefined) return
+    try {
+      const { filename } = downloadTokens(
+        { tree: active.tree, label: active.label },
+        'tailwind',
+        new Date(),
+      )
+      showToast(`${filename} 다운로드`, 'success')
+    } catch (error) {
+      showToast(
+        `토큰 (Tailwind) 내보내기 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
         'error',
       )
     }
@@ -4380,6 +4421,26 @@ function HomePageInner() {
                   title="활성 디자인을 작동하는 HTML 파일로 내보냅니다 (Embla + vanilla JS wrap)."
                 >
                   HTML 내보내기
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 font-semibold text-[var(--dw-ui-text-muted)] hover:border-[var(--dw-ui-accent)] hover:text-[var(--dw-ui-accent-text-strong)] disabled:opacity-40"
+                  onClick={handleExportGenerationTokensCss}
+                  disabled={compareMode}
+                  aria-label="토큰 (CSS) 내보내기"
+                  title="활성 디자인에서 사용된 색/간격/radius/font 를 CSS variables (.css) 로 내보냅니다."
+                >
+                  토큰 (CSS)
+                </button>
+                <button
+                  type="button"
+                  className="rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 font-semibold text-[var(--dw-ui-text-muted)] hover:border-[var(--dw-ui-accent)] hover:text-[var(--dw-ui-accent-text-strong)] disabled:opacity-40"
+                  onClick={handleExportGenerationTokensTailwind}
+                  disabled={compareMode}
+                  aria-label="토큰 (Tailwind) 내보내기"
+                  title="활성 디자인에서 사용된 색/간격/radius/font 를 Tailwind config (.ts) 로 내보냅니다."
+                >
+                  토큰 (Tailwind)
                 </button>
                 <label className="cursor-pointer rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 font-semibold text-[var(--dw-ui-text-muted)] hover:border-[var(--dw-ui-accent)] hover:text-[var(--dw-ui-accent-text-strong)]">
                   불러오기
