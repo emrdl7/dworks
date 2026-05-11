@@ -256,7 +256,8 @@ export function useAlignDistribute(args: UseAlignDistributeArgs): void {
         onAnnounce?.(ALIGN_ACTION_NAMES[actionKey])
       }
     },
-    [tree, selectedIds, canvasScrollRef, canvasZoom, onCommit, onWarn, onAnnounce],
+    // MR-03 — tree 는 treeRef 로 읽으므로 deps 에 포함하지 않는다 (useCallback 안정성).
+    [selectedIds, canvasScrollRef, canvasZoom, onCommit, onWarn, onAnnounce],
   )
 
   const alignLeft = useCallback(() => performAlign('alignLeft', 'x', 'min'), [performAlign])
@@ -336,7 +337,8 @@ export function useAlignDistribute(args: UseAlignDistributeArgs): void {
         onAnnounce?.(ALIGN_ACTION_NAMES[actionKey])
       }
     },
-    [tree, selectedIds, canvasScrollRef, canvasZoom, onCommit, onWarn, onAnnounce],
+    // MR-03 — tree 는 treeRef 로 읽으므로 deps 에 포함하지 않는다 (useCallback 안정성).
+    [selectedIds, canvasScrollRef, canvasZoom, onCommit, onWarn, onAnnounce],
   )
 
   const distributeH = useCallback(() => performDistribute('distributeH', 'x'), [performDistribute])
