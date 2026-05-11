@@ -12,7 +12,7 @@
 | 1 | UX 핵심 fix + 측정 | 7/7 | Complete    | 2026-05-11 |
 | 2 | AI 생성 품질 자동 검증 | 5/5 | Complete    | 2026-05-11 |
 | 3 | 시각 보조 도구 (그리드/줌/미니맵) | 3/3 | Complete    | 2026-05-11 |
-| 4 | export 깊이 — 인터랙티브 작동 | 3/3 plans done | EXP-01..EXP-03 | 2026-05-11 |
+| 4 | export 깊이 — 인터랙티브 작동 | 3/3 | Complete    | 2026-05-11 |
 | 5 | 디자인 시스템 (theme/palette/token export) | theme switcher + custom palette + 토큰 export | DS-01..DS-03 | yes |
 
 ---
