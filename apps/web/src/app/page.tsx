@@ -3315,6 +3315,52 @@ function HomePageInner() {
         },
       }),
     ),
+    // UX-03 노드 타입 변환 — 선택 노드 type 의 호환 type 만 enable
+    // (자기 자신/자식 없는 타입 항목은 hide). D-05 3-route 중 ⌘K route.
+    ...(Object.keys(nodeTypeLabels) as TreeNode['type'][]).flatMap<CommandPaletteItem>(
+      (targetType) => {
+        // 선택된 노드 없으면 모든 변환 disabled (선택 안내만)
+        if (!selectedCommandNode) {
+          return [
+            {
+              id: `convert-to-${targetType}`,
+              label: `변환: ${nodeTypeLabels[targetType]}(으)로`,
+              group: '노드 변환',
+              icon: nodeTypeIcons[targetType],
+              keywords: ['변환', 'convert', targetType, nodeTypeLabels[targetType]],
+              disabled: true,
+              disabledReason: '선택된 노드가 없음',
+              action: () => {},
+            },
+          ]
+        }
+        // 자기 자신 변환 항목은 제외
+        if (selectedCommandNode.type === targetType) return []
+        const compatible = canConvertNodeType(
+          selectedCommandNode.type,
+          targetType,
+        )
+        const reason = nodeTypeConversionDisabledReason[selectedCommandNode.type]
+        return [
+          {
+            id: `convert-to-${targetType}`,
+            label: `변환: ${nodeTypeLabels[targetType]}(으)로`,
+            group: '노드 변환',
+            icon: nodeTypeIcons[targetType],
+            keywords: ['변환', 'convert', targetType, nodeTypeLabels[targetType]],
+            disabled: !compatible,
+            disabledReason: compatible
+              ? undefined
+              : (reason ??
+                `${nodeTypeLabels[selectedCommandNode.type]}은(는) ${nodeTypeLabels[targetType]}(으)로 변환할 수 없습니다`),
+            action: () => {
+              if (!selectedCommandNode) return
+              handleConvertNodeType(selectedCommandNode.id, targetType)
+            },
+          },
+        ]
+      },
+    ),
     // 편집
     {
       id: 'duplicate',
