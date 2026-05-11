@@ -81,6 +81,67 @@
   --dw-motion-ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/* DS-01 light theme — 흰 배경 + 짙은 텍스트 + 동일 indigo accent (브랜드 일관).
+   :root dark 의 모든 --dw-ui-* 키를 light 톤으로 mirror — 누락 키는 dark fallback 되어
+   시각 깨짐 (예: 흰 배경에 다크 패널). chrome 토큰만 swap, typography/spacing/radius/shadow/motion 은 :root 공유. */
+[data-theme='light'] {
+  --dw-ui-bg: #ffffff;
+  --dw-ui-panel: #f8f9fb;
+  --dw-ui-elevated: #ffffff;
+  --dw-ui-soft: #eef0f3;
+  --dw-ui-strong: #d8dce2;
+  --dw-ui-text-primary: #1a1d22;
+  --dw-ui-text-body: #3a3f48;
+  --dw-ui-text-muted: #6b7280;
+  --dw-ui-text-faint: #9ca3af;
+  --dw-ui-text-disabled: #d1d5db;
+  --dw-ui-border: #e5e7eb;
+  --dw-ui-accent: #6366f1;
+  --dw-ui-accent-hover: #4f46e5;
+  --dw-ui-accent-soft: #eef2ff;
+  --dw-ui-accent-text: #4338ca;
+  --dw-ui-accent-text-strong: #3730a3;
+  --dw-ui-accent-border: #c7d2fe;
+  --dw-ui-warn-bg: #fffbeb;
+  --dw-ui-warn-bg-strong: #fef3c7;
+  --dw-ui-warn-text: #b45309;
+  --dw-ui-warn-border: #fcd34d;
+  --dw-ui-danger-bg: #fef2f2;
+  --dw-ui-danger-bg-strong: #fee2e2;
+  --dw-ui-danger-text: #b91c1c;
+  --dw-ui-danger-border: #fca5a5;
+}
+
+/* DS-01 sepia theme — warm 베이지 톤 (빈티지/클래식 톤 매핑 일치).
+   accent 는 orange (#c2410c) 로 베이지에 어울리도록 별도 톤. */
+[data-theme='sepia'] {
+  --dw-ui-bg: #f5e6d3;
+  --dw-ui-panel: #ede0c8;
+  --dw-ui-elevated: #f8eedd;
+  --dw-ui-soft: #e0d0b0;
+  --dw-ui-strong: #bfa97a;
+  --dw-ui-text-primary: #3d2a1f;
+  --dw-ui-text-body: #5e3a1d;
+  --dw-ui-text-muted: #8b7355;
+  --dw-ui-text-faint: #a89072;
+  --dw-ui-text-disabled: #c5b39e;
+  --dw-ui-border: #d4c0a0;
+  --dw-ui-accent: #c2410c;
+  --dw-ui-accent-hover: #9a3412;
+  --dw-ui-accent-soft: #fed7aa;
+  --dw-ui-accent-text: #7c2d12;
+  --dw-ui-accent-text-strong: #5e210f;
+  --dw-ui-accent-border: #fb923c;
+  --dw-ui-warn-bg: #fef3c7;
+  --dw-ui-warn-bg-strong: #fde68a;
+  --dw-ui-warn-text: #92400e;
+  --dw-ui-warn-border: #d97706;
+  --dw-ui-danger-bg: #fef2f2;
+  --dw-ui-danger-bg-strong: #fecaca;
+  --dw-ui-danger-text: #991b1b;
+  --dw-ui-danger-border: #f87171;
+}
+
 /* 페이지 자체 스크롤바 차단 — 패널 내부에서만 스크롤되도록.
    main(h-screen overflow-hidden)이 viewport에 맞춰지고 패널 콘텐츠는
    각자 overflow-y-auto로 처리한다. body 단계에서 안전망. */
