@@ -196,7 +196,11 @@ import {
 import { TextPreview } from './text-preview'
 import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
 import { SelectableNode } from './selectable-node'
-import { CommandPalette, type CommandPaletteItem } from './command-palette'
+import {
+  CommandPalette,
+  ShortcutHelpModal,
+  type CommandPaletteItem,
+} from './command-palette'
 import { SpacingOverlay } from './spacing-overlay'
 import { ToastProvider } from './toast-context'
 import { ToastHost } from './toast-host'
@@ -704,15 +708,8 @@ export default function HomePage() {
   const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
   // 캔버스 grid — 디자인 정밀도용 격자 (off / 8 / 16 / 24 px cycle)
   const [canvasGridSize, setCanvasGridSize] = useState<0 | 8 | 16 | 24>(0)
-  // 키보드 단축키 도움말 popover
+  // 키보드 단축키 도움말 popover (focus 처리는 ShortcutHelpModal 내부에서 담당)
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false)
-  const shortcutHelpCloseRef = useRef<HTMLButtonElement | null>(null)
-  useEffect(() => {
-    if (shortcutHelpOpen) {
-      // 마운트 직후 focus — animation 시작과 함께
-      shortcutHelpCloseRef.current?.focus()
-    }
-  }, [shortcutHelpOpen])
   // ⌘K 명령 팔레트
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   // 레이어 트리 collapse 상태 — 컨테이너 노드 ID 집합. 기본 모두 펼침.
@@ -3370,13 +3367,20 @@ export default function HomePage() {
         })
       },
     },
-    // 도움말
+    // 도움말 — UX-06 D-19: ⌘K → "단축키" 검색으로 cheatsheet 노출.
     {
       id: 'shortcut-help',
-      label: '키보드 단축키 도움말',
+      label: '단축키',
       group: '도움말',
       shortcut: '?',
-      keywords: ['shortcut', 'help', 'hotkey'],
+      keywords: [
+        'shortcut',
+        'help',
+        'hotkey',
+        '단축키',
+        '도움말',
+        '키보드',
+      ],
       action: () => setShortcutHelpOpen(true),
     },
   ]
@@ -5097,131 +5101,11 @@ export default function HomePage() {
           onTogglePanels={() => setPanelsHidden((v) => !v)}
         />
       ) : null}
-      {shortcutHelpOpen ? (
-        <>
-          <button
-            type="button"
-            aria-label="단축키 도움말 닫기"
-            onClick={() => setShortcutHelpOpen(false)}
-            className="fixed inset-0 z-40 cursor-default bg-black/60"
-            style={{ animation: 'dw-fade-in 180ms ease-out both' }}
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shortcut-help-title"
-            className="fixed bottom-6 right-6 z-50 w-[22rem] max-w-[calc(100vw-3rem)] rounded-lg border border-[var(--dw-ui-border)] bg-[var(--dw-ui-elevated)] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
-            style={{ animation: 'dw-fade-up 200ms ease-out both' }}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <h2
-                id="shortcut-help-title"
-                className="text-sm font-semibold text-[var(--dw-ui-text-primary)]"
-              >
-                키보드 단축키
-              </h2>
-              <button
-                type="button"
-                aria-label="닫기"
-                ref={shortcutHelpCloseRef}
-                onClick={() => setShortcutHelpOpen(false)}
-                className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-soft)] hover:text-[var(--dw-ui-text-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)]"
-              >
-                <X size={14} />
-              </button>
-            </div>
-            <div className="space-y-3 text-sm">
-              {[
-                {
-                  category: '편집',
-                  items: [
-                    { keys: ['⌘', 'Z'], label: '실행 취소' },
-                    { keys: ['⌘', '⇧', 'Z'], label: '다시 실행' },
-                    { keys: ['⌘', 'D'], label: '복제' },
-                    { keys: ['Delete'], label: '삭제' },
-                  ],
-                },
-                {
-                  category: '노드 이동',
-                  items: [
-                    { keys: ['⌘', '↑'], label: '형제 위로 이동' },
-                    { keys: ['⌘', '↓'], label: '형제 아래로 이동' },
-                    { keys: ['↑', '↓'], label: '레이어 사이 이동' },
-                    { keys: ['←', '→'], label: '탭 전환' },
-                  ],
-                },
-                {
-                  category: '브리프 입력',
-                  items: [
-                    { keys: ['⌘', 'Enter'], label: '질문 받기' },
-                    { keys: ['⌘', '⇧', 'Enter'], label: '바로 생성' },
-                  ],
-                },
-                {
-                  category: '다중 선택',
-                  items: [
-                    { keys: ['⇧', 'click'], label: '범위 선택 (primary ~ target)' },
-                    { keys: ['⌘', 'click'], label: '개별 토글' },
-                    { keys: ['⌘', 'A'], label: '전체 선택' },
-                  ],
-                },
-                {
-                  category: '캔버스 패닝 / 줌',
-                  items: [
-                    { keys: ['Space', '+ drag'], label: '캔버스 panning' },
-                    { keys: ['middle', 'drag'], label: '캔버스 panning (대체)' },
-                    { keys: ['⌘', 'wheel'], label: '캔버스 줌 (트랙패드 pinch도 OK)' },
-                    { keys: ['⌘', '+'], label: '줌 인 10%' },
-                    { keys: ['⌘', '-'], label: '줌 아웃 10%' },
-                    { keys: ['⌘', '0'], label: '줌 100% 리셋' },
-                    { keys: ['⌘', '1'], label: '화면에 맞춤 (fit to screen)' },
-                    { keys: ['⌘', '2'], label: '선택 노드를 화면 중앙에 fit' },
-                  ],
-                },
-                {
-                  category: '선택 / 도움말',
-                  items: [
-                    { keys: ['Esc'], label: '선택 해제 / 닫기' },
-                    { keys: ['?'], label: '이 도움말 토글' },
-                    { keys: ['⌘', 'K'], label: '명령 팔레트' },
-                    { keys: ['⌘', 'F'], label: '레이어 검색 focus' },
-                    { keys: ['⌘', '\\'], label: '좌/우 패널 hide (집중 모드)' },
-                  ],
-                },
-              ].map((group) => (
-                <div key={group.category}>
-                  <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--dw-ui-text-faint)]">
-                    {group.category}
-                  </div>
-                  <dl className="space-y-1">
-                    {group.items.map((item) => (
-                      <div
-                        key={item.label}
-                        className="flex items-center justify-between gap-3"
-                      >
-                        <dt className="text-[var(--dw-ui-text-muted)]">{item.label}</dt>
-                        <dd className="flex items-center gap-1">
-                          {item.keys.map((k, i) => (
-                            <kbd
-                              key={`${item.label}-${i}`}
-                              className="inline-flex h-6 min-w-6 items-center justify-center rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-1.5 text-[11px] font-semibold text-[var(--dw-ui-text-body)]"
-                            >
-                              {k}
-                            </kbd>
-                          ))}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-              ))}
-            </div>
-            <p className="mt-4 text-[11px] text-[var(--dw-ui-text-faint)]">
-              입력 필드에서는 단축키가 비활성화됩니다.
-            </p>
-          </div>
-        </>
-      ) : null}
+      <ShortcutHelpModal
+        open={shortcutHelpOpen}
+        onClose={() => setShortcutHelpOpen(false)}
+      />
+
       <CommandPalette
         open={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
