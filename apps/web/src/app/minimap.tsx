@@ -189,39 +189,45 @@ export function Minimap(props: MinimapProps) {
 
   // 미니맵 body 클릭 — 클릭 위치를 캔버스 viewport 중앙으로 navigate (D-11).
   // zoom 변경 없으므로 canvasScrollRef 의 scrollLeft/Top 직접 설정.
+  // WR-01 fix: closure 캡처 scale/safeContent 대신 wrapper 실측값으로 재계산 —
+  // 빠른 연속 클릭 시 batched state update 와 DOM scroll 간 frame race 회피.
   function handleBodyClick(event: ReactMouseEvent<HTMLDivElement>): void {
     const wrapper = canvasScrollRef.current
     if (!wrapper) return
-    const target = event.currentTarget
-    const rect = target.getBoundingClientRect()
+    const z = canvasZoom > 0 ? canvasZoom : 1
+    const liveContentW = Math.max(wrapper.scrollWidth / z, containerWidth)
+    const liveScale = bodyWidth / liveContentW
+    if (liveScale <= 0) return
+    const rect = event.currentTarget.getBoundingClientRect()
     const minimapX = event.clientX - rect.left
     const minimapY = event.clientY - rect.top
-    if (scale <= 0) return
-    const logicalX = minimapX / scale
-    const logicalY = minimapY / scale
-    const z = canvasZoom > 0 ? canvasZoom : 1
+    const logicalX = minimapX / liveScale
+    const logicalY = minimapY / liveScale
     // logical → DOM scroll px (zoom 곱), viewport 절반 빼서 중앙 정렬.
     wrapper.scrollLeft = Math.max(0, logicalX * z - wrapper.clientWidth / 2)
     wrapper.scrollTop = Math.max(0, logicalY * z - wrapper.clientHeight / 2)
-    measureViewport()
+    // measureViewport 는 scroll listener rAF 가 어차피 잡으므로 직접 호출 생략.
   }
 
   // 키보드 활성화 (Enter/Space) — 콘텐츠 중앙으로 navigate (WCAG 2.1 키보드 접근성).
+  // WR-01 fix: safeContent 클로저 대신 wrapper 실측값으로 재계산.
   function handleBodyKeyDown(event: ReactKeyboardEvent<HTMLDivElement>): void {
     if (event.key !== 'Enter' && event.key !== ' ') return
     event.preventDefault()
     const wrapper = canvasScrollRef.current
     if (!wrapper) return
     const z = canvasZoom > 0 ? canvasZoom : 1
+    const liveContentW = Math.max(wrapper.scrollWidth / z, containerWidth)
+    const liveContentH = Math.max(wrapper.scrollHeight / z, 1)
     wrapper.scrollLeft = Math.max(
       0,
-      (safeContent.w / 2) * z - wrapper.clientWidth / 2,
+      (liveContentW / 2) * z - wrapper.clientWidth / 2,
     )
     wrapper.scrollTop = Math.max(
       0,
-      (safeContent.h / 2) * z - wrapper.clientHeight / 2,
+      (liveContentH / 2) * z - wrapper.clientHeight / 2,
     )
-    measureViewport()
+    // measureViewport 는 scroll listener rAF 가 어차피 잡으므로 직접 호출 생략.
   }
 
   const panelStyle: CSSProperties = {
