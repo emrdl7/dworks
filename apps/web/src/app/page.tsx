@@ -197,6 +197,7 @@ import { TextPreview } from './text-preview'
 import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
 import { SelectableNode } from './selectable-node'
 import { CommandPalette, type CommandPaletteItem } from './command-palette'
+import { SpacingOverlay } from './spacing-overlay'
 import { ToastProvider } from './toast-context'
 import { ToastHost } from './toast-host'
 import {
@@ -625,6 +626,8 @@ export default function HomePage() {
   // 캔버스 panning(스페이스+드래그) 상태
   const [isSpacePressed, setIsSpacePressed] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
+  // UX-02: Alt 키 추적 — SpacingOverlay 정렬 가이드 토글용 (D-03).
+  const [altKeyPressed, setAltKeyPressed] = useState(false)
   const canvasScrollRef = useRef<HTMLDivElement | null>(null)
   const panStateRef = useRef<{
     startX: number
@@ -3057,6 +3060,28 @@ export default function HomePage() {
     }
   }, [])
 
+  // UX-02: Alt 키 추적 — SpacingOverlay 정렬 가이드 토글(D-03). 기존 keydown handler 와
+  // 별도 useEffect (Wave 4-6 단축키 plan 충돌 회피). blur 는 _stuck_ Alt 방지용.
+  useEffect(() => {
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Alt' || event.altKey) setAltKeyPressed(true)
+    }
+    function onKeyUp(event: globalThis.KeyboardEvent) {
+      if (event.key === 'Alt' || !event.altKey) setAltKeyPressed(false)
+    }
+    function onBlur() {
+      setAltKeyPressed(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [])
+
   // 캔버스 panning mouse move/up — 패닝 활성 시만 listen
   useEffect(() => {
     if (!isPanning) return
@@ -4666,7 +4691,7 @@ export default function HomePage() {
           )}
           <div
             ref={canvasScrollRef}
-            className={`min-h-0 flex-1 overflow-auto overscroll-contain ${
+            className={`relative min-h-0 flex-1 overflow-auto overscroll-contain ${
               isPanning
                 ? 'cursor-grabbing select-none [&_*]:!cursor-grabbing'
                 : isSpacePressed
@@ -4834,6 +4859,13 @@ export default function HomePage() {
               </div>
             </div>
           )}
+          {/* UX-02 spacing overlay — 노드 선택 + 다른 노드 hover 시 px 측정선 자동 표시.
+              canvasScrollRef 내부 absolute 자식 (parent에 relative 적용됨) — scroll 따라감. */}
+          <SpacingOverlay
+            selectedNodeId={selectedNodeId}
+            altKeyPressed={altKeyPressed}
+            canvasWrapperRef={canvasScrollRef}
+          />
           </div>
           {compareMode ? null : (
             <div className="flex h-7 shrink-0 items-center justify-between gap-3 border-t border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-4 text-[11px] text-[var(--dw-ui-text-faint)]">
