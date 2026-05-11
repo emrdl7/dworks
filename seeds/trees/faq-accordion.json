@@ -1,0 +1,57 @@
+{
+  "version": "1",
+  "root": {
+    "id": "faq-accordion-root",
+    "type": "section",
+    "editKind": "structure",
+    "layout": { "direction": "column", "align": "center" },
+    "spacing": { "paddingTop": 80, "paddingBottom": 80, "paddingLeft": 56, "paddingRight": 56, "gap": 32 },
+    "color": { "backgroundColor": "#ffffff", "textColor": "#0f172a" },
+    "children": [
+      {
+        "id": "faq-accordion.heading",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "heading-1",
+        "content": "자주 묻는 질문",
+        "typography": { "fontSize": 40, "fontWeight": "800", "lineHeight": 1.1, "letterSpacing": -0.025, "textAlign": "center" },
+        "color": { "textColor": "#0f172a" }
+      },
+      {
+        "id": "faq-accordion.accordion",
+        "type": "accordion",
+        "editKind": "structure",
+        "variant": "bordered",
+        "allowMultiple": false,
+        "items": [
+          {
+            "id": "faq-accordion.item-1",
+            "title": "배송은 얼마나 걸리나요?",
+            "content": "주문 후 평균 2-3일 내 배송됩니다. 도서산간 지역은 1-2일 추가될 수 있습니다.",
+            "expanded": true
+          },
+          {
+            "id": "faq-accordion.item-2",
+            "title": "환불 정책은 어떻게 되나요?",
+            "content": "수령일로부터 7일 이내 미사용 제품에 한해 전액 환불 가능합니다."
+          },
+          {
+            "id": "faq-accordion.item-3",
+            "title": "회원 가입 시 혜택이 있나요?",
+            "content": "가입 즉시 10% 할인 쿠폰을 드리며, 등급에 따라 추가 할인이 적용됩니다."
+          },
+          {
+            "id": "faq-accordion.item-4",
+            "title": "결제 수단은 무엇이 있나요?",
+            "content": "신용카드, 무통장 입금, 페이코, 카카오페이를 지원합니다."
+          },
+          {
+            "id": "faq-accordion.item-5",
+            "title": "교환은 가능한가요?",
+            "content": "단순 변심에 의한 교환은 수령일로부터 7일 이내 1회 가능합니다."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "version": "1",
+  "root": {
+    "id": "pricing-tier-root",
+    "type": "section",
+    "editKind": "structure",
+    "layout": { "direction": "column", "align": "center" },
+    "spacing": { "paddingTop": 80, "paddingBottom": 80, "paddingLeft": 56, "paddingRight": 56, "gap": 40 },
+    "color": { "backgroundColor": "#ffffff", "textColor": "#0f172a" },
+    "children": [
+      {
+        "id": "pricing.heading",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "heading-1",
+        "content": "요금제",
+        "typography": { "fontSize": 44, "fontWeight": "800", "lineHeight": 1.1, "letterSpacing": -0.025, "textAlign": "center" },
+        "color": { "textColor": "#0f172a" }
+      },
+      {
+        "id": "pricing.grid",
+        "type": "section",
+        "editKind": "structure",
+        "layout": { "direction": "row", "align": "stretch", "justify": "center" },
+        "spacing": { "gap": 24 },
+        "responsive": { "mobile": "1열 stack" },
+        "children": [
+          {
+            "id": "pricing.basic",
+            "type": "card",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "start" },
+            "spacing": { "paddingTop": 32, "paddingBottom": 32, "paddingLeft": 28, "paddingRight": 28, "gap": 16 },
+            "color": { "backgroundColor": "#ffffff" },
+            "shape": { "radius": 16, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#e2e8f0", "shadow": "sm" },
+            "children": [
+              { "id": "pricing.basic.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "베이직", "typography": { "fontSize": 22, "fontWeight": "700" }, "color": { "textColor": "#0f172a" } },
+              { "id": "pricing.basic.price", "type": "text", "editKind": "text", "emphasis": "heading-2", "content": "월 9,900원", "typography": { "fontSize": 32, "fontWeight": "800", "letterSpacing": -0.02 }, "color": { "textColor": "#0f172a" } },
+              {
+                "id": "pricing.basic.features",
+                "type": "list",
+                "editKind": "structure",
+                "variant": "unordered",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 8 },
+                "children": [
+                  { "id": "pricing.basic.f1", "type": "text", "editKind": "text", "content": "기본 기능", "typography": { "fontSize": 14 }, "color": { "textColor": "#475569" } },
+                  { "id": "pricing.basic.f2", "type": "text", "editKind": "text", "content": "이메일 지원", "typography": { "fontSize": 14 }, "color": { "textColor": "#475569" } }
+                ]
+              },
+              { "id": "pricing.basic.cta", "type": "button", "editKind": "text", "variant": "ghost", "label": "시작하기", "color": { "backgroundColor": "#f1f5f9", "textColor": "#0f172a", "hoverBackgroundColor": "#e2e8f0" }, "shape": { "radius": 10, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#cbd5e1" }, "spacing": { "paddingLeft": 20, "paddingRight": 20, "paddingTop": 12, "paddingBottom": 12 }, "typography": { "fontSize": 14, "fontWeight": "600" } }
+            ]
+          },
+          {
+            "id": "pricing.pro",
+            "type": "card",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "start" },
+            "spacing": { "paddingTop": 36, "paddingBottom": 36, "paddingLeft": 32, "paddingRight": 32, "gap": 18 },
+            "color": { "backgroundColor": "#7c3aed", "textColor": "#ffffff" },
+            "shape": { "radius": 18, "shadow": "xl" },
+            "transform": { "scale": 1.04 },
+            "children": [
+              { "id": "pricing.pro.badge", "type": "text", "editKind": "text", "emphasis": "caption", "content": "추천", "typography": { "fontSize": 11, "fontWeight": "700", "letterSpacing": 0.12 }, "color": { "textColor": "#fef9c3" } },
+              { "id": "pricing.pro.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "프로", "typography": { "fontSize": 24, "fontWeight": "800" }, "color": { "textColor": "#ffffff" } },
+              { "id": "pricing.pro.price", "type": "text", "editKind": "text", "emphasis": "heading-2", "content": "월 19,900원", "typography": { "fontSize": 36, "fontWeight": "800", "letterSpacing": -0.02 }, "color": { "textColor": "#ffffff" } },
+              {
+                "id": "pricing.pro.features",
+                "type": "list",
+                "editKind": "structure",
+                "variant": "unordered",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 8 },
+                "children": [
+                  { "id": "pricing.pro.f1", "type": "text", "editKind": "text", "content": "모든 기본 기능", "typography": { "fontSize": 14 }, "color": { "textColor": "#ede9fe" } },
+                  { "id": "pricing.pro.f2", "type": "text", "editKind": "text", "content": "우선 지원", "typography": { "fontSize": 14 }, "color": { "textColor": "#ede9fe" } },
+                  { "id": "pricing.pro.f3", "type": "text", "editKind": "text", "content": "팀 협업", "typography": { "fontSize": 14 }, "color": { "textColor": "#ede9fe" } }
+                ]
+              },
+              { "id": "pricing.pro.cta", "type": "button", "editKind": "text", "variant": "primary", "label": "프로 시작하기", "color": { "backgroundColor": "#ffffff", "textColor": "#7c3aed", "hoverBackgroundColor": "#f5f3ff" }, "shape": { "radius": 10, "shadow": "lg" }, "spacing": { "paddingLeft": 22, "paddingRight": 22, "paddingTop": 14, "paddingBottom": 14 }, "typography": { "fontSize": 15, "fontWeight": "700" } }
+            ]
+          },
+          {
+            "id": "pricing.enterprise",
+            "type": "card",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "start" },
+            "spacing": { "paddingTop": 32, "paddingBottom": 32, "paddingLeft": 28, "paddingRight": 28, "gap": 16 },
+            "color": { "backgroundColor": "#ffffff" },
+            "shape": { "radius": 16, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#e2e8f0", "shadow": "sm" },
+            "children": [
+              { "id": "pricing.enterprise.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "엔터프라이즈", "typography": { "fontSize": 22, "fontWeight": "700" }, "color": { "textColor": "#0f172a" } },
+              { "id": "pricing.enterprise.price", "type": "text", "editKind": "text", "emphasis": "heading-2", "content": "맞춤 견적", "typography": { "fontSize": 28, "fontWeight": "800", "letterSpacing": -0.02 }, "color": { "textColor": "#0f172a" } },
+              {
+                "id": "pricing.enterprise.features",
+                "type": "list",
+                "editKind": "structure",
+                "variant": "unordered",
+                "layout": { "direction": "column" },
+                "spacing": { "gap": 8 },
+                "children": [
+                  { "id": "pricing.enterprise.f1", "type": "text", "editKind": "text", "content": "모든 프로 기능", "typography": { "fontSize": 14 }, "color": { "textColor": "#475569" } },
+                  { "id": "pricing.enterprise.f2", "type": "text", "editKind": "text", "content": "전담 매니저", "typography": { "fontSize": 14 }, "color": { "textColor": "#475569" } },
+                  { "id": "pricing.enterprise.f3", "type": "text", "editKind": "text", "content": "SLA 보장", "typography": { "fontSize": 14 }, "color": { "textColor": "#475569" } }
+                ]
+              },
+              { "id": "pricing.enterprise.cta", "type": "button", "editKind": "text", "variant": "ghost", "label": "문의하기", "color": { "backgroundColor": "#f1f5f9", "textColor": "#0f172a", "hoverBackgroundColor": "#e2e8f0" }, "shape": { "radius": 10, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#cbd5e1" }, "spacing": { "paddingLeft": 20, "paddingRight": 20, "paddingTop": 12, "paddingBottom": 12 }, "typography": { "fontSize": 14, "fontWeight": "600" } }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

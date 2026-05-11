@@ -1,0 +1,56 @@
+{
+  "version": "1",
+  "root": {
+    "id": "products-carousel-root",
+    "type": "section",
+    "editKind": "structure",
+    "layout": { "direction": "column", "align": "center" },
+    "spacing": { "paddingTop": 72, "paddingBottom": 72, "paddingLeft": 56, "paddingRight": 56, "gap": 32 },
+    "color": { "backgroundColor": "#fafafa", "textColor": "#0f172a" },
+    "children": [
+      {
+        "id": "products-carousel.heading",
+        "type": "text",
+        "editKind": "text",
+        "emphasis": "heading-1",
+        "content": "추천 상품",
+        "typography": { "fontSize": 40, "fontWeight": "800", "lineHeight": 1.1, "letterSpacing": -0.025, "textAlign": "center" },
+        "color": { "textColor": "#0f172a" }
+      },
+      {
+        "id": "products-carousel.carousel",
+        "type": "carousel",
+        "editKind": "media",
+        "aspectRatio": "landscape",
+        "showDots": true,
+        "showArrows": true,
+        "items": [
+          {
+            "id": "products-carousel.slide-1",
+            "src": "https://placehold.co/600x400/png?text=Sneakers",
+            "alt": "프리미엄 운동화",
+            "caption": "프리미엄 운동화"
+          },
+          {
+            "id": "products-carousel.slide-2",
+            "src": "https://placehold.co/600x400/png?text=Watch",
+            "alt": "스마트 워치",
+            "caption": "스마트 워치"
+          },
+          {
+            "id": "products-carousel.slide-3",
+            "src": "https://placehold.co/600x400/png?text=Earbuds",
+            "alt": "무선 이어폰",
+            "caption": "무선 이어폰"
+          },
+          {
+            "id": "products-carousel.slide-4",
+            "src": "https://placehold.co/600x400/png?text=Backpack",
+            "alt": "백팩",
+            "caption": "백팩"
+          }
+        ]
+      }
+    ]
+  }
+}
