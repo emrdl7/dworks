@@ -36,8 +36,9 @@ interface PaletteContextValue {
   // id 는 내부 생성 — addPalette 는 Omit<Palette, 'id'> 받음. 유효성 위반 시 null 반환.
   addPalette: (palette: Omit<Palette, 'id'>) => Palette | null
   removePalette: (id: string) => void
-  // 부분 갱신 — colors 가 포함되면 5-10 / hex 검증, 실패 시 무시.
-  updatePalette: (id: string, patch: Partial<Omit<Palette, 'id'>>) => void
+  // 부분 갱신 — colors 가 포함되면 5-10 / hex 검증.
+  // true=적용 완료, false=유효성 검사 실패로 patch 무시 (caller 가 toast 노출).
+  updatePalette: (id: string, patch: Partial<Omit<Palette, 'id'>>) => boolean
   setActivePaletteId: (id: string | null) => void
 }
 
@@ -149,7 +150,10 @@ export function PaletteProvider({ children }: PaletteProviderProps) {
   )
 
   const updatePalette = useCallback(
-    (id: string, patch: Partial<Omit<Palette, 'id'>>) => {
+    (id: string, patch: Partial<Omit<Palette, 'id'>>): boolean => {
+      // success=false 면 유효성 검사 실패 — list/persist 갱신 생략, false 반환.
+      // caller (예: PaletteManagerDialog) 가 toast 로 사용자 피드백 노출.
+      let success = true
       const list = palettes.map((p) => {
         if (p.id !== id) return p
         const next: Palette = { ...p, ...patch }
@@ -159,14 +163,20 @@ export function PaletteProvider({ children }: PaletteProviderProps) {
             next.colors.length < MIN_COLORS_PER_PALETTE ||
             next.colors.length > MAX_COLORS_PER_PALETTE
           ) {
+            success = false
             return p
           }
-          if (!next.colors.every(isValidHex)) return p
+          if (!next.colors.every(isValidHex)) {
+            success = false
+            return p
+          }
         }
         return next
       })
+      if (!success) return false
       setPalettes(list)
       persist(list, activePaletteId)
+      return true
     },
     [palettes, activePaletteId],
   )
