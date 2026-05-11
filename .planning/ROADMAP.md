@@ -17,7 +17,7 @@
 
 ---
 
-## Phase 1 — UX 핵심 fix + 측정 도구
+## Phase 1: UX 핵심 fix + 측정 도구
 
 **Goal**: 사용자가 명시한 5대 UX 비판을 처리해 _기성 툴 자연스러움_의 기반 확보. 컨텍스트 메뉴 화면 밖 버그 + 노드 간격 측정 + 노드 타입 변경 확대 + 컴포넌트 드래그 추가 + multi-select 박스 + 키보드 shortcut.
 
@@ -33,7 +33,7 @@
 
 ---
 
-## Phase 2 — AI 생성 품질 자동 검증
+## Phase 2: AI 생성 품질 자동 검증
 
 **Goal**: prompt에 박힌 13 신호가 _자동 enforce_되도록 — generation 후 validator + 자동 보강 + 도메인×톤 매트릭스 확장 + 참조 이미지 활용 강화.
 
@@ -48,7 +48,7 @@
 
 ---
 
-## Phase 3 — 시각 보조 도구
+## Phase 3: 시각 보조 도구
 
 **Goal**: 기성 디자인툴 _시각 표준_ — 12-column grid overlay + 마우스 위치 기준 줌 + 미니맵.
 
@@ -61,7 +61,7 @@
 
 ---
 
-## Phase 4 — export 깊이 (라이브러리 wrap)
+## Phase 4: export 깊이 (라이브러리 wrap)
 
 **Goal**: carousel/tabs/accordion/modal/animation이 _실제 작동하는_ HTML로 export. 현재는 정적 HTML + data-attr만.
 
@@ -74,7 +74,7 @@
 
 ---
 
-## Phase 5 — 디자인 시스템 깊이
+## Phase 5: 디자인 시스템 깊이
 
 **Goal**: theme switcher + custom palette + 토큰 export로 _디자인 시스템 도구_의 기본기 확보.
 
