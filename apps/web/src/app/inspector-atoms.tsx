@@ -1,10 +1,21 @@
+'use client'
+
 // Inspector 패널 공통 atomic 컴포넌트 — page.tsx 분할(Phase 6)에서 분리.
 // SpacingControls/LayoutControls/ShapeControls/NodeColorControls/TypographyControls
-// 등이 공유.
+// + UX-03 NodeTypeConvertDropdown 등이 공유.
 
-import type { ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
-import type { LucideIcon } from 'lucide-react'
+import { ChevronDown, type LucideIcon } from 'lucide-react'
+
+import type { TreeNode } from '@dworks/tree'
+
+import {
+  canConvertNodeType,
+  nodeTypeConversionDisabledReason,
+  nodeTypeIcons,
+  nodeTypeLabels,
+} from './node-meta'
 
 export interface InspectorDisclosureControl {
   onOpenChange: (next: boolean) => void
@@ -329,6 +340,138 @@ export function OpacityControl({
           onChange={(event) => onChange(event.target.value)}
         />
       </label>
+    </div>
+  )
+}
+
+// ============================================================================
+// NodeTypeConvertDropdown — UX-03 D-05 3-route 중 인스펙터 route.
+//   현재 노드 type 의 아이콘 + 한국어 라벨 표시, 펼치면 12 type 목록 + 호환 enabled.
+//   keyboard 접근성: aria-haspopup="listbox" + role="listbox"/option + ESC/outside close.
+// ============================================================================
+
+export interface NodeTypeConvertDropdownProps {
+  currentType: TreeNode['type']
+  // 호환 type 선택 시 호출. 같은 type / 비호환 type 은 본 컴포넌트에서 차단.
+  onConvert: (nextType: TreeNode['type']) => void
+}
+
+export function NodeTypeConvertDropdown({
+  currentType,
+  onConvert,
+}: NodeTypeConvertDropdownProps) {
+  const [open, setOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const listRef = useRef<HTMLUListElement | null>(null)
+
+  const CurrentIcon = nodeTypeIcons[currentType]
+  const allTypes = Object.keys(nodeTypeLabels) as TreeNode['type'][]
+
+  // outside click — close
+  useEffect(() => {
+    if (!open) return
+    function onDocClick(event: MouseEvent) {
+      const target = event.target as Node | null
+      if (!target) return
+      if (
+        !buttonRef.current?.contains(target) &&
+        !listRef.current?.contains(target)
+      ) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+
+  // ESC — close + return focus
+  useEffect(() => {
+    if (!open) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        buttonRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const handleSelect = useCallback(
+    (nextType: TreeNode['type']) => {
+      if (nextType === currentType) {
+        setOpen(false)
+        return
+      }
+      if (!canConvertNodeType(currentType, nextType)) return
+      onConvert(nextType)
+      setOpen(false)
+    },
+    [currentType, onConvert],
+  )
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`노드 타입 변경 — 현재 ${nodeTypeLabels[currentType]}`}
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1.5 rounded-[var(--dw-radius-sm)] border border-[var(--dw-ui-border)] bg-[var(--dw-ui-elevated)] px-2 py-1 text-[length:var(--dw-text-label)] font-semibold text-[var(--dw-ui-text-strong)] hover:border-[var(--dw-ui-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[var(--dw-ui-accent)]"
+      >
+        <CurrentIcon aria-hidden="true" size={14} strokeWidth={1.75} />
+        <span>{nodeTypeLabels[currentType]}</span>
+        <ChevronDown aria-hidden="true" size={12} strokeWidth={1.75} />
+      </button>
+      {open ? (
+        <ul
+          ref={listRef}
+          role="listbox"
+          aria-label="노드 타입 변경"
+          className="absolute left-0 top-full z-[200] mt-1 min-w-[10rem] rounded-[var(--dw-radius-sm)] border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] py-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+        >
+          {allTypes.map((t) => {
+            const isSelf = t === currentType
+            const compatible = canConvertNodeType(currentType, t)
+            const Icon = nodeTypeIcons[t]
+            const disabledReason =
+              nodeTypeConversionDisabledReason[currentType] ??
+              `${nodeTypeLabels[currentType]}은(는) ${nodeTypeLabels[t]}(으)로 변환할 수 없습니다`
+            const buttonDisabled = !compatible || isSelf
+            return (
+              <li key={t} role="option" aria-selected={isSelf}>
+                <button
+                  type="button"
+                  disabled={buttonDisabled}
+                  title={
+                    !compatible && !isSelf
+                      ? `변환 불가: ${disabledReason}`
+                      : undefined
+                  }
+                  onClick={() => handleSelect(t)}
+                  className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-[length:var(--dw-text-value)] ${
+                    isSelf
+                      ? 'bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                      : compatible
+                        ? 'text-[var(--dw-ui-text-body)] hover:bg-[var(--dw-ui-elevated)]'
+                        : 'cursor-not-allowed text-[var(--dw-ui-text-muted)] opacity-50'
+                  }`}
+                >
+                  <Icon aria-hidden="true" size={14} strokeWidth={1.75} />
+                  <span>{nodeTypeLabels[t]}</span>
+                  {isSelf ? (
+                    <span className="ml-auto text-[length:var(--dw-text-caption)]">
+                      현재
+                    </span>
+                  ) : null}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      ) : null}
     </div>
   )
 }

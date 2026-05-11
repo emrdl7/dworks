@@ -245,6 +245,7 @@ import {
   InspectorDisclosure,
   type InspectorDisclosureControl,
   InspectorRow,
+  NodeTypeConvertDropdown,
   OpacityControl,
   TypographyNumberField,
   TypographyToggleButton,
@@ -5123,6 +5124,7 @@ function HomePageInner() {
             onTabsChange={handleTabsChange}
             onAccordionChange={handleAccordionChange}
             onModalChange={handleModalChange}
+            onConvertType={handleConvertNodeType}
             colorPreset={colorPreset}
           />
         </aside>
@@ -7309,6 +7311,8 @@ interface NodeInspectorProps {
     patch: ModalEditPatch,
     options?: CommitTreeEditOptions,
   ) => void
+  // UX-03 D-05 — 인스펙터 상단 NodeTypeConvertDropdown route.
+  onConvertType: (nodeId: string, nextType: TreeNode['type']) => void
 }
 
 function NodeInspector({
@@ -7342,6 +7346,7 @@ function NodeInspector({
   onTabsChange,
   onAccordionChange,
   onModalChange,
+  onConvertType,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
   const [nodeIdCopied, setNodeIdCopied] = useState(false)
@@ -7417,19 +7422,15 @@ function NodeInspector({
     })
   }
 
-  const NodeTypeIcon = nodeTypeIcons[node.type]
   return (
     <section className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0 border-b border-[var(--dw-ui-border)] px-4 pb-0 pt-3">
         <div className="flex items-center justify-between gap-3 px-0">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--dw-radius-sm)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]">
-              <NodeTypeIcon aria-hidden="true" size={12} />
-            </span>
-            <h2 className="truncate text-[length:var(--dw-text-value)] font-[number:var(--dw-font-weight-label)] text-[var(--dw-ui-text-primary)]">
-              {nodeTypeLabels[node.type]}
-            </h2>
-          </div>
+          {/* UX-03 D-05 — 인스펙터 상단 type dropdown (3-route 중 inspector route). */}
+          <NodeTypeConvertDropdown
+            currentType={node.type}
+            onConvert={(nextType) => onConvertType(node.id, nextType)}
+          />
           <button
             type="button"
             aria-label={
