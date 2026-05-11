@@ -129,9 +129,10 @@ export const ENTRANCE_ANIMATION_SCRIPT = `
     'slide-down': 'translateY(-20px)',
     'fade-in': null
   };
+  // WR-04: applyInitial 은 _initial 상태(opacity 0 + transform offset)_ 만 박는다.
+  //         prefersReduced 분기는 호출부에서 applyFinal 로 직접 처리 → 함수명·실제 동작 의미 일치.
   function applyInitial(el){
     var type = el.getAttribute('data-dw-entrance') || 'fade-in';
-    if (prefersReduced) { el.style.opacity = '1'; el.style.transform = 'none'; return; }
     el.style.opacity = '0';
     var t = TYPE_TO_INITIAL[type];
     if (t) el.style.transform = t;
@@ -144,7 +145,8 @@ export const ENTRANCE_ANIMATION_SCRIPT = `
     el.style.transform = 'none';
   }
   var nodes = document.querySelectorAll('[data-dw-entrance]');
-  if (prefersReduced) { nodes.forEach(function(el){ applyInitial(el); }); return; }
+  // prefers-reduced-motion 사용자는 애니메이션 스킵 — 최종 상태로 즉시 표시.
+  if (prefersReduced) { nodes.forEach(function(el){ applyFinal(el); }); return; }
   var loadEls = [];
   var scrollEls = [];
   nodes.forEach(function(el){
