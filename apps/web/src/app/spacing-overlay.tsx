@@ -257,11 +257,13 @@ export function SpacingOverlay(props: SpacingOverlayProps) {
       return
     }
     // selectedNodeId/hoveredNodeId 변경 시점에만 DOM 측정 — mousemove 폭주 회피(T-01-04 mitigate).
+    // MR-02 — id 에 CSS selector 특수문자(", \, ]) 가 섞일 경우 querySelector 가 throw
+    // 한다. CSS.escape 로 attribute selector 안전화 (use-align-distribute.ts 와 동일 패턴).
     const selEl = document.querySelector<HTMLElement>(
-      `[data-dworks-node-id="${selectedNodeId}"]`,
+      `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
     )
     const hovEl = document.querySelector<HTMLElement>(
-      `[data-dworks-node-id="${hoveredNodeId}"]`,
+      `[data-dworks-node-id="${CSS.escape(hoveredNodeId)}"]`,
     )
     if (!selEl || !hovEl) {
       setOverlay(null)
