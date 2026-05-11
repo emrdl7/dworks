@@ -16,7 +16,7 @@
 // onAnnounce — 정렬/분포 commit 성공 시 한국어 액션 이름 ("좌측 정렬", "가로 균등 분포" 등)
 // 호출 — page.tsx 가 aria-live polite 영역에 알림 (UI-SPEC line 327, 체커 warning fix).
 
-import { useCallback, useEffect, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, type RefObject } from 'react'
 import type { NodeInset, Tree, TreeNode } from '@dworks/tree'
 import { updateNodeMeta } from '@dworks/tree-editor'
 
@@ -160,6 +160,14 @@ export function useAlignDistribute(args: UseAlignDistributeArgs): void {
     onAnnounce,
   } = args
 
+  // MR-03 — performAlign/performDistribute 가 같은 tick 내 연속 호출되면 React state
+  // tree 가 아직 commit 전이라 두 번째 호출이 _직전 commit 결과_ 가 아닌 동일 closure tree
+  // 를 본다. ref 로 live tree 를 노출해 chained commit 안전 (no-op race 방지).
+  const treeRef = useRef(tree)
+  useEffect(() => {
+    treeRef.current = tree
+  }, [tree])
+
   // 공통 정렬 처리 — getKey 가 노드 rect 에서 정렬 기준 좌표 (number) 반환.
   // updateInset 이 rect 차이 + 그룹 기준값으로 새 inset 패치 반환.
   // 모든 그룹에 대해 검증 + commit 까지 단일 핸들러로 통일.
@@ -169,14 +177,22 @@ export function useAlignDistribute(args: UseAlignDistributeArgs): void {
       axis: 'x' | 'y',
       anchor: 'min' | 'center' | 'max',
     ) => {
-      if (selectedIds.size < 2) {
+      // MR-03 — closure 의 stale `tree` 대신 ref 에서 live tree 읽기 (chained commit 안전).
+      const liveTree = treeRef.current
+      // HR-01 — root id 가 selectedIds 에 섞여 있어도 정렬 대상 아니므로 먼저 제거.
+      // 이후 size 가드 (>=2) 를 적용해야 "root + 단일 노드 → silent skip" 회귀 없음.
+      const effectiveIds = new Set<string>()
+      selectedIds.forEach((id) => {
+        if (id !== liveTree.root.id) effectiveIds.add(id)
+      })
+      if (effectiveIds.size < 2) {
         onWarn(WARN_NEED_2_NODES)
         return
       }
       const wrapper = canvasScrollRef.current
-      const groups = groupByParent(tree, selectedIds)
+      const groups = groupByParent(liveTree, effectiveIds)
       if (groups.size === 0) return
-      let nextTree = tree
+      let nextTree = liveTree
       let focusId: string | null = null
       let anyApplied = false
       let warnedAbsolute = false
@@ -253,14 +269,22 @@ export function useAlignDistribute(args: UseAlignDistributeArgs): void {
   // 분포 — 가로/세로 균등. leftmost/rightmost (or top/bottom) 고정, 중간 균등 배치.
   const performDistribute = useCallback(
     (actionKey: 'distributeH' | 'distributeV', axis: 'x' | 'y') => {
-      if (selectedIds.size < 3) {
+      // MR-03 — closure 의 stale `tree` 대신 ref 에서 live tree 읽기 (chained commit 안전).
+      const liveTree = treeRef.current
+      // HR-01 — root id 가 selectedIds 에 섞여 있어도 분포 대상 아니므로 먼저 제거.
+      // 이후 size 가드 (>=3) 를 적용해야 "root + 2 노드 → silent skip" 회귀 없음.
+      const effectiveIds = new Set<string>()
+      selectedIds.forEach((id) => {
+        if (id !== liveTree.root.id) effectiveIds.add(id)
+      })
+      if (effectiveIds.size < 3) {
         onWarn(WARN_NEED_3_NODES)
         return
       }
       const wrapper = canvasScrollRef.current
-      const groups = groupByParent(tree, selectedIds)
+      const groups = groupByParent(liveTree, effectiveIds)
       if (groups.size === 0) return
-      let nextTree = tree
+      let nextTree = liveTree
       let focusId: string | null = null
       let anyApplied = false
       let warnedAbsolute = false
