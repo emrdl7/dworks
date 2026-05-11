@@ -224,6 +224,26 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateCarousel operation with all optional fields', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateCarousel',
+      nodeId: 'gallery',
+      previewIndex: 2,
+      showDots: false,
+      showArrows: false,
+      auto: true,
+      intervalMs: 4000,
+    })
+    assert.equal(op.type, 'updateCarousel')
+    if (op.type === 'updateCarousel') {
+      assert.equal(op.previewIndex, 2)
+      assert.equal(op.showDots, false)
+      assert.equal(op.showArrows, false)
+      assert.equal(op.auto, true)
+      assert.equal(op.intervalMs, 4000)
+    }
+  })
+
   it('parses updateNodeMeta operation with responsiveStyle', () => {
     const op = editOperationSchema.parse({
       type: 'updateNodeMeta',

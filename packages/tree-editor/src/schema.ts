@@ -4,6 +4,7 @@
 
 import { z } from 'zod'
 import {
+  carouselItemSchema,
   focalPointSchema,
   imageAspectRatioSchema,
   imagePresentationSchema,
@@ -30,6 +31,7 @@ import type {
   EditOperation,
   MoveNodeOperation,
   UpdateButtonLabelOperation,
+  UpdateCarouselOperation,
   UpdateColorOperation,
   UpdateImageOperation,
   UpdateLayoutOperation,
@@ -119,6 +121,19 @@ export const updateImageOperationSchema: z.ZodType<UpdateImageOperation> =
     presentation: imagePresentationSchema.optional(),
   })
 
+export const updateCarouselOperationSchema: z.ZodType<UpdateCarouselOperation> =
+  z.object({
+    type: z.literal('updateCarousel'),
+    nodeId: z.string().min(1),
+    items: z.array(carouselItemSchema).min(1).optional(),
+    aspectRatio: imageAspectRatioSchema.optional(),
+    auto: z.boolean().optional(),
+    intervalMs: z.number().int().min(1000).max(30000).optional(),
+    showDots: z.boolean().optional(),
+    showArrows: z.boolean().optional(),
+    previewIndex: z.number().int().min(0).optional(),
+  })
+
 export const moveNodeOperationSchema: z.ZodType<MoveNodeOperation> = z.object({
   type: z.literal('moveNode'),
   nodeId: z.string().min(1),
@@ -144,7 +159,7 @@ export const updateStyleTokensOperationSchema: z.ZodType<UpdateStyleTokensOperat
   })
 
 // discriminatedUnion으로 type 리터럴 분기 — exhaustiveness check 강제.
-export const editOperationSchema = z.discriminatedUnion('type', [
+export const editOperationSchema: z.ZodType<EditOperation> = z.discriminatedUnion('type', [
   updateTextOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'updateText'>
     nodeId: z.ZodString
@@ -205,6 +220,17 @@ export const editOperationSchema = z.discriminatedUnion('type', [
     aspectRatio: z.ZodOptional<typeof imageAspectRatioSchema>
     focalPoint: z.ZodOptional<typeof focalPointSchema>
     presentation: z.ZodOptional<typeof imagePresentationSchema>
+  }>,
+  updateCarouselOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateCarousel'>
+    nodeId: z.ZodString
+    items: z.ZodOptional<z.ZodArray<typeof carouselItemSchema>>
+    aspectRatio: z.ZodOptional<typeof imageAspectRatioSchema>
+    auto: z.ZodOptional<z.ZodBoolean>
+    intervalMs: z.ZodOptional<z.ZodNumber>
+    showDots: z.ZodOptional<z.ZodBoolean>
+    showArrows: z.ZodOptional<z.ZodBoolean>
+    previewIndex: z.ZodOptional<z.ZodNumber>
   }>,
   moveNodeOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'moveNode'>

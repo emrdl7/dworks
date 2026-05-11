@@ -539,6 +539,33 @@ export interface ImageNode extends BaseNodeMeta {
   presentation?: ImagePresentation
 }
 
+// CarouselNode — 이미지 carousel.
+//   캔버스에서는 정적 미리보기 (첫 이미지 + dot indicator + 좌/우 화살표).
+//   _실제_ slide 동작은 export 결과에서 Embla Carousel 등 라이브러리.
+export interface CarouselItem {
+  id: string
+  src: string
+  alt: string
+  caption?: string
+  focalPoint?: FocalPoint
+}
+
+export interface CarouselNode extends BaseNodeMeta {
+  type: 'carousel'
+  items: CarouselItem[]
+  aspectRatio?: ImageAspectRatio
+  // 자동 재생 — 미리보기에는 영향 없음 (export 시 라이브러리에 전달).
+  auto?: boolean
+  // ms 단위 자동 재생 간격 (auto일 때만 의미 있음). 기본 5000.
+  intervalMs?: number
+  // 시각 컨트롤 표시 여부. 기본 둘 다 true.
+  showDots?: boolean
+  showArrows?: boolean
+  // 정적 미리보기에서 어떤 슬라이드를 보여줄지 — 인스펙터에서 변경.
+  // undefined면 0 (첫 이미지).
+  previewIndex?: number
+}
+
 export interface SectionNode extends BaseNodeMeta {
   type: 'section'
   role?: string
@@ -577,6 +604,7 @@ export type TreeNode =
   | TextNode
   | ButtonNode
   | ImageNode
+  | CarouselNode
   | SectionNode
   | HeroNode
   | CardNode
@@ -635,6 +663,26 @@ export const imageNodeSchema: z.ZodType<ImageNode> = z.object({
   presentation: imagePresentationSchema.optional(),
 })
 
+export const carouselItemSchema: z.ZodType<CarouselItem> = z.object({
+  id: z.string().min(1),
+  src: z.string(),
+  alt: z.string(),
+  caption: z.string().optional(),
+  focalPoint: focalPointSchema.optional(),
+})
+
+export const carouselNodeSchema: z.ZodType<CarouselNode> = z.object({
+  ...baseShape,
+  type: z.literal('carousel'),
+  items: z.array(carouselItemSchema).min(1),
+  aspectRatio: imageAspectRatioSchema.optional(),
+  auto: z.boolean().optional(),
+  intervalMs: z.number().int().min(1000).max(30000).optional(),
+  showDots: z.boolean().optional(),
+  showArrows: z.boolean().optional(),
+  previewIndex: z.number().int().min(0).optional(),
+})
+
 // 재귀 union을 위해 children 필드는 z.lazy로 후행 참조.
 const childrenLazy = z.lazy((): z.ZodType<TreeNode[]> =>
   z.array(treeNodeSchema),
@@ -687,6 +735,7 @@ export const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
     textNodeSchema,
     buttonNodeSchema,
     imageNodeSchema,
+    carouselNodeSchema,
     sectionNodeSchema,
     heroNodeSchema,
     cardNodeSchema,
@@ -708,6 +757,7 @@ export const TREE_NODE_TYPES = [
   'text',
   'button',
   'image',
+  'carousel',
   'section',
   'hero',
   'card',

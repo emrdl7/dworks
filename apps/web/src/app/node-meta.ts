@@ -4,6 +4,7 @@
 
 import {
   FormInput,
+  GalleryHorizontal,
   ImageIcon,
   List,
   MousePointer,
@@ -20,6 +21,7 @@ export const nodeTypeLabels: Record<TreeNode['type'], string> = {
   text: '텍스트',
   button: '버튼',
   image: '이미지',
+  carousel: '이미지 carousel',
   section: '섹션',
   hero: '히어로',
   card: '카드',
@@ -31,6 +33,7 @@ export const nodeTypeIcons: Record<TreeNode['type'], LucideIcon> = {
   text: Type,
   button: MousePointer,
   image: ImageIcon,
+  carousel: GalleryHorizontal,
   section: PanelTop,
   hero: SquareStack,
   card: Square,

@@ -52,6 +52,7 @@ import {
   type GradientType,
   type ImageAspectRatio,
   type ImageFit,
+  type CarouselNode,
   type ImageNode,
   type ImagePresentation,
   type LayoutAlign,
@@ -91,6 +92,7 @@ import {
   type LeafNodeType,
   moveNode,
   type NodeMetaPatch,
+  updateCarousel,
   updateColor,
   updateButtonLabel,
   updateImage,
@@ -531,6 +533,17 @@ type ImageEditPatch = Pick<
 > & {
   presentation?: Partial<ImagePresentation>
 }
+
+type CarouselEditPatch = Pick<
+  Partial<CarouselNode>,
+  | 'items'
+  | 'aspectRatio'
+  | 'auto'
+  | 'intervalMs'
+  | 'showDots'
+  | 'showArrows'
+  | 'previewIndex'
+>
 
 export default function HomePage() {
   const [selectedFixtureId, setSelectedFixtureId] = useState(defaultTreeFixture.id)
@@ -2319,6 +2332,14 @@ export default function HomePage() {
     options?: CommitTreeEditOptions,
   ) {
     commitTreeEdit(updateImage(tree, node.id, patch), undefined, options)
+  }
+
+  function handleCarouselChange(
+    node: CarouselNode,
+    patch: CarouselEditPatch,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateCarousel(tree, node.id, patch), undefined, options)
   }
 
   function handleMoveNode(nodeId: string, direction: 'up' | 'down') {
@@ -4805,6 +4826,7 @@ export default function HomePage() {
             onFontFamilyDelete={handleFontFamilyDelete}
             onButtonLabelChange={handleButtonLabelChange}
             onImageChange={handleImageChange}
+            onCarouselChange={handleCarouselChange}
             colorPreset={colorPreset}
           />
         </aside>
@@ -6079,6 +6101,13 @@ function CanvasNode({
           />
         </SelectableNode>
       )
+
+    case 'carousel':
+      return (
+        <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          <CarouselPreview node={node} style={boxStyle} fallbackStyle={colorStyle} />
+        </SelectableNode>
+      )
   }
 }
 
@@ -6611,6 +6640,109 @@ function getImageObjectPosition(focalPoint: FocalPoint): string {
   return `${Math.round(focalPoint.x * 100)}% ${Math.round(focalPoint.y * 100)}%`
 }
 
+// CarouselPreview — 캔버스 정적 미리보기.
+//   _실제_ slide 동작은 export 결과에서 라이브러리(Embla Carousel 등) wrap.
+//   캔버스에서는 previewIndex 슬라이드 + dot indicator + (선택적) 좌/우 화살표.
+function CarouselPreview({
+  node,
+  style,
+  fallbackStyle,
+}: {
+  node: CarouselNode
+  style?: CSSProperties
+  fallbackStyle?: CSSProperties
+}) {
+  const items = node.items
+  const previewIndex = Math.min(
+    Math.max(node.previewIndex ?? 0, 0),
+    Math.max(items.length - 1, 0),
+  )
+  const item = items[previewIndex]
+  const showDots = node.showDots ?? true
+  const showArrows = node.showArrows ?? true
+  const aspect = node.aspectRatio ?? 'wide'
+
+  return (
+    <figure
+      className={`relative flex w-full min-w-0 max-w-full overflow-hidden border border-white/25 bg-[var(--dw-image-surface)] ${
+        aspectRatioClasses[aspect]
+      }`}
+      style={style}
+    >
+      {item ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="h-full w-full"
+          src={item.src}
+          alt={item.alt}
+          style={{
+            objectFit: 'cover',
+            ...(item.focalPoint
+              ? { objectPosition: getImageObjectPosition(item.focalPoint) }
+              : {}),
+          }}
+        />
+      ) : (
+        <div
+          className="flex h-full w-full flex-col justify-center bg-[var(--dw-image-accent)] p-6 text-[var(--dw-text-primary)]"
+          style={fallbackStyle}
+        >
+          <span className="text-xs font-semibold uppercase tracking-wide">
+            이미지 carousel
+          </span>
+          <span className="mt-2 max-w-sm text-2xl font-semibold leading-tight">
+            슬라이드를 추가하세요
+          </span>
+        </div>
+      )}
+
+      {/* 좌/우 화살표 — 시각 미리보기 (실제 slide는 export 라이브러리 처리) */}
+      {showArrows && items.length > 1 ? (
+        <>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white text-sm shadow-md backdrop-blur-sm"
+          >
+            ‹
+          </span>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/35 text-white text-sm shadow-md backdrop-blur-sm"
+          >
+            ›
+          </span>
+        </>
+      ) : null}
+
+      {/* dot indicator */}
+      {showDots && items.length > 1 ? (
+        <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+          {items.map((it, idx) => (
+            <span
+              key={it.id}
+              className={`h-1.5 rounded-full transition-[width,opacity] duration-200 ${
+                idx === previewIndex
+                  ? 'w-6 bg-white opacity-95'
+                  : 'w-1.5 bg-white opacity-55'
+              }`}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {/* 슬라이드 카운트 (디자이너 안내) */}
+      {items.length > 1 ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-3 top-3 inline-flex items-center rounded-full bg-black/45 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur-sm"
+        >
+          {previewIndex + 1} / {items.length}
+        </span>
+      ) : null}
+    </figure>
+  )
+}
+
 const IMAGE_DROP_SHADOW_DEFAULT: ImageDropShadow = {
   offsetX: 0,
   offsetY: 4,
@@ -6708,6 +6840,11 @@ interface NodeInspectorProps {
   onFontFamilyDelete: (familyId: string) => Promise<void>
   onButtonLabelChange: (node: ButtonNode, label: string) => void
   onImageChange: (node: ImageNode, patch: ImageEditPatch) => void
+  onCarouselChange: (
+    node: CarouselNode,
+    patch: CarouselEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
 }
 
 function NodeInspector({
@@ -6737,6 +6874,7 @@ function NodeInspector({
   onFontFamilyDelete,
   onButtonLabelChange,
   onImageChange,
+  onCarouselChange,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
   const [nodeIdCopied, setNodeIdCopied] = useState(false)
@@ -7269,6 +7407,14 @@ function NodeInspector({
                   onImageChange={onImageChange}
                 />
               </>
+            ) : null}
+
+            {node.type === 'carousel' ? (
+              <CarouselControls
+                node={node}
+                disclosure={bindSection('Carousel')}
+                onCarouselChange={onCarouselChange}
+              />
             ) : null}
 
             {isContainerNode(node) ? (
@@ -10989,6 +11135,144 @@ function ShapeControls({
             </div>
           )}
         </div>
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface CarouselControlsProps {
+  disclosure?: InspectorDisclosureControl
+  node: CarouselNode
+  onCarouselChange: (
+    node: CarouselNode,
+    patch: CarouselEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+// Carousel 컨트롤 — 미리보기 슬라이드 / 자동 재생 / dot/arrow 토글 + intervalMs.
+// items 편집(추가/삭제/순서)은 다음 사이클.
+function CarouselControls({
+  disclosure,
+  node,
+  onCarouselChange,
+}: CarouselControlsProps) {
+  const items = node.items
+  const previewIndex = Math.min(
+    Math.max(node.previewIndex ?? 0, 0),
+    Math.max(items.length - 1, 0),
+  )
+  const auto = node.auto === true
+  const intervalMs = node.intervalMs ?? 5000
+  const showDots = node.showDots !== false
+  const showArrows = node.showArrows !== false
+
+  return (
+    <InspectorDisclosure
+      title="Carousel"
+      description={`${items.length}개 슬라이드 — 미리보기 + 자동/표시 옵션`}
+      defaultOpen
+      {...disclosure}
+    >
+      <div className="mt-3 space-y-4">
+        {/* 미리보기 슬라이드 */}
+        <div>
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            미리보기 슬라이드
+          </span>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {items.map((it, idx) => (
+              <button
+                key={it.id}
+                type="button"
+                aria-pressed={idx === previewIndex}
+                onClick={() => onCarouselChange(node, { previewIndex: idx })}
+                className={`flex h-8 min-w-8 items-center justify-center rounded-[var(--dw-radius-sm)] border px-2 text-[length:var(--dw-text-label)] font-mono tabular-nums transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                  idx === previewIndex
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                }`}
+                title={it.alt || `슬라이드 ${idx + 1}`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+          </div>
+          {items[previewIndex]?.caption ? (
+            <p className="mt-2 text-[11px] text-[var(--dw-ui-text-muted)]">
+              {items[previewIndex]?.caption}
+            </p>
+          ) : null}
+        </div>
+
+        {/* 표시 옵션 */}
+        <div className="grid grid-cols-2 gap-2">
+          <label className="flex items-center gap-2 text-xs text-[var(--dw-ui-text-body)]">
+            <input
+              type="checkbox"
+              className="accent-[var(--dw-ui-accent)]"
+              checked={showDots}
+              onChange={(e) =>
+                onCarouselChange(node, {
+                  showDots: e.target.checked ? undefined : false,
+                })
+              }
+            />
+            dot indicator
+          </label>
+          <label className="flex items-center gap-2 text-xs text-[var(--dw-ui-text-body)]">
+            <input
+              type="checkbox"
+              className="accent-[var(--dw-ui-accent)]"
+              checked={showArrows}
+              onChange={(e) =>
+                onCarouselChange(node, {
+                  showArrows: e.target.checked ? undefined : false,
+                })
+              }
+            />
+            좌/우 화살표
+          </label>
+        </div>
+
+        {/* 자동 재생 */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 text-xs text-[var(--dw-ui-text-body)]">
+            <input
+              type="checkbox"
+              className="accent-[var(--dw-ui-accent)]"
+              checked={auto}
+              onChange={(e) =>
+                onCarouselChange(node, {
+                  auto: e.target.checked ? true : undefined,
+                })
+              }
+            />
+            자동 재생 (export 시점에만 의미 있음)
+          </label>
+          {auto ? (
+            <TypographyNumberField
+              label="자동 재생 간격"
+              unit="ms"
+              min={1000}
+              max={30000}
+              step={500}
+              value={intervalMs}
+              placeholder="5000"
+              onChange={(value) =>
+                onCarouselChange(node, {
+                  intervalMs: parseOptionalNumber(value, 1000, 30000) ?? 5000,
+                })
+              }
+            />
+          ) : null}
+        </div>
+
+        <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
+          캔버스는 _정적_ 미리보기 — 실제 슬라이드 동작은 export 결과에서
+          carousel 라이브러리(Embla 등)가 처리합니다. 슬라이드 추가/삭제/순서
+          편집은 다음 사이클에서 지원합니다.
+        </p>
       </div>
     </InspectorDisclosure>
   )

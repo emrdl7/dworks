@@ -28,9 +28,35 @@ import {
 } from './schema.js'
 
 describe('tree schema', () => {
-  it('exposes 8 node types after the M2 image node expansion', () => {
-    assert.equal(TREE_NODE_TYPES.length, 8)
+  it('exposes 9 node types — text/button/image/carousel/section/hero/card/list/form', () => {
+    assert.equal(TREE_NODE_TYPES.length, 9)
     assert.ok(TREE_NODE_TYPES.includes('image'))
+    assert.ok(TREE_NODE_TYPES.includes('carousel'))
+  })
+
+  it('parses a minimal carousel node (1 item)', () => {
+    const node = {
+      id: 'c1',
+      type: 'carousel',
+      editKind: 'media',
+      items: [{ id: 'c1.0', src: 'https://x/a.jpg', alt: 'a' }],
+    }
+    const parsed = treeNodeSchema.parse(node)
+    assert.equal(parsed.type, 'carousel')
+    if (parsed.type === 'carousel') {
+      assert.equal(parsed.items.length, 1)
+    }
+  })
+
+  it('rejects carousel with empty items array', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 'c2',
+        type: 'carousel',
+        editKind: 'media',
+        items: [],
+      }),
+    )
   })
 
   it('parses a minimal text node', () => {

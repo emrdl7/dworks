@@ -18,6 +18,7 @@ import {
   updateShape,
   updateSpacing,
   updateButtonLabel,
+  updateCarousel,
   updateImage,
   updateStyleTokens,
   updateText,
@@ -468,6 +469,51 @@ describe('tree editor operations', () => {
         assert.equal(resetCard.cursor, undefined)
         assert.equal(resetCard.transition, undefined)
         assert.equal(resetCard.transform, undefined)
+      }
+    }
+  })
+
+  it('updateCarousel partial patch — toggle showDots, set previewIndex, clear auto', () => {
+    const tree: Tree = {
+      version: '1',
+      root: {
+        id: 'page',
+        type: 'section',
+        editKind: 'structure',
+        children: [
+          {
+            id: 'gallery',
+            type: 'carousel',
+            editKind: 'media',
+            items: [
+              { id: 'a', src: 'https://x/a.jpg', alt: 'a' },
+              { id: 'b', src: 'https://x/b.jpg', alt: 'b' },
+              { id: 'c', src: 'https://x/c.jpg', alt: 'c' },
+            ],
+            auto: true,
+            intervalMs: 5000,
+            showDots: true,
+            showArrows: true,
+            previewIndex: 0,
+          },
+        ],
+      },
+    }
+    const next = updateCarousel(tree, 'gallery', {
+      showDots: false,
+      previewIndex: 2,
+      auto: undefined,
+    })
+    if (next.root.type === 'section') {
+      const c = next.root.children[0]
+      if (c?.type === 'carousel') {
+        assert.equal(c.showDots, false)
+        assert.equal(c.previewIndex, 2)
+        assert.equal(c.auto, undefined)
+        // 안 박은 키는 base 유지
+        assert.equal(c.intervalMs, 5000)
+        assert.equal(c.showArrows, true)
+        assert.equal(c.items.length, 3)
       }
     }
   })

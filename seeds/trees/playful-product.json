@@ -139,12 +139,41 @@
                 ]
               },
               {
-                "id": "hero.image",
-                "type": "image",
+                "id": "hero.gallery",
+                "type": "carousel",
                 "editKind": "media",
-                "src": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1600&q=80",
-                "alt": "BLOOM 시그니처 컬러 티셔츠와 토트백 컬렉션",
+                "items": [
+                  {
+                    "id": "hero.gallery.item1",
+                    "src": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1600&q=80",
+                    "alt": "BLOOM 시그니처 컬러 티셔츠와 토트백 컬렉션 — Look 1",
+                    "caption": "Look 01 — Coral burst tee"
+                  },
+                  {
+                    "id": "hero.gallery.item2",
+                    "src": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1600&q=80",
+                    "alt": "BLOOM 토트백 — Look 2",
+                    "caption": "Look 02 — Tangerine tote"
+                  },
+                  {
+                    "id": "hero.gallery.item3",
+                    "src": "https://images.unsplash.com/photo-1542293787938-c9e299b88018?auto=format&fit=crop&w=1600&q=80",
+                    "alt": "BLOOM 머그컵 컬렉션 — Look 3",
+                    "caption": "Look 03 — Bloom enamel mug"
+                  },
+                  {
+                    "id": "hero.gallery.item4",
+                    "src": "https://images.unsplash.com/photo-1542838686-37da4a9fd1b3?auto=format&fit=crop&w=1600&q=80",
+                    "alt": "BLOOM 스튜디오 무드 — Look 4",
+                    "caption": "Behind the scenes — Bloom studio"
+                  }
+                ],
                 "aspectRatio": "wide",
+                "auto": true,
+                "intervalMs": 4000,
+                "showDots": true,
+                "showArrows": true,
+                "previewIndex": 0,
                 "shape": { "radius": 36, "shadow": "xl" }
               },
               {

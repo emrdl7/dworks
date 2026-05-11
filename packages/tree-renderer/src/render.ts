@@ -9,6 +9,7 @@
 import type {
   ButtonNode,
   CardNode,
+  CarouselNode,
   FormNode,
   HeroNode,
   ImageNode,
@@ -134,6 +135,8 @@ export function renderNode(node: TreeNode): string {
       return renderButton(node)
     case 'image':
       return renderImage(node)
+    case 'carousel':
+      return renderCarousel(node)
     case 'section':
       return renderSection(node)
     case 'hero':
@@ -145,6 +148,16 @@ export function renderNode(node: TreeNode): string {
     case 'form':
       return renderForm(node)
   }
+}
+
+function renderCarousel(node: CarouselNode): string {
+  // 정적 export — 슬라이드 라이브러리 없이 _previewIndex 이미지_만 렌더.
+  // 실제 carousel 동작은 export 후 Embla 등 라이브러리 wrap 필요.
+  const previewIndex = node.previewIndex ?? 0
+  const item = node.items[Math.min(previewIndex, node.items.length - 1)]
+  if (!item) return `<div${commonAttrs(node)}></div>`
+  const img = `<img${attrs([['src', item.src], ['alt', item.alt]])} />`
+  return `<div${commonAttrs(node)} role="region" aria-label="이미지 carousel" aria-roledescription="carousel">${img}</div>`
 }
 
 export function renderTree(tree: Tree): string {

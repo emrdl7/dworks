@@ -1,4 +1,5 @@
 import type {
+  CarouselNode,
   FocalPoint,
   ImageAspectRatio,
   ImageNode,
@@ -88,6 +89,19 @@ export interface UpdateImageOperation {
   presentation?: Partial<ImagePresentation>
 }
 
+export interface UpdateCarouselOperation {
+  type: 'updateCarousel'
+  nodeId: string
+  // 부분 업데이트 — 미정의 키는 변경 안 함.
+  items?: CarouselNode['items']
+  aspectRatio?: ImageAspectRatio
+  auto?: boolean
+  intervalMs?: number
+  showDots?: boolean
+  showArrows?: boolean
+  previewIndex?: number
+}
+
 export interface MoveNodeOperation {
   type: 'moveNode'
   nodeId: string
@@ -120,6 +134,7 @@ type ContentEditOperation =
   | UpdateNodeMetaOperation
   | UpdateButtonLabelOperation
   | UpdateImageOperation
+  | UpdateCarouselOperation
 
 type StructureEditOperation =
   | MoveNodeOperation
@@ -219,6 +234,14 @@ export function updateImage(
   patch: Omit<UpdateImageOperation, 'type' | 'nodeId'>,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateImage', nodeId, ...patch })
+}
+
+export function updateCarousel(
+  tree: Tree,
+  nodeId: string,
+  patch: Omit<UpdateCarouselOperation, 'type' | 'nodeId'>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateCarousel', nodeId, ...patch })
 }
 
 export function moveNode(
@@ -731,6 +754,7 @@ function editNode(
     case 'text':
     case 'button':
     case 'image':
+    case 'carousel':
       return node
   }
 }
@@ -786,6 +810,14 @@ function editMatchedNode(
         )
       }
       return withImagePatch(node, operation)
+
+    case 'updateCarousel':
+      if (node.type !== 'carousel') {
+        throw new Error(
+          `tree edit failed: updateCarousel requires carousel node, got ${node.type}: ${node.id}`,
+        )
+      }
+      return withCarouselPatch(node, operation)
   }
 }
 
@@ -923,6 +955,42 @@ function withImagePatch(
     } else {
       next.presentation = presentation
     }
+  }
+
+  return next
+}
+
+function withCarouselPatch(
+  node: CarouselNode,
+  patch: Omit<UpdateCarouselOperation, 'type' | 'nodeId'>,
+): CarouselNode {
+  const next: CarouselNode = { ...node }
+
+  if (patch.items !== undefined) next.items = patch.items
+
+  if ('aspectRatio' in patch) {
+    if (patch.aspectRatio === undefined) delete next.aspectRatio
+    else next.aspectRatio = patch.aspectRatio
+  }
+  if ('auto' in patch) {
+    if (patch.auto === undefined) delete next.auto
+    else next.auto = patch.auto
+  }
+  if ('intervalMs' in patch) {
+    if (patch.intervalMs === undefined) delete next.intervalMs
+    else next.intervalMs = patch.intervalMs
+  }
+  if ('showDots' in patch) {
+    if (patch.showDots === undefined) delete next.showDots
+    else next.showDots = patch.showDots
+  }
+  if ('showArrows' in patch) {
+    if (patch.showArrows === undefined) delete next.showArrows
+    else next.showArrows = patch.showArrows
+  }
+  if ('previewIndex' in patch) {
+    if (patch.previewIndex === undefined) delete next.previewIndex
+    else next.previewIndex = patch.previewIndex
   }
 
   return next

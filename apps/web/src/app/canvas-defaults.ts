@@ -63,6 +63,8 @@ export const DEFAULT_SPACING_BY_TYPE: Record<TreeNodeType, Spacing> = {
   // button: px-5 = padding-x 20px. vertical은 min-h-11(44px)로 처리 — spacing 영역 밖.
   button: { paddingLeft: 20, paddingRight: 20 },
   image: {},
+  // carousel: 자체 padding 없음 — 부모 spacing이 채움. 이미지 레퍼런스(figure)와 동일.
+  carousel: {},
 }
 
 // emphasis별 typography default — text 노드 TextPreview의 className에서 추출 + 인스펙터
@@ -145,6 +147,7 @@ export const DEFAULT_LAYOUT_BY_TYPE: Record<TreeNodeType, NodeLayout> = {
   text: {},
   button: {},
   image: {},
+  carousel: {},
 }
 
 // type별 shape default — radius / border / shadow.
@@ -164,6 +167,8 @@ export const DEFAULT_SHAPE_BY_TYPE: Record<TreeNodeType, Shape> = {
   text: {},
   button: {},
   image: {},
+  // carousel: 시각 임팩트 위해 radius/shadow 약간 — 사용자가 explicit 으로 0/none 박을 수 있음.
+  carousel: { radius: 12, shadow: 'md' },
 }
 
 // type별 color token slot — 캔버스 className의 var(--dw-*) 토큰을 ColorPresetTokens
@@ -191,6 +196,7 @@ export const DEFAULT_COLOR_TOKENS_BY_TYPE: Record<TreeNodeType, ColorTokenSlots>
   text: {},
   button: {},
   image: {},
+  carousel: {},
 }
 
 // emphasis별 text color token slot — text 노드의 textColor가 emphasis에 따라
