@@ -152,7 +152,7 @@ export type LayoutIntent =
  * 이미지 4사분면 (좌상/우상/좌하/우하) 의 _콘텐츠 픽셀_ 밀도로 레이아웃 의도를 추출.
  * 콘텐츠 픽셀 기준: alpha >= 128 인 픽셀만 카운트.
  * heuristic:
- *   - 좌측 두 사분면 합 / 총 ≥ 0.6 → 'left-aligned'
+ *   - 좌측 두 사분면 합 / 총 ≥ 0.7 → 'left-aligned' (ME-03: 0.6 → 0.7 보수화)
  *   - 중앙 영역 (가로/세로 25-75% box) 픽셀 / 총 ≥ 0.6 → 'centered'
  *   - 4 사분면 비율 변동계수 (stdev/mean) < 0.2 → 'grid'
  *   - 나머지 → 'asymmetric'
@@ -187,7 +187,8 @@ export function extractLayoutIntent(source: RgbaPixelSource): LayoutIntent {
   }
   if (total === 0) return 'asymmetric'
   const leftRatio = (tl + bl) / total
-  if (leftRatio >= 0.6) return 'left-aligned'
+  // ME-03: 0.6 → 0.7 — left-aligned 편향 완화 (균일 분포가 이미 50% 이라 0.6 은 너무 낮음).
+  if (leftRatio >= 0.7) return 'left-aligned'
   const centerRatio = centerBox / total
   if (centerRatio >= 0.6) return 'centered'
   const mean = total / 4
