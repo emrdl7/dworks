@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T05:14:02.278Z"
+last_updated: "2026-05-11T05:17:04.131Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
-  percent: 73
+  completed_plans: 9
+  percent: 82
 ---
 
 # Dworks v2.0 STATE
@@ -22,22 +22,23 @@ progress:
 
 | # | Phase | Status |
 |---|-------|--------|
-| 1 | UX 핵심 fix + 측정 도구 | 🟡 ready (not started) |
-| 2 | AI 생성 품질 자동 검증 | ⚪ pending |
+| 1 | UX 핵심 fix + 측정 도구 | 🟡 진행 중 (5/7 plan 완료, 01-01/01-04 잔여) |
+| 2 | AI 생성 품질 자동 검증 | 🟡 진행 시작 (02-01 완료, 02-02~02-05 잔여) |
 | 3 | 시각 보조 도구 | ⚪ pending |
 | 4 | export 깊이 | ⚪ pending |
 | 5 | 디자인 시스템 깊이 | ⚪ pending |
 
 ## Active Work
 
-**Phase 1 진행 중** — Wave 6 (01-07 완료, UX-05 완료).
+**Phase 2 진행 시작** — AI-01 13 신호 측정 + validator API foundation 완료.
 
 - ✅ 01-02 (UX-01 verification stub) — 2026-05-11. commit 679bfb6 이미 적용됨을 SUMMARY 로 기록. 코드 수정 0.
 - ✅ 01-03 (UX-02 spacing overlay) — 2026-05-11. SpacingOverlay 컴포넌트 + page.tsx 마운트. commits acda97c + ec02c1f. 4분.
 - ✅ 01-05 (UX-03 노드 타입 변환 3-route) — 2026-05-11. convertNodeType utility + 컨텍스트 메뉴 동적 서브메뉴 + 인스펙터 dropdown + ⌘K 액션. commits f353bef..1da9a41. 26분.
 - ✅ 01-06 (UX-04 컴포넌트 라이브러리 패널) — 2026-05-11. 240/32px 패널 + 12 basic + 10 pattern + drag drop. commits d98ac1f..6971e88. 6분.
 - ✅ 01-07 (UX-05 박스 선택 + 정렬/분포) — 2026-05-11. BoxSelectOverlay + useAlignDistribute (8 단축키) + aria-live 한국어 알림. commits 8912300..a895e00. 8분.
-- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06)
+- ✅ 02-01 (AI-01 richness 13 신호 + validateTreeRichness) — 2026-05-11. 신호 #9~#13 + missing[] API + 11 테스트. commits 75ea025..d264ebc. 5분.
+- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02..02-05 (enforceRichness hook + 인터랙티브 자동 + entranceAnim 자동 + 매트릭스 + 이미지)
 
 ## Decisions Log
 
@@ -51,6 +52,8 @@ progress:
 - [Phase 1 / Plan 07] 정렬/분포 8 단축키: Alt+A/H/D/W/V/S (≥2 선택) + Alt+Shift+H/V (≥3 선택). meta/ctrl 충돌 가드 + INPUT/TEXTAREA/contentEditable 보호
 - [Phase 1 / Plan 07] aria-live polite region 단일 — 박스 선택 결과 ("{N}개 노드 선택") + 정렬/분포 한국어 액션 이름 8종 공유. UI-SPEC line 327 체커 warning fix
 - [Phase 1 / Plan 07] 공통 부모 그룹화 (D-16) + non-absolute 자식 발견 시 그룹 skip + 1회 toast — 다른 부모 자식들은 각자 그룹 안에서만 정렬
+- [Phase 2 / Plan 01] richness.ts 13 신호 모델 — RICHNESS_SIGNAL_KEYS 동적 구성으로 validator 자동 동기 (8 필드 하드코딩 위치 4곳 제거)
+- [Phase 2 / Plan 01] validateTreeRichness API — missing[] 반환으로 enforceRichness hook (02-02) 의 자동 보강 분기 foundation 제공
 
 ## Performance Metrics
 
@@ -62,6 +65,7 @@ progress:
 | Phase 01-ux-fix P06 | 347 | 3 tasks | 6 files |
 | Phase 01 P07 | 480 | 3 tasks | 3 files |
 | Phase 02 P02 | 2 min | 1 tasks | 1 files |
+| Phase 02-ai-quality P01 | 5min | 2 tasks | 5 files |
 
 ## v1 Final State (참조)
 

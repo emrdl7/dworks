@@ -63,7 +63,7 @@ Plans:
 
 ```
 Plans:
-- [ ] 02-01-PLAN.md — AI-01 richness.ts 5 신호 추가 + validateTreeRichness API (Wave 1, foundation)
+- [x] 02-01-PLAN.md — AI-01 richness.ts 5 신호 추가 + validateTreeRichness API (Wave 1, foundation) — 2026-05-11
 - [ ] 02-02-PLAN.md — AI-04 도메인×톤 6×5 매트릭스 prompt 섹션 (Wave 1, prompt-only)
 - [ ] 02-03-PLAN.md — AI-05 image-color analyzeDominantColors + extractLayoutIntent + prompt inject (Wave 2)
 - [ ] 02-04-PLAN.md — AI-01b/AI-02/AI-03 generation-normalize enforceRichness hook + interactive + animation (Wave 2)

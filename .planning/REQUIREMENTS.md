@@ -9,7 +9,8 @@
 
 ### A. AI 생성 품질 (5)
 
-- [ ] **AI-01**: generation-normalize 또는 별도 validator가 풍부도 13 신호를 자체 점검 — 미달 신호 발견 시 (1) prompt에 _재시도 요청_ 추가하거나 (2) 자동 보강 (예: entranceAnimation 0개면 hero.title/cards에 자동 박기). 신호별 통과/미달 표시 + 사용자에게 표시.
+- [x] **AI-01
+**: generation-normalize 또는 별도 validator가 풍부도 13 신호를 자체 점검 — 미달 신호 발견 시 (1) prompt에 _재시도 요청_ 추가하거나 (2) 자동 보강 (예: entranceAnimation 0개면 hero.title/cards에 자동 박기). 신호별 통과/미달 표시 + 사용자에게 표시.
 - [ ] **AI-02**: prompt에 _도메인별 인터랙티브 컴포넌트 매트릭스_ 명시 (e-commerce → carousel + accordion, SaaS → tabs + accordion, 포트폴리오 → carousel, 가입 페이지 → modal). 후처리 검증으로 _최소 1개_ 강제.
 - [ ] **AI-03**: 후처리 — entranceAnimation 가진 노드 < 6개일 때 자동 박기 (hero.title slide-up, features cards staggered slide-up). 사용자 명시 없는 한 트리거 'scroll', 처음 hero는 'load'.
 - [x] **AI-04**: 톤 매핑 11종을 _도메인_ × _톤_ 매트릭스로 확장 (예: dark+luxury+ecommerce, playful+SaaS, minimal+portfolio 등). prompt에 매트릭스 표 추가 + fixture로 시연.
