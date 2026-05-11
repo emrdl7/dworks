@@ -4,6 +4,8 @@
 
 import {
   useContext,
+  useEffect,
+  useState,
   type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
@@ -162,6 +164,31 @@ export function SelectableNode({
   // 떠나야 부모 안에서 떠있는 layer가 됨. 내부 section에 박으면 wrapper 안에 갇힘.
   const positionStyle = getPositionStyle(node.position, node.inset)
 
+  // entranceAnimation 미리보기 — 선택될 때마다 한 번 재생. (hooks는 readOnly 분기 위)
+  const anim = node.entranceAnimation
+  const isPrimaryForEntrance = !readOnly && node.id === selectedNodeId
+  const [entrancePlaying, setEntrancePlaying] = useState(false)
+  useEffect(() => {
+    if (!anim || !isPrimaryForEntrance) {
+      setEntrancePlaying(false)
+      return
+    }
+    setEntrancePlaying(true)
+    const total = (anim.duration ?? 600) + (anim.delay ?? 0) + 100
+    const timer = window.setTimeout(() => setEntrancePlaying(false), total)
+    return () => window.clearTimeout(timer)
+  }, [anim, isPrimaryForEntrance])
+  const entranceStyle: CSSProperties =
+    entrancePlaying && anim
+      ? {
+          animationName: `dw-entrance-${anim.type}`,
+          animationDuration: `${anim.duration ?? 600}ms`,
+          animationDelay: `${anim.delay ?? 0}ms`,
+          animationTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          animationFillMode: 'both',
+        }
+      : {}
+
   if (readOnly) {
     const readOnlyStyle: CSSProperties = {
       pointerEvents: 'none',
@@ -182,6 +209,7 @@ export function SelectableNode({
   const isInSelection = selectionCtx.allSelectedIds.has(node.id)
   const isCanvasSelectable = node.pointerEvents !== 'none'
   const isHovered = hoveredNodeId === node.id && !isInSelection
+
   const nodeMetaStyle: CSSProperties = {
     pointerEvents: isCanvasSelectable ? 'auto' : 'none',
     ...(node.opacity === undefined ? {} : { opacity: node.opacity }),
@@ -189,6 +217,7 @@ export function SelectableNode({
     ...(transitionStyle ?? {}),
     ...(transformStyle ?? {}),
     ...(positionStyle ?? {}),
+    ...entranceStyle,
   }
 
   function selectNode(modifiers?: { shift?: boolean; meta?: boolean }) {
