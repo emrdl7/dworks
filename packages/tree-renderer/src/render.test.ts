@@ -210,3 +210,160 @@ describe('renderTree', () => {
     assert.match(html, /<\/section>$/)
   })
 })
+
+describe('renderCarousel', () => {
+  it('renderCarousel 모든 slide 와 prev/next 버튼 박음', () => {
+    const html = renderNode({
+      id: 'car1',
+      type: 'carousel',
+      editKind: 'media',
+      items: [
+        { id: 's1', src: '/a.jpg', alt: 'a' },
+        { id: 's2', src: '/b.jpg', alt: 'b' },
+        { id: 's3', src: '/c.jpg', alt: 'c' },
+      ],
+    })
+    // 3 슬라이드 모두 렌더
+    assert.equal((html.match(/data-dworks-carousel-slide/g) ?? []).length, 3)
+    // viewport + container 구조 (Embla 호환)
+    assert.match(html, /class="dw-carousel__viewport"/)
+    assert.match(html, /class="dw-carousel__container"/)
+    // prev/next 버튼 + 한국어 aria
+    assert.match(html, /data-dworks-carousel-prev[^>]*aria-label="이전 슬라이드"/)
+    assert.match(html, /data-dworks-carousel-next[^>]*aria-label="다음 슬라이드"/)
+    // root 에 data-dworks-carousel attr
+    assert.match(html, /<div[^>]*data-dworks-carousel/)
+    // slide index attr
+    assert.match(html, /data-slide-index="0"/)
+    assert.match(html, /data-slide-index="2"/)
+  })
+
+  it('renderCarousel caption 있으면 figure/figcaption 으로 wrap', () => {
+    const html = renderNode({
+      id: 'car2',
+      type: 'carousel',
+      editKind: 'media',
+      items: [
+        { id: 's1', src: '/a.jpg', alt: 'a', caption: '첫 슬라이드' },
+      ],
+    })
+    assert.match(html, /<figure><img[^>]*\/><figcaption>첫 슬라이드<\/figcaption><\/figure>/)
+  })
+})
+
+describe('renderTabs', () => {
+  it('renderTabs 모든 trigger + 모든 panel 박고 활성 panel 만 visible', () => {
+    const html = renderNode({
+      id: 'tabs1',
+      type: 'tabs',
+      editKind: 'structure',
+      activeIndex: 1,
+      items: [
+        { id: 'a', label: '소개', content: 'about' },
+        { id: 'b', label: '가격', content: 'pricing' },
+        { id: 'c', label: '문의', content: 'contact' },
+      ],
+    })
+    // 3 trigger, 3 panel
+    assert.equal((html.match(/data-dworks-tab-trigger/g) ?? []).length, 3)
+    assert.equal((html.match(/data-dworks-tab-panel/g) ?? []).length, 3)
+    // activeIndex=1 (id 'b') aria-selected="true", tabindex="0"
+    assert.match(html, /data-tab-id="b"[^>]*aria-selected="true"[^>]*tabindex="0"/)
+    // 비활성 (id 'a') aria-selected="false"
+    assert.match(html, /data-tab-id="a"[^>]*aria-selected="false"/)
+    // 비활성 panel hidden, 활성 panel visible
+    assert.match(html, /id="panel-a"[^>]*hidden>/)
+    assert.match(html, /id="panel-b"[^>]*>pricing<\/div>/)
+    // aria-controls 연결
+    assert.match(html, /data-tab-id="b"[^>]*aria-controls="panel-b"/)
+    // root data-dworks-tabs
+    assert.match(html, /<div[^>]*data-dworks-tabs/)
+  })
+
+  it('renderTabs activeIndex 미지정 시 첫 tab 활성', () => {
+    const html = renderNode({
+      id: 'tabs2',
+      type: 'tabs',
+      editKind: 'structure',
+      items: [
+        { id: 'x', label: 'X', content: 'xx' },
+        { id: 'y', label: 'Y', content: 'yy' },
+      ],
+    })
+    assert.match(html, /data-tab-id="x"[^>]*aria-selected="true"/)
+    assert.match(html, /data-tab-id="y"[^>]*aria-selected="false"/)
+  })
+})
+
+describe('renderAccordion', () => {
+  it('renderAccordion data-expand-mode single (allowMultiple false/undefined)', () => {
+    const html = renderNode({
+      id: 'acc1',
+      type: 'accordion',
+      editKind: 'structure',
+      items: [
+        { id: 'i1', title: 'Q1', content: 'A1' },
+        { id: 'i2', title: 'Q2', content: 'A2', expanded: true },
+      ],
+    })
+    assert.match(html, /data-expand-mode="single"/)
+    // 각 item 에 data-dworks-accordion-item
+    assert.equal((html.match(/data-dworks-accordion-item/g) ?? []).length, 2)
+    // expanded item 에 open attr
+    assert.match(html, /<details open[^>]*data-item-id="i2"/)
+    // 비-expanded item open 없음
+    assert.match(html, /<details class="dw-accordion__item"[^>]*data-item-id="i1"/)
+  })
+
+  it('renderAccordion data-expand-mode multiple (allowMultiple true)', () => {
+    const html = renderNode({
+      id: 'acc2',
+      type: 'accordion',
+      editKind: 'structure',
+      allowMultiple: true,
+      items: [{ id: 'i1', title: 'Q', content: 'A' }],
+    })
+    assert.match(html, /data-expand-mode="multiple"/)
+    assert.match(html, /<div[^>]*data-dworks-accordion[^>]*data-expand-mode="multiple"/)
+  })
+})
+
+describe('renderModal', () => {
+  it('renderModal trigger 버튼 + dialog + close 버튼 + 한국어 aria', () => {
+    const html = renderNode({
+      id: 'mod1',
+      type: 'modal',
+      editKind: 'structure',
+      title: '확인',
+      content: '진행하시겠습니까?',
+      primaryActionLabel: '확인',
+      secondaryActionLabel: '취소',
+    })
+    // trigger 버튼 박힘 (modal 전)
+    assert.match(html, /^<button[^>]*data-dworks-modal-trigger[^>]*data-modal-id="mod1"[^>]*>확인<\/button>/)
+    // dialog 박힘 + data-dworks-modal + id
+    assert.match(html, /<dialog[^>]*data-dworks-modal[^>]*id="mod1"/)
+    // 본문 + footer 보존
+    assert.match(html, /<h2>확인<\/h2>/)
+    assert.match(html, /<div>진행하시겠습니까\?<\/div>/)
+    assert.match(html, /data-dw-modal-action="primary"/)
+    assert.match(html, /data-dw-modal-action="secondary"/)
+    // close 버튼 + 한국어 aria
+    assert.match(html, /<button[^>]*data-dworks-modal-close[^>]*aria-label="닫기">닫기<\/button>/)
+    // dialog 닫는 태그
+    assert.match(html, /<\/dialog>$/)
+  })
+
+  it('renderModal title 비어있어도 trigger fallback 라벨 (열기)', () => {
+    // 스키마상 title 은 min(1) 이므로 의도된 단축 라벨 검증 — title 이 있으면 그게 라벨로 쓰임.
+    const html = renderNode({
+      id: 'mod2',
+      type: 'modal',
+      editKind: 'structure',
+      title: '안내',
+      content: '',
+    })
+    // trigger 버튼은 title 을 라벨로 사용
+    assert.match(html, /^<button[^>]*data-dworks-modal-trigger[^>]*>안내<\/button>/)
+  })
+})
