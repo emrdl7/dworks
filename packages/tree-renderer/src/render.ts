@@ -50,14 +50,18 @@ function classFromTokens(tokens?: string[]): string | undefined {
   return tokens.map((t) => `t-${t.replace(/[^a-zA-Z0-9_-]/g, '-')}`).join(' ')
 }
 
-function commonAttrs(node: TreeNode): string {
+function commonAttrs(node: TreeNode, extraClasses?: string[]): string {
   // entranceAnimation은 data-attr로 노출 — export 후 라이브러리(IntersectionObserver
   // + CSS animation)가 이 attr 보고 진입 효과 처리.
+  // extraClasses — 인터랙티브 노드(modal/tabs/carousel/accordion)가 BASE_CSS 적용을 위해
+  // 박는 dw-* 컴포넌트 class. styleTokens 기반 class 와 단일 attr 로 병합 (HTML class 중복 방지).
   const anim = node.entranceAnimation
+  const tokenCls = classFromTokens(node.styleTokens)
+  const merged = [tokenCls, ...(extraClasses ?? [])].filter(Boolean).join(' ') || undefined
   return attrs([
     ['data-dw-node', node.id],
     ['data-dw-edit', node.editKind],
-    ['class', classFromTokens(node.styleTokens)],
+    ['class', merged],
     ['data-dw-entrance', anim?.type],
     ['data-dw-entrance-trigger', anim?.trigger],
     ['data-dw-entrance-duration', anim?.duration?.toString()],
@@ -184,7 +188,8 @@ function renderModal(node: ModalNode): string {
   const actionsHtml = actions.length > 0 ? `<footer>${actions.join('')}</footer>` : ''
   const closeButton = `<button type="button" class="dw-modal__close" data-dworks-modal-close aria-label="닫기">닫기</button>`
   const triggerButton = `<button type="button" class="dw-modal__trigger" data-dworks-modal-trigger${attrs([['data-modal-id', node.id]])}>${escapeHtml(triggerLabel)}</button>`
-  return `${triggerButton}<dialog${commonAttrs(node)}${open} data-dworks-modal${attrs([['id', node.id], ['data-dw-modal-size', node.size ?? 'md']])}>${titleHtml}${contentHtml}${actionsHtml}${closeButton}</dialog>`
+  // CR-02 — dialog 에 dw-modal class 부착해야 BASE_CSS(.dw-modal/.dw-modal[open]/.dw-modal::backdrop) 적용.
+  return `${triggerButton}<dialog${commonAttrs(node, ['dw-modal'])}${open} data-dworks-modal${attrs([['id', node.id], ['data-dw-modal-size', node.size ?? 'md']])}>${titleHtml}${contentHtml}${actionsHtml}${closeButton}</dialog>`
 }
 
 function renderAccordion(node: AccordionNode): string {
@@ -198,14 +203,14 @@ function renderAccordion(node: AccordionNode): string {
       return `<details${open} class="dw-accordion__item" data-dworks-accordion-item${attrs([['data-item-id', it.id]])}><summary class="dw-accordion__summary">${escapeHtml(it.title)}</summary><div class="dw-accordion__panel">${content}</div></details>`
     })
     .join('')
-  return `<div${commonAttrs(node)} class="dw-accordion" data-dworks-accordion data-expand-mode="${expandMode}" role="region" aria-roledescription="accordion">${items}</div>`
+  return `<div${commonAttrs(node, ['dw-accordion'])} data-dworks-accordion data-expand-mode="${expandMode}" role="region" aria-roledescription="accordion">${items}</div>`
 }
 
 function renderTabs(node: TabsNode): string {
   // Phase 4 EXP-02 — 모든 trigger + 모든 panel 렌더. vanilla JS 가 클릭 시 활성 전환.
   // 비활성 panel 은 hidden attr — vanilla JS 가 toggle. tabindex / aria-selected / aria-controls 박음.
   if (node.items.length === 0) {
-    return `<div${commonAttrs(node)} class="dw-tabs" data-dworks-tabs role="region" aria-roledescription="tabs"></div>`
+    return `<div${commonAttrs(node, ['dw-tabs'])} data-dworks-tabs role="region" aria-roledescription="tabs"></div>`
   }
   const activeIndex = Math.min(
     Math.max(node.activeIndex ?? 0, 0),
@@ -246,14 +251,14 @@ function renderTabs(node: TabsNode): string {
       ])}${hiddenAttr}>${content}</div>`
     })
     .join('')
-  return `<div${commonAttrs(node)} class="dw-tabs" data-dworks-tabs role="region" aria-roledescription="tabs"><div class="dw-tabs__list" role="tablist">${triggers}</div>${panels}</div>`
+  return `<div${commonAttrs(node, ['dw-tabs'])} data-dworks-tabs role="region" aria-roledescription="tabs"><div class="dw-tabs__list" role="tablist">${triggers}</div>${panels}</div>`
 }
 
 function renderCarousel(node: CarouselNode): string {
   // Phase 4 EXP-01 — Embla Carousel CDN 과 호환되는 viewport + container + slide 구조 + prev/next 버튼.
   // _모든_ items 를 렌더 (preview 가 아닌 export 본격). vanilla JS / Embla 가 transform 으로 슬라이드 이동.
   if (node.items.length === 0) {
-    return `<div${commonAttrs(node)} class="dw-carousel" data-dworks-carousel role="region" aria-roledescription="carousel"></div>`
+    return `<div${commonAttrs(node, ['dw-carousel'])} data-dworks-carousel role="region" aria-roledescription="carousel"></div>`
   }
   const slides = node.items
     .map((item, idx) => {
@@ -269,7 +274,7 @@ function renderCarousel(node: CarouselNode): string {
     .join('')
   const prevBtn = `<button type="button" class="dw-carousel__btn dw-carousel__btn--prev" data-dworks-carousel-prev aria-label="이전 슬라이드">‹</button>`
   const nextBtn = `<button type="button" class="dw-carousel__btn dw-carousel__btn--next" data-dworks-carousel-next aria-label="다음 슬라이드">›</button>`
-  return `<div${commonAttrs(node)} class="dw-carousel" data-dworks-carousel role="region" aria-label="이미지 carousel" aria-roledescription="carousel"><div class="dw-carousel__viewport"><div class="dw-carousel__container">${slides}</div></div>${prevBtn}${nextBtn}</div>`
+  return `<div${commonAttrs(node, ['dw-carousel'])} data-dworks-carousel role="region" aria-label="이미지 carousel" aria-roledescription="carousel"><div class="dw-carousel__viewport"><div class="dw-carousel__container">${slides}</div></div>${prevBtn}${nextBtn}</div>`
 }
 
 export function renderTree(tree: Tree): string {
