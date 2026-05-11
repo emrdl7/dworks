@@ -42,6 +42,10 @@ export interface ExportedClarifyTurn {
 export interface ExportedImageReference {
   colors: string[]
   aspectRatio?: 'square' | 'landscape' | 'portrait' | 'wide'
+  /** AI-05 / HI-02: 추출된 dominant 색 hex list — image-color.analyzeDominantColors 결과. */
+  dominantColors?: string[]
+  /** AI-05 / HI-02: 레이아웃 의도 — image-color.extractLayoutIntent 결과. */
+  layoutIntent?: 'centered' | 'left-aligned' | 'grid' | 'asymmetric'
 }
 
 export interface ExportedBrief {
@@ -504,9 +508,37 @@ function validateImageReference(
     }
     aspectRatio = raw.aspectRatio
   }
+  // HI-02: dominantColors 검증 — optional hex 배열 (legacy v1 호환 위해 추가 필드).
+  let dominantColors: string[] | undefined
+  if (raw.dominantColors !== undefined && raw.dominantColors !== null) {
+    if (!Array.isArray(raw.dominantColors)) return null
+    const dc: string[] = []
+    for (const item of raw.dominantColors) {
+      if (typeof item !== 'string') return null
+      const lower = item.toLowerCase()
+      if (!HEX6_RE.test(lower)) return null
+      dc.push(lower)
+    }
+    if (dc.length > 0) dominantColors = dc
+  }
+  // HI-02: layoutIntent 검증 — image-color.LayoutIntent 와 동일 union.
+  let layoutIntent: ExportedImageReference['layoutIntent']
+  if (raw.layoutIntent !== undefined && raw.layoutIntent !== null) {
+    if (
+      raw.layoutIntent !== 'centered' &&
+      raw.layoutIntent !== 'left-aligned' &&
+      raw.layoutIntent !== 'grid' &&
+      raw.layoutIntent !== 'asymmetric'
+    ) {
+      return null
+    }
+    layoutIntent = raw.layoutIntent
+  }
   return {
     colors,
     ...(aspectRatio !== undefined ? { aspectRatio } : {}),
+    ...(dominantColors !== undefined ? { dominantColors } : {}),
+    ...(layoutIntent !== undefined ? { layoutIntent } : {}),
   }
 }
 
