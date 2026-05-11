@@ -34,7 +34,7 @@
 
 ### C. 시각 보조 (3)
 
-- [ ] **VIS-01**: 캔버스 그리드 — viewport별 12-column grid overlay 토글. snap to column.
+- [x] **VIS-01**: 캔버스 그리드 — viewport별 12-column grid overlay 토글. snap to column. (2026-05-11, Plan 03-01. snap 컴퓨트 site 는 자유위치 드래그 기능 미존재로 deferred — helper export + state + 가이드 div 인프라 준비됨)
 - [ ] **VIS-02**: 줌 컨트롤 — pinch zoom + 마우스 위치 기준 줌 (현재 중심 기준). ⌘+/⌘- shortcut도.
 - [ ] **VIS-03**: 미니맵 — 좌하단 작은 미니맵으로 큰 트리 navigate.
 
