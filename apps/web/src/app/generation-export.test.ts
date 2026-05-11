@@ -244,6 +244,12 @@ describe('parseImportPayload', () => {
         colorVariety: true,
         hasImagery: false,
         hasShapeDepth: false,
+        // 신호 #9~#13 (13-신호 모델 — 기존 score 0.625 유지하기 위해 모두 false)
+        designOverrideVariety: false,
+        sectionVisualVariety: false,
+        nodeTypeVariety: false,
+        interactiveComponent: false,
+        entranceAnimationSpread: false,
       },
     }
     const payload = buildExportPayload(sourceWithRichness, new Date())
@@ -403,6 +409,12 @@ describe('generation export batch', () => {
         colorVariety: true,
         hasImagery: false,
         hasShapeDepth: false,
+        // 신호 #9~#13 (테스트는 summary score 만 검증 — 13신호 모델로 형 보존)
+        designOverrideVariety: false,
+        sectionVisualVariety: false,
+        nodeTypeVariety: false,
+        interactiveComponent: false,
+        entranceAnimationSpread: false,
       },
     }
     const sourceLow = {
@@ -417,6 +429,11 @@ describe('generation export batch', () => {
         colorVariety: false,
         hasImagery: false,
         hasShapeDepth: false,
+        designOverrideVariety: false,
+        sectionVisualVariety: false,
+        nodeTypeVariety: false,
+        interactiveComponent: false,
+        entranceAnimationSpread: false,
       },
     }
     const out = buildExportBatchPayload(
@@ -658,6 +675,12 @@ const richSource: ExportableGeneration = {
     colorVariety: true,
     hasImagery: true,
     hasShapeDepth: true,
+    // 신호 #9~#13 — fixture 시점 점수 보존 (round-trip 만 검증)
+    designOverrideVariety: true,
+    sectionVisualVariety: true,
+    nodeTypeVariety: true,
+    interactiveComponent: false,
+    entranceAnimationSpread: false,
   },
 }
 

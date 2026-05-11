@@ -352,18 +352,15 @@ function validateRichness(
       return { ok: false, reason: `richness.${key}가 boolean이 아닙니다.` }
     }
   }
+  // RICHNESS_SIGNAL_KEYS 가 13 신호 모두를 포함하므로 동적 구성.
+  const signals = Object.fromEntries(
+    RICHNESS_SIGNAL_KEYS.map((key) => [key, raw[key] as boolean]),
+  ) as Omit<RichnessReport, 'score'>
   return {
     ok: true,
     value: {
       score: raw.score,
-      hasPageLandmarks: raw.hasPageLandmarks as boolean,
-      hasMainMultiSection: raw.hasMainMultiSection as boolean,
-      hasDisplayHeadingOne: raw.hasDisplayHeadingOne as boolean,
-      hasCallToAction: raw.hasCallToAction as boolean,
-      fontSizeVariety: raw.fontSizeVariety as boolean,
-      colorVariety: raw.colorVariety as boolean,
-      hasImagery: raw.hasImagery as boolean,
-      hasShapeDepth: raw.hasShapeDepth as boolean,
+      ...signals,
     },
   }
 }

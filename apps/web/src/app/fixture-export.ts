@@ -230,15 +230,12 @@ function validateExportedRichness(raw: unknown): RichnessReport | null {
   for (const key of RICHNESS_SIGNAL_KEYS) {
     if (typeof raw[key] !== 'boolean') return null
   }
+  // RICHNESS_SIGNAL_KEYS 가 13 신호 모두를 포함하므로 동적 구성.
+  const signals = Object.fromEntries(
+    RICHNESS_SIGNAL_KEYS.map((key) => [key, raw[key] as boolean]),
+  ) as Omit<RichnessReport, 'score'>
   return {
     score: raw.score,
-    hasPageLandmarks: raw.hasPageLandmarks as boolean,
-    hasMainMultiSection: raw.hasMainMultiSection as boolean,
-    hasDisplayHeadingOne: raw.hasDisplayHeadingOne as boolean,
-    hasCallToAction: raw.hasCallToAction as boolean,
-    fontSizeVariety: raw.fontSizeVariety as boolean,
-    colorVariety: raw.colorVariety as boolean,
-    hasImagery: raw.hasImagery as boolean,
-    hasShapeDepth: raw.hasShapeDepth as boolean,
+    ...signals,
   }
 }
