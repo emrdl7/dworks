@@ -49,3 +49,35 @@ export const nodeTypeIcons: Record<TreeNode['type'], LucideIcon> = {
   list: List,
   form: FormInput,
 }
+
+// 노드 타입 변환 매트릭스 — UX-03 호환 변환 source of truth.
+// UI-SPEC.md line 137-148 + CONTEXT.md D-06 잠금.
+export const nodeTypeConversionMatrix: Record<TreeNode['type'], readonly TreeNode['type'][]> = {
+  text: ['button'],
+  button: ['text'],
+  section: ['hero', 'card'],
+  hero: ['section', 'card'],
+  card: ['section', 'hero'],
+  list: ['accordion'],
+  accordion: ['list'],
+  image: ['carousel'],
+  carousel: ['image'],
+  form: [],
+  tabs: [],
+  modal: [],
+}
+
+// 비호환 사유 — 컨텍스트 메뉴 tooltip + ⌘K disabledReason 에서 사용.
+export const nodeTypeConversionDisabledReason: Partial<Record<TreeNode['type'], string>> = {
+  form: '입력 폼은 다른 노드로 변환할 수 없습니다',
+  modal: '모달은 컨테이너 전용입니다',
+  tabs: '탭은 다른 타입으로 변환할 수 없습니다',
+}
+
+// 호환 검사 헬퍼 — 컨텍스트 메뉴/명령 팔레트/인스펙터 dropdown 모두 호출 (DRY).
+export function canConvertNodeType(
+  fromType: TreeNode['type'],
+  toType: TreeNode['type'],
+): boolean {
+  return nodeTypeConversionMatrix[fromType]?.includes(toType) ?? false
+}
