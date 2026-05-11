@@ -46,6 +46,17 @@ export function PaletteManagerDialog({
     value: string
   } | null>(null)
 
+  // WR-02: dialog 가 `if (!open) return null` 패턴으로 conditional render 되지만
+  // 컴포넌트 자체는 부모 트리에 마운트되어 useState 값이 살아남는다. 닫힐 때 draft 상태를
+  // 초기화 — 다음 open 시 깨끗한 입력 화면을 보장.
+  useEffect(() => {
+    if (!open) {
+      setDraftName('새 팔레트')
+      setDraftColors(DEFAULT_COLORS)
+      setEditingName(null)
+    }
+  }, [open])
+
   if (!open) return null
 
   function handleAdd() {
