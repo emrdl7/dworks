@@ -200,6 +200,7 @@ import { CommandPalette, type CommandPaletteItem } from './command-palette'
 import { SpacingOverlay } from './spacing-overlay'
 import { ToastProvider } from './toast-context'
 import { ToastHost } from './toast-host'
+import { useQuickAddShortcuts } from './use-quick-add'
 import {
   DEFAULT_ACCENT_PICKER_COLOR,
   DEFAULT_COLOR_PICKER_COLOR,
@@ -2854,6 +2855,23 @@ export default function HomePage() {
     }
     setCanvasZoom(newZoom)
   }
+
+  // UX-06 quick-add 단축키 — T/B/I/R/C/H/L/F 등 단일 키로 노드 추가.
+  // 모달/팔레트/도움말 열림 중이면 비활성 (D-17). 기존 global keydown 과 modifier 가 달라 충돌 없음.
+  useQuickAddShortcuts({
+    enabled:
+      !commandPaletteOpen &&
+      !briefDrawerOpen &&
+      !inspectorDrawerOpen &&
+      !shortcutHelpOpen,
+    tree,
+    selectedNodeId,
+    rootId: tree.root.id,
+    onAddLeafChild: handleAddLeafChild,
+    onAddLeafSibling: handleAddLeafSibling,
+    onAddContainerChild: handleAddContainerChild,
+    onAddContainerSibling: handleAddContainerSibling,
+  })
 
   // 글로벌 키보드 shortcut — input/textarea/contenteditable에서는 비활성
   useEffect(() => {
