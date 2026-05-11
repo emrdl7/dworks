@@ -128,6 +128,56 @@ export function mergeReferenceAspect(
 }
 
 /**
+ * 다중 참고 이미지의 dominantColors 를 합산 — union (앞 ref 의 색 순서 우선, 중복 제거).
+ * D-16 / HI-01: 다중 ref 경로에서도 <reference_image_analysis> 블록 emit 시 사용.
+ */
+export function aggregateDominantColors(
+  refs: ReadonlyArray<{ dominantColors?: ReadonlyArray<string> }>,
+  maxColors = 8,
+): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const ref of refs) {
+    if (ref.dominantColors === undefined) continue
+    for (const hex of ref.dominantColors) {
+      if (typeof hex !== 'string') continue
+      const lower = hex.toLowerCase()
+      if (seen.has(lower)) continue
+      seen.add(lower)
+      out.push(lower)
+      if (out.length >= maxColors) return out
+    }
+  }
+  return out
+}
+
+/**
+ * 다중 참고 이미지의 layoutIntent 를 통합 추론 — 최빈값, 동수면 첫 ref 값.
+ * D-16 / HI-01: 다중 ref 경로에서도 <reference_image_analysis> 블록 emit 시 사용.
+ */
+export function aggregateLayoutIntent(
+  refs: ReadonlyArray<{ layoutIntent?: LayoutIntent }>,
+): LayoutIntent | undefined {
+  const counts = new Map<LayoutIntent, number>()
+  let firstIntent: LayoutIntent | undefined
+  for (const ref of refs) {
+    if (ref.layoutIntent === undefined) continue
+    if (firstIntent === undefined) firstIntent = ref.layoutIntent
+    counts.set(ref.layoutIntent, (counts.get(ref.layoutIntent) ?? 0) + 1)
+  }
+  if (counts.size === 0) return undefined
+  let best = firstIntent
+  let bestCount = 0
+  for (const [intent, count] of counts) {
+    if (count > bestCount) {
+      best = intent
+      bestCount = count
+    }
+  }
+  return best
+}
+
+/**
  * Brief 객체를 LLM user prompt 문자열로 직렬화.
  */
 export function formatBriefAsUserPrompt(brief: DesignBrief): string {
@@ -199,6 +249,21 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
     lines.push(
       '  (여러 참고 이미지의 색감/비율을 종합한 시드. 그대로 베끼지 말고 디자인 팔레트의 영감 자료로 활용. raw hex 강제 X)',
     )
+    // <reference_image_analysis> 블록 — D-16 (HI-01 fix).
+    // 다중 ref 의 dominantColors 는 union (중복 제거, 앞 ref 순서 우선) 으로 합산,
+    // layoutIntent 는 최빈값 (동수면 첫 ref 의 값) 으로 채택. 단일 ref 와 동일하게 emit.
+    const aggregatedDominant = aggregateDominantColors(refs)
+    const aggregatedLayout = aggregateLayoutIntent(refs)
+    if (aggregatedDominant.length > 0 || aggregatedLayout !== undefined) {
+      lines.push('', `<reference_image_analysis>`)
+      if (aggregatedDominant.length > 0) {
+        lines.push(`dominantColors: [${aggregatedDominant.join(', ')}]`)
+      }
+      if (aggregatedLayout !== undefined) {
+        lines.push(`layoutIntent: '${aggregatedLayout}'`)
+      }
+      lines.push(`</reference_image_analysis>`)
+    }
   }
   if (brief.variantSeed !== undefined && brief.variantSeed.index >= 2) {
     lines.push('', `### 변형 시드 — ${brief.variantSeed.index}번째 시도`)
