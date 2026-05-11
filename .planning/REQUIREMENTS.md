@@ -14,7 +14,8 @@
 - [ ] **AI-02**: prompt에 _도메인별 인터랙티브 컴포넌트 매트릭스_ 명시 (e-commerce → carousel + accordion, SaaS → tabs + accordion, 포트폴리오 → carousel, 가입 페이지 → modal). 후처리 검증으로 _최소 1개_ 강제.
 - [ ] **AI-03**: 후처리 — entranceAnimation 가진 노드 < 6개일 때 자동 박기 (hero.title slide-up, features cards staggered slide-up). 사용자 명시 없는 한 트리거 'scroll', 처음 hero는 'load'.
 - [x] **AI-04**: 톤 매핑 11종을 _도메인_ × _톤_ 매트릭스로 확장 (예: dark+luxury+ecommerce, playful+SaaS, minimal+portfolio 등). prompt에 매트릭스 표 추가 + fixture로 시연.
-- [ ] **AI-05**: 멀티모달 참조 이미지 활용 — 이미지에서 dominant color + 레이아웃 패턴 추출해 prompt에 _hex 팔레트_ + _layout 의도_로 전달. 기존 image-color 모듈 강화.
+- [x] **AI-05
+**: 멀티모달 참조 이미지 활용 — 이미지에서 dominant color + 레이아웃 패턴 추출해 prompt에 _hex 팔레트_ + _layout 의도_로 전달. 기존 image-color 모듈 강화.
 
 ### B. 인스펙터/캔버스 UX (사용자 핵심 요구)
 
