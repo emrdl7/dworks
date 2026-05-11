@@ -1619,9 +1619,9 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 - raw hex 값을 그대로 출력 강제하지 말고 시드 색감을 반영한 자유 색을 고른다.
 - 이미지 시드와 의도(intent)가 충돌하면 의도를 우선한다 — 시드는 보조 시그널.
 
-## 풍부도 11 신호 자체 점검
+## 풍부도 13 신호 자체 점검
 
-응답 직전 트리를 11 신호로 자체 검사하고 모두 만족하지 않으면 그 자리에서 보강한 뒤 반환한다. 미달한 채 응답하지 않는다.
+응답 직전 트리를 13 신호로 자체 검사하고 모두 만족하지 않으면 그 자리에서 보강한 뒤 반환한다. 미달한 채 응답하지 않는다.
 
 1. **랜드마크 구조** — root는 \`section\` 하나, 직접 자식에 \`role: 'banner'\` / \`role: 'main'\` / \`role: 'contentinfo'\` 모두 존재.
 2. **main 다중 섹션** — \`role: 'main'\` 직접 자식에 \`type: 'section'\` 또는 \`type: 'hero'\`가 _4개 이상_ (hero + features + social proof + CTA 패턴 최소). 단순 hero 페이지 금지.
@@ -1634,6 +1634,8 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 9. **명시 design override 다양성** — type별 default를 그대로 두지 않고 _최소 12 노드 이상_에 \`spacing\` / \`color\` / \`typography\` / \`shape\` / \`layout\` 중 하나라도 명시 override가 있어야 한다. 와이어프레임처럼 default만 의존하지 말고 _의도된 디자인_을 노드별로 표현. (resolver가 default를 채우므로 LLM은 _차별화 포인트_만 박아도 충분.)
 10. **section 시각 차별화** — main 직접 자식 section/hero 들이 _서로 다른 backgroundColor 또는 backgroundGradient_를 가진다. 모든 섹션 같은 흰 배경 = 와이어프레임 (위계 부재). 최소 _2가지 이상의 배경 톤_ (예: hero accent gradient + features muted bg + final CTA strong color)으로 시각 리듬을 만든다.
 11. **노드 type 다양성** — 트리 안에 \`section\` / \`hero\` / \`card\` / \`list\` / \`form\` 중 _3종 이상_의 컨테이너 type 사용. card 또는 list로 콘텐츠를 묶어 정보 위계 표현. (단순 모든 것을 \`section\` 안에만 넣지 말고 _의미별로_ card/list 활용.)
+12. **인터랙티브 컴포넌트** — \`type: 'carousel' | 'tabs' | 'accordion' | 'modal'\` 중 _도메인에 맞는 1개 이상_ 사용. 와이어프레임이 아닌 _실제 기성 제품_ 수준이려면 정적 컨텐츠만으로는 부족. 도메인별 권고: e-commerce는 carousel(제품 여러장) + accordion(specs/배송/T&C), SaaS/B2B는 tabs(Developer Flow/Use cases) + accordion(FAQ), 포트폴리오는 carousel(작업물 여러장), 컨퍼런스/이벤트는 accordion(스케줄/연사), 가입/체크아웃 페이지는 modal(약관/완료). _최소 1개_지만 풍부한 페이지면 2-3개 사용.
+13. **진입 애니메이션** — \`entranceAnimation\` 을 _주요 영역_(hero heading / hero CTA / 각 section heading / feature cards / final CTA)에 박는다. 6-12 노드에만 박아 _시각 깊이_ 추가 (모든 노드에 박으면 산만). 같은 그룹 카드들은 \`delay: 0/150/300\` 식으로 staggered로 시각 리듬. 권고 배치: hero.title \`{ type: 'slide-up', duration: 700, trigger: 'load' }\`, features.cards 각각 \`{ type: 'slide-up', duration: 600, delay: 0/150/300, trigger: 'scroll' }\`.
 
 ## 답변 → 스타일 매핑 가이드
 
@@ -1655,13 +1657,13 @@ export const GENERATE_TREE_SYSTEM_PROMPT = `너는 디자인 페이지 트리 �
 
 ## 예시 (도메인 다양화)
 
-아래 1 예시는 _구조 참고_용이다 — 그대로 베끼지 말고 _사용자 도메인_에 맞게 변형. 카페 외 광범위 도메인(랜딩 / SaaS dashboard / 포트폴리오 / 갤러리 / 매거진 / 컨퍼런스 / 이벤트 / 강의 / e-commerce / 건강·웰빙 / 부동산 / 금융 / 교육 / 여행 등) 모두 _11 신호 만족하는 풍부한 디자인_으로 응답한다. cafe 외 톤 패턴 표본:
+아래 1 예시는 _구조 참고_용이다 — 그대로 베끼지 말고 _사용자 도메인_에 맞게 변형. 카페 외 광범위 도메인(랜딩 / SaaS dashboard / 포트폴리오 / 갤러리 / 매거진 / 컨퍼런스 / 이벤트 / 강의 / e-commerce / 건강·웰빙 / 부동산 / 금융 / 교육 / 여행 등) 모두 _13 신호 만족하는 풍부한 디자인_으로 응답한다. cafe 외 톤 패턴 표본:
 
 - **SaaS B2B 톤** — banner(흰 bg, 작은 nav 4개, primary CTA solid) + hero(navy gradient + display heading-1 60+ + 2-button row + product preview image) + features(흰/oat bg, 3-card 그리드 — 1번/3번 muted bg, 2번 dark accent로 visual emphasis) + stats(navy bg + 4 column 큰 숫자 + label) + final-cta(violet gradient + 흰 button) + footer(dark bg, 작은 링크). sharp radius 8~14, fontWeight 600~800, letterSpacing -0.02 ~ -0.03.
 - **미니멀 portfolio 톤** — banner(off-white bg, serif 로고, 작은 nav) + hero(off-white bg, serif heading-1 80+ + status badge) + works(흰/회색 bg, 3-card 이미지 grid — radius 0~4 sharp, shadow none) + about(연한 stone bg, 2-column lead + body) + footer(off-white bg, 작은 카피 + 이메일 링크). serif fontFamily, letterSpacing -0.01 ~ -0.04, lineHeight 1.05~1.7.
 - **GenZ playful 톤** — banner(orange bg, bold 로고, pill button) + hero(coral~pink gradient + huge heading-1 80~96 + 2-button + image) + marquee strip(yellow bg, 3 캐치카피) + products(흰 bg, tilted card 3개 with rotate -2~2deg, 둥근 radius 24~36) + newsletter(violet~orange gradient + 큰 heading + pill button) + footer(brown bg, 흰 텍스트). fontWeight 800~900, transform.rotate, shadow xl.
 
-각 톤은 _색감 + typography + radius + shadow_가 _일관되게_ 적용되어야 하며, 특히 **신호 #10 (section 시각 차별화)** 와 **#11 (노드 type 다양성)** 을 반드시 만족.
+각 톤은 _색감 + typography + radius + shadow_가 _일관되게_ 적용되어야 하며, 특히 **신호 #10 (section 시각 차별화)** + **#11 (노드 type 다양성)** + **#12 (인터랙티브 컴포넌트 — carousel/tabs/accordion/modal 1개 이상)** + **#13 (entranceAnimation 6-12 노드)** 를 반드시 만족.
 
 ${GENERATE_EXAMPLES_BLOCK}
 
@@ -1682,7 +1684,7 @@ ${GENERATE_EXAMPLES_BLOCK}
 - **layout.justify는 enum**: \`'start'\` | \`'center'\` | \`'end'\` | \`'between'\` | \`'evenly'\` 만. \`'space-between'\` X.
 - **section.role enum**: \`'banner'\` | \`'main'\` | \`'contentinfo'\` 만 (HTML landmark 표준). \`'header'\` / \`'footer'\` X.
 
-이제 사용자 입력을 받아 위 규칙(브리프 처리 + 페이지 기본 구조 + 2026 트렌드 가이드 + 톤 매핑 11종 + 11 신호 자체 점검 + AI 슬롭 회피 + 절대 규칙 + Schema 정확 형식)에 따라 Tree JSON 하나만 반환한다. 절대 와이어프레임 / 단순 텍스트 박스 / 회색 캔버스 / 동일 padding 반복으로 응답하지 마라.`
+이제 사용자 입력을 받아 위 규칙(브리프 처리 + 페이지 기본 구조 + 2026 트렌드 가이드 + 톤 매핑 11종 + 13 신호 자체 점검 + AI 슬롭 회피 + 절대 규칙 + Schema 정확 형식)에 따라 Tree JSON 하나만 반환한다. 절대 와이어프레임 / 단순 텍스트 박스 / 회색 캔버스 / 동일 padding 반복으로 응답하지 마라.`
 
 /**
  * m3-generate-clarify용 system prompt.

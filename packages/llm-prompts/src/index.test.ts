@@ -428,9 +428,9 @@ describe('llm-prompts examples', () => {
     )
   })
 
-  it('GENERATE_TREE_SYSTEM_PROMPT includes 풍부도 11 신호 자체 점검 체크리스트', () => {
+  it('GENERATE_TREE_SYSTEM_PROMPT includes 풍부도 13 신호 자체 점검 체크리스트', () => {
     assert.ok(
-      GENERATE_TREE_SYSTEM_PROMPT.includes('## 풍부도 11 신호 자체 점검'),
+      GENERATE_TREE_SYSTEM_PROMPT.includes('## 풍부도 13 신호 자체 점검'),
       '풍부도 자체 점검 헤더 누락',
     )
     const checkpoints = [
@@ -445,6 +445,8 @@ describe('llm-prompts examples', () => {
       '명시 design override 다양성',
       'section 시각 차별화',
       '노드 type 다양성',
+      '인터랙티브 컴포넌트',
+      '진입 애니메이션',
     ]
     for (const point of checkpoints) {
       assert.ok(
