@@ -55,6 +55,8 @@ import {
   type CarouselNode,
   type TabsNode,
   type TabItem,
+  type AccordionNode,
+  type AccordionItem,
   type ImageNode,
   type ImagePresentation,
   type LayoutAlign,
@@ -96,6 +98,7 @@ import {
   type LeafNodeType,
   moveNode,
   type NodeMetaPatch,
+  updateAccordion,
   updateCarousel,
   updateColor,
   updateButtonLabel,
@@ -553,6 +556,11 @@ type CarouselEditPatch = Pick<
 type TabsEditPatch = Pick<
   Partial<TabsNode>,
   'items' | 'activeIndex' | 'variant'
+>
+
+type AccordionEditPatch = Pick<
+  Partial<AccordionNode>,
+  'items' | 'allowMultiple' | 'variant'
 >
 
 export default function HomePage() {
@@ -2452,6 +2460,14 @@ export default function HomePage() {
     options?: CommitTreeEditOptions,
   ) {
     commitTreeEdit(updateTabs(tree, node.id, patch), undefined, options)
+  }
+
+  function handleAccordionChange(
+    node: AccordionNode,
+    patch: AccordionEditPatch,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateAccordion(tree, node.id, patch), undefined, options)
   }
 
   function handleMoveNode(nodeId: string, direction: 'up' | 'down') {
@@ -4940,6 +4956,7 @@ export default function HomePage() {
             onImageChange={handleImageChange}
             onCarouselChange={handleCarouselChange}
             onTabsChange={handleTabsChange}
+            onAccordionChange={handleAccordionChange}
             colorPreset={colorPreset}
           />
         </aside>
@@ -6228,6 +6245,13 @@ function CanvasNode({
           <TabsPreview node={node} style={boxStyle} />
         </SelectableNode>
       )
+
+    case 'accordion':
+      return (
+        <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          <AccordionPreview node={node} style={boxStyle} />
+        </SelectableNode>
+      )
   }
 }
 
@@ -6941,6 +6965,71 @@ function TabsPreview({
   )
 }
 
+// AccordionPreview — 캔버스 정적 미리보기.
+//   각 item을 collapsible row로. expanded=true면 펼친 상태로 content 노출.
+//   variant: 'bordered'(기본 - 각 item에 border), 'minimal'(border 없음 + 가는 구분선).
+function AccordionPreview({
+  node,
+  style,
+}: {
+  node: AccordionNode
+  style?: CSSProperties
+}) {
+  const items = node.items
+  const variant = node.variant ?? 'bordered'
+
+  return (
+    <div style={style} className="w-full min-w-0">
+      <ul
+        role="region"
+        aria-label="아코디언"
+        className={`divide-y divide-[var(--dw-ui-border)] ${
+          variant === 'bordered'
+            ? 'rounded-md border border-[var(--dw-ui-border)] divide-y-0'
+            : ''
+        }`}
+      >
+        {items.map((it, idx) => {
+          const expanded = it.expanded === true
+          return (
+            <li
+              key={it.id}
+              className={`${
+                variant === 'bordered'
+                  ? `${idx > 0 ? 'border-t border-[var(--dw-ui-border)]' : ''} px-4 py-3`
+                  : 'px-1 py-3'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex-1 text-[length:var(--dw-text-label)] font-semibold text-[var(--dw-ui-text-primary)]">
+                  {it.title}
+                </span>
+                <span
+                  aria-hidden="true"
+                  className={`text-[var(--dw-ui-text-muted)] transition-transform duration-[var(--dw-motion-base)] ${
+                    expanded ? 'rotate-180' : ''
+                  }`}
+                >
+                  ⌄
+                </span>
+              </div>
+              {expanded ? (
+                <div className="mt-2 whitespace-pre-wrap text-[length:var(--dw-text-body)] leading-relaxed text-[var(--dw-ui-text-body)]">
+                  {it.content || (
+                    <span className="text-[var(--dw-ui-text-faint)]">
+                      컨텐츠가 비어있습니다
+                    </span>
+                  )}
+                </div>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 const IMAGE_DROP_SHADOW_DEFAULT: ImageDropShadow = {
   offsetX: 0,
   offsetY: 4,
@@ -7048,6 +7137,11 @@ interface NodeInspectorProps {
     patch: TabsEditPatch,
     options?: CommitTreeEditOptions,
   ) => void
+  onAccordionChange: (
+    node: AccordionNode,
+    patch: AccordionEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
 }
 
 function NodeInspector({
@@ -7079,6 +7173,7 @@ function NodeInspector({
   onImageChange,
   onCarouselChange,
   onTabsChange,
+  onAccordionChange,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
   const [nodeIdCopied, setNodeIdCopied] = useState(false)
@@ -7642,6 +7737,14 @@ function NodeInspector({
                 node={node}
                 disclosure={bindSection('Tabs')}
                 onTabsChange={onTabsChange}
+              />
+            ) : null}
+
+            {node.type === 'accordion' ? (
+              <AccordionControls
+                node={node}
+                disclosure={bindSection('Accordion')}
+                onAccordionChange={onAccordionChange}
               />
             ) : null}
 
@@ -11852,6 +11955,217 @@ function TabsControls({
         <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
           캔버스는 _정적_ 미리보기 (활성 탭만 표시) — 실제 탭 전환은 export 결과에서
           라이브러리(Radix Tabs 등)가 처리합니다.
+        </p>
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface AccordionControlsProps {
+  disclosure?: InspectorDisclosureControl
+  node: AccordionNode
+  onAccordionChange: (
+    node: AccordionNode,
+    patch: AccordionEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+// AccordionControls — variant select + allowMultiple 토글 + items 편집
+// (각 item title/content + expanded toggle + 추가/삭제/순서).
+function AccordionControls({
+  disclosure,
+  node,
+  onAccordionChange,
+}: AccordionControlsProps) {
+  const items = node.items
+  const variant = node.variant ?? 'bordered'
+  const allowMultiple = node.allowMultiple === true
+
+  function patchItems(nextItems: AccordionNode['items']) {
+    onAccordionChange(node, { items: nextItems })
+  }
+
+  function updateItem(idx: number, patch: Partial<AccordionItem>) {
+    const next = items.map((it, i) => (i === idx ? { ...it, ...patch } : it))
+    patchItems(next)
+  }
+
+  function moveItem(idx: number, dir: -1 | 1) {
+    const target = idx + dir
+    if (target < 0 || target >= items.length) return
+    const next = [...items]
+    const a = next[idx]
+    const b = next[target]
+    if (!a || !b) return
+    next[idx] = b
+    next[target] = a
+    patchItems(next)
+  }
+
+  function removeItem(idx: number) {
+    if (items.length <= 1) return
+    patchItems(items.filter((_, i) => i !== idx))
+  }
+
+  function addItem() {
+    const newId = `${node.id}.item${items.length + 1}-${Math.random().toString(36).slice(2, 6)}`
+    patchItems([
+      ...items,
+      { id: newId, title: `항목 ${items.length + 1}`, content: '' },
+    ])
+  }
+
+  return (
+    <InspectorDisclosure
+      title="Accordion"
+      description={`${items.length}개 항목 — 편집/추가/순서 + 펼침 + variant`}
+      defaultOpen
+      {...disclosure}
+    >
+      <div className="mt-3 space-y-4">
+        {/* variant + allowMultiple */}
+        <div className="space-y-2">
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            스타일
+          </span>
+          <div className="grid grid-cols-2 gap-1">
+            {(['bordered', 'minimal'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={variant === v}
+                onClick={() =>
+                  onAccordionChange(node, {
+                    variant: v === 'bordered' ? undefined : v,
+                  })
+                }
+                className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                  variant === v
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                }`}
+              >
+                {v === 'bordered' ? '테두리' : '미니멀'}
+              </button>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 text-xs text-[var(--dw-ui-text-body)]">
+            <input
+              type="checkbox"
+              className="accent-[var(--dw-ui-accent)]"
+              checked={allowMultiple}
+              onChange={(e) =>
+                onAccordionChange(node, {
+                  allowMultiple: e.target.checked ? true : undefined,
+                })
+              }
+            />
+            여러 항목 동시 펼치기 허용 (export 시점)
+          </label>
+        </div>
+
+        {/* items 편집 */}
+        <div>
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            항목 ({items.length}개, 최소 1개)
+          </span>
+          <ul className="mt-2 space-y-2">
+            {items.map((it, idx) => {
+              const expanded = it.expanded === true
+              return (
+                <li
+                  key={it.id}
+                  className={`rounded-md border px-2.5 py-2 ${
+                    expanded
+                      ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)]/30'
+                      : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex h-6 min-w-6 items-center justify-center rounded bg-[var(--dw-ui-elevated)] px-1.5 text-[11px] font-mono tabular-nums text-[var(--dw-ui-text-muted)]">
+                      {idx + 1}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="위로"
+                      title="위로"
+                      disabled={idx === 0}
+                      onClick={() => moveItem(idx, -1)}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="아래로"
+                      title="아래로"
+                      disabled={idx === items.length - 1}
+                      onClick={() => moveItem(idx, 1)}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateItem(idx, {
+                          expanded: expanded ? undefined : true,
+                        })
+                      }
+                      className={`ml-auto inline-flex h-6 items-center rounded px-2 text-[11px] ${
+                        expanded
+                          ? 'bg-[var(--dw-ui-accent)] text-[var(--dw-ui-accent-text)]'
+                          : 'text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)]'
+                      }`}
+                    >
+                      {expanded ? '펼침' : '펼치기'}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="삭제"
+                      title={items.length === 1 ? '최소 1개 유지' : '삭제'}
+                      disabled={items.length === 1}
+                      onClick={() => removeItem(idx)}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-warn-bg)] hover:text-[var(--dw-ui-warn-text)] disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="mt-2 space-y-1.5">
+                    <input
+                      type="text"
+                      placeholder="제목"
+                      aria-label={`항목 ${idx + 1} 제목`}
+                      className="block h-8 w-full rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-bg)] px-2 text-[11px] outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+                      value={it.title}
+                      onChange={(e) => updateItem(idx, { title: e.target.value })}
+                    />
+                    <textarea
+                      placeholder="컨텐츠 (markdown 가능)"
+                      aria-label={`항목 ${idx + 1} 컨텐츠`}
+                      rows={3}
+                      className="block w-full rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-bg)] px-2 py-1.5 text-[11px] leading-relaxed outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+                      value={it.content}
+                      onChange={(e) => updateItem(idx, { content: e.target.value })}
+                    />
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+          <button
+            type="button"
+            onClick={addItem}
+            className="mt-2 flex h-8 w-full items-center justify-center rounded border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[11px] text-[var(--dw-ui-text-muted)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] hover:border-[var(--dw-ui-accent)] hover:bg-[var(--dw-ui-accent-soft)]/40 hover:text-[var(--dw-ui-accent-text)]"
+          >
+            + 항목 추가
+          </button>
+        </div>
+
+        <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
+          캔버스는 _정적_ 미리보기 (펼친 항목만 컨텐츠 표시) — 실제 펼침/접힘은
+          export 결과에서 라이브러리(Radix Accordion 등)가 처리합니다.
         </p>
       </div>
     </InspectorDisclosure>

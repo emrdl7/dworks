@@ -388,6 +388,41 @@
             ]
           },
           {
+            "id": "faq",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 96, "paddingLeft": 56, "paddingRight": 56, "gap": 40 },
+            "color": { "backgroundColor": "#f8fafc" },
+            "children": [
+              {
+                "id": "faq.head",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column", "align": "center" },
+                "spacing": { "gap": 12 },
+                "children": [
+                  { "id": "faq.kicker", "type": "text", "editKind": "text", "emphasis": "caption", "content": "FAQ", "typography": { "fontSize": 13, "fontWeight": "700", "letterSpacing": 0.08, "textAlign": "center" }, "color": { "textColor": "#0ea5e9" } },
+                  { "id": "faq.title", "type": "text", "editKind": "text", "emphasis": "heading-2", "content": "자주 묻는 질문", "typography": { "fontSize": 32, "fontWeight": "700", "lineHeight": 1.2, "textAlign": "center" }, "color": { "textColor": "#0f172a" } }
+                ]
+              },
+              {
+                "id": "faq.list",
+                "type": "accordion",
+                "editKind": "structure",
+                "variant": "bordered",
+                "items": [
+                  { "id": "faq.list.1", "title": "Stratum은 어떤 데이터를 수집하나요?", "content": "사용자가 명시 호출한 이벤트만 수집합니다. SDK는 백그라운드에서 쿠키나 PII를 자동 수집하지 않습니다.", "expanded": true },
+                  { "id": "faq.list.2", "title": "무료 한도를 초과하면 어떻게 되나요?", "content": "이번 달 50K 이벤트를 넘으면 다음 달 1일까지 새 이벤트는 큐에 쌓이고 알림으로 알려드립니다. 자동으로 유료 전환되지 않습니다." },
+                  { "id": "faq.list.3", "title": "온프레미스 / VPC 배포가 가능한가요?", "content": "Enterprise 플랜에서 K8s helm chart를 통한 self-host를 지원합니다. SOC2 / ISO 27001 인증된 환경에 배포할 수 있습니다." },
+                  { "id": "faq.list.4", "title": "기존 분석 도구와 동시 사용 가능한가요?", "content": "네 — Stratum은 dual-tracking을 가정해 설계됐습니다. GA4 / Mixpanel / Amplitude와 같은 키로 같이 보내며, schema 호환성 유지." }
+                ],
+                "color": { "backgroundColor": "#ffffff" },
+                "shape": { "radius": 12 }
+              }
+            ]
+          },
+          {
             "id": "final-cta",
             "type": "section",
             "editKind": "structure",

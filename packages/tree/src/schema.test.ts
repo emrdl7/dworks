@@ -28,11 +28,28 @@ import {
 } from './schema.js'
 
 describe('tree schema', () => {
-  it('exposes 10 node types — adds carousel + tabs to base 8', () => {
-    assert.equal(TREE_NODE_TYPES.length, 10)
+  it('exposes 11 node types — adds carousel + tabs + accordion to base 8', () => {
+    assert.equal(TREE_NODE_TYPES.length, 11)
     assert.ok(TREE_NODE_TYPES.includes('image'))
     assert.ok(TREE_NODE_TYPES.includes('carousel'))
     assert.ok(TREE_NODE_TYPES.includes('tabs'))
+    assert.ok(TREE_NODE_TYPES.includes('accordion'))
+  })
+
+  it('parses a minimal accordion node (1 item)', () => {
+    const node = {
+      id: 'a1',
+      type: 'accordion',
+      editKind: 'structure',
+      items: [{ id: 'a1.0', title: '질문', content: '답', expanded: true }],
+      variant: 'minimal',
+    }
+    const parsed = treeNodeSchema.parse(node)
+    assert.equal(parsed.type, 'accordion')
+    if (parsed.type === 'accordion') {
+      assert.equal(parsed.items[0]?.expanded, true)
+      assert.equal(parsed.variant, 'minimal')
+    }
   })
 
   it('parses a minimal carousel node (1 item)', () => {

@@ -7,6 +7,7 @@
 // - 인라인 편집 마커 외 인터랙션 hooks
 
 import type {
+  AccordionNode,
   ButtonNode,
   CardNode,
   CarouselNode,
@@ -140,6 +141,8 @@ export function renderNode(node: TreeNode): string {
       return renderCarousel(node)
     case 'tabs':
       return renderTabs(node)
+    case 'accordion':
+      return renderAccordion(node)
     case 'section':
       return renderSection(node)
     case 'hero':
@@ -151,6 +154,19 @@ export function renderNode(node: TreeNode): string {
     case 'form':
       return renderForm(node)
   }
+}
+
+function renderAccordion(node: AccordionNode): string {
+  // 정적 export — 각 item을 details/summary로 렌더 (네이티브 disclosure).
+  // expanded=true면 open 속성 박음. 실제 single/multiple 동작은 export 후 라이브러리 wrap.
+  const items = node.items
+    .map((it) => {
+      const open = it.expanded === true ? ' open' : ''
+      const content = escapeHtml(it.content).replace(/\n/g, '<br />')
+      return `<details${open}><summary>${escapeHtml(it.title)}</summary><div>${content}</div></details>`
+    })
+    .join('')
+  return `<div${commonAttrs(node)} role="region" aria-roledescription="accordion">${items}</div>`
 }
 
 function renderTabs(node: TabsNode): string {

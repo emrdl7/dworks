@@ -4,6 +4,7 @@
 
 import {
   AppWindow,
+  ChevronsUpDown,
   FormInput,
   GalleryHorizontal,
   ImageIcon,
@@ -24,6 +25,7 @@ export const nodeTypeLabels: Record<TreeNode['type'], string> = {
   image: '이미지',
   carousel: '이미지 carousel',
   tabs: '탭',
+  accordion: '아코디언',
   section: '섹션',
   hero: '히어로',
   card: '카드',
@@ -37,6 +39,7 @@ export const nodeTypeIcons: Record<TreeNode['type'], LucideIcon> = {
   image: ImageIcon,
   carousel: GalleryHorizontal,
   tabs: AppWindow,
+  accordion: ChevronsUpDown,
   section: PanelTop,
   hero: SquareStack,
   card: Square,

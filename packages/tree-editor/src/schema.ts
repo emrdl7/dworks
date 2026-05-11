@@ -4,6 +4,8 @@
 
 import { z } from 'zod'
 import {
+  accordionItemSchema,
+  accordionVariantSchema,
   carouselItemSchema,
   focalPointSchema,
   imageAspectRatioSchema,
@@ -32,6 +34,7 @@ import type {
   DuplicateNodeOperation,
   EditOperation,
   MoveNodeOperation,
+  UpdateAccordionOperation,
   UpdateButtonLabelOperation,
   UpdateCarouselOperation,
   UpdateColorOperation,
@@ -146,6 +149,15 @@ export const updateTabsOperationSchema: z.ZodType<UpdateTabsOperation> =
     variant: tabsVariantSchema.optional(),
   })
 
+export const updateAccordionOperationSchema: z.ZodType<UpdateAccordionOperation> =
+  z.object({
+    type: z.literal('updateAccordion'),
+    nodeId: z.string().min(1),
+    items: z.array(accordionItemSchema).min(1).optional(),
+    allowMultiple: z.boolean().optional(),
+    variant: accordionVariantSchema.optional(),
+  })
+
 export const moveNodeOperationSchema: z.ZodType<MoveNodeOperation> = z.object({
   type: z.literal('moveNode'),
   nodeId: z.string().min(1),
@@ -250,6 +262,13 @@ export const editOperationSchema: z.ZodType<EditOperation> = z.discriminatedUnio
     items: z.ZodOptional<z.ZodArray<typeof tabItemSchema>>
     activeIndex: z.ZodOptional<z.ZodNumber>
     variant: z.ZodOptional<typeof tabsVariantSchema>
+  }>,
+  updateAccordionOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateAccordion'>
+    nodeId: z.ZodString
+    items: z.ZodOptional<z.ZodArray<typeof accordionItemSchema>>
+    allowMultiple: z.ZodOptional<z.ZodBoolean>
+    variant: z.ZodOptional<typeof accordionVariantSchema>
   }>,
   moveNodeOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'moveNode'>

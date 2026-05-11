@@ -590,6 +590,30 @@ export interface TabsNode extends BaseNodeMeta {
   variant?: TabsVariant
 }
 
+// AccordionNode — FAQ/details 등에 사용. 각 item은 title + content + expanded?.
+//   캔버스는 expanded=true인 item만 펼친 상태로 정적 렌더, 나머지는 접힘.
+export const ACCORDION_VARIANTS = ['bordered', 'minimal'] as const
+export const accordionVariantSchema = z.enum(ACCORDION_VARIANTS)
+export type AccordionVariant = z.infer<typeof accordionVariantSchema>
+
+export interface AccordionItem {
+  id: string
+  title: string
+  content: string  // inline markdown
+  // 정적 미리보기에서 펼친 상태로 보여줄지. 기본 false.
+  expanded?: boolean
+}
+
+export interface AccordionNode extends BaseNodeMeta {
+  type: 'accordion'
+  items: AccordionItem[]
+  // 한 번에 여러 item 펼치기 허용. 기본 false (single accordion).
+  // export 시 라이브러리 옵션으로 전달.
+  allowMultiple?: boolean
+  // 시각 스타일. 기본 'bordered'.
+  variant?: AccordionVariant
+}
+
 export interface SectionNode extends BaseNodeMeta {
   type: 'section'
   role?: string
@@ -630,6 +654,7 @@ export type TreeNode =
   | ImageNode
   | CarouselNode
   | TabsNode
+  | AccordionNode
   | SectionNode
   | HeroNode
   | CardNode
@@ -722,6 +747,21 @@ export const tabsNodeSchema: z.ZodType<TabsNode> = z.object({
   variant: tabsVariantSchema.optional(),
 })
 
+export const accordionItemSchema: z.ZodType<AccordionItem> = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  content: z.string(),
+  expanded: z.boolean().optional(),
+})
+
+export const accordionNodeSchema: z.ZodType<AccordionNode> = z.object({
+  ...baseShape,
+  type: z.literal('accordion'),
+  items: z.array(accordionItemSchema).min(1),
+  allowMultiple: z.boolean().optional(),
+  variant: accordionVariantSchema.optional(),
+})
+
 // 재귀 union을 위해 children 필드는 z.lazy로 후행 참조.
 const childrenLazy = z.lazy((): z.ZodType<TreeNode[]> =>
   z.array(treeNodeSchema),
@@ -776,6 +816,7 @@ export const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
     imageNodeSchema,
     carouselNodeSchema,
     tabsNodeSchema,
+    accordionNodeSchema,
     sectionNodeSchema,
     heroNodeSchema,
     cardNodeSchema,
@@ -799,6 +840,7 @@ export const TREE_NODE_TYPES = [
   'image',
   'carousel',
   'tabs',
+  'accordion',
   'section',
   'hero',
   'card',

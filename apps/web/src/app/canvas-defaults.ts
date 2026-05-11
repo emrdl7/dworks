@@ -67,6 +67,8 @@ export const DEFAULT_SPACING_BY_TYPE: Record<TreeNodeType, Spacing> = {
   carousel: {},
   // tabs: tab list와 panel 사이 자연스러운 간격을 위해 작은 gap.
   tabs: { gap: 16 },
+  // accordion: 각 item 사이 약간의 spacing.
+  accordion: { gap: 4 },
 }
 
 // emphasis별 typography default — text 노드 TextPreview의 className에서 추출 + 인스펙터
@@ -152,6 +154,8 @@ export const DEFAULT_LAYOUT_BY_TYPE: Record<TreeNodeType, NodeLayout> = {
   carousel: {},
   // tabs: column — tab list가 위, panel이 아래.
   tabs: { direction: 'column', wrap: 'nowrap' },
+  // accordion: column — items 세로 stack.
+  accordion: { direction: 'column', wrap: 'nowrap' },
 }
 
 // type별 shape default — radius / border / shadow.
@@ -175,6 +179,8 @@ export const DEFAULT_SHAPE_BY_TYPE: Record<TreeNodeType, Shape> = {
   carousel: { radius: 12, shadow: 'md' },
   // tabs: 자체 border/radius 없음 — 자식 panel이 시각 책임.
   tabs: {},
+  // accordion: 자체 stack — 각 item이 border/radius 책임.
+  accordion: {},
 }
 
 // type별 color token slot — 캔버스 className의 var(--dw-*) 토큰을 ColorPresetTokens
@@ -204,6 +210,7 @@ export const DEFAULT_COLOR_TOKENS_BY_TYPE: Record<TreeNodeType, ColorTokenSlots>
   image: {},
   carousel: {},
   tabs: {},
+  accordion: {},
 }
 
 // emphasis별 text color token slot — text 노드의 textColor가 emphasis에 따라

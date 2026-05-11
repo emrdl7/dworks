@@ -1,4 +1,6 @@
 import type {
+  AccordionNode,
+  AccordionVariant,
   CarouselNode,
   FocalPoint,
   ImageAspectRatio,
@@ -112,6 +114,14 @@ export interface UpdateTabsOperation {
   variant?: TabsVariant
 }
 
+export interface UpdateAccordionOperation {
+  type: 'updateAccordion'
+  nodeId: string
+  items?: AccordionNode['items']
+  allowMultiple?: boolean
+  variant?: AccordionVariant
+}
+
 export interface MoveNodeOperation {
   type: 'moveNode'
   nodeId: string
@@ -146,6 +156,7 @@ type ContentEditOperation =
   | UpdateImageOperation
   | UpdateCarouselOperation
   | UpdateTabsOperation
+  | UpdateAccordionOperation
 
 type StructureEditOperation =
   | MoveNodeOperation
@@ -261,6 +272,14 @@ export function updateTabs(
   patch: Omit<UpdateTabsOperation, 'type' | 'nodeId'>,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateTabs', nodeId, ...patch })
+}
+
+export function updateAccordion(
+  tree: Tree,
+  nodeId: string,
+  patch: Omit<UpdateAccordionOperation, 'type' | 'nodeId'>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateAccordion', nodeId, ...patch })
 }
 
 export function moveNode(
@@ -775,6 +794,7 @@ function editNode(
     case 'image':
     case 'carousel':
     case 'tabs':
+    case 'accordion':
       return node
   }
 }
@@ -846,6 +866,14 @@ function editMatchedNode(
         )
       }
       return withTabsPatch(node, operation)
+
+    case 'updateAccordion':
+      if (node.type !== 'accordion') {
+        throw new Error(
+          `tree edit failed: updateAccordion requires accordion node, got ${node.type}: ${node.id}`,
+        )
+      }
+      return withAccordionPatch(node, operation)
   }
 }
 
@@ -997,6 +1025,23 @@ function withTabsPatch(
   if ('activeIndex' in patch) {
     if (patch.activeIndex === undefined) delete next.activeIndex
     else next.activeIndex = patch.activeIndex
+  }
+  if ('variant' in patch) {
+    if (patch.variant === undefined) delete next.variant
+    else next.variant = patch.variant
+  }
+  return next
+}
+
+function withAccordionPatch(
+  node: AccordionNode,
+  patch: Omit<UpdateAccordionOperation, 'type' | 'nodeId'>,
+): AccordionNode {
+  const next: AccordionNode = { ...node }
+  if (patch.items !== undefined) next.items = patch.items
+  if ('allowMultiple' in patch) {
+    if (patch.allowMultiple === undefined) delete next.allowMultiple
+    else next.allowMultiple = patch.allowMultiple
   }
   if ('variant' in patch) {
     if (patch.variant === undefined) delete next.variant
