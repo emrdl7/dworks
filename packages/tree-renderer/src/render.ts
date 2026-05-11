@@ -15,6 +15,7 @@ import type {
   HeroNode,
   ImageNode,
   ListNode,
+  ModalNode,
   SectionNode,
   TabsNode,
   TextNode,
@@ -150,6 +151,8 @@ export function renderNode(node: TreeNode): string {
       return renderTabs(node)
     case 'accordion':
       return renderAccordion(node)
+    case 'modal':
+      return renderModal(node)
     case 'section':
       return renderSection(node)
     case 'hero':
@@ -161,6 +164,23 @@ export function renderNode(node: TreeNode): string {
     case 'form':
       return renderForm(node)
   }
+}
+
+function renderModal(node: ModalNode): string {
+  // 정적 export — modal은 dialog 엘리먼트 + open attr (네이티브) + data-attr.
+  // 실제 trigger 버튼/backdrop close는 export 후 라이브러리(Radix Dialog 등) wrap.
+  const open = node.open !== false ? ' open' : ''
+  const titleHtml = `<h2>${escapeHtml(node.title)}</h2>`
+  const contentHtml = `<div>${escapeHtml(node.content).replace(/\n/g, '<br />')}</div>`
+  const actions: string[] = []
+  if (node.secondaryActionLabel) {
+    actions.push(`<button type="button" data-dw-modal-action="secondary">${escapeHtml(node.secondaryActionLabel)}</button>`)
+  }
+  if (node.primaryActionLabel) {
+    actions.push(`<button type="button" data-dw-modal-action="primary">${escapeHtml(node.primaryActionLabel)}</button>`)
+  }
+  const actionsHtml = actions.length > 0 ? `<footer>${actions.join('')}</footer>` : ''
+  return `<dialog${commonAttrs(node)}${open} data-dw-modal-size="${node.size ?? 'md'}">${titleHtml}${contentHtml}${actionsHtml}</dialog>`
 }
 
 function renderAccordion(node: AccordionNode): string {

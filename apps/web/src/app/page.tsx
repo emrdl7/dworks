@@ -57,6 +57,8 @@ import {
   type TabItem,
   type AccordionNode,
   type AccordionItem,
+  type ModalNode,
+  type ModalSize,
   type ImageNode,
   type ImagePresentation,
   type LayoutAlign,
@@ -105,6 +107,7 @@ import {
   updateButtonLabel,
   updateImage,
   updateLayout,
+  updateModal,
   updateTabs,
   updateNodeMeta,
   updateShape,
@@ -562,6 +565,16 @@ type TabsEditPatch = Pick<
 type AccordionEditPatch = Pick<
   Partial<AccordionNode>,
   'items' | 'allowMultiple' | 'variant'
+>
+
+type ModalEditPatch = Pick<
+  Partial<ModalNode>,
+  | 'title'
+  | 'content'
+  | 'primaryActionLabel'
+  | 'secondaryActionLabel'
+  | 'size'
+  | 'open'
 >
 
 export default function HomePage() {
@@ -2469,6 +2482,14 @@ export default function HomePage() {
     options?: CommitTreeEditOptions,
   ) {
     commitTreeEdit(updateAccordion(tree, node.id, patch), undefined, options)
+  }
+
+  function handleModalChange(
+    node: ModalNode,
+    patch: ModalEditPatch,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateModal(tree, node.id, patch), undefined, options)
   }
 
   function handleMoveNode(nodeId: string, direction: 'up' | 'down') {
@@ -4958,6 +4979,7 @@ export default function HomePage() {
             onCarouselChange={handleCarouselChange}
             onTabsChange={handleTabsChange}
             onAccordionChange={handleAccordionChange}
+            onModalChange={handleModalChange}
             colorPreset={colorPreset}
           />
         </aside>
@@ -6253,6 +6275,13 @@ function CanvasNode({
           <AccordionPreview node={node} style={boxStyle} />
         </SelectableNode>
       )
+
+    case 'modal':
+      return (
+        <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          <ModalPreview node={node} style={boxStyle} />
+        </SelectableNode>
+      )
   }
 }
 
@@ -7031,6 +7060,81 @@ function AccordionPreview({
   )
 }
 
+// ModalPreview — 캔버스 _inline_ 미리보기 (실제 fixed/backdrop 안 함).
+//   디자이너가 컨텐츠를 본 채 디자인. open=false면 placeholder만 표시.
+//   size별로 max-width 차등.
+const MODAL_SIZE_MAX_WIDTH: Record<ModalSize, string> = {
+  sm: '400px',
+  md: '560px',
+  lg: '720px',
+  xl: '960px',
+}
+
+function ModalPreview({
+  node,
+  style,
+}: {
+  node: ModalNode
+  style?: CSSProperties
+}) {
+  const size = node.size ?? 'md'
+  const open = node.open !== false
+  const maxWidth = MODAL_SIZE_MAX_WIDTH[size]
+
+  if (!open) {
+    return (
+      <div
+        style={style}
+        className="flex w-full items-center justify-center rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-4 py-6 text-[length:var(--dw-text-caption)] text-[var(--dw-ui-text-muted)]"
+      >
+        모달 (닫힘) — _open_ 토글로 미리보기를 열 수 있습니다 ({size})
+      </div>
+    )
+  }
+
+  return (
+    <div
+      style={style}
+      className="w-full"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={node.title}
+        className="mx-auto w-full"
+        style={{ maxWidth }}
+      >
+        <header className="mb-3">
+          <h3 className="text-[length:var(--dw-text-heading-3)] font-semibold leading-tight text-[var(--dw-ui-text-primary)]">
+            {node.title}
+          </h3>
+        </header>
+        <div className="whitespace-pre-wrap text-[length:var(--dw-text-body)] leading-relaxed text-[var(--dw-ui-text-body)]">
+          {node.content || (
+            <span className="text-[var(--dw-ui-text-faint)]">
+              모달 본문이 비어있습니다
+            </span>
+          )}
+        </div>
+        {node.primaryActionLabel || node.secondaryActionLabel ? (
+          <footer className="mt-5 flex items-center justify-end gap-2">
+            {node.secondaryActionLabel ? (
+              <span className="inline-flex h-9 items-center rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-4 text-[length:var(--dw-text-label)] font-medium text-[var(--dw-ui-text-body)]">
+                {node.secondaryActionLabel}
+              </span>
+            ) : null}
+            {node.primaryActionLabel ? (
+              <span className="inline-flex h-9 items-center rounded-md bg-[var(--dw-ui-accent)] px-4 text-[length:var(--dw-text-label)] font-semibold text-[var(--dw-ui-accent-text)]">
+                {node.primaryActionLabel}
+              </span>
+            ) : null}
+          </footer>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 const IMAGE_DROP_SHADOW_DEFAULT: ImageDropShadow = {
   offsetX: 0,
   offsetY: 4,
@@ -7143,6 +7247,11 @@ interface NodeInspectorProps {
     patch: AccordionEditPatch,
     options?: CommitTreeEditOptions,
   ) => void
+  onModalChange: (
+    node: ModalNode,
+    patch: ModalEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
 }
 
 function NodeInspector({
@@ -7175,6 +7284,7 @@ function NodeInspector({
   onCarouselChange,
   onTabsChange,
   onAccordionChange,
+  onModalChange,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
   const [nodeIdCopied, setNodeIdCopied] = useState(false)
@@ -7752,6 +7862,14 @@ function NodeInspector({
                 node={node}
                 disclosure={bindSection('Accordion')}
                 onAccordionChange={onAccordionChange}
+              />
+            ) : null}
+
+            {node.type === 'modal' ? (
+              <ModalControls
+                node={node}
+                disclosure={bindSection('Modal')}
+                onModalChange={onModalChange}
               />
             ) : null}
 
@@ -12340,6 +12458,142 @@ function AccordionControls({
         <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
           캔버스는 _정적_ 미리보기 (펼친 항목만 컨텐츠 표시) — 실제 펼침/접힘은
           export 결과에서 라이브러리(Radix Accordion 등)가 처리합니다.
+        </p>
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface ModalControlsProps {
+  disclosure?: InspectorDisclosureControl
+  node: ModalNode
+  onModalChange: (
+    node: ModalNode,
+    patch: ModalEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+// ModalControls — title/content/action labels/size/open 편집.
+function ModalControls({
+  disclosure,
+  node,
+  onModalChange,
+}: ModalControlsProps) {
+  const size = node.size ?? 'md'
+  const open = node.open !== false
+
+  return (
+    <InspectorDisclosure
+      title="Modal"
+      description="dialog/modal — 캔버스는 inline 미리보기, export 시 fixed + backdrop"
+      defaultOpen
+      {...disclosure}
+    >
+      <div className="mt-3 space-y-4">
+        <label className="block">
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            제목
+          </span>
+          <input
+            type="text"
+            className="mt-2 h-9 w-full rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 text-sm outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+            value={node.title}
+            onChange={(e) => onModalChange(node, { title: e.target.value })}
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            본문 (markdown)
+          </span>
+          <textarea
+            rows={4}
+            className="mt-2 block w-full rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-sm leading-relaxed outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+            value={node.content}
+            onChange={(e) => onModalChange(node, { content: e.target.value })}
+          />
+        </label>
+
+        <div className="grid grid-cols-2 gap-2">
+          <label className="block">
+            <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+              CTA 버튼 라벨
+            </span>
+            <input
+              type="text"
+              placeholder="예: 확인 / 동의"
+              className="mt-2 h-9 w-full rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 text-sm outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+              value={node.primaryActionLabel ?? ''}
+              onChange={(e) =>
+                onModalChange(node, {
+                  primaryActionLabel:
+                    e.target.value === '' ? undefined : e.target.value,
+                })
+              }
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+              보조 버튼 라벨
+            </span>
+            <input
+              type="text"
+              placeholder="예: 취소"
+              className="mt-2 h-9 w-full rounded-md border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 text-sm outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+              value={node.secondaryActionLabel ?? ''}
+              onChange={(e) =>
+                onModalChange(node, {
+                  secondaryActionLabel:
+                    e.target.value === '' ? undefined : e.target.value,
+                })
+              }
+            />
+          </label>
+        </div>
+
+        <div>
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            크기
+          </span>
+          <div className="mt-2 grid grid-cols-4 gap-1">
+            {(['sm', 'md', 'lg', 'xl'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={size === s}
+                onClick={() =>
+                  onModalChange(node, { size: s === 'md' ? undefined : s })
+                }
+                className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border text-[length:var(--dw-text-label)] font-mono uppercase tracking-wide transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                  size === s
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <label className="flex items-center gap-2 text-xs text-[var(--dw-ui-text-body)]">
+          <input
+            type="checkbox"
+            className="accent-[var(--dw-ui-accent)]"
+            checked={open}
+            onChange={(e) =>
+              onModalChange(node, {
+                open: e.target.checked ? undefined : false,
+              })
+            }
+          />
+          캔버스 미리보기 열기 (false면 placeholder만 표시)
+        </label>
+
+        <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
+          캔버스는 _inline_ 미리보기 (fixed/backdrop 없이) — 실제 모달은 export 결과에서
+          라이브러리(Radix Dialog 등)가 fixed + backdrop으로 wrap합니다.
         </p>
       </div>
     </InspectorDisclosure>

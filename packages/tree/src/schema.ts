@@ -647,6 +647,29 @@ export interface AccordionNode extends BaseNodeMeta {
   variant?: AccordionVariant
 }
 
+// ModalNode — dialog/modal. 캔버스는 _inline_ 카드 미리보기 (fixed/backdrop 무시),
+// export 시 position fixed + backdrop으로 wrap. 디자이너가 컨텐츠를 본 채 편집 가능.
+export const MODAL_SIZES = ['sm', 'md', 'lg', 'xl'] as const
+export const modalSizeSchema = z.enum(MODAL_SIZES)
+export type ModalSize = z.infer<typeof modalSizeSchema>
+
+export interface ModalNode extends BaseNodeMeta {
+  type: 'modal'
+  // 헤더 제목.
+  title: string
+  // 본문 (inline markdown — 빈 줄로 단락).
+  content: string
+  // footer CTA 버튼 라벨 (primary). 빈 값이면 버튼 없음.
+  primaryActionLabel?: string
+  // footer 보조 버튼 라벨 (secondary, 보통 '취소').
+  secondaryActionLabel?: string
+  // 너비 sizing. 기본 'md'.
+  size?: ModalSize
+  // 캔버스 미리보기에서 _숨김_ 시뮬레이션 (false면 inline 미리보기 비표시).
+  // 기본 true (디자이너가 컨텐츠를 보는 게 default 이득).
+  open?: boolean
+}
+
 export interface SectionNode extends BaseNodeMeta {
   type: 'section'
   role?: string
@@ -688,6 +711,7 @@ export type TreeNode =
   | CarouselNode
   | TabsNode
   | AccordionNode
+  | ModalNode
   | SectionNode
   | HeroNode
   | CardNode
@@ -796,6 +820,17 @@ export const accordionNodeSchema: z.ZodType<AccordionNode> = z.object({
   variant: accordionVariantSchema.optional(),
 })
 
+export const modalNodeSchema: z.ZodType<ModalNode> = z.object({
+  ...baseShape,
+  type: z.literal('modal'),
+  title: z.string().min(1),
+  content: z.string(),
+  primaryActionLabel: z.string().optional(),
+  secondaryActionLabel: z.string().optional(),
+  size: modalSizeSchema.optional(),
+  open: z.boolean().optional(),
+})
+
 // 재귀 union을 위해 children 필드는 z.lazy로 후행 참조.
 const childrenLazy = z.lazy((): z.ZodType<TreeNode[]> =>
   z.array(treeNodeSchema),
@@ -851,6 +886,7 @@ export const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
     carouselNodeSchema,
     tabsNodeSchema,
     accordionNodeSchema,
+    modalNodeSchema,
     sectionNodeSchema,
     heroNodeSchema,
     cardNodeSchema,
@@ -875,6 +911,7 @@ export const TREE_NODE_TYPES = [
   'carousel',
   'tabs',
   'accordion',
+  'modal',
   'section',
   'hero',
   'card',

@@ -28,12 +28,34 @@ import {
 } from './schema.js'
 
 describe('tree schema', () => {
-  it('exposes 11 node types — adds carousel + tabs + accordion to base 8', () => {
-    assert.equal(TREE_NODE_TYPES.length, 11)
+  it('exposes 12 node types — adds carousel + tabs + accordion + modal to base 8', () => {
+    assert.equal(TREE_NODE_TYPES.length, 12)
     assert.ok(TREE_NODE_TYPES.includes('image'))
     assert.ok(TREE_NODE_TYPES.includes('carousel'))
     assert.ok(TREE_NODE_TYPES.includes('tabs'))
     assert.ok(TREE_NODE_TYPES.includes('accordion'))
+    assert.ok(TREE_NODE_TYPES.includes('modal'))
+  })
+
+  it('parses a minimal modal node', () => {
+    const node = {
+      id: 'm1',
+      type: 'modal',
+      editKind: 'structure',
+      title: '확인',
+      content: '진행하시겠습니까?',
+      primaryActionLabel: '확인',
+      secondaryActionLabel: '취소',
+      size: 'sm',
+      open: false,
+    }
+    const parsed = treeNodeSchema.parse(node)
+    assert.equal(parsed.type, 'modal')
+    if (parsed.type === 'modal') {
+      assert.equal(parsed.title, '확인')
+      assert.equal(parsed.size, 'sm')
+      assert.equal(parsed.open, false)
+    }
   })
 
   it('parses a minimal accordion node (1 item)', () => {

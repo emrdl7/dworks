@@ -69,6 +69,8 @@ export const DEFAULT_SPACING_BY_TYPE: Record<TreeNodeType, Spacing> = {
   tabs: { gap: 16 },
   // accordion: 각 item 사이 약간의 spacing.
   accordion: { gap: 4 },
+  // modal: padding이 자체 카드 내부에. 큰 padding으로 컨텐츠 호흡.
+  modal: { paddingTop: 28, paddingRight: 28, paddingBottom: 28, paddingLeft: 28, gap: 16 },
 }
 
 // emphasis별 typography default — text 노드 TextPreview의 className에서 추출 + 인스펙터
@@ -156,6 +158,8 @@ export const DEFAULT_LAYOUT_BY_TYPE: Record<TreeNodeType, NodeLayout> = {
   tabs: { direction: 'column', wrap: 'nowrap' },
   // accordion: column — items 세로 stack.
   accordion: { direction: 'column', wrap: 'nowrap' },
+  // modal: column — title/content/footer 세로 stack.
+  modal: { direction: 'column', wrap: 'nowrap' },
 }
 
 // type별 shape default — radius / border / shadow.
@@ -181,6 +185,8 @@ export const DEFAULT_SHAPE_BY_TYPE: Record<TreeNodeType, Shape> = {
   tabs: {},
   // accordion: 자체 stack — 각 item이 border/radius 책임.
   accordion: {},
+  // modal: 카드 형태 — radius 16 + xl shadow.
+  modal: { radius: 16, shadow: 'xl' },
 }
 
 // type별 color token slot — 캔버스 className의 var(--dw-*) 토큰을 ColorPresetTokens
@@ -211,6 +217,7 @@ export const DEFAULT_COLOR_TOKENS_BY_TYPE: Record<TreeNodeType, ColorTokenSlots>
   carousel: {},
   tabs: {},
   accordion: {},
+  modal: {},
 }
 
 // emphasis별 text color token slot — text 노드의 textColor가 emphasis에 따라

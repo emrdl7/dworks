@@ -2,6 +2,8 @@ import type {
   AccordionNode,
   AccordionVariant,
   CarouselNode,
+  ModalNode,
+  ModalSize,
   FocalPoint,
   ImageAspectRatio,
   ImageNode,
@@ -123,6 +125,17 @@ export interface UpdateAccordionOperation {
   variant?: AccordionVariant
 }
 
+export interface UpdateModalOperation {
+  type: 'updateModal'
+  nodeId: string
+  title?: string
+  content?: string
+  primaryActionLabel?: string
+  secondaryActionLabel?: string
+  size?: ModalSize
+  open?: boolean
+}
+
 export interface MoveNodeOperation {
   type: 'moveNode'
   nodeId: string
@@ -158,6 +171,7 @@ type ContentEditOperation =
   | UpdateCarouselOperation
   | UpdateTabsOperation
   | UpdateAccordionOperation
+  | UpdateModalOperation
 
 type StructureEditOperation =
   | MoveNodeOperation
@@ -281,6 +295,14 @@ export function updateAccordion(
   patch: Omit<UpdateAccordionOperation, 'type' | 'nodeId'>,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateAccordion', nodeId, ...patch })
+}
+
+export function updateModal(
+  tree: Tree,
+  nodeId: string,
+  patch: Omit<UpdateModalOperation, 'type' | 'nodeId'>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateModal', nodeId, ...patch })
 }
 
 export function moveNode(
@@ -796,6 +818,7 @@ function editNode(
     case 'carousel':
     case 'tabs':
     case 'accordion':
+    case 'modal':
       return node
   }
 }
@@ -875,6 +898,14 @@ function editMatchedNode(
         )
       }
       return withAccordionPatch(node, operation)
+
+    case 'updateModal':
+      if (node.type !== 'modal') {
+        throw new Error(
+          `tree edit failed: updateModal requires modal node, got ${node.type}: ${node.id}`,
+        )
+      }
+      return withModalPatch(node, operation)
   }
 }
 
@@ -1038,6 +1069,32 @@ function withTabsPatch(
   if ('variant' in patch) {
     if (patch.variant === undefined) delete next.variant
     else next.variant = patch.variant
+  }
+  return next
+}
+
+function withModalPatch(
+  node: ModalNode,
+  patch: Omit<UpdateModalOperation, 'type' | 'nodeId'>,
+): ModalNode {
+  const next: ModalNode = { ...node }
+  if (patch.title !== undefined) next.title = patch.title
+  if (patch.content !== undefined) next.content = patch.content
+  if ('primaryActionLabel' in patch) {
+    if (patch.primaryActionLabel === undefined) delete next.primaryActionLabel
+    else next.primaryActionLabel = patch.primaryActionLabel
+  }
+  if ('secondaryActionLabel' in patch) {
+    if (patch.secondaryActionLabel === undefined) delete next.secondaryActionLabel
+    else next.secondaryActionLabel = patch.secondaryActionLabel
+  }
+  if ('size' in patch) {
+    if (patch.size === undefined) delete next.size
+    else next.size = patch.size
+  }
+  if ('open' in patch) {
+    if (patch.open === undefined) delete next.open
+    else next.open = patch.open
   }
   return next
 }
