@@ -3,20 +3,20 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T08:36:50.382Z"
+last_updated: "2026-05-11T09:05:00.000Z"
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 15
-  completed_plans: 14
-  percent: 93
+  completed_plans: 15
+  percent: 100
 ---
 
 # Dworks v2.0 STATE
 
 ## Current Phase
 
-**Next**: Phase 1 — UX 핵심 fix + 측정 도구
+**Next**: Phase 4 — export 깊이 (인터랙티브 작동 라이브러리 wrap)
 
 ## Phase Status
 
@@ -24,7 +24,7 @@ progress:
 |---|-------|--------|
 | 1 | UX 핵심 fix + 측정 도구 | 🟡 진행 중 (5/7 plan 완료, 01-01/01-04 잔여) |
 | 2 | AI 생성 품질 자동 검증 | 🟢 plans 5/5 완료 (02-05 wiring gap closure 완료) |
-| 3 | 시각 보조 도구 | 🟡 진행 중 (2/3 plan 완료 — VIS-01 + VIS-02 done) |
+| 3 | 시각 보조 도구 | 🟢 plans 3/3 완료 (VIS-01 + VIS-02 + VIS-03 done) |
 | 4 | export 깊이 | ⚪ pending |
 | 5 | 디자인 시스템 깊이 | ⚪ pending |
 
@@ -42,7 +42,8 @@ progress:
 - ✅ 02-05 (AI-01/02/03/05 production wiring gap closure) — 2026-05-11. page.tsx 두 호출 site 패치 — normalizeDesignTree({prompt: submitted.intent}) + extractFromDataUrl 가 analyzeDominantColors + extractLayoutIntent 호출 + ImageReferenceSeed 확장. commits 9cb2818 + 1518289. 12분.
 - ✅ 03-01 (VIS-01 12-col grid overlay + snap helper + column-span label) — 2026-05-11. grid-overlay.tsx 신규(153줄) + helper 3종 + 14 unit tests + page.tsx 5+ site 통합 + command-palette '시각 보조' group. commits 3dc8405 + 99122d6. 25분. Snap 컴퓨트 site 는 자유위치 드래그 미존재로 deferred(인프라/helper only).
 - ✅ 03-02 (VIS-02 viewport 중앙 pivot 줌 통일) — 2026-05-11. setZoomWithCenterPivot useCallback helper + 5 진입점(toolbar +/- / ⌘0/⌘+/⌘- / ⌘K zoom-100 / GlobalContextMenu reset) wiring. wheel cursor-pivot 보존. commits 7ab2cf5 + 280884c. 8분.
-- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02 (도메인×톤 매트릭스?), 02-03 (이미지 분석?), 03-03 (VIS-03 미니맵).
+- ✅ 03-03 (VIS-03 좌하단 미니맵) — 2026-05-11. minimap.tsx 신규(311줄) — 노드 outlined rectangle + viewport rect + 클릭 navigate + Shift+M + toolbar 버튼 + commandPalette + dw:uiPrefs:v1 영속화. rAF throttle + treeRevision trigger 패턴. Map import → MapIcon alias 로 global Map constructor shadowing 회피. commits b945001 + 6d4780e + 6c030cf. 25분.
+- 잔여: Phase 4 (export 깊이) + Phase 5 (디자인 시스템) — 다음 phase.
 
 ## Decisions Log
 
@@ -68,6 +69,10 @@ progress:
 - [Phase 3 / Plan 01] snap-to-column 컴퓨트 site deferred — 자유위치 노드의 드래그 기반 좌표 조정 기능이 codebase 에 없음(PositionControls 의 inset.left 인스펙터 input only). helper export(computeColumnEdges/snapToColumnEdge) + 가이드 div 인프라 + state 박아두고, 드래그 통합은 후속.
 - [Phase 3 / Plan 02] setZoomWithCenterPivot helper — number | ((prev)=>next) 두 시그니처로 keydown effect dep 변경 없이 ⌘+/⌘- 가 최신 canvasZoom 기준 ±0.1 (stale closure 회피). useCallback([]) 으로 ref-stable.
 - [Phase 3 / Plan 02] toolbar +/- + ⌘0/⌘+/⌘- + ⌘K zoom-100 + GlobalContextMenu reset 5 진입점 모두 viewport 중앙 pivot 통일 (Rule 2 일관성). handleCanvasFit/handleZoomToSelection/wheel cursor pivot 은 별도 동작 보존.
+- [Phase 3 / Plan 03] minimap.tsx — 노드 mini-render 없이 outlined rectangle only (D-09, 성능 회피). scroll listener rAF throttle + treeRevision dep 으로 노드 박스 캐싱. 클릭 navigate 는 zoom 변경 없으므로 canvasScrollRef.scrollLeft/Top 직접 mutation (D-11, pendingDirectScrollRef 불필요).
+- [Phase 3 / Plan 03] Map (lucide-react) import → MapIcon alias — global `Map` constructor 5곳(`new Map<string, V>()`)이 lucide Map 컴포넌트와 shadowing 충돌 (TS7009/TS2558). alias 로 namespace 분리.
+- [Phase 3 / Plan 03] treeRevision useState + tree dep effect 패턴 — useRef.current++ 만으로는 re-render 안 일어남. setState((r)=>r+1) 로 minimap 의 measureNodes effect 가 안정적으로 재실행.
+- [Phase 3 / Plan 03] Shift+M 단축키 — modal `M` quick-add 와 충돌 회피 (D-12). modifier 검사 strict (`shift=true, meta/alt=false`).
 
 ## Performance Metrics
 
@@ -85,6 +90,7 @@ progress:
 | Phase 02 P05 | 12min | 2 tasks | 1 files |
 | Phase 03 P01 | 25min | 3 tasks | 4 files |
 | Phase 03 P02 | 8min | 2 tasks | 1 files |
+| Phase 03 P03 | 25min | 3 tasks | 3 files |
 
 ## v1 Final State (참조)
 
