@@ -1872,10 +1872,11 @@ function HomePageInner() {
       snapshotActiveGeneration(tree)
       const now = Date.now()
       // LLM 응답을 normalize — id 중복 제거 + root section 보강
+      // AI-01/02/03 자동 보강 활성화 — prompt 전달 시에만 enforceRichness branch 실행 (D-05~10).
       const newEntries: GenerationEntry[] = successes.map((success) => ({
         id: createGenerationEntryId(),
         label: '',
-        tree: normalizeDesignTree(success.tree),
+        tree: normalizeDesignTree(success.tree, { prompt: submitted.intent }),
         immutable: false,
         brief: submitted,
         questions: clarifyQuestions,
