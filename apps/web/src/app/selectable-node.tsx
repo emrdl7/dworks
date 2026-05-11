@@ -24,7 +24,9 @@ import {
   CanvasReadOnlyContext,
   CanvasSelectionContext,
   CanvasToolbarContext,
+  CanvasViewportContext,
 } from './canvas-contexts'
+import { resolveTransform } from './design-resolver'
 import {
   getPositionStyle,
   getTransformStyle,
@@ -152,7 +154,9 @@ export function SelectableNode({
   const readOnly = useContext(CanvasReadOnlyContext)
   const { hoveredNodeId, setHoveredNodeId } = useContext(CanvasHoverContext)
   const _selectionCtxTopLevel = useContext(CanvasSelectionContext)
-  const transformStyle = getTransformStyle(node.transform)
+  const viewport = useContext(CanvasViewportContext)
+  // viewport-merged transform — mobile/tablet에 transform override 있으면 그게 base를 덮음.
+  const transformStyle = getTransformStyle(resolveTransform(node, viewport))
   const transitionStyle = getTransitionStyle(node.transition)
   // node.position(absolute/sticky/fixed)은 wrapper에 적용 — wrapper가 정상 flow를
   // 떠나야 부모 안에서 떠있는 layer가 됨. 내부 section에 박으면 wrapper 안에 갇힘.

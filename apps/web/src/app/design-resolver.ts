@@ -421,3 +421,19 @@ export function resolveColor(node: TreeNode, context: ResolveContext): ResolvedC
 
   return { value, sources }
 }
+
+// resolved transform — base + viewport override 부분 머지.
+//   transform은 design-style.ts의 getTransformStyle이 직접 사용하므로 여기서는
+//   _간단한 머지 결과_만 반환 (sources 추적 X).
+//   미정 base + 미정 override → undefined.
+export function resolveTransform(
+  node: TreeNode,
+  viewport: ResponsiveViewport,
+): TreeNode['transform'] {
+  const base = node.transform
+  if (viewport === 'desktop') return base
+  const override = node.responsiveStyle?.[viewport]?.transform
+  if (override === undefined) return base
+  if (base === undefined) return override
+  return { ...base, ...override }
+}

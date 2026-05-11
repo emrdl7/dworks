@@ -15,6 +15,7 @@ import {
   resolveLayout,
   resolveShape,
   resolveSpacing,
+  resolveTransform,
   resolveTypography,
 } from './design-resolver.js'
 
@@ -560,6 +561,33 @@ describe('responsiveStyle viewport override', () => {
     const mobile = resolveColor(text, { viewport: 'mobile' })
     assert.equal(desktop.value.textColor, '#0f172a')
     assert.equal(mobile.value.textColor, '#dc2626')
+  })
+
+  it('transform mobile override — base rotate 5deg → mobile rotate 0', () => {
+    const node = makeText({
+      transform: { rotate: 5, scale: 1.1 },
+      responsiveStyle: { mobile: { transform: { rotate: 0 } } },
+    } as Partial<TreeNode>)
+    assert.deepEqual(resolveTransform(node, 'desktop'), {
+      rotate: 5,
+      scale: 1.1,
+    })
+    assert.deepEqual(resolveTransform(node, 'mobile'), {
+      rotate: 0,
+      scale: 1.1,
+    })
+    assert.deepEqual(resolveTransform(node, 'tablet'), {
+      rotate: 5,
+      scale: 1.1,
+    })
+  })
+
+  it('transform — base 없어도 mobile override만 있으면 그대로 반환', () => {
+    const node = makeText({
+      responsiveStyle: { mobile: { transform: { rotate: -10 } } },
+    } as Partial<TreeNode>)
+    assert.equal(resolveTransform(node, 'desktop'), undefined)
+    assert.deepEqual(resolveTransform(node, 'mobile'), { rotate: -10 })
   })
 
   it('responsiveStyle 없으면 기존 동작 그대로', () => {
