@@ -197,6 +197,8 @@ import { TextPreview } from './text-preview'
 import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
 import { SelectableNode } from './selectable-node'
 import { CommandPalette, type CommandPaletteItem } from './command-palette'
+import { ToastProvider } from './toast-context'
+import { ToastHost } from './toast-host'
 import {
   DEFAULT_ACCENT_PICKER_COLOR,
   DEFAULT_COLOR_PICKER_COLOR,
@@ -3337,6 +3339,7 @@ export default function HomePage() {
   ]
 
   return (
+    <ToastProvider>
     <CanvasSelectionContext.Provider
       value={{
         primarySelectedId: selectedNodeId,
@@ -5174,9 +5177,11 @@ export default function HomePage() {
         onClose={() => setCommandPaletteOpen(false)}
         items={commandItems}
       />
+      <ToastHost />
     </main>
     </CanvasHoverContext.Provider>
     </CanvasSelectionContext.Provider>
+    </ToastProvider>
   )
 }
 
