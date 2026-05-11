@@ -2809,6 +2809,13 @@ function HomePageInner() {
 
     if (payload.type) {
       const t = payload.type
+      // LR-05 — dataTransfer payload 의 type 이 12 노드 타입 중 하나인지 검증.
+      // 외부 drag / 잘못된 payload 가 흘러들어와도 nodeTypeLabels[t] 가 undefined 라
+      // toast 가 "undefined 노드는 …" 으로 깨지는 회귀 차단.
+      if (!(t in nodeTypeLabels)) {
+        showToast('알 수 없는 노드 타입입니다', 'error')
+        return
+      }
       // tree-editor 의 leaf/container 분기.
       if (t === 'text' || t === 'button' || t === 'image') {
         handleAddLeafChild(parentId, t)
