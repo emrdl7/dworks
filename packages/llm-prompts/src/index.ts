@@ -3,6 +3,8 @@
 
 import { type Tree } from '@dworks/tree'
 
+import { loadDesignSystem } from './design-systems/loader'
+
 export const PACKAGE_NAME = '@dworks/llm-prompts'
 
 /**
@@ -55,6 +57,13 @@ export interface DesignBrief {
     /** 시도할 톤 (앞 5개는 system prompt 매핑 톤 — 다크/미니멀/빈티지/퓨처/에디토리얼/GenZ 등). */
     targetTone?: string
   }
+  /**
+   * 활성 design system id — `nexu-io/open-design` 패턴 흡수.
+   * `design-systems/{id}/DESIGN.md` 가 prompt 에 inject 되어 _구체 토큰_ 으로 LLM 강제.
+   * 예: 'linear-app', 'stripe-app', 'apple', 'anthropic'.
+   * undefined 면 system prompt 의 일반 톤 매핑만 사용 (기존 동작).
+   */
+  activeDesignSystem?: string
 }
 
 /** brief에서 사용할 imageReferences 배열을 결정한다 — 신규(imageReferences) 우선, 없으면 legacy 단일을 array[0]로. */
@@ -280,6 +289,23 @@ export function formatBriefAsUserPrompt(brief: DesignBrief): string {
     lines.push(
       '- hero pattern, layout direction, color family를 의도적으로 다르게. 같은 패턴 반복 금지.',
     )
+  }
+  // Open Design 흡수 — 활성 design system 의 DESIGN.md 를 prompt 에 inject.
+  // 9 섹션 markdown (color/typography/spacing/component/...) 이 _구체 토큰_ 으로
+  // LLM 강제. 톤 매핑보다 우선 (예: linear-app 이면 #5e6ad2 / weight 510 / cv01,ss03 강제).
+  // attribution: nexu-io/open-design (Apache 2.0) — design-systems/NOTICE.md 참조.
+  if (
+    brief.activeDesignSystem !== undefined &&
+    brief.activeDesignSystem.length > 0
+  ) {
+    const md = loadDesignSystem(brief.activeDesignSystem)
+    if (md !== null) {
+      lines.push('', `### 활성 디자인 시스템: ${brief.activeDesignSystem}`)
+      lines.push(
+        '아래는 이번 시안에 _필수 적용_ 할 디자인 시스템 명세이다. 색·타이포그래피·spacing·component 모두 이 시스템의 토큰을 따른다. 톤 매핑보다 우선.',
+      )
+      lines.push('', md.trim())
+    }
   }
   lines.push('', '위 브리프에 맞춰 dworks Tree JSON 하나를 반환한다.')
   return lines.join('\n')
