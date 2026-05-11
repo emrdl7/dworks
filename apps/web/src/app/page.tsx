@@ -791,8 +791,23 @@ function HomePageInner() {
   const [gridOverlayEnabled, setGridOverlayEnabled] = useState(false)
   // VIS-03 — 좌하단 미니맵 토글. localStorage 영속화(dw:uiPrefs:v1) — D-08, D-12.
   const [minimapEnabled, setMinimapEnabled] = useState(false)
-  // VIS-03 — tree 변경 시 미니맵 노드 박스 재측정 trigger.
-  // useRef 카운터로는 re-render 가 안 일어나므로 useState + effect 패턴.
+  /**
+   * VIS-03 / WR-04 — Minimap 재측정 trigger 카운터.
+   *
+   * **목적**: `tree` 객체 자체를 Minimap 에 prop 으로 넘기지 않고 별도 revision
+   * 카운터로 변경 신호만 전달한다. 이유:
+   * - Minimap 의 노드 박스 측정은 `document.querySelectorAll('[data-dworks-node-id]')`
+   *   기반(DOM-driven) 이라 tree 구조 detail 이 불필요.
+   * - tree 를 직접 prop 으로 넘기면 Minimap 이 tree shape 에 결합되어 향후 lazy
+   *   mount / virtualized 노드 도입 시 의존성이 누수된다.
+   *
+   * **사용 패턴**: `useEffect` deps 에 들어가 mutation 시 effect 가 재실행되도록
+   * 강제(force-remount-effect-deps)하는 용도. `useRef` 카운터는 re-render 가
+   * 일어나지 않아 `useState` 가 필요하다.
+   *
+   * **Overflow**: `number` (safe-integer 2^53 ≈ 9e15). 초당 100 mutation 기준
+   * ~28만년 — 실용상 무시 가능.
+   */
   const [treeRevision, setTreeRevision] = useState(0)
   // VIS-01 D-04 — snap 발생 column edge X 좌표(logical px). null 이면 가이드 숨김.
   // setSnapGuideX 는 향후 자유 위치(absolute) 노드 드래그 통합 site 에서 호출 예정 — 본 plan
