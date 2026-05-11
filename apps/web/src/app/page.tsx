@@ -2071,6 +2071,30 @@ export default function HomePage() {
     return true
   }
 
+  // viewport-aware reset — mobile/tablet에서 reset 누르면 _그 viewport의 prop만_
+  // 제거 (base는 그대로). desktop이면 false (caller가 기존 base reset 진행).
+  function commitResponsiveReset(
+    node: TreeNode,
+    key: keyof ResponsiveOverride,
+  ) {
+    if (responsiveViewport === 'desktop') return false
+    const baseRS: Record<string, Record<string, unknown>> =
+      (node.responsiveStyle ?? {}) as never
+    const baseVP: Record<string, unknown> = baseRS[responsiveViewport] ?? {}
+    const nextVP: Record<string, unknown> = { ...baseVP }
+    delete nextVP[key as string]
+    const nextRS: Record<string, Record<string, unknown>> = { ...baseRS }
+    if (Object.keys(nextVP).length > 0) {
+      nextRS[responsiveViewport] = nextVP
+    } else {
+      delete nextRS[responsiveViewport]
+    }
+    const next =
+      Object.keys(nextRS).length > 0 ? (nextRS as ResponsiveStyle) : undefined
+    commitTreeEdit(updateNodeMeta(tree, node.id, { responsiveStyle: next }))
+    return true
+  }
+
   function handleTextTypographyChange(
     node: TextNode,
     patch: Partial<Typography>,
@@ -2081,6 +2105,7 @@ export default function HomePage() {
   }
 
   function handleTextTypographyReset(node: TextNode) {
+    if (commitResponsiveReset(node, 'typography')) return
     commitTreeEdit(
       updateTextTypography(
         tree,
@@ -2102,6 +2127,7 @@ export default function HomePage() {
   }
 
   function handleSpacingReset(node: TreeNode) {
+    if (commitResponsiveReset(node, 'spacing')) return
     commitTreeEdit(
       updateSpacing(
         tree,
@@ -2123,6 +2149,7 @@ export default function HomePage() {
   }
 
   function handleShapeReset(node: TreeNode) {
+    if (commitResponsiveReset(node, 'shape')) return
     commitTreeEdit(
       updateShape(
         tree,
@@ -2152,6 +2179,7 @@ export default function HomePage() {
   }
 
   function handleNodeColorReset(node: TreeNode) {
+    if (commitResponsiveReset(node, 'color')) return
     const resetColorTree = updateColor(
       tree,
       node.id,
@@ -2173,6 +2201,7 @@ export default function HomePage() {
   }
 
   function handleLayoutReset(node: TreeNode) {
+    if (commitResponsiveReset(node, 'layout')) return
     commitTreeEdit(
       updateLayout(
         tree,
