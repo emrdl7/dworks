@@ -83,6 +83,15 @@ Plans:
 2. 줌이 마우스 포인터 위치 기준으로 동작 (현재 중심 기준 → focal point 기준)
 3. 좌하단 미니맵 — 큰 트리에서 viewport 위치 표시 + 클릭으로 navigate
 
+**Plans:** 2/3 plans complete
+
+```
+Plans:
+- [x] 03-01-PLAN.md — VIS-01 12-col 그리드 overlay + snap helper (Wave 1) — 2026-05-11
+- [x] 03-02-PLAN.md — VIS-02 viewport 중앙 pivot 줌 (toolbar +/- + ⌘0/⌘+/⌘-) (Wave 2) — 2026-05-11
+- [ ] 03-03-PLAN.md — VIS-03 좌하단 미니맵 (Wave 3)
+```
+
 ---
 
 ## Phase 4: export 깊이 (라이브러리 wrap)

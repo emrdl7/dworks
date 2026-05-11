@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T09:05:00.000Z"
+last_updated: "2026-05-11T08:36:50.382Z"
 progress:
   total_phases: 5
   completed_phases: 2
@@ -24,7 +24,7 @@ progress:
 |---|-------|--------|
 | 1 | UX 핵심 fix + 측정 도구 | 🟡 진행 중 (5/7 plan 완료, 01-01/01-04 잔여) |
 | 2 | AI 생성 품질 자동 검증 | 🟢 plans 5/5 완료 (02-05 wiring gap closure 완료) |
-| 3 | 시각 보조 도구 | 🟡 진행 중 (1/3 plan 완료 — VIS-01 done) |
+| 3 | 시각 보조 도구 | 🟡 진행 중 (2/3 plan 완료 — VIS-01 + VIS-02 done) |
 | 4 | export 깊이 | ⚪ pending |
 | 5 | 디자인 시스템 깊이 | ⚪ pending |
 
@@ -41,7 +41,8 @@ progress:
 - ✅ 02-04 (AI-01/02/03 enforceRichness + interactive + entranceAnimation) — 2026-05-11. enforceRichness orchestrator + inferDomain 5종 + ensureInteractiveComponent + ensureEntranceAnimations D-09 우선순위 3단계. commits 99e2e02..8a20010. 4분.
 - ✅ 02-05 (AI-01/02/03/05 production wiring gap closure) — 2026-05-11. page.tsx 두 호출 site 패치 — normalizeDesignTree({prompt: submitted.intent}) + extractFromDataUrl 가 analyzeDominantColors + extractLayoutIntent 호출 + ImageReferenceSeed 확장. commits 9cb2818 + 1518289. 12분.
 - ✅ 03-01 (VIS-01 12-col grid overlay + snap helper + column-span label) — 2026-05-11. grid-overlay.tsx 신규(153줄) + helper 3종 + 14 unit tests + page.tsx 5+ site 통합 + command-palette '시각 보조' group. commits 3dc8405 + 99122d6. 25분. Snap 컴퓨트 site 는 자유위치 드래그 미존재로 deferred(인프라/helper only).
-- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02 (도메인×톤 매트릭스?), 02-03 (이미지 분석?)
+- ✅ 03-02 (VIS-02 viewport 중앙 pivot 줌 통일) — 2026-05-11. setZoomWithCenterPivot useCallback helper + 5 진입점(toolbar +/- / ⌘0/⌘+/⌘- / ⌘K zoom-100 / GlobalContextMenu reset) wiring. wheel cursor-pivot 보존. commits 7ab2cf5 + 280884c. 8분.
+- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02 (도메인×톤 매트릭스?), 02-03 (이미지 분석?), 03-03 (VIS-03 미니맵).
 
 ## Decisions Log
 
@@ -65,6 +66,8 @@ progress:
 - [Phase 2 / Plan 05] extractFromDataUrl 의 동일 pixelSource 재사용 — 3 함수 (extractDominantColors, analyzeDominantColors, extractLayoutIntent) 가 같은 imageData 객체 전달받아 canvas 디코딩 1회 유지
 - [Phase 3 / Plan 01] GridOverlay mount 위치: canvasScrollRef 가 아닌 viewport box(`width: selectedViewportPreset.width, zoom: canvasZoom`) 내부 — containerWidth 자연 매칭 + 부모 CSS zoom 자동 추종 (보정 코드 0). viewport box 에 `position: relative` 추가 필수.
 - [Phase 3 / Plan 01] snap-to-column 컴퓨트 site deferred — 자유위치 노드의 드래그 기반 좌표 조정 기능이 codebase 에 없음(PositionControls 의 inset.left 인스펙터 input only). helper export(computeColumnEdges/snapToColumnEdge) + 가이드 div 인프라 + state 박아두고, 드래그 통합은 후속.
+- [Phase 3 / Plan 02] setZoomWithCenterPivot helper — number | ((prev)=>next) 두 시그니처로 keydown effect dep 변경 없이 ⌘+/⌘- 가 최신 canvasZoom 기준 ±0.1 (stale closure 회피). useCallback([]) 으로 ref-stable.
+- [Phase 3 / Plan 02] toolbar +/- + ⌘0/⌘+/⌘- + ⌘K zoom-100 + GlobalContextMenu reset 5 진입점 모두 viewport 중앙 pivot 통일 (Rule 2 일관성). handleCanvasFit/handleZoomToSelection/wheel cursor pivot 은 별도 동작 보존.
 
 ## Performance Metrics
 
@@ -81,6 +84,7 @@ progress:
 | Phase 02 P04 | 4 | 3 tasks | 2 files |
 | Phase 02 P05 | 12min | 2 tasks | 1 files |
 | Phase 03 P01 | 25min | 3 tasks | 4 files |
+| Phase 03 P02 | 8min | 2 tasks | 1 files |
 
 ## v1 Final State (참조)
 
