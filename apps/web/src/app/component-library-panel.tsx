@@ -71,6 +71,16 @@ const BASIC_TYPE_ORDER: readonly TreeNode['type'][] = [
   'modal',
 ]
 
+// LR-04 — tree-editor 가 leaf/container 헬퍼만 노출 → 본 4 타입은 Basic 카드에서
+// 활성화해도 warn toast 만 발생. AT 사용자에게는 비활성 상태를 알려야 WCAG 4.1.2
+// (Name, Role, Value) 충족 — aria-disabled + label 안내 변경.
+const BASIC_UNSUPPORTED_TYPES: ReadonlySet<TreeNode['type']> = new Set([
+  'carousel',
+  'tabs',
+  'accordion',
+  'modal',
+])
+
 // 패턴 카드 라벨 — fixture.name 보다 짧은 한국어 별칭.
 // fixture 추가 시 fallback (fixture.name → fixture.description → fixture.id).
 const FIXTURE_LABELS: Record<string, string> = {
@@ -144,22 +154,32 @@ export function ComponentLibraryPanel({
               기본
             </h3>
             <div className="grid grid-cols-2 gap-2">
-              {BASIC_TYPE_ORDER.map((type) => (
-                <ComponentCard
-                  key={type}
-                  icon={BASIC_TYPE_ICONS[type]}
-                  label={nodeTypeLabels[type]}
-                  variant="basic"
-                  onDragStart={(event) => {
-                    event.dataTransfer.effectAllowed = 'copy'
-                    event.dataTransfer.setData(
-                      'application/x-dworks-node',
-                      JSON.stringify({ type } satisfies ComponentLibraryDragPayload),
-                    )
-                  }}
-                  onActivate={() => onAddByKeyboard({ type })}
-                />
-              ))}
+              {BASIC_TYPE_ORDER.map((type) => {
+                const unsupported = BASIC_UNSUPPORTED_TYPES.has(type)
+                return (
+                  <ComponentCard
+                    key={type}
+                    icon={BASIC_TYPE_ICONS[type]}
+                    label={nodeTypeLabels[type]}
+                    variant="basic"
+                    // LR-04 — 4 타입은 활성화 시 warn toast 만 발생. AT 사용자에게도 안내.
+                    ariaDisabled={unsupported}
+                    ariaLabelOverride={
+                      unsupported
+                        ? `${nodeTypeLabels[type]} 카드 (패턴 카드 또는 ⌘K 사용)`
+                        : undefined
+                    }
+                    onDragStart={(event) => {
+                      event.dataTransfer.effectAllowed = 'copy'
+                      event.dataTransfer.setData(
+                        'application/x-dworks-node',
+                        JSON.stringify({ type } satisfies ComponentLibraryDragPayload),
+                      )
+                    }}
+                    onActivate={() => onAddByKeyboard({ type })}
+                  />
+                )
+              })}
             </div>
           </section>
 
@@ -209,6 +229,10 @@ interface ComponentCardProps {
   icon: LucideIcon
   label: string
   variant: 'basic' | 'pattern'
+  // LR-04 — Basic 카드 중 tree-editor 미지원 (carousel/tabs/accordion/modal) 일 때 true.
+  // role=button + tabIndex 는 유지해 SR navigation 가능. aria-disabled 만 전달.
+  ariaDisabled?: boolean
+  ariaLabelOverride?: string
   onDragStart: (event: ReactDragEvent<HTMLDivElement>) => void
   onActivate: () => void
 }
@@ -217,6 +241,8 @@ function ComponentCard({
   icon: Icon,
   label,
   variant,
+  ariaDisabled = false,
+  ariaLabelOverride,
   onDragStart,
   onActivate,
 }: ComponentCardProps) {
@@ -226,6 +252,7 @@ function ComponentCard({
       role="button"
       tabIndex={0}
       draggable
+      aria-disabled={ariaDisabled || undefined}
       onDragStart={onDragStart}
       onClick={onActivate}
       onKeyDown={(event) => {
@@ -234,7 +261,7 @@ function ComponentCard({
           onActivate()
         }
       }}
-      aria-label={`${label} 카드 (드래그 또는 Enter)`}
+      aria-label={ariaLabelOverride ?? `${label} 카드 (드래그 또는 Enter)`}
       className={[
         'group cursor-grab rounded-[var(--dw-radius-sm)] border border-[var(--dw-ui-border)] bg-[var(--dw-ui-elevated)] transition-all duration-[var(--dw-motion-base)] ease-[var(--dw-motion-ease)]',
         'hover:scale-[1.02] hover:border-[var(--dw-ui-accent)] hover:ring-1 hover:ring-[var(--dw-ui-accent)]',
