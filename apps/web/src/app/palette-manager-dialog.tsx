@@ -57,6 +57,35 @@ export function PaletteManagerDialog({
     }
   }, [open])
 
+  // WR-03: WCAG 2.1 키보드 네비게이션 — ESC 키로 닫기 + 닫을 때 이전 focus 복원.
+  // focus trap (Tab cycle) 은 후속 작업으로 deferred.
+  useEffect(() => {
+    if (!open) return
+    // 열기 직전 활성 요소 기억 — 닫을 때 복원.
+    const prevActive =
+      typeof document !== 'undefined'
+        ? (document.activeElement as HTMLElement | null)
+        : null
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => {
+      window.removeEventListener('keydown', handleKey)
+      // 복원 — element 가 여전히 DOM 에 있고 focusable 일 때만.
+      if (prevActive && typeof prevActive.focus === 'function') {
+        try {
+          prevActive.focus()
+        } catch {
+          // 일부 환경에서 detached element focus 시 throw — 무시.
+        }
+      }
+    }
+  }, [open, onClose])
+
   if (!open) return null
 
   function handleAdd() {
