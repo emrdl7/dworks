@@ -1,0 +1,1 @@
+- [02-04 execution] image-color.test.ts:9 missing export 'extractLayoutIntent' (Plan 02-03 영역, 본 plan scope 외)

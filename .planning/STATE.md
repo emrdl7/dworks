@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T05:22:11.083Z"
+last_updated: "2026-05-11T05:24:12.354Z"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 10
-  percent: 91
+  completed_plans: 11
+  percent: 100
 ---
 
 # Dworks v2.0 STATE
@@ -23,7 +23,7 @@ progress:
 | # | Phase | Status |
 |---|-------|--------|
 | 1 | UX 핵심 fix + 측정 도구 | 🟡 진행 중 (5/7 plan 완료, 01-01/01-04 잔여) |
-| 2 | AI 생성 품질 자동 검증 | 🟡 진행 시작 (02-01 완료, 02-02~02-05 잔여) |
+| 2 | AI 생성 품질 자동 검증 | 🟡 진행 중 (02-01..02-04 완료, 02-05 잔여) |
 | 3 | 시각 보조 도구 | ⚪ pending |
 | 4 | export 깊이 | ⚪ pending |
 | 5 | 디자인 시스템 깊이 | ⚪ pending |
@@ -38,7 +38,8 @@ progress:
 - ✅ 01-06 (UX-04 컴포넌트 라이브러리 패널) — 2026-05-11. 240/32px 패널 + 12 basic + 10 pattern + drag drop. commits d98ac1f..6971e88. 6분.
 - ✅ 01-07 (UX-05 박스 선택 + 정렬/분포) — 2026-05-11. BoxSelectOverlay + useAlignDistribute (8 단축키) + aria-live 한국어 알림. commits 8912300..a895e00. 8분.
 - ✅ 02-01 (AI-01 richness 13 신호 + validateTreeRichness) — 2026-05-11. 신호 #9~#13 + missing[] API + 11 테스트. commits 75ea025..d264ebc. 5분.
-- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02..02-05 (enforceRichness hook + 인터랙티브 자동 + entranceAnim 자동 + 매트릭스 + 이미지)
+- ✅ 02-04 (AI-01/02/03 enforceRichness + interactive + entranceAnimation) — 2026-05-11. enforceRichness orchestrator + inferDomain 5종 + ensureInteractiveComponent + ensureEntranceAnimations D-09 우선순위 3단계. commits 99e2e02..8a20010. 4분.
+- 잔여: 01-01 (Toast/Setup?), 01-04 (Quick-add UX-06), 02-02 (도메인×톤 매트릭스?), 02-03 (이미지 분석?), 02-05 (?)
 
 ## Decisions Log
 
@@ -54,6 +55,10 @@ progress:
 - [Phase 1 / Plan 07] 공통 부모 그룹화 (D-16) + non-absolute 자식 발견 시 그룹 skip + 1회 toast — 다른 부모 자식들은 각자 그룹 안에서만 정렬
 - [Phase 2 / Plan 01] richness.ts 13 신호 모델 — RICHNESS_SIGNAL_KEYS 동적 구성으로 validator 자동 동기 (8 필드 하드코딩 위치 4곳 제거)
 - [Phase 2 / Plan 01] validateTreeRichness API — missing[] 반환으로 enforceRichness hook (02-02) 의 자동 보강 분기 foundation 제공
+- [Phase 2 / Plan 04] enforceRichness server-side hook — prompt 있을 때만 활성화 (D-04 backward compat). 기존 normalizeDesignTree(tree) 호출자 영향 없음.
+- [Phase 2 / Plan 04] 도메인 5종 매핑 (D-05) — ecommerce→carousel/saas→tabs/faq→accordion/auth→modal/default→accordion. pure regex match.
+- [Phase 2 / Plan 04] entranceAnimation D-09 3단 우선순위 — hero.title 700 load + cards 600 staggered scroll (delay 0/150/300, STAGGER_DELAY_MS=150) + final 500 fade. MAX_ANIMATIONS=8.
+- [Phase 2 / Plan 04] D-07 + D-10 idempotent guards — hasAnyInteractive / hasEntranceAnimation 으로 기존 값 덮어쓰지 않음. normalizeDesignTree 두 번 호출 결과 deepEqual.
 
 ## Performance Metrics
 
@@ -67,6 +72,7 @@ progress:
 | Phase 02 P02 | 2 min | 1 tasks | 1 files |
 | Phase 02-ai-quality P01 | 5min | 2 tasks | 5 files |
 | Phase 02-ai-quality P03 | 8min | 2 tasks | 3 files |
+| Phase 02 P04 | 4 | 3 tasks | 2 files |
 
 ## v1 Final State (참조)
 
