@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T03:48:22.298Z"
+last_updated: "2026-05-11T04:00:15.942Z"
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 7
-  completed_plans: 1
-  percent: 14
+  completed_plans: 2
+  percent: 29
 ---
 
 # Dworks v2.0 STATE
@@ -30,14 +30,24 @@ progress:
 
 ## Active Work
 
-**Phase 1 진행 중** — Wave 1 시작.
+**Phase 1 진행 중** — Wave 2.
 
 - ✅ 01-02 (UX-01 verification stub) — 2026-05-11. commit 679bfb6 이미 적용됨을 SUMMARY 로 기록. 코드 수정 0.
-- 잔여: 01-01 (?), 01-03..01-07 (UX-02..UX-06)
+- ✅ 01-03 (UX-02 spacing overlay) — 2026-05-11. SpacingOverlay 컴포넌트 + page.tsx 마운트. commits acda97c + ec02c1f. 4분.
+- 잔여: 01-01 (?), 01-04..01-07 (UX-03..UX-06)
 
 ## Decisions Log
 
 - UX-01 already complete via commit 679bfb6 — verification stub plan records this in phase SUMMARY (2026-05-11)
+- [Phase 1 / Plan 03] canvasZoom 보정 생략 — CSS zoom 좌표계가 자동 동기되므로 wrapper rect 차이만 사용
+- [Phase 1 / Plan 03] Alt 추적은 격리 useEffect — Wave 4-6 단축키 plan file 충돌 회피 패턴
+
+## Performance Metrics
+
+| Phase | Plan | Duration | Tasks | Files | Completed |
+|-------|------|----------|-------|-------|-----------|
+| 01-ux-fix | 02 | (verification stub) | 0 | 0 | 2026-05-11 |
+| 01-ux-fix | 03 | 4min | 2 | 2 | 2026-05-11 |
 
 ## v1 Final State (참조)
 

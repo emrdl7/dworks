@@ -19,7 +19,8 @@
 
 - [x] **UX-01
 **: 우클릭 컨텍스트 메뉴 (NodeContextMenu) viewport boundary 검사 — 화면 우측/하단 가까우면 _좌측/위로 자동 flip_. 모든 메뉴 항목 항상 보이도록.
-- [ ] **UX-02**: 노드 간격 측정 _Figma 스타일_ — 선택 노드와 hover 다른 노드 사이 spacing(px) overlay 표시. 정렬 가이드 라인(빨간 선) + 스냅. Alt 키로 hover 시 거리 측정.
+- [x] **UX-02
+**: 노드 간격 측정 _Figma 스타일_ — 선택 노드와 hover 다른 노드 사이 spacing(px) overlay 표시. 정렬 가이드 라인(빨간 선) + 스냅. Alt 키로 hover 시 거리 측정.
 - [ ] **UX-03**: 노드 타입 변경 확대 — 현재 일부 type만 변환 가능. 모든 호환 type 간 변환 (text↔button, section↔hero↔card, list ↔ accordion, image↔carousel, 등). 비호환 변환 시 명확한 경고.
 - [ ] **UX-04**: 좌측 컴포넌트 라이브러리 패널 — 12 노드 타입 + 사전 정의 패턴 카드 (hero/feature-grid/cta/footer 등 ≥10) + 드래그로 캔버스에 추가 + 드래그 중 placeholder/스냅.
 - [ ] **UX-05**: 다중 선택 — Shift+drag로 박스 선택. 선택 후 정렬(좌/중/우, 상/중/하) + 분포(가로/세로 균등) 단축키.

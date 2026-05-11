@@ -36,8 +36,8 @@
 ```
 Plans:
 - [ ] 01-01-PLAN.md — Toast host + 변환 매트릭스 (Wave 1, foundation)
-- [ ] 01-02-PLAN.md — UX-01 boundary auto-flip 검증 stub (Wave 1, doc-only)
-- [ ] 01-03-PLAN.md — UX-02 Spacing overlay + 정렬 가이드 (Wave 2)
+- [x] 01-02-PLAN.md — UX-01 boundary auto-flip 검증 stub (Wave 1, doc-only)
+- [x] 01-03-PLAN.md — UX-02 Spacing overlay + 정렬 가이드 (Wave 2)
 - [ ] 01-04-PLAN.md — UX-06 Quick-add 단축키 + cheatsheet (Wave 3)
 - [ ] 01-05-PLAN.md — UX-03 노드 타입 변환 (컨텍스트 + ⌘K) (Wave 4)
 - [ ] 01-06-PLAN.md — UX-04 좌측 컴포넌트 라이브러리 패널 + drag/drop (Wave 5)
