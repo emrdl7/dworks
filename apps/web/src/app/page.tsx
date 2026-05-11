@@ -216,6 +216,7 @@ import { BoxSelectOverlay, findNodesInBox } from './box-select-overlay'
 import { SpacingOverlay } from './spacing-overlay'
 import { ToastProvider, useToast } from './toast-context'
 import { ToastHost } from './toast-host'
+import { useAlignDistribute } from './use-align-distribute'
 import { useQuickAddShortcuts } from './use-quick-add'
 import {
   DEFAULT_ACCENT_PICKER_COLOR,
@@ -2965,13 +2966,14 @@ function HomePageInner() {
   }
 
   // UX-06 quick-add 단축키 — T/B/I/R/C/H/L/F 등 단일 키로 노드 추가.
-  // 모달/팔레트/도움말 열림 중이면 비활성 (D-17). 기존 global keydown 과 modifier 가 달라 충돌 없음.
+  // 모달/팔레트/도움말 / 박스 선택 drag 중이면 비활성 (D-17, UX-05 충돌 회피).
   useQuickAddShortcuts({
     enabled:
       !commandPaletteOpen &&
       !briefDrawerOpen &&
       !inspectorDrawerOpen &&
-      !shortcutHelpOpen,
+      !shortcutHelpOpen &&
+      !boxSelect.active,
     tree,
     selectedNodeId,
     rootId: tree.root.id,
@@ -2979,6 +2981,26 @@ function HomePageInner() {
     onAddLeafSibling: handleAddLeafSibling,
     onAddContainerChild: handleAddContainerChild,
     onAddContainerSibling: handleAddContainerSibling,
+  })
+
+  // UX-05 정렬/분포 단축키 — Alt+A/H/D/W/V/S (정렬) + Alt+Shift+H/V (분포).
+  // quick-add 와 modifier 가 달라 (Alt 필수) 동일 keydown 등록되어도 충돌 없으나,
+  // 박스 선택 drag 중에는 둘 다 비활성 (안전).
+  // onAnnounce 는 박스 선택과 동일 aria-live polite region 재사용 — 체커 warning fix.
+  useAlignDistribute({
+    enabled:
+      !commandPaletteOpen &&
+      !briefDrawerOpen &&
+      !inspectorDrawerOpen &&
+      !shortcutHelpOpen &&
+      !boxSelect.active,
+    tree,
+    selectedIds: allSelectedNodeIds,
+    canvasScrollRef,
+    canvasZoom,
+    onCommit: commitTreeEdit,
+    onWarn: (msg) => showToast(msg, 'warn'),
+    onAnnounce: setBoxSelectAnnouncement,
   })
 
   // 글로벌 키보드 shortcut — input/textarea/contenteditable에서는 비활성
