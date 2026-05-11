@@ -3210,9 +3210,10 @@ function HomePageInner() {
         return
       }
       // ⌘0 — 캔버스 줌 100% 리셋 (Figma/Sketch 표준)
+      // VIS-02 D-07 — viewport 중앙 pivot 으로 리셋.
       if (meta && event.key === '0') {
         event.preventDefault()
-        setCanvasZoom(1)
+        setZoomWithCenterPivot(1)
         return
       }
       // ⌘1 — fit to screen (선택 viewport가 화면에 꽉 차도록)
@@ -3228,19 +3229,17 @@ function HomePageInner() {
         return
       }
       // ⌘+ / ⌘= — 줌 인 (= 키도 받음, shift 없는 + 입력 호환)
+      // VIS-02 D-07 — viewport 중앙 pivot 줌인 (clamp 는 helper 내부).
       if (meta && (event.key === '+' || event.key === '=')) {
         event.preventDefault()
-        setCanvasZoom((z) =>
-          Math.min(2, Math.round((z + 0.1) * 100) / 100),
-        )
+        setZoomWithCenterPivot((z) => z + 0.1)
         return
       }
       // ⌘- — 줌 아웃
+      // VIS-02 D-07 — viewport 중앙 pivot 줌아웃.
       if (meta && event.key === '-') {
         event.preventDefault()
-        setCanvasZoom((z) =>
-          Math.max(0.25, Math.round((z - 0.1) * 100) / 100),
-        )
+        setZoomWithCenterPivot((z) => z - 0.1)
         return
       }
       // UX-04 — [ 컴포넌트 라이브러리 패널 토글 (modifier 없는 단일 키, D-08).
@@ -3707,7 +3706,8 @@ function HomePageInner() {
       group: '줌',
       shortcut: '⌘0',
       keywords: ['zoom', 'reset', '100'],
-      action: () => setCanvasZoom(1),
+      // VIS-02 D-07 — command palette 진입점도 viewport 중앙 pivot 통일.
+      action: () => setZoomWithCenterPivot(1),
     },
     {
       id: 'zoom-fit',
@@ -5652,7 +5652,8 @@ function HomePageInner() {
             setAdditionalSelectedNodeIds(new Set())
           }}
           onFit={handleCanvasFit}
-          onZoomReset={() => setCanvasZoom(1)}
+          /* VIS-02 D-07 — global context menu 도 viewport 중앙 pivot 통일. */
+          onZoomReset={() => setZoomWithCenterPivot(1)}
           onZoomToSelection={handleZoomToSelection}
           onToggleGrid={() =>
             setCanvasGridSize((s) => {
