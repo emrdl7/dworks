@@ -176,6 +176,33 @@ export function Minimap(props: MinimapProps) {
     }
   }, [open, canvasScrollRef, measureViewport, treeRevision])
 
+  // WR-03 fix: wrapper 크기/콘텐츠 reflow 시 노드 박스 재측정.
+  // measureNodes 는 평소 treeRevision 변경 시에만 호출되어 — tree identity 가
+  // 안 바뀌는 in-place mutation(lazy mount, 자식 reflow, 컨테이너 크기 변동
+  // 등)에서 outline 이 stale 한 채 남는 문제 해결. ResizeObserver 1개 +
+  // rAF 디바운스로 burst 변화를 한 frame 으로 합친다.
+  useEffect(() => {
+    if (!open) return
+    const wrapper = canvasScrollRef.current
+    if (!wrapper) return
+    let pending = 0
+    const ro = new ResizeObserver(() => {
+      if (pending !== 0) return
+      pending = window.requestAnimationFrame(() => {
+        pending = 0
+        measureNodes()
+      })
+    })
+    ro.observe(wrapper)
+    return () => {
+      ro.disconnect()
+      if (pending !== 0) {
+        window.cancelAnimationFrame(pending)
+        pending = 0
+      }
+    }
+  }, [open, canvasScrollRef, measureNodes, treeRevision])
+
   if (!open) return null
 
   // contentSize 가 아직 없을 때(첫 frame) 의 fallback — containerWidth 정사각형.
