@@ -72,6 +72,12 @@ export function ToastProvider({ children }: ToastProviderProps) {
       clearTimeout(timer)
       timersRef.current.delete(id)
     }
+    // LR-02 — dedupe 직전 toast 가 수동 dismiss 됐다면 ref 도 같이 정리.
+    // 그렇지 않으면 다음 showToast 가 사라진 id 에 대해 setTimeout 을 재발급해
+    // timersRef 에 정리 안 되는 항목이 잔존 (tiny memory leak).
+    if (lastToastRef.current?.id === id) {
+      lastToastRef.current = null
+    }
   }, [])
 
   const showToast = useCallback(
