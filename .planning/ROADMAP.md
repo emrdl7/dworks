@@ -13,7 +13,7 @@
 | 2 | AI 생성 품질 자동 검증 | 5/5 | Complete    | 2026-05-11 |
 | 3 | 시각 보조 도구 (그리드/줌/미니맵) | 3/3 | Complete    | 2026-05-11 |
 | 4 | export 깊이 — 인터랙티브 작동 | 3/3 | Complete    | 2026-05-11 |
-| 5 | 디자인 시스템 (theme/palette/token export) | theme switcher + custom palette + 토큰 export | DS-01..DS-03 | yes |
+| 5 | 디자인 시스템 (theme/palette/token export) | 3/3 | Complete    | 2026-05-11 |
 
 ---
 

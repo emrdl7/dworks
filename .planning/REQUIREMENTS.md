@@ -47,7 +47,7 @@
 
 ### E. 디자인 시스템 (3)
 
-- [ ] **DS-01**: theme switcher — chrome 영역 light/dark/sepia 토글. globals.css 토큰 swap. 캔버스 콘텐츠는 별도 (별 영향 없음).
+- [x] **DS-01**: theme switcher — chrome 영역 light/dark/sepia 토글. globals.css 토큰 swap. 캔버스 콘텐츠는 별도 (별 영향 없음).
 - [x] **DS-02
 **: custom palette 저장/관리 — userFixtures와 비슷한 구조로 사용자 정의 palette 저장.
 - [x] **DS-03
