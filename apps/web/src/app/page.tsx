@@ -623,7 +623,16 @@ function HomePageInner() {
   const [additionalSelectedNodeIds, setAdditionalSelectedNodeIds] = useState<
     Set<string>
   >(new Set())
+  // HR-02 — 박스 선택처럼 _primary + additional 을 같은 tick 안에서 같이 설정_ 하는
+  // 경로는 본 ref 를 true 로 세팅한 뒤 setSelectedNodeId / setAdditionalSelectedNodeIds
+  // 를 연달아 호출한다. reset useEffect 가 다음 commit 에 1회 skip → 의도된 batch 선택
+  // 이 React 18+ automatic batching / 19 concurrent 환경에서도 안전하게 유지된다.
+  const batchSelectionRef = useRef(false)
   useEffect(() => {
+    if (batchSelectionRef.current) {
+      batchSelectionRef.current = false
+      return
+    }
     setAdditionalSelectedNodeIds(new Set())
   }, [selectedNodeId])
   const allSelectedNodeIds = useMemo(
@@ -3415,12 +3424,12 @@ function HomePageInner() {
       const first = found[0]
       if (first !== undefined) {
         const rest = found.slice(1)
+        // HR-02 — React 19 automatic batching 환경에서 queueMicrotask 가 commit phase
+        // 전 / 후 어느쪽에 실행될지 비결정적 → reset useEffect 가 additional 을 덮어
+        // 쓸 수 있음. batchSelectionRef 로 reset 1회 skip + 동기 setter 호출 (단일 batch).
+        batchSelectionRef.current = true
         setSelectedNodeId(first)
-        // selectedNodeId 변경 시 additionalSelectedNodeIds 가 reset 되는 useEffect 가
-        // 있으므로 next microtask 로 additional 적용 — 순서 보장.
-        queueMicrotask(() => {
-          setAdditionalSelectedNodeIds(new Set(rest))
-        })
+        setAdditionalSelectedNodeIds(new Set(rest))
         setBoxSelectAnnouncement(`${found.length}개 노드 선택`)
       }
       setBoxSelect({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 })
@@ -3437,7 +3446,10 @@ function HomePageInner() {
       document.body.style.cursor = previousCursor
       document.body.style.userSelect = previousUserSelect
     }
-  }, [boxSelect.active, boxSelect.startX, boxSelect.startY, canvasZoom, tree.root.id])
+    // MR-01 — `tree.root.id` 만으로는 fixture swap 중 드래그 시 onUp 이 stale tree 의
+    // root id 를 참조할 수 있다. `tree` 전체를 dep 으로 포함해 commit 마다 listener
+    // 가 새 closure 로 재바인딩되도록 한다 (active 가 보통 false 라 cost 미미).
+  }, [boxSelect.active, boxSelect.startX, boxSelect.startY, canvasZoom, tree])
 
   // ⌘K 명령 팔레트 항목 — 선택 노드 컨텍스트에 따라 disabled 결정.
   // 의도적으로 useMemo 안 쓰고 inline 계산 — handler들이 매 렌더 새 참조라
