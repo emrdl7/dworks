@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -3398,6 +3399,34 @@ function HomePageInner() {
   // zoom-to-selection 같은 직접 scroll 지정용
   const pendingDirectScrollRef = useRef<{ left: number; top: number } | null>(null)
 
+  // VIS-02 D-06/D-07 — toolbar +/- 버튼 + 키보드 ⌘+/⌘-/⌘0 줌은 cursor 위치 불명.
+  // canvas viewport 중앙 을 pivot 으로 사용 (wheel cursor-anchor 패턴 재사용).
+  // pendingZoomAnchorRef 의 단일 보정 effect 를 그대로 활용.
+  // 인자: number(직접 값) 또는 (prev) => next (delta 계산용, stale closure 회피).
+  const setZoomWithCenterPivot = useCallback(
+    (nextOrFn: number | ((prev: number) => number)): void => {
+      const target = canvasScrollRef.current
+      const rect = target ? target.getBoundingClientRect() : null
+      setCanvasZoom((prev) => {
+        const raw = typeof nextOrFn === 'function' ? nextOrFn(prev) : nextOrFn
+        const next = Math.max(0.25, Math.min(2, Math.round(raw * 100) / 100))
+        if (next === prev) return prev
+        // canvasScrollRef 가 아직 mount 전이면 anchor 없이 진행 — 보정 effect 가 noop
+        if (target && rect) {
+          pendingZoomAnchorRef.current = {
+            cursorX: rect.width / 2,
+            cursorY: rect.height / 2,
+            oldScrollLeft: target.scrollLeft,
+            oldScrollTop: target.scrollTop,
+            oldZoom: prev,
+          }
+        }
+        return next
+      })
+    },
+    [],
+  )
+
   // 캔버스 트랙패드/⌘+wheel 줌 — passive:false로 native attach (preventDefault 위해)
   useEffect(() => {
     const el = canvasScrollRef.current
@@ -5048,9 +5077,10 @@ function HomePageInner() {
                   onChange={setResponsiveViewport}
                 />
                 <span className="h-4 w-px shrink-0 bg-[var(--dw-ui-soft)]" aria-hidden="true" />
+                {/* VIS-02 D-06 — toolbar +/- 버튼도 viewport 중앙 pivot 으로 통일. */}
                 <CanvasZoomControl
                   value={canvasZoom}
-                  onChange={setCanvasZoom}
+                  onChange={setZoomWithCenterPivot}
                   onFit={handleCanvasFit}
                 />
                 <span className="h-4 w-px shrink-0 bg-[var(--dw-ui-soft)]" aria-hidden="true" />
