@@ -32,10 +32,16 @@ export interface ExportHtmlOptions {
 }
 
 // Embla Carousel UMD CDN (8.5.0 stable, CONTEXT D-05).
+// WR-03: SRI(Subresource Integrity) sha384 해시 부착 — CDN 변조 시 브라우저가 거부.
+//        해시는 unpkg.com/embla-carousel@8.5.0/embla-carousel.umd.js (17997 bytes) 기준.
+//        Embla 버전 업 시 해시 동시 갱신 필요.
 const EMBLA_CDN = 'https://unpkg.com/embla-carousel@8.5.0/embla-carousel.umd.js'
+const EMBLA_SRI = 'sha384-6PCKgOOLMemlf3VQZ8sQdAgDTKST7gNpHvrRqzGePqboeTtee919uJKZaj3hrY7z'
 // Pretendard Variable web font (CONTEXT D-03, lite CSS 포함).
+// WR-03: 동일 SRI 정책 — Pretendard 버전 업 시 해시 동시 갱신.
 const PRETENDARD_CDN =
   'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css'
+const PRETENDARD_SRI = 'sha384-f9iEnfDmuRSuBrXQjpPibejnfJMrZ2yI+715EjxlzBsPFIpaD1NxMh1MIzthxtCh'
 
 // HTML attribute / text 내부에서 안전한 escape.
 const HTML_ESCAPES: Record<string, string> = {
@@ -98,11 +104,11 @@ function buildHead(title: string, lang: string, features: ExportFeatures): strin
   parts.push(`<meta charset="UTF-8">`)
   parts.push(`<meta name="viewport" content="width=device-width, initial-scale=1.0">`)
   parts.push(`<title>${escapeHtml(title)}</title>`)
-  parts.push(`<link rel="stylesheet" href="${PRETENDARD_CDN}">`)
+  parts.push(`<link rel="stylesheet" href="${PRETENDARD_CDN}" integrity="${PRETENDARD_SRI}" crossorigin="anonymous">`)
   parts.push(`<style>${BASE_CSS}</style>`)
   // Carousel 노드가 있어야만 Embla CDN 로드 — 다른 export 는 외부 의존 0.
   if (features.hasCarousel) {
-    parts.push(`<script src="${EMBLA_CDN}" defer></script>`)
+    parts.push(`<script src="${EMBLA_CDN}" integrity="${EMBLA_SRI}" crossorigin="anonymous" defer></script>`)
   }
   return parts.join('\n')
 }
