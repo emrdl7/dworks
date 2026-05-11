@@ -6,6 +6,9 @@
 // API 형태:
 //   - extractDominantColors(imageData, count) → string[]   소문자 #rrggbb, 빈도 desc
 //   - pickAspectRatio(width, height)          → 'square' | 'landscape' | 'portrait' | 'wide'
+//   - analyzeDominantColors(imageData, count) → { hexes, classifications } HSL light/dark/neutral 분류
+//   - extractLayoutIntent(imageData)          → 'centered' | 'left-aligned' | 'grid' | 'asymmetric'
+//   - rgbToHsl(r, g, b)                       → [h, s, l] (0-1 ratio, internal helper)
 //
 // 순수 함수 — DOM 없이 ImageData(=Uint8ClampedArray + width)만 받는다. 호출 측이
 // File → ObjectURL → HTMLImageElement → canvas.drawImage → getImageData를 책임진다.
@@ -61,6 +64,64 @@ export function extractDominantColors(
   )
 }
 
+// RGB(0-255) → HSL(0-1 ratio). luminance L 로 light/dark/neutral 분류에 사용.
+// 순수 수학 함수 — external dep 없음.
+function rgbToHsl(
+  r: number,
+  g: number,
+  b: number,
+): [number, number, number] {
+  const rn = r / 255
+  const gn = g / 255
+  const bn = b / 255
+  const max = Math.max(rn, gn, bn)
+  const min = Math.min(rn, gn, bn)
+  const l = (max + min) / 2
+  let h = 0
+  let s = 0
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    if (max === rn) h = (gn - bn) / d + (gn < bn ? 6 : 0)
+    else if (max === gn) h = (bn - rn) / d + 2
+    else h = (rn - gn) / d + 4
+    h /= 6
+  }
+  return [h, s, l]
+}
+
+// hex(#rrggbb) → luminance 기준 light/dark/neutral 분류.
+// L >= 0.7 → light, L <= 0.3 → dark, 그 외 → neutral.
+function classifyByLuminance(hex: string): 'light' | 'dark' | 'neutral' {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  const [, , l] = rgbToHsl(r, g, b)
+  if (l >= 0.7) return 'light'
+  if (l <= 0.3) return 'dark'
+  return 'neutral'
+}
+
+export interface DominantColorsAnalysis {
+  /** 빈도 상위 hex 색 (소문자 #rrggbb). 최대 count 개. */
+  hexes: string[]
+  /** 각 hex 의 light/dark/neutral 분류 (HSL luminance 기준). hexes 와 같은 length. */
+  classifications: Array<'light' | 'dark' | 'neutral'>
+}
+
+/**
+ * dominant 5색 + light/dark/neutral 분류 분석.
+ * extractDominantColors 결과를 HSL luminance 로 분류한 통합 결과.
+ */
+export function analyzeDominantColors(
+  source: RgbaPixelSource,
+  count = 5,
+): DominantColorsAnalysis {
+  const hexes = extractDominantColors(source, count)
+  const classifications = hexes.map(classifyByLuminance)
+  return { hexes, classifications }
+}
+
 export function pickAspectRatio(
   width: number,
   height: number,
@@ -78,6 +139,68 @@ export function pickAspectRatio(
   if (ratio >= 1.2) return 'landscape'
   if (ratio <= 0.8) return 'portrait'
   return 'square'
+}
+
+/** 이미지 콘텐츠의 레이아웃 의도. v1 은 4사분면 픽셀 분포 heuristic. */
+export type LayoutIntent =
+  | 'centered'
+  | 'left-aligned'
+  | 'grid'
+  | 'asymmetric'
+
+/**
+ * 이미지 4사분면 (좌상/우상/좌하/우하) 의 _콘텐츠 픽셀_ 밀도로 레이아웃 의도를 추출.
+ * 콘텐츠 픽셀 기준: alpha >= 128 인 픽셀만 카운트.
+ * heuristic:
+ *   - 좌측 두 사분면 합 / 총 ≥ 0.6 → 'left-aligned'
+ *   - 중앙 영역 (가로/세로 25-75% box) 픽셀 / 총 ≥ 0.6 → 'centered'
+ *   - 4 사분면 비율 변동계수 (stdev/mean) < 0.2 → 'grid'
+ *   - 나머지 → 'asymmetric'
+ */
+export function extractLayoutIntent(source: RgbaPixelSource): LayoutIntent {
+  const { data, width, height } = source
+  const halfW = width / 2
+  const halfH = height / 2
+  // 중앙 박스 영역 (전체 가로/세로의 25~75% 구간).
+  const cx0 = width * 0.25
+  const cx1 = width * 0.75
+  const cy0 = height * 0.25
+  const cy1 = height * 0.75
+  let tl = 0
+  let tr = 0
+  let bl = 0
+  let br = 0
+  let centerBox = 0
+  let total = 0
+  for (let i = 0; i < data.length; i += 4) {
+    const a = data[i + 3] ?? 255
+    if (a < 128) continue
+    const pi = i / 4
+    const x = pi % width
+    const y = Math.floor(pi / width)
+    total += 1
+    if (x < halfW && y < halfH) tl += 1
+    else if (x >= halfW && y < halfH) tr += 1
+    else if (x < halfW && y >= halfH) bl += 1
+    else br += 1
+    if (x >= cx0 && x < cx1 && y >= cy0 && y < cy1) centerBox += 1
+  }
+  if (total === 0) return 'asymmetric'
+  const leftRatio = (tl + bl) / total
+  if (leftRatio >= 0.6) return 'left-aligned'
+  const centerRatio = centerBox / total
+  if (centerRatio >= 0.6) return 'centered'
+  const mean = total / 4
+  const variance =
+    ((tl - mean) ** 2 +
+      (tr - mean) ** 2 +
+      (bl - mean) ** 2 +
+      (br - mean) ** 2) /
+    4
+  const stdev = Math.sqrt(variance)
+  const cv = mean > 0 ? stdev / mean : 0
+  if (cv < 0.2) return 'grid'
+  return 'asymmetric'
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
