@@ -194,7 +194,14 @@ import {
   SHADOW_VALUES,
 } from './design-style'
 import { TextPreview } from './text-preview'
-import { nodeTypeIcons, nodeTypeLabels } from './node-meta'
+import {
+  canConvertNodeType,
+  nodeTypeConversionDisabledReason,
+  nodeTypeConversionMatrix,
+  nodeTypeIcons,
+  nodeTypeLabels,
+} from './node-meta'
+import { convertNodeType } from './node-type-convert'
 import { SelectableNode } from './selectable-node'
 import {
   CommandPalette,
@@ -202,7 +209,7 @@ import {
   type CommandPaletteItem,
 } from './command-palette'
 import { SpacingOverlay } from './spacing-overlay'
-import { ToastProvider } from './toast-context'
+import { ToastProvider, useToast } from './toast-context'
 import { ToastHost } from './toast-host'
 import { useQuickAddShortcuts } from './use-quick-add'
 import {
@@ -585,7 +592,19 @@ type ModalEditPatch = Pick<
   | 'open'
 >
 
+// HomePage 는 ToastProvider 로 HomePageInner 를 감싸 useToast() 가
+// 컴포넌트 함수 body 에서 호출 가능하도록 한다 (UX-03 변환 손실 toast 등).
 export default function HomePage() {
+  return (
+    <ToastProvider>
+      <HomePageInner />
+    </ToastProvider>
+  )
+}
+
+function HomePageInner() {
+  // 전역 toast — UX-03 변환 손실 안내 등에서 사용.
+  const { showToast } = useToast()
   const [selectedFixtureId, setSelectedFixtureId] = useState(defaultTreeFixture.id)
   const [tree, setTree] = useState<Tree>(defaultTreeFixture.tree)
   const [selectedNodeId, setSelectedNodeId] = useState(
@@ -2766,6 +2785,28 @@ export default function HomePage() {
     closeContextMenu()
   }
 
+  // UX-03 — 12 호환 매트릭스 기반 노드 타입 변환. 3-route (컨텍스트 메뉴 /
+  // 인스펙터 dropdown / ⌘K) 모두 본 핸들러 1개를 호출 — 회귀 없는 동기화.
+  function handleConvertNodeType(
+    nodeId: string,
+    nextType: TreeNode['type'],
+  ) {
+    const result = convertNodeType(tree, nodeId, nextType)
+    if (result.tree === tree) {
+      // no-op 또는 비호환 — 첫 lossWarning 만 warn toast 로 안내
+      const firstWarning = result.lossWarnings[0]
+      if (firstWarning) {
+        showToast(firstWarning, 'warn')
+      }
+      closeContextMenu()
+      return
+    }
+    commitTreeEdit(result.tree, result.changedNodeId)
+    // 손실 warning 각각 별도 warn toast (Toast Provider 가 500ms 내 중복 dedupe)
+    result.lossWarnings.forEach((msg) => showToast(msg, 'warn', 5000))
+    closeContextMenu()
+  }
+
   function handleToggleNodeCanvasSelection(node: TreeNode) {
     handleNodeMetaChange(node, {
       pointerEvents: node.pointerEvents === 'none' ? undefined : 'none',
@@ -3386,7 +3427,6 @@ export default function HomePage() {
   ]
 
   return (
-    <ToastProvider>
     <CanvasSelectionContext.Provider
       value={{
         primarySelectedId: selectedNodeId,
@@ -5066,6 +5106,9 @@ export default function HomePage() {
           onChangeLeafType={(nextType) =>
             handleChangeLeafType(contextMenuNode.id, nextType)
           }
+          onConvertNodeType={(nextType) =>
+            handleConvertNodeType(contextMenuNode.id, nextType)
+          }
           onClose={closeContextMenu}
           onDelete={() => handleDeleteNode(contextMenuNode.id)}
           onDuplicate={() => handleDuplicateNode(contextMenuNode.id)}
@@ -5115,7 +5158,6 @@ export default function HomePage() {
     </main>
     </CanvasHoverContext.Provider>
     </CanvasSelectionContext.Provider>
-    </ToastProvider>
   )
 }
 
@@ -5300,6 +5342,8 @@ interface NodeContextMenuProps {
   onAddContainerSibling: (containerType: ContainerNodeType) => void
   onChangeContainerType: (nextType: ContainerNodeType) => void
   onChangeLeafType: (nextType: LeafNodeType) => void
+  // UX-03 — 12 호환 매트릭스 기반 타입 변환 핸들러 (D-05 3-route 중 컨텍스트 메뉴 route).
+  onConvertNodeType: (nextType: TreeNode['type']) => void
   onClose: () => void
   onDelete: () => void
   onDuplicate: () => void
@@ -5319,6 +5363,7 @@ function NodeContextMenu({
   onAddContainerSibling,
   onChangeContainerType,
   onChangeLeafType,
+  onConvertNodeType,
   onClose,
   onDelete,
   onDuplicate,
@@ -5516,29 +5561,39 @@ function NodeContextMenu({
           </ContextMenuButton>
         </>
       ) : null}
-      {node.type === 'text' || node.type === 'button' || node.type === 'image' ? (
-        <>
-          <div className="my-1 h-px bg-[var(--dw-ui-soft)]" role="separator" />
-          <ContextMenuButton
-            disabled={node.type === 'text'}
-            onClick={() => onChangeLeafType('text')}
-          >
-            텍스트로 변경
-          </ContextMenuButton>
-          <ContextMenuButton
-            disabled={node.type === 'image'}
-            onClick={() => onChangeLeafType('image')}
-          >
-            이미지로 변경
-          </ContextMenuButton>
-          <ContextMenuButton
-            disabled={node.type === 'button'}
-            onClick={() => onChangeLeafType('button')}
-          >
-            버튼으로 변경
-          </ContextMenuButton>
-        </>
-      ) : null}
+      {/* UX-03 노드 타입 변경 — 12 호환 매트릭스 기반 동적 항목 (D-05/D-06).
+          기존 flat "텍스트로 변경" / "이미지로 변경" 항목은 매트릭스로 대체.
+          비호환 사유 있을 땐 disabled + tooltip 표시. */}
+      {(() => {
+        const compatibleTypes = nodeTypeConversionMatrix[node.type]
+        const disabledReason = nodeTypeConversionDisabledReason[node.type]
+        if (compatibleTypes.length === 0 && !disabledReason) return null
+        return (
+          <>
+            <div className="my-1 h-px bg-[var(--dw-ui-soft)]" role="separator" />
+            <div className="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--dw-ui-text-faint)]">
+              노드 타입 변경
+            </div>
+            {compatibleTypes.length === 0 ? (
+              <ContextMenuButton
+                disabled
+                title={`변환 불가: ${disabledReason}`}
+              >
+                변환 불가
+              </ContextMenuButton>
+            ) : (
+              compatibleTypes.map((targetType) => (
+                <ContextMenuButton
+                  key={targetType}
+                  onClick={() => onConvertNodeType(targetType)}
+                >
+                  {nodeTypeLabels[targetType]}(으)로 변경
+                </ContextMenuButton>
+              ))
+            )}
+          </>
+        )
+      })()}
       {node.type === 'section' ||
       node.type === 'hero' ||
       node.type === 'card' ||
@@ -5571,25 +5626,7 @@ function NodeContextMenu({
           <ContextMenuButton onClick={() => onAddContainerChild('form')}>
             폼 그룹 추가
           </ContextMenuButton>
-          <div className="my-1 h-px bg-[var(--dw-ui-soft)]" role="separator" />
-          <ContextMenuButton
-            disabled={node.type === 'section'}
-            onClick={() => onChangeContainerType('section')}
-          >
-            섹션으로 변경
-          </ContextMenuButton>
-          <ContextMenuButton
-            disabled={node.type === 'card'}
-            onClick={() => onChangeContainerType('card')}
-          >
-            카드로 변경
-          </ContextMenuButton>
-          <ContextMenuButton
-            disabled={node.type === 'list'}
-            onClick={() => onChangeContainerType('list')}
-          >
-            목록으로 변경
-          </ContextMenuButton>
+          {/* 컨테이너 type 변경 항목은 위쪽 "노드 타입 변경" 동적 매트릭스로 통합 (UX-03). */}
         </>
       ) : null}
     </div>
@@ -5758,10 +5795,12 @@ interface ContextMenuButtonProps {
   checked?: boolean
   children: ReactNode
   disabled?: boolean
-  onClick: () => void
+  onClick?: () => void
   roleType?: 'menuitem' | 'menuitemcheckbox'
   shortcut?: string
   tone?: 'neutral' | 'danger'
+  // 비활성 항목 hover 시 native browser tooltip (UX-03 변환 불가 사유 표시).
+  title?: string
 }
 
 function ContextMenuButton({
@@ -5771,6 +5810,7 @@ function ContextMenuButton({
   onClick,
   roleType = 'menuitem',
   shortcut,
+  title,
   tone = 'neutral',
 }: ContextMenuButtonProps) {
   const toneClass =
@@ -5786,6 +5826,7 @@ function ContextMenuButton({
       className={`flex min-h-9 w-full items-center justify-between gap-3 rounded px-3 text-left text-sm font-semibold outline-none transition disabled:cursor-not-allowed disabled:text-[var(--dw-ui-text-faint)] disabled:hover:bg-transparent ${toneClass}`}
       disabled={disabled}
       onClick={onClick}
+      title={title}
     >
       <span>{children}</span>
       {roleType === 'menuitemcheckbox' ? (
