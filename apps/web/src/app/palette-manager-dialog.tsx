@@ -4,7 +4,7 @@
 // CONTEXT D-08 (인스펙터 통합은 v3+ deferred), D-10 (dialog UI + 색 picker grid).
 // 색 picker 는 native <input type="color"> — HSL picker 는 v3 (CONTEXT specifics).
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
   MAX_COLORS_PER_PALETTE,
@@ -38,6 +38,13 @@ export function PaletteManagerDialog({
   const { showToast } = useToast()
   const [draftName, setDraftName] = useState('새 팔레트')
   const [draftColors, setDraftColors] = useState<string[]>(DEFAULT_COLORS)
+  // WR-01: palette 이름 inline 편집은 매 keystroke 마다 updatePalette 를 호출하면
+  // localStorage write 가 폭주(IME 자모 단위 포함). 로컬 draft state 유지 후 onBlur
+  // 시점에만 commit — keystroke I/O 분리.
+  const [editingName, setEditingName] = useState<{
+    id: string
+    value: string
+  } | null>(null)
 
   if (!open) return null
 
@@ -126,10 +133,24 @@ export function PaletteManagerDialog({
             >
               <input
                 type="text"
-                value={p.name}
+                value={editingName?.id === p.id ? editingName.value : p.name}
                 onChange={(e) =>
-                  updatePalette(p.id, { name: e.target.value })
+                  setEditingName({ id: p.id, value: e.target.value })
                 }
+                onBlur={() => {
+                  if (
+                    editingName?.id === p.id &&
+                    editingName.value !== p.name
+                  ) {
+                    const ok = updatePalette(p.id, {
+                      name: editingName.value.trim() || '이름 없음',
+                    })
+                    if (!ok) {
+                      showToast('팔레트 이름 변경 실패', 'error')
+                    }
+                  }
+                  setEditingName(null)
+                }}
                 className="w-32 rounded bg-transparent px-2 py-1 text-xs text-[var(--dw-ui-text-primary)]"
                 aria-label={`${p.name} 이름 편집`}
               />
