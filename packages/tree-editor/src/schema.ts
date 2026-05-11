@@ -7,6 +7,7 @@ import {
   accordionItemSchema,
   accordionVariantSchema,
   carouselItemSchema,
+  entranceAnimationSchema,
   focalPointSchema,
   imageAspectRatioSchema,
   imagePresentationSchema,
@@ -106,6 +107,7 @@ export const updateNodeMetaOperationSchema: z.ZodType<UpdateNodeMetaOperation> =
       inset: nodeInsetSchema.optional(),
       hideOn: responsiveHiddenSchema,
       responsiveStyle: responsiveStyleSchema,
+      entranceAnimation: entranceAnimationSchema.optional(),
     }),
   })
 
@@ -229,6 +231,7 @@ export const editOperationSchema: z.ZodType<EditOperation> = z.discriminatedUnio
       inset: z.ZodOptional<typeof nodeInsetSchema>
       hideOn: typeof responsiveHiddenSchema
       responsiveStyle: typeof responsiveStyleSchema
+      entranceAnimation: z.ZodOptional<typeof entranceAnimationSchema>
     }>
   }>,
   updateButtonLabelOperationSchema as z.ZodObject<{

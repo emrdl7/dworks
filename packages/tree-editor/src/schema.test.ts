@@ -244,6 +244,27 @@ describe('edit-operation schema', () => {
     }
   })
 
+  it('parses updateNodeMeta operation with entranceAnimation', () => {
+    const op = editOperationSchema.parse({
+      type: 'updateNodeMeta',
+      nodeId: 'hero.title',
+      patch: {
+        entranceAnimation: {
+          type: 'fade-in',
+          duration: 800,
+          delay: 0,
+          trigger: 'load',
+        },
+      },
+    })
+    assert.equal(op.type, 'updateNodeMeta')
+    if (op.type === 'updateNodeMeta') {
+      assert.equal(op.patch.entranceAnimation?.type, 'fade-in')
+      assert.equal(op.patch.entranceAnimation?.duration, 800)
+      assert.equal(op.patch.entranceAnimation?.trigger, 'load')
+    }
+  })
+
   it('parses updateNodeMeta operation with responsiveStyle', () => {
     const op = editOperationSchema.parse({
       type: 'updateNodeMeta',

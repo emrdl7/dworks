@@ -73,6 +73,7 @@ import {
   type ResponsiveHidden,
   type ResponsiveOverride,
   type ResponsiveStyle,
+  type EntranceAnimationType,
   type TransitionCubicBezier,
   NODE_TRANSITION_TIMING_IDS,
   type NodeLayout,
@@ -7428,6 +7429,12 @@ function NodeInspector({
               onNodeMetaChange={onNodeMetaChange}
             />
 
+            <EntranceAnimationControls
+              node={node}
+              disclosure={bindSection('진입 애니메이션')}
+              onNodeMetaChange={onNodeMetaChange}
+            />
+
             <SpacingControls
               node={node}
               effectiveStyle={effectiveStyle}
@@ -10428,6 +10435,173 @@ function ResponsiveHideControls({
             )
           })}
         </div>
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface EntranceAnimationControlsProps {
+  disclosure?: InspectorDisclosureControl
+  node: TreeNode
+  onNodeMetaChange: (
+    node: TreeNode,
+    patch: NodeMetaPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+const ENTRANCE_ANIMATION_OPTIONS: ReadonlyArray<{
+  id: EntranceAnimationType
+  label: string
+}> = [
+  { id: 'fade-in', label: 'Fade in' },
+  { id: 'slide-up', label: '↑ Slide up' },
+  { id: 'slide-down', label: '↓ Slide down' },
+  { id: 'slide-left', label: '← Slide left' },
+  { id: 'slide-right', label: '→ Slide right' },
+  { id: 'scale-up', label: 'Scale up' },
+  { id: 'zoom-in', label: 'Zoom in' },
+]
+
+// EntranceAnimationControls — 노드 진입 애니메이션 (export 시점 wrap).
+// 캔버스는 정적 — 사용자가 진입 효과를 _상상_으로 박을 수 있도록 라벨만 명확.
+function EntranceAnimationControls({
+  disclosure,
+  node,
+  onNodeMetaChange,
+}: EntranceAnimationControlsProps) {
+  const anim = node.entranceAnimation
+  const hasAnim = anim !== undefined
+  const trigger = anim?.trigger ?? 'scroll'
+  const duration = anim?.duration ?? 600
+  const delay = anim?.delay ?? 0
+
+  function setType(type: EntranceAnimationType | undefined) {
+    if (type === undefined) {
+      onNodeMetaChange(node, { entranceAnimation: undefined })
+      return
+    }
+    onNodeMetaChange(node, {
+      entranceAnimation: {
+        ...(anim ?? {}),
+        type,
+      },
+    })
+  }
+
+  function patchAnim(patch: Partial<NonNullable<TreeNode['entranceAnimation']>>) {
+    if (!anim) return
+    onNodeMetaChange(node, {
+      entranceAnimation: { ...anim, ...patch },
+    })
+  }
+
+  return (
+    <InspectorDisclosure
+      title="진입 애니메이션"
+      description="노드가 화면에 들어올 때 효과 (export 시점 wrap)"
+      onAction={() => onNodeMetaChange(node, { entranceAnimation: undefined })}
+      isActionDisabled={!hasAnim}
+      hasExplicit={hasAnim}
+      defaultOpen={false}
+      {...disclosure}
+    >
+      <div className="mt-3 space-y-3">
+        <div>
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            효과
+          </span>
+          <div className="mt-2 grid grid-cols-2 gap-1">
+            <button
+              type="button"
+              aria-pressed={!hasAnim}
+              onClick={() => setType(undefined)}
+              className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                !hasAnim
+                  ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                  : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+              }`}
+            >
+              없음
+            </button>
+            {ENTRANCE_ANIMATION_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                aria-pressed={anim?.type === opt.id}
+                onClick={() => setType(opt.id)}
+                className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                  anim?.type === opt.id
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {hasAnim ? (
+          <>
+            <div>
+              <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+                트리거
+              </span>
+              <div className="mt-2 grid grid-cols-2 gap-1">
+                {(['scroll', 'load'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={trigger === t}
+                    onClick={() => patchAnim({ trigger: t === 'scroll' ? undefined : t })}
+                    className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                      trigger === t
+                        ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                        : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                    }`}
+                  >
+                    {t === 'scroll' ? '🪟 스크롤 진입' : '⚡ 페이지 로드'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <TypographyNumberField
+                label="지속 시간"
+                unit="ms"
+                min={100}
+                max={3000}
+                step={50}
+                value={duration}
+                placeholder="600"
+                onChange={(value) =>
+                  patchAnim({
+                    duration: parseOptionalNumber(value, 100, 3000) ?? 600,
+                  })
+                }
+              />
+              <TypographyNumberField
+                label="시작 지연"
+                unit="ms"
+                min={0}
+                max={3000}
+                step={50}
+                value={delay}
+                placeholder="0"
+                onChange={(value) =>
+                  patchAnim({
+                    delay: parseOptionalNumber(value, 0, 3000),
+                  })
+                }
+              />
+            </div>
+            <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
+              캔버스는 _정적_ 미리보기 — 실제 애니메이션은 export 결과에서 IntersectionObserver
+              + CSS animation으로 wrap. 같은 그룹 카드들은 delay를 0/150/300 식으로 staggered 적용.
+            </p>
+          </>
+        ) : null}
       </div>
     </InspectorDisclosure>
   )

@@ -69,6 +69,7 @@ export interface NodeMetaPatch {
   inset?: TreeNode['inset']
   hideOn?: TreeNode['hideOn']
   responsiveStyle?: TreeNode['responsiveStyle']
+  entranceAnimation?: TreeNode['entranceAnimation']
 }
 
 export interface UpdateNodeMetaOperation {
@@ -968,6 +969,14 @@ function withNodeMetaPatch<T extends TreeNode>(
       delete next.responsiveStyle
     } else {
       next.responsiveStyle = patch.responsiveStyle
+    }
+  }
+
+  if ('entranceAnimation' in patch) {
+    if (patch.entranceAnimation === undefined) {
+      delete next.entranceAnimation
+    } else {
+      next.entranceAnimation = patch.entranceAnimation
     }
   }
 

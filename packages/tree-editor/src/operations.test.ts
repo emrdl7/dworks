@@ -518,6 +518,48 @@ describe('tree editor operations', () => {
     }
   })
 
+  it('updates and clears entranceAnimation metadata', () => {
+    const tree = fixtureTree()
+    const edited = updateNodeMeta(tree, 'landing.title', {
+      entranceAnimation: {
+        type: 'slide-up',
+        duration: 700,
+        delay: 200,
+        trigger: 'scroll',
+      },
+    })
+    const reset = updateNodeMeta(edited, 'landing.title', {
+      entranceAnimation: undefined,
+    })
+    const findById = (n: TreeNode, id: string): TreeNode | undefined => {
+      if (n.id === id) return n
+      if ('children' in n) {
+        for (const c of n.children) {
+          const found = findById(c, id)
+          if (found) return found
+        }
+      }
+      return undefined
+    }
+    if (
+      tree.root.type === 'section' &&
+      edited.root.type === 'section' &&
+      reset.root.type === 'section'
+    ) {
+      const original = findById(tree.root, 'landing.title')
+      const modified = findById(edited.root, 'landing.title')
+      const cleared = findById(reset.root, 'landing.title')
+      assert.equal(original?.entranceAnimation, undefined)
+      assert.deepEqual(modified?.entranceAnimation, {
+        type: 'slide-up',
+        duration: 700,
+        delay: 200,
+        trigger: 'scroll',
+      })
+      assert.equal(cleared?.entranceAnimation, undefined)
+    }
+  })
+
   it('updates and clears responsiveStyle metadata', () => {
     const tree = fixtureTree()
     const edited = updateNodeMeta(tree, 'landing.title', {

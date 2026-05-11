@@ -312,6 +312,38 @@ export const nodeInsetSchema = z.object({
 })
 export type NodeInset = z.infer<typeof nodeInsetSchema>
 
+// entranceAnimation — 노드 진입 애니메이션. export 결과에서 IntersectionObserver +
+// CSS animation으로 wrap. 캔버스는 정적 (인스펙터에서 미리보기 가능).
+//
+// 사용 예: hero.title \`{ type: 'slide-up', duration: 700, delay: 0, trigger: 'scroll' }\`,
+// features card 1/2/3 staggered \`{ type: 'fade-in', delay: 0/150/300 }\`.
+export const ENTRANCE_ANIMATION_TYPES = [
+  'fade-in',
+  'slide-up',
+  'slide-down',
+  'slide-left',
+  'slide-right',
+  'scale-up',
+  'zoom-in',
+] as const
+export const entranceAnimationTypeSchema = z.enum(ENTRANCE_ANIMATION_TYPES)
+export type EntranceAnimationType = z.infer<typeof entranceAnimationTypeSchema>
+
+export const ENTRANCE_ANIMATION_TRIGGERS = ['load', 'scroll'] as const
+export const entranceAnimationTriggerSchema = z.enum(ENTRANCE_ANIMATION_TRIGGERS)
+export type EntranceAnimationTrigger = z.infer<typeof entranceAnimationTriggerSchema>
+
+export const entranceAnimationSchema = z.object({
+  type: entranceAnimationTypeSchema,
+  // ms 단위 duration. 기본 600.
+  duration: z.number().int().min(100).max(3000).optional(),
+  // ms 단위 delay. staggered 효과에 사용. 기본 0.
+  delay: z.number().int().min(0).max(3000).optional(),
+  // 'scroll' = IntersectionObserver, 'load' = mount 즉시. 기본 'scroll'.
+  trigger: entranceAnimationTriggerSchema.optional(),
+})
+export type EntranceAnimation = z.infer<typeof entranceAnimationSchema>
+
 // responsiveStyle — 노드별 viewport-specific prop override.
 // 데스크탑은 root prop이 default 의도이므로 여기엔 mobile/tablet만.
 // resolver가 desktop은 root prop을 그대로, mobile/tablet은 "root prop ∪ override"를
@@ -512,6 +544,7 @@ interface BaseNodeMeta {
   inset?: NodeInset
   hideOn?: ResponsiveHidden
   responsiveStyle?: ResponsiveStyle
+  entranceAnimation?: EntranceAnimation
 }
 
 export interface TextNode extends BaseNodeMeta {
@@ -683,6 +716,7 @@ const baseShape = {
   inset: nodeInsetSchema.optional(),
   hideOn: responsiveHiddenSchema,
   responsiveStyle: responsiveStyleSchema,
+  entranceAnimation: entranceAnimationSchema.optional(),
 }
 
 export const textNodeSchema: z.ZodType<TextNode> = z.object({

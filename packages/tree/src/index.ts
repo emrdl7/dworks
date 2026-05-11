@@ -88,6 +88,11 @@ export {
   responsiveHiddenSchema,
   responsiveOverrideSchema,
   responsiveStyleSchema,
+  entranceAnimationSchema,
+  entranceAnimationTypeSchema,
+  entranceAnimationTriggerSchema,
+  ENTRANCE_ANIMATION_TYPES,
+  ENTRANCE_ANIMATION_TRIGGERS,
 } from './schema.js'
 export type {
   EditKind,
@@ -154,4 +159,7 @@ export type {
   ResponsiveHidden,
   ResponsiveOverride,
   ResponsiveStyle,
+  EntranceAnimation,
+  EntranceAnimationType,
+  EntranceAnimationTrigger,
 } from './schema.js'

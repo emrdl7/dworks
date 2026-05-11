@@ -109,7 +109,8 @@
                 "responsiveStyle": {
                   "mobile": { "typography": { "fontSize": 36 } },
                   "tablet": { "typography": { "fontSize": 48 } }
-                }
+                },
+                "entranceAnimation": { "type": "slide-up", "duration": 700, "trigger": "load" }
               },
               {
                 "id": "hero.subtitle",
@@ -257,6 +258,7 @@
                     "spacing": { "paddingTop": 28, "paddingBottom": 28, "paddingLeft": 28, "paddingRight": 28, "gap": 14 },
                     "color": { "backgroundColor": "#f1f5f9" },
                     "shape": { "radius": 14, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#e2e8f0", "shadow": "none" },
+                    "entranceAnimation": { "type": "slide-up", "duration": 600, "delay": 0 },
                     "children": [
                       { "id": "features.card.1.tag", "type": "text", "editKind": "text", "content": "1", "typography": { "fontSize": 14, "fontWeight": "800" }, "color": { "textColor": "#0284c7" } },
                       { "id": "features.card.1.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "이벤트 수집", "typography": { "fontSize": 20, "fontWeight": "700" }, "color": { "textColor": "#0f172a" } },
@@ -271,6 +273,7 @@
                     "spacing": { "paddingTop": 28, "paddingBottom": 28, "paddingLeft": 28, "paddingRight": 28, "gap": 14 },
                     "color": { "backgroundColor": "#0f172a" },
                     "shape": { "radius": 14, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#1e293b", "shadow": "lg" },
+                    "entranceAnimation": { "type": "slide-up", "duration": 600, "delay": 150 },
                     "children": [
                       { "id": "features.card.2.tag", "type": "text", "editKind": "text", "content": "2", "typography": { "fontSize": 14, "fontWeight": "800" }, "color": { "textColor": "#7dd3fc" } },
                       { "id": "features.card.2.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "실시간 변환", "typography": { "fontSize": 20, "fontWeight": "700" }, "color": { "textColor": "#f8fafc" } },
@@ -285,6 +288,7 @@
                     "spacing": { "paddingTop": 28, "paddingBottom": 28, "paddingLeft": 28, "paddingRight": 28, "gap": 14 },
                     "color": { "backgroundColor": "#f1f5f9" },
                     "shape": { "radius": 14, "borderWidth": 1, "borderStyle": "solid", "borderColor": "#e2e8f0", "shadow": "none" },
+                    "entranceAnimation": { "type": "slide-up", "duration": 600, "delay": 300 },
                     "children": [
                       { "id": "features.card.3.tag", "type": "text", "editKind": "text", "content": "3", "typography": { "fontSize": 14, "fontWeight": "800" }, "color": { "textColor": "#0284c7" } },
                       { "id": "features.card.3.title", "type": "text", "editKind": "text", "emphasis": "heading-3", "content": "알림 + 대시보드", "typography": { "fontSize": 20, "fontWeight": "700" }, "color": { "textColor": "#0f172a" } },

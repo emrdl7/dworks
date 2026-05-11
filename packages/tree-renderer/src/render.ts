@@ -50,10 +50,17 @@ function classFromTokens(tokens?: string[]): string | undefined {
 }
 
 function commonAttrs(node: TreeNode): string {
+  // entranceAnimation은 data-attr로 노출 — export 후 라이브러리(IntersectionObserver
+  // + CSS animation)가 이 attr 보고 진입 효과 처리.
+  const anim = node.entranceAnimation
   return attrs([
     ['data-dw-node', node.id],
     ['data-dw-edit', node.editKind],
     ['class', classFromTokens(node.styleTokens)],
+    ['data-dw-entrance', anim?.type],
+    ['data-dw-entrance-trigger', anim?.trigger],
+    ['data-dw-entrance-duration', anim?.duration?.toString()],
+    ['data-dw-entrance-delay', anim?.delay?.toString()],
   ])
 }
 
