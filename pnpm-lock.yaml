@@ -117,6 +117,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@dworks/exporters':
+        specifier: workspace:*
+        version: link:../../packages/exporters
       '@dworks/tree':
         specifier: workspace:*
         version: link:../../packages/tree
