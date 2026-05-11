@@ -33,6 +33,36 @@ function makeText(overrides: Partial<TreeNode> = {}): TreeNode {
   } as TreeNode
 }
 
+// enforceRichness 테스트 helper — main role container + hero + footer section.
+function makeMain(children: TreeNode[] = []): TreeNode {
+  return {
+    id: 'n-main',
+    type: 'section',
+    role: 'main',
+    editKind: 'structure',
+    children,
+  } as unknown as TreeNode
+}
+
+function makeHero(overrides: Partial<TreeNode> = {}): TreeNode {
+  return {
+    id: 'n-hero',
+    type: 'hero',
+    editKind: 'structure',
+    children: [],
+    ...overrides,
+  } as unknown as TreeNode
+}
+
+function makeFooterSection(): TreeNode {
+  return {
+    id: 'n-footer-section',
+    type: 'section',
+    editKind: 'structure',
+    children: [],
+  } as unknown as TreeNode
+}
+
 describe('normalizeDesignTree', () => {
   it('root이 section이면 그대로 통과', () => {
     const tree = makeTree(makeSection())
@@ -106,5 +136,58 @@ describe('normalizeDesignTree', () => {
     const children = (out.root as { children: TreeNode[] }).children
     assert.equal(children[0]?.id, 't1')
     assert.equal(children[1]?.id, 't2')
+  })
+})
+
+describe('enforceRichness — interactive', () => {
+  it('enforceRichness — interactiveComponent 부재 + SaaS prompt → tabs 자동 추가 (D-05)', () => {
+    const main = makeMain([makeHero(), makeFooterSection()])
+    const root = makeSection({ children: [main] })
+    const tree = makeTree(root)
+    const out = normalizeDesignTree(tree, { prompt: 'SaaS dashboard 페이지' })
+    // root.children[0] 이 main, main.children 안에 tabs 노드 존재
+    const outMain = (out.root as unknown as { children: TreeNode[] }).children[0]
+    assert.ok(outMain !== undefined)
+    const mainChildren = (outMain as unknown as { children: TreeNode[] }).children
+    const tabsNode = mainChildren.find((c) => c.type === 'tabs')
+    assert.ok(tabsNode !== undefined, 'tabs 노드 자동 추가 안 됨')
+    // 마지막 section/hero 직전 위치 — [hero, tabs, section]
+    const childTypes = mainChildren.map((c) => c.type)
+    assert.deepEqual(childTypes, ['hero', 'tabs', 'section'])
+  })
+
+  it('enforceRichness — interactiveComponent 부재 + e-commerce prompt → carousel 자동 추가', () => {
+    const main = makeMain([makeHero(), makeFooterSection()])
+    const tree = makeTree(makeSection({ children: [main] }))
+    const out = normalizeDesignTree(tree, { prompt: 'e-commerce 제품 카탈로그' })
+    const outMain = (out.root as unknown as { children: TreeNode[] }).children[0]
+    const carouselNode = (outMain as unknown as { children: TreeNode[] }).children.find(
+      (c) => c.type === 'carousel',
+    )
+    assert.ok(carouselNode !== undefined)
+  })
+
+  it('enforceRichness — 이미 interactive 1개 이상이면 추가 안 함 (D-07)', () => {
+    const main = makeMain([
+      makeHero(),
+      {
+        id: 'existing-accordion',
+        type: 'accordion',
+        editKind: 'structure',
+        items: [],
+      } as unknown as TreeNode,
+      makeFooterSection(),
+    ])
+    const tree = makeTree(makeSection({ children: [main] }))
+    const out = normalizeDesignTree(tree, { prompt: 'SaaS' })
+    const outMain = (out.root as unknown as { children: TreeNode[] }).children[0]
+    const interactiveCount = (outMain as unknown as { children: TreeNode[] }).children.filter(
+      (c) =>
+        c.type === 'carousel' ||
+        c.type === 'tabs' ||
+        c.type === 'accordion' ||
+        c.type === 'modal',
+    ).length
+    assert.equal(interactiveCount, 1) // 기존 accordion 만, tabs 추가 안 됨
   })
 })
