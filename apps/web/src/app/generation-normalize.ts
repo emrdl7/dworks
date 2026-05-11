@@ -76,16 +76,32 @@ export function normalizeDesignTree(
   const intermediate: Tree = { ...tree, root: deduped }
   // 3) 풍부도 13 신호 자동 보강 (prompt 있을 때만 — backward compat)
   if (context.prompt === undefined) return intermediate
-  return enforceRichness(intermediate, context.prompt)
+  // ME-04: enforceRichness 가 { tree, residualMissing } 을 반환하므로 tree 만 추출.
+  return enforceRichness(intermediate, context.prompt).tree
+}
+
+/**
+ * ME-04: enforceRichness 결과 — 보강된 tree + 보강 후에도 남은 missing 신호.
+ * residualMissing 은 다음 phase 에서 toast 안내 등 surface UI 에 사용 예정.
+ */
+export interface EnforceRichnessResult {
+  tree: Tree
+  residualMissing: RichnessSignalKey[]
 }
 
 /**
  * 13 풍부도 신호 자동 보강 — idempotent + safe 변환만.
  *   - interactiveComponent missing: 도메인 추론 후 carousel/tabs/accordion/modal 1개 추가 (D-05, D-07)
  *   - entranceAnimationSpread missing: hero.title + main 직계 카드 + final CTA staggered (D-08, D-09, D-10)
- * 보강 후에도 잔여 missing 이 있으면 호출 측이 toast 로 사용자에게 안내.
+ *
+ * ME-04: 반환 형태가 { tree, residualMissing } 로 바뀜 — 보강 후 재검증 결과를 노출해
+ * 호출 측에서 잔여 미달 신호를 추후 toast 등으로 안내 가능. v1 에선 toast 미구현이라
+ * page.tsx 는 residualMissing 을 사용하지 않지만 API shape 은 잡아 둠.
  */
-export function enforceRichness(tree: Tree, prompt: string): Tree {
+export function enforceRichness(
+  tree: Tree,
+  prompt: string,
+): EnforceRichnessResult {
   const { missing }: { missing: RichnessSignalKey[] } = validateTreeRichness(tree)
   let next = tree
   if (missing.includes('interactiveComponent')) {
@@ -94,7 +110,9 @@ export function enforceRichness(tree: Tree, prompt: string): Tree {
   if (missing.includes('entranceAnimationSpread')) {
     next = ensureEntranceAnimations(next)
   }
-  return next
+  // ME-04: 보강 후 재검증 — 잔여 missing 노출.
+  const after = validateTreeRichness(next)
+  return { tree: next, residualMissing: after.missing }
 }
 
 /** 도메인 → 권장 인터랙티브 컴포넌트 매핑 (D-05).
