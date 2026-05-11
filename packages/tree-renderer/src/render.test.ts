@@ -271,11 +271,13 @@ describe('renderTabs', () => {
     assert.match(html, /data-tab-id="b"[^>]*aria-selected="true"[^>]*tabindex="0"/)
     // 비활성 (id 'a') aria-selected="false"
     assert.match(html, /data-tab-id="a"[^>]*aria-selected="false"/)
-    // 비활성 panel hidden, 활성 panel visible
-    assert.match(html, /id="panel-a"[^>]*hidden>/)
-    assert.match(html, /id="panel-b"[^>]*>pricing<\/div>/)
-    // aria-controls 연결
-    assert.match(html, /data-tab-id="b"[^>]*aria-controls="panel-b"/)
+    // 비활성 panel hidden, 활성 panel visible — id 에 node.id prefix (WR-01)
+    assert.match(html, /id="tabs1-panel-a"[^>]*hidden>/)
+    assert.match(html, /id="tabs1-panel-b"[^>]*>pricing<\/div>/)
+    // aria-controls 연결 + trigger id 가 panel aria-labelledby 와 매칭 (CR-01)
+    assert.match(html, /data-tab-id="b"[^>]*aria-controls="tabs1-panel-b"/)
+    assert.match(html, /id="tabs1-tab-b"/)
+    assert.match(html, /id="tabs1-panel-b"[^>]*aria-labelledby="tabs1-tab-b"/)
     // root data-dworks-tabs
     assert.match(html, /<div[^>]*data-dworks-tabs/)
   })

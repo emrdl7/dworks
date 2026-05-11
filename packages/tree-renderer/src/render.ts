@@ -212,6 +212,9 @@ function renderTabs(node: TabsNode): string {
     node.items.length - 1,
   )
   const activeId = node.items[activeIndex]?.id ?? node.items[0]?.id ?? ''
+  // CR-01 / WR-01 — trigger 에 id 부착 + tabs node.id prefix 로 globally-unique 보장.
+  // panel 의 aria-labelledby 가 가리킬 대상이 실재해야 스크린 리더가 panel 라벨을 결정한다 (WAI-ARIA tabs).
+  const prefix = node.id
   const triggers = node.items
     .map((it) => {
       const isActive = it.id === activeId
@@ -219,9 +222,10 @@ function renderTabs(node: TabsNode): string {
         ['type', 'button'],
         ['class', 'dw-tabs__trigger'],
         ['role', 'tab'],
+        ['id', `${prefix}-tab-${it.id}`],
         ['data-dworks-tab-trigger', ''],
         ['data-tab-id', it.id],
-        ['aria-controls', `panel-${it.id}`],
+        ['aria-controls', `${prefix}-panel-${it.id}`],
         ['aria-selected', isActive ? 'true' : 'false'],
         ['tabindex', isActive ? '0' : '-1'],
       ])}>${escapeHtml(it.label)}</button>`
@@ -237,8 +241,8 @@ function renderTabs(node: TabsNode): string {
         ['role', 'tabpanel'],
         ['data-dworks-tab-panel', ''],
         ['data-tab-id', it.id],
-        ['id', `panel-${it.id}`],
-        ['aria-labelledby', `tab-${it.id}`],
+        ['id', `${prefix}-panel-${it.id}`],
+        ['aria-labelledby', `${prefix}-tab-${it.id}`],
       ])}${hiddenAttr}>${content}</div>`
     })
     .join('')
