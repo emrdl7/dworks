@@ -353,6 +353,13 @@ const SHORTCUT_GROUPS: readonly ShortcutGroup[] = [
     ],
   },
   {
+    // VIS-01..VIS-03 — Phase 3 시각 보조 카테고리.
+    category: '시각 보조',
+    items: [
+      { keys: ['G'], label: '12-col 그리드 토글' },
+    ],
+  },
+  {
     category: '선택 / 도움말',
     items: [
       { keys: ['Esc'], label: '선택 해제 / 닫기' },

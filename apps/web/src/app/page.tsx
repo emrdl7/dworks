@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Grid3x3,
   GripVertical,
   Lock,
   Unlock,
@@ -220,6 +221,7 @@ import {
 } from './command-palette'
 import { BoxSelectOverlay, findNodesInBox } from './box-select-overlay'
 import { SpacingOverlay } from './spacing-overlay'
+import { GridOverlay, computeColumnSpan } from './grid-overlay'
 import { ToastProvider, useToast } from './toast-context'
 import { ToastHost } from './toast-host'
 import { useAlignDistribute } from './use-align-distribute'
@@ -782,6 +784,13 @@ function HomePageInner() {
   const [leftPanelTab, setLeftPanelTab] = useState<'brief' | 'layers'>('brief')
   // 캔버스 grid — 디자인 정밀도용 격자 (off / 8 / 16 / 24 px cycle)
   const [canvasGridSize, setCanvasGridSize] = useState<0 | 8 | 16 | 24>(0)
+  // VIS-01 — 12-col grid overlay 토글. localStorage 영속화(dw:uiPrefs:v1) — D-01.
+  const [gridOverlayEnabled, setGridOverlayEnabled] = useState(false)
+  // VIS-01 D-04 — snap 발생 column edge X 좌표(logical px). null 이면 가이드 숨김.
+  // setSnapGuideX 는 향후 자유 위치(absolute) 노드 드래그 통합 site 에서 호출 예정 — 본 plan
+  // 에서는 인프라(state + 가이드 렌더 + computeColumnEdges/snapToColumnEdge export)만 박는다.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [snapGuideX, setSnapGuideX] = useState<number | null>(null)
   // 키보드 단축키 도움말 popover (focus 처리는 ShortcutHelpModal 내부에서 담당)
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false)
   // ⌘K 명령 팔레트
@@ -1019,6 +1028,8 @@ function HomePageInner() {
           leftPanelTab?: 'brief' | 'layers'
           leftPanelWidth?: number
           rightPanelWidth?: number
+          // VIS-01 — 12-col grid overlay 토글 상태(D-01).
+          gridOverlayEnabled?: boolean
         }
         // 신규(canvasGridSize) 우선, 없으면 legacy boolean 마이그레이션
         if (
@@ -1063,6 +1074,10 @@ function HomePageInner() {
         ) {
           setRightPanelWidth(saved.rightPanelWidth)
         }
+        // VIS-01 — 토글 상태 복원(boolean 검증, D-01).
+        if (typeof saved.gridOverlayEnabled === 'boolean') {
+          setGridOverlayEnabled(saved.gridOverlayEnabled)
+        }
       }
     } catch {
       // localStorage 접근 실패는 무시 — default 상태 유지
@@ -1082,6 +1097,8 @@ function HomePageInner() {
           leftPanelTab,
           leftPanelWidth,
           rightPanelWidth,
+          // VIS-01 — 12-col grid overlay 토글 상태(D-01).
+          gridOverlayEnabled,
         }),
       )
     } catch {
@@ -1095,6 +1112,7 @@ function HomePageInner() {
     leftPanelTab,
     leftPanelWidth,
     rightPanelWidth,
+    gridOverlayEnabled,
   ])
 
   useEffect(() => {
@@ -1292,6 +1310,28 @@ function HomePageInner() {
     [tree, colorPreset],
   )
   const selectedViewportPreset = responsiveViewportPresets[responsiveViewport]
+  // VIS-01 D-05 — 선택 노드 width 가 1/2/3/4/6/12 column span 과 ±4px 일치하면
+  // toolbar 에 "{N} cols" 라벨을 표시한다. gridOverlayEnabled 가 false 거나 노드 측정
+  // 실패면 null. canvasZoom 으로 DOM rect 를 logical px 로 환산(viewport box 의 CSS zoom 보정).
+  const selectedColumnSpan = useMemo<number | null>(() => {
+    if (!gridOverlayEnabled || !selectedNodeId) return null
+    if (typeof document === 'undefined') return null
+    const el = document.querySelector<HTMLElement>(
+      `[data-dworks-node-id="${CSS.escape(selectedNodeId)}"]`,
+    )
+    if (!el) return null
+    const z = canvasZoom > 0 ? canvasZoom : 1
+    const widthLogical = el.getBoundingClientRect().width / z
+    return computeColumnSpan(widthLogical, selectedViewportPreset.width, 12, 16, 4)
+    // tree 는 DOM 측정 trigger 용 proxy dep (노드 크기/구조 변경 후 재계산 필요).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    gridOverlayEnabled,
+    selectedNodeId,
+    canvasZoom,
+    selectedViewportPreset.width,
+    tree,
+  ])
   const canvasStyle = useMemo(
     () => getCanvasStyle(colorPreset),
     [colorPreset],
@@ -3208,6 +3248,17 @@ function HomePageInner() {
         setComponentPanelOpen((v) => !v)
         return
       }
+      // VIS-01 — G 키로 12-col grid overlay 토글 (modifier 없음, D-01).
+      if (
+        event.key.toLowerCase() === 'g' &&
+        !meta &&
+        !event.altKey &&
+        !event.shiftKey
+      ) {
+        event.preventDefault()
+        setGridOverlayEnabled((v) => !v)
+        return
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -3671,6 +3722,16 @@ function HomePageInner() {
           search?.select()
         })
       },
+    },
+    // VIS-01..VIS-03 — Phase 3 시각 보조 토글 (VIS-02/03 은 후속 Plan 에서 같은 group 추가).
+    {
+      id: 'toggle-grid-overlay',
+      label: gridOverlayEnabled ? '12-col 그리드 끄기' : '12-col 그리드 켜기',
+      group: '시각 보조',
+      shortcut: 'G',
+      keywords: ['grid', '그리드', 'column', 'layout', '12'],
+      icon: Grid3x3,
+      action: () => setGridOverlayEnabled((v) => !v),
     },
     // 도움말 — UX-06 D-19: ⌘K → "단축키" 검색으로 cheatsheet 노출.
     {
@@ -5021,6 +5082,34 @@ function HomePageInner() {
                     {canvasGridSize === 0 ? '그리드' : `${canvasGridSize}px`}
                   </span>
                 </button>
+                {/* VIS-01 — 12-col grid overlay 토글 + column span 라벨(D-01, D-05). */}
+                <button
+                  type="button"
+                  aria-label={
+                    gridOverlayEnabled
+                      ? '12-col 그리드 끄기'
+                      : '12-col 그리드 켜기'
+                  }
+                  aria-pressed={gridOverlayEnabled}
+                  title="12-col 그리드 (G)"
+                  onClick={() => setGridOverlayEnabled((v) => !v)}
+                  className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] ${
+                    gridOverlayEnabled
+                      ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                      : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-muted)] hover:border-[var(--dw-ui-accent)] hover:text-[var(--dw-ui-accent-text-strong)]'
+                  }`}
+                >
+                  <Grid3x3 size={13} aria-hidden="true" />
+                  <span>12-col</span>
+                </button>
+                {selectedColumnSpan !== null && (
+                  <span
+                    className="inline-flex h-7 shrink-0 items-center rounded-md border border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] px-2 text-xs font-semibold text-[var(--dw-ui-accent-text)] tabular-nums"
+                    aria-live="polite"
+                  >
+                    {selectedColumnSpan} cols
+                  </span>
+                )}
               </div>
             </div>
           )}
@@ -5239,7 +5328,7 @@ function HomePageInner() {
               }}
             >
               <div
-                className="mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)] shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-12px_rgba(0,0,0,0.6)] transition-[width] duration-200 ease-out motion-reduce:transition-none"
+                className="relative mx-auto border border-[var(--dw-border)] bg-[var(--dw-surface)] text-[var(--dw-text-primary)] shadow-[0_1px_2px_rgba(0,0,0,0.4),0_8px_24px_-12px_rgba(0,0,0,0.6)] transition-[width] duration-200 ease-out motion-reduce:transition-none"
                 style={{
                   ...canvasStyle,
                   width: selectedViewportPreset.width,
@@ -5266,6 +5355,31 @@ function HomePageInner() {
                     </CanvasToolbarContext.Provider>
                   </CanvasColorPresetContext.Provider>
                 </CanvasViewportContext.Provider>
+                {/* VIS-01 — 12-col grid overlay (viewport box 내부, selectedViewportPreset.width 기준).
+                    부모 viewport box 가 CSS zoom: canvasZoom 으로 scale 되므로 자동 추종. */}
+                <GridOverlay
+                  enabled={gridOverlayEnabled}
+                  columnCount={12}
+                  gutterPx={16}
+                  containerWidth={selectedViewportPreset.width}
+                  canvasZoom={canvasZoom}
+                  canvasWrapperRef={canvasScrollRef}
+                />
+                {/* VIS-01 D-04 — snap 가이드. snapGuideX(logical px) 위치에 #FF8FAB 1px 수직선. */}
+                {gridOverlayEnabled && snapGuideX !== null && (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute"
+                    style={{
+                      left: snapGuideX,
+                      top: 0,
+                      width: 1,
+                      height: '100%',
+                      backgroundColor: '#FF8FAB',
+                      zIndex: 51,
+                    }}
+                  />
+                )}
               </div>
             </div>
           )}

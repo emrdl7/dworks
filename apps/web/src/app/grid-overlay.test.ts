@@ -22,7 +22,8 @@ describe('computeColumnEdges', () => {
     // 첫 column 끝(=105.333) 과 두번째 column 시작(=105.333+16=121.333) 사이는 gutter.
     assert.equal(edges[2], colWidth + 16)
     // 마지막 column 끝점은 containerWidth 와 일치(부동소수점 ±1e-9 허용).
-    assert.ok(Math.abs(edges[edges.length - 1] - 1440) < 1e-9)
+    const last = edges[edges.length - 1] ?? 0
+    assert.ok(Math.abs(last - 1440) < 1e-9)
   })
 
   it('returns empty array if colWidth ≤ 0 (container too narrow)', () => {
@@ -34,7 +35,9 @@ describe('computeColumnEdges', () => {
   it('edges sorted ascending', () => {
     const edges = computeColumnEdges(1024, 12, 16)
     for (let i = 1; i < edges.length; i += 1) {
-      assert.ok(edges[i] > edges[i - 1], `edge[${i}] should be > edge[${i - 1}]`)
+      const cur = edges[i] ?? 0
+      const prev = edges[i - 1] ?? 0
+      assert.ok(cur > prev, `edge[${i}] should be > edge[${i - 1}]`)
     }
   })
 })
