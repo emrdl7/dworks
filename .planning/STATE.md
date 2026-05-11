@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T09:41:08.634Z"
+last_updated: "2026-05-11T09:47:29.461Z"
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 21
-  completed_plans: 19
-  percent: 90
+  completed_plans: 20
+  percent: 95
 ---
 
 # Dworks v2.0 STATE
@@ -26,7 +26,7 @@ progress:
 | 2 | AI 생성 품질 자동 검증 | 🟢 plans 5/5 완료 (02-05 wiring gap closure 완료) |
 | 3 | 시각 보조 도구 | 🟢 plans 3/3 완료 (VIS-01 + VIS-02 + VIS-03 done) |
 | 4 | export 깊이 | 🟢 plans 3/3 완료 (04-01 tree-renderer + 04-02 exporters + 04-03 web 어댑터 done) |
-| 5 | 디자인 시스템 깊이 | 🟡 진행 중 (05-02 DS-02 done; 05-01 code 적용 완료 SUMMARY 없음; 05-03 잔여) |
+| 5 | 디자인 시스템 깊이 | 🟢 plans 2/3 완료 (05-02 DS-02 + 05-03 DS-03 done; 05-01 DS-01 코드 적용 완료 SUMMARY 없음) |
 
 ## Active Work
 
@@ -47,7 +47,8 @@ progress:
 - ✅ 04-02 (EXP-01/02/03 exporters html.ts + html-scripts.ts + tests) — 2026-05-11. exportTreeToHtml(tree) → 완성된 <!DOCTYPE html> + detectFeatures 5종 검출 + 5개 vanilla JS IIFE 템플릿 (TABS/MODAL/ACCORDION/CAROUSEL_INIT/ENTRANCE) + BASE_CSS + Embla CDN 자동 주입 + IntersectionObserver + prefers-reduced-motion. 9 신규 테스트 pass. deviation 5건 (data-dw-entrance attr 명, schema descend 단순화, aria-selected string, readyState 분기, unused param). commits 43e6b66 + ffd4955 + fdf3743. 5분.
 - ✅ 04-03 (EXP-01/02/03 web 어댑터 + HTML 내보내기 UI) — 2026-05-11. apps/web/src/app/html-export.ts 신규(53줄) — downloadGenerationAsHtml + buildHtmlFilename. page.tsx handleExportGenerationHtml + 'HTML 내보내기' 버튼 JSON 옆 추가. showToast(message, tone) 위치인자 시그니처 정정 (Rule 1) + disabled={compareMode} JSON 패턴 정렬 (Rule 2). 376 tests pass. commits 97e8cbf + b63a208. 6분.
 - ✅ 05-02 (DS-02 custom palette manager) — 2026-05-11. palette-context.ts (PaletteProvider+usePalettes+CRUD+localStorage 'dw:palettes:v1'+유효성) + palette-manager-dialog.tsx (CRUD UI + native color picker grid) + page.tsx PaletteProvider wrap + ⌘K '팔레트 관리'. commits 82190d3..2d97104. 3분. 376 tests pass. 인스펙터 wiring 은 v3+ deferred.
-- 잔여: 05-01 (DS-01 SUMMARY 작성 — 코드는 이미 적용) + 05-03 (DS-03 토큰 export).
+- ✅ 05-03 (DS-03 디자인 토큰 export) — 2026-05-11. packages/exporters/src/tokens.ts (extractDesignTokens + exportDesignTokens(tailwind|css) + ExtractedTokens type) + tokens.test.ts (5 신규) + index.ts re-export + apps/web/src/app/token-export.ts (downloadTokens) + page.tsx 2 handler + '토큰 (CSS)' / '토큰 (Tailwind)' 버튼. commits 6f1d4e8..2c36f46. 8분. exporters 14/14 + web 376/376 pass. schema 실 필드명 정렬 (Rule 1: spacing 9키), color 추출 확장 (Rule 2: NodeColor 11 + Shape.borderColor + presentation.overlayColor), radius corner 5변형 (Rule 2).
+- 잔여: 05-01 (DS-01 SUMMARY 작성 — 코드는 이미 적용).
 
 ## Decisions Log
 
@@ -90,6 +91,11 @@ progress:
 - [Phase 5 / Plan 02] palette-context.ts 는 .ts 확장자 + createElement — theme-context.ts (05-01) 패턴 차용, JSX 없이 React tree 생성. Provider 순서 ThemeProvider > PaletteProvider > ToastProvider (palette CRUD 가 toast 비의존, hydration 안정성).
 - [Phase 5 / Plan 02] 유효성 검사 분산 — context.addPalette null 반환 (silent 거부) + dialog 가 null 체크 후 toast 노출 (user-facing). hex regex + 5-10색 범위 + max 8 palette + invalid localStorage entry silently drop.
 - [Phase 5 / Plan 02] 활성 palette 의 인스펙터 color picker 통합은 v3+ deferred (D-08 specifics) — 본 plan 은 storage + dialog + ⌘K 액션만. 사용처 wiring 은 후속.
+- [Phase 5 / Plan 03] schema 실 필드명 정렬 (Rule 1) — plan 의 `spacing: { padding, paddingX/Y, gap, margin, marginX/Y }` 가정은 spacingSchema (paddingTop/Right/Bottom/Left + marginTop/Right/Bottom/Left + gap 9 키) 와 불일치. SPACING_KEYS 를 schema 9 키 기준 재정의 — 그대로 두면 모든 spacing 토큰 누락.
+- [Phase 5 / Plan 03] color 추출 범위 확장 (Rule 2) — NodeColor 11 hex 키 (backgroundColor/textColor/accentColor + hover/active/focus/disabled 변형 8) + Shape.borderColor (schema 상 Shape 안에 있음) + ImagePresentation.overlayColor 까지 통합. plan 의 5 키만으론 interaction state 색 6 키 누락.
+- [Phase 5 / Plan 03] radius corner 5 변형 추출 (Rule 2) — radius + radiusTopLeft/Right + radiusBottomLeft/Right. corner-specific radius 누락 회피.
+- [Phase 5 / Plan 03] Tailwind 빈 카테고리 블록 생략 — colors/spacing/borderRadius/fontSize/fontFamily 중 비어있으면 블록 자체 생략. 빈 트리 → `theme.extend: {}` 만 + export default config 유지. CSS 도 :root 본문 비어있음.
+- [Phase 5 / Plan 03] apps/web 어댑터 패턴 = Phase 4 EXP-03 html-export.ts 와 동일 — Blob + anchor.click() + URL.revokeObjectURL try/finally. 파일명 prefix 만 다름 (`dworks-tokens-` vs `dworks-generation-`). MIME: text/typescript (Tailwind) / text/css (CSS).
 
 ## Performance Metrics
 
@@ -112,6 +118,7 @@ progress:
 | Phase 04 P02 | 5min | 3 tasks | 5 files |
 | Phase 04 P03 | 6min | 2 tasks | 4 files |
 | Phase 05-design-system P02 | 3min | 3 tasks | 3 files |
+| Phase 05-design-system P03 | 8min | 3 tasks | 5 files |
 
 ## v1 Final State (참조)
 
