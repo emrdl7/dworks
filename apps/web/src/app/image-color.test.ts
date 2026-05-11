@@ -4,7 +4,9 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import {
+  analyzeDominantColors,
   extractDominantColors,
+  extractLayoutIntent,
   mergeImageReferenceAspect,
   mergeImageReferenceColors,
   pickAspectRatio,
@@ -146,6 +148,90 @@ describe('mergeImageReferenceColors', () => {
       3,
     )
     assert.equal(merged.length, 3)
+  })
+})
+
+describe('analyzeDominantColors', () => {
+  it('5색 HSL 분류 light/dark/neutral 반환', () => {
+    // 5 픽셀 — 어두운 회색, 밝은 회색, 중간 회색, 빨강, 파랑.
+    const data = rgbaPlane([
+      [10, 10, 10, 255], // dark
+      [240, 240, 240, 255], // light
+      [128, 128, 128, 255], // neutral
+      [255, 0, 0, 255], // saturated red (mid luminance → neutral)
+      [0, 0, 255, 255], // saturated blue (low luminance → dark)
+    ])
+    const result = analyzeDominantColors(
+      { data, width: 5, height: 1 },
+      5,
+    )
+    // hexes 와 classifications 길이가 같아야 한다 (1:1 mapping).
+    assert.equal(result.hexes.length, result.classifications.length)
+    assert.ok(result.hexes.length >= 1 && result.hexes.length <= 5)
+    // dark / light 분류가 둘 다 등장해야 한다 (입력에 명확히 존재).
+    assert.ok(result.classifications.includes('dark'))
+    assert.ok(result.classifications.includes('light'))
+  })
+})
+
+describe('extractLayoutIntent', () => {
+  it('좌측 두 사분면 집중 → left-aligned', () => {
+    // 2x2: 좌측 두 픽셀만 opaque, 우측 투명.
+    const data = rgbaPlane([
+      [255, 0, 0, 255],
+      [0, 0, 0, 0],
+      [255, 0, 0, 255],
+      [0, 0, 0, 0],
+    ])
+    assert.equal(
+      extractLayoutIntent({ data, width: 2, height: 2 }),
+      'left-aligned',
+    )
+  })
+
+  it('네 사분면 균등 → grid', () => {
+    // 2x2: 네 픽셀 모두 opaque (cv=0 → grid).
+    const data = rgbaPlane([
+      [255, 0, 0, 255],
+      [0, 255, 0, 255],
+      [0, 0, 255, 255],
+      [255, 255, 0, 255],
+    ])
+    assert.equal(
+      extractLayoutIntent({ data, width: 2, height: 2 }),
+      'grid',
+    )
+  })
+
+  it('중앙 영역 집중 → centered', () => {
+    // 4x4: 중앙 2x2 (인덱스 5,6,9,10) 만 opaque, 외곽 12 픽셀 투명.
+    const transparent: [number, number, number, number] = [0, 0, 0, 0]
+    const opaque: [number, number, number, number] = [255, 255, 255, 255]
+    const pixels: Array<[number, number, number, number]> =
+      Array.from({ length: 16 }, () => transparent)
+    pixels[5] = opaque
+    pixels[6] = opaque
+    pixels[9] = opaque
+    pixels[10] = opaque
+    const data = rgbaPlane(pixels)
+    assert.equal(
+      extractLayoutIntent({ data, width: 4, height: 4 }),
+      'centered',
+    )
+  })
+
+  it('불규칙 분포 → asymmetric', () => {
+    // 2x2: tl + br 만 opaque (대각선) — 좌 비율 0.5, 중앙 0, cv 높음.
+    const data = rgbaPlane([
+      [255, 0, 0, 255],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 255, 0, 255],
+    ])
+    assert.equal(
+      extractLayoutIntent({ data, width: 2, height: 2 }),
+      'asymmetric',
+    )
   })
 })
 
