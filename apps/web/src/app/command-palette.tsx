@@ -357,6 +357,7 @@ const SHORTCUT_GROUPS: readonly ShortcutGroup[] = [
     category: '시각 보조',
     items: [
       { keys: ['G'], label: '12-col 그리드 토글' },
+      { keys: ['⇧', 'M'], label: '미니맵 토글' },
     ],
   },
   {
