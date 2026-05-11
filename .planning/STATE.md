@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: unknown
+status: ready_to_plan
 last_updated: "2026-05-11T04:38:18.808Z"
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 7
   completed_plans: 5
-  percent: 71
+  percent: 20
 ---
 
 # Dworks v2.0 STATE

@@ -31,3 +31,4 @@ test-results/
 
 # dworks artifacts (M1 이후 평가 산출물)
 artifacts/
+.gstack/

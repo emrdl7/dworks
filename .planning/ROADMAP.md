@@ -9,7 +9,7 @@
 
 | # | Phase | Goal | Requirements | UI hint |
 |---|-------|------|--------------|---------|
-| 1 | UX 핵심 fix + 측정 | 사용자 명시 비판 5건 처리 (컨텍스트 메뉴 / 간격 측정 / 노드 변경 / 컴포넌트 드래그 / multi-select) | UX-01..UX-06 | yes |
+| 1 | UX 핵심 fix + 측정 | 7/7 | Complete    | 2026-05-11 |
 | 2 | AI 생성 품질 자동 검증 | 풍부도 13 신호 자동 enforce + 도메인×톤 매트릭스 + 멀티모달 강화 | AI-01..AI-05 | partial |
 | 3 | 시각 보조 도구 (그리드/줌/미니맵) | 기성 툴 시각 표준 (column grid + 마우스 위치 줌 + 미니맵) | VIS-01..VIS-03 | yes |
 | 4 | export 깊이 — 인터랙티브 작동 | carousel/tabs/accordion/modal/animation 실제 작동 export (라이브러리 wrap) | EXP-01..EXP-03 | no |
@@ -31,17 +31,17 @@
 5. Shift+drag 박스 선택 + 정렬/분포 단축키 (정렬 좌/중/우/상/중/하 + 분포 가로/세로 균등)
 6. T/B/I/R/C 등 노드 quick-add 단축키 작동
 
-**Plans:** 7 plans
+**Plans:** 7/7 plans complete
 
 ```
 Plans:
-- [ ] 01-01-PLAN.md — Toast host + 변환 매트릭스 (Wave 1, foundation)
+- [x] 01-01-PLAN.md — Toast host + 변환 매트릭스 (Wave 1, foundation)
 - [x] 01-02-PLAN.md — UX-01 boundary auto-flip 검증 stub (Wave 1, doc-only)
 - [x] 01-03-PLAN.md — UX-02 Spacing overlay + 정렬 가이드 (Wave 2)
-- [ ] 01-04-PLAN.md — UX-06 Quick-add 단축키 + cheatsheet (Wave 3)
+- [x] 01-04-PLAN.md — UX-06 Quick-add 단축키 + cheatsheet (Wave 3)
 - [x] 01-05-PLAN.md — UX-03 노드 타입 변환 (컨텍스트 + 인스펙터 dropdown + ⌘K) (Wave 4)
-- [ ] 01-06-PLAN.md — UX-04 좌측 컴포넌트 라이브러리 패널 + drag/drop (Wave 5)
-- [ ] 01-07-PLAN.md — UX-05 박스 선택 + 정렬/분포 8 단축키 (Wave 6)
+- [x] 01-06-PLAN.md — UX-04 좌측 컴포넌트 라이브러리 패널 + drag/drop (Wave 5)
+- [x] 01-07-PLAN.md — UX-05 박스 선택 + 정렬/분포 8 단축키 (Wave 6)
 ```
 
 ---
