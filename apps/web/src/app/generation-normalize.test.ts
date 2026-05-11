@@ -5,7 +5,10 @@ import { describe, it } from 'node:test'
 
 import type { Tree, TreeNode } from '@dworks/tree'
 
-import { normalizeDesignTree } from './generation-normalize.js'
+import {
+  normalizeDesignTree,
+  type EntranceAnimation,
+} from './generation-normalize.js'
 
 function makeTree(root: TreeNode): Tree {
   return { version: '1', root } as Tree
@@ -61,6 +64,39 @@ function makeFooterSection(): TreeNode {
     editKind: 'structure',
     children: [],
   } as unknown as TreeNode
+}
+
+function makeHeading(id: string): TreeNode {
+  return {
+    id,
+    type: 'text',
+    emphasis: 'heading-1',
+    value: '제목',
+  } as unknown as TreeNode
+}
+
+function makeCard(id: string): TreeNode {
+  return {
+    id,
+    type: 'card',
+    editKind: 'structure',
+    children: [],
+  } as unknown as TreeNode
+}
+
+// 재귀로 id 매칭 노드 찾기 — animation 테스트에서 박힌 prop 확인용.
+function findById(node: TreeNode, id: string): TreeNode | undefined {
+  if (node.id === id) return node
+  if (
+    'children' in node &&
+    Array.isArray((node as { children?: TreeNode[] }).children)
+  ) {
+    for (const c of (node as { children: TreeNode[] }).children) {
+      const r = findById(c, id)
+      if (r !== undefined) return r
+    }
+  }
+  return undefined
 }
 
 describe('normalizeDesignTree', () => {
@@ -189,5 +225,97 @@ describe('enforceRichness — interactive', () => {
         c.type === 'modal',
     ).length
     assert.equal(interactiveCount, 1) // 기존 accordion 만, tabs 추가 안 됨
+  })
+})
+
+describe('enforceRichness — entranceAnimation', () => {
+  it('enforceRichness — entranceAnimation 부재 시 hero.title + 카드 + final heading 박힘 (D-09)', () => {
+    const hero = makeHero({
+      id: 'hero-1',
+      children: [makeHeading('hero-h')],
+    } as Partial<TreeNode>)
+    const featureSection: TreeNode = {
+      id: 'features',
+      type: 'section',
+      editKind: 'structure',
+      children: [makeCard('c1'), makeCard('c2'), makeCard('c3')],
+    } as unknown as TreeNode
+    const finalSection: TreeNode = {
+      id: 'cta',
+      type: 'section',
+      editKind: 'structure',
+      children: [makeHeading('cta-h')],
+    } as unknown as TreeNode
+    const main = makeMain([hero, featureSection, finalSection])
+    const tree = makeTree(makeSection({ children: [main] }))
+    const out = normalizeDesignTree(tree, { prompt: 'SaaS' })
+
+    // hero-h: slide-up duration:700 trigger:load
+    const heroH = findById(out.root, 'hero-h')
+    assert.ok(heroH !== undefined)
+    const heroAnim = (heroH as unknown as { entranceAnimation?: EntranceAnimation })
+      .entranceAnimation
+    assert.equal(heroAnim?.type, 'slide-up')
+    assert.equal(heroAnim?.duration, 700)
+    assert.equal(heroAnim?.trigger, 'load')
+
+    // c1/c2/c3: staggered slide-up duration:600 delay 0/150/300 trigger:scroll
+    const c1 = findById(out.root, 'c1')
+    const c2 = findById(out.root, 'c2')
+    const c3 = findById(out.root, 'c3')
+    const a1 = (c1 as unknown as { entranceAnimation?: EntranceAnimation })
+      .entranceAnimation
+    const a2 = (c2 as unknown as { entranceAnimation?: EntranceAnimation })
+      .entranceAnimation
+    const a3 = (c3 as unknown as { entranceAnimation?: EntranceAnimation })
+      .entranceAnimation
+    assert.equal(a1?.delay, 0)
+    assert.equal(a2?.delay, 150)
+    assert.equal(a3?.delay, 300)
+    assert.equal(a1?.duration, 600)
+    assert.equal(a1?.trigger, 'scroll')
+  })
+
+  it('enforceRichness — 이미 entranceAnimation 있는 노드는 덮어쓰지 않음 (D-10)', () => {
+    const existing: EntranceAnimation = {
+      type: 'fade-in',
+      duration: 1000,
+      trigger: 'scroll',
+    }
+    const heading = {
+      ...makeHeading('hero-h'),
+      entranceAnimation: existing,
+    } as unknown as TreeNode
+    const hero = makeHero({
+      id: 'hero-1',
+      children: [heading],
+    } as Partial<TreeNode>)
+    const main = makeMain([hero, makeFooterSection()])
+    const tree = makeTree(makeSection({ children: [main] }))
+    const out = normalizeDesignTree(tree, { prompt: 'SaaS' })
+    const heroH = findById(out.root, 'hero-h')
+    const anim = (heroH as unknown as { entranceAnimation: EntranceAnimation })
+      .entranceAnimation
+    // 기존 fade-in 1000 유지 (덮어쓰기 X)
+    assert.equal(anim.type, 'fade-in')
+    assert.equal(anim.duration, 1000)
+  })
+
+  it('enforceRichness — idempotent (두 번 호출 동일 결과)', () => {
+    const hero = makeHero({
+      id: 'hero-1',
+      children: [makeHeading('hero-h')],
+    } as Partial<TreeNode>)
+    const featureSection: TreeNode = {
+      id: 'features',
+      type: 'section',
+      editKind: 'structure',
+      children: [makeCard('c1'), makeCard('c2')],
+    } as unknown as TreeNode
+    const main = makeMain([hero, featureSection, makeFooterSection()])
+    const tree = makeTree(makeSection({ children: [main] }))
+    const once = normalizeDesignTree(tree, { prompt: 'SaaS' })
+    const twice = normalizeDesignTree(once, { prompt: 'SaaS' })
+    assert.deepEqual(once, twice)
   })
 })
