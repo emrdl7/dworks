@@ -97,14 +97,26 @@ export function enforceRichness(tree: Tree, prompt: string): Tree {
   return next
 }
 
-/** 도메인 → 권장 인터랙티브 컴포넌트 매핑 (D-05). */
-export type DomainKey = 'ecommerce' | 'saas' | 'faq' | 'auth' | 'default'
+/** 도메인 → 권장 인터랙티브 컴포넌트 매핑 (D-05).
+ *  ME-01: prompt 매트릭스 6 도메인(portfolio/education 포함) 과 동기화. */
+export type DomainKey =
+  | 'ecommerce'
+  | 'portfolio'
+  | 'saas'
+  | 'education'
+  | 'faq'
+  | 'auth'
+  | 'default'
 
-/** prompt 의도 키워드 매칭 — pure regex. (D-05) */
+/** prompt 의도 키워드 매칭 — pure regex. (D-05, ME-01) */
 export function inferDomain(prompt: string): DomainKey {
   const p = prompt.toLowerCase()
   if (/e-?commerce|쇼핑|제품|카탈로그/.test(p)) return 'ecommerce' // → carousel
+  // ME-01: portfolio 추가 — 작품 슬라이드 carousel 권고.
+  if (/포트폴리오|portfolio|작업물|works|갤러리|작품/.test(p)) return 'portfolio'
   if (/saas|b2b|dashboard|기능|pricing/.test(p)) return 'saas' // → tabs
+  // ME-01: education 추가 — 커리큘럼/FAQ-like accordion 권고.
+  if (/교육|강의|educate|course|학습|lesson|커리큘럼/.test(p)) return 'education'
   if (/faq|컨퍼런스|일정|specs/.test(p)) return 'faq' // → accordion
   if (/가입|회원|약관/.test(p)) return 'auth' // → modal
   return 'default' // → accordion
@@ -118,7 +130,11 @@ const DOMAIN_TO_INTERACTIVE: Record<
   'carousel' | 'tabs' | 'accordion' | 'modal'
 > = {
   ecommerce: 'carousel',
+  // ME-01: portfolio → carousel (작업물 슬라이드).
+  portfolio: 'carousel',
   saas: 'tabs',
+  // ME-01: education → accordion (커리큘럼/FAQ-like).
+  education: 'accordion',
   faq: 'accordion',
   auth: 'modal',
   default: 'accordion',
