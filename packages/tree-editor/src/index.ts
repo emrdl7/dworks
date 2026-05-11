@@ -23,6 +23,7 @@ export {
   updateCarousel,
   updateImage,
   updateStyleTokens,
+  updateTabs,
   updateText,
   updateTextTypography,
 } from './operations.js'
@@ -37,6 +38,7 @@ export type {
   UpdateCarouselOperation,
   UpdateColorOperation,
   UpdateImageOperation,
+  UpdateTabsOperation,
   UpdateLayoutOperation,
   UpdateNodeMetaOperation,
   NodeMetaPatch,
@@ -58,6 +60,7 @@ export {
   updateCarouselOperationSchema,
   updateColorOperationSchema,
   updateImageOperationSchema,
+  updateTabsOperationSchema,
   updateLayoutOperationSchema,
   updateNodeMetaOperationSchema,
   updateShapeOperationSchema,

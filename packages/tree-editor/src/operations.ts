@@ -9,6 +9,8 @@ import type {
   Shape,
   Spacing,
   StyleTokens,
+  TabsNode,
+  TabsVariant,
   TextNode,
   Tree,
   TreeNode,
@@ -102,6 +104,14 @@ export interface UpdateCarouselOperation {
   previewIndex?: number
 }
 
+export interface UpdateTabsOperation {
+  type: 'updateTabs'
+  nodeId: string
+  items?: TabsNode['items']
+  activeIndex?: number
+  variant?: TabsVariant
+}
+
 export interface MoveNodeOperation {
   type: 'moveNode'
   nodeId: string
@@ -135,6 +145,7 @@ type ContentEditOperation =
   | UpdateButtonLabelOperation
   | UpdateImageOperation
   | UpdateCarouselOperation
+  | UpdateTabsOperation
 
 type StructureEditOperation =
   | MoveNodeOperation
@@ -242,6 +253,14 @@ export function updateCarousel(
   patch: Omit<UpdateCarouselOperation, 'type' | 'nodeId'>,
 ): Tree {
   return applyEditOperation(tree, { type: 'updateCarousel', nodeId, ...patch })
+}
+
+export function updateTabs(
+  tree: Tree,
+  nodeId: string,
+  patch: Omit<UpdateTabsOperation, 'type' | 'nodeId'>,
+): Tree {
+  return applyEditOperation(tree, { type: 'updateTabs', nodeId, ...patch })
 }
 
 export function moveNode(
@@ -755,6 +774,7 @@ function editNode(
     case 'button':
     case 'image':
     case 'carousel':
+    case 'tabs':
       return node
   }
 }
@@ -818,6 +838,14 @@ function editMatchedNode(
         )
       }
       return withCarouselPatch(node, operation)
+
+    case 'updateTabs':
+      if (node.type !== 'tabs') {
+        throw new Error(
+          `tree edit failed: updateTabs requires tabs node, got ${node.type}: ${node.id}`,
+        )
+      }
+      return withTabsPatch(node, operation)
   }
 }
 
@@ -957,6 +985,23 @@ function withImagePatch(
     }
   }
 
+  return next
+}
+
+function withTabsPatch(
+  node: TabsNode,
+  patch: Omit<UpdateTabsOperation, 'type' | 'nodeId'>,
+): TabsNode {
+  const next: TabsNode = { ...node }
+  if (patch.items !== undefined) next.items = patch.items
+  if ('activeIndex' in patch) {
+    if (patch.activeIndex === undefined) delete next.activeIndex
+    else next.activeIndex = patch.activeIndex
+  }
+  if ('variant' in patch) {
+    if (patch.variant === undefined) delete next.variant
+    else next.variant = patch.variant
+  }
   return next
 }
 

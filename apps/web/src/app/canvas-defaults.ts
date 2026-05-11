@@ -65,6 +65,8 @@ export const DEFAULT_SPACING_BY_TYPE: Record<TreeNodeType, Spacing> = {
   image: {},
   // carousel: 자체 padding 없음 — 부모 spacing이 채움. 이미지 레퍼런스(figure)와 동일.
   carousel: {},
+  // tabs: tab list와 panel 사이 자연스러운 간격을 위해 작은 gap.
+  tabs: { gap: 16 },
 }
 
 // emphasis별 typography default — text 노드 TextPreview의 className에서 추출 + 인스펙터
@@ -148,6 +150,8 @@ export const DEFAULT_LAYOUT_BY_TYPE: Record<TreeNodeType, NodeLayout> = {
   button: {},
   image: {},
   carousel: {},
+  // tabs: column — tab list가 위, panel이 아래.
+  tabs: { direction: 'column', wrap: 'nowrap' },
 }
 
 // type별 shape default — radius / border / shadow.
@@ -169,6 +173,8 @@ export const DEFAULT_SHAPE_BY_TYPE: Record<TreeNodeType, Shape> = {
   image: {},
   // carousel: 시각 임팩트 위해 radius/shadow 약간 — 사용자가 explicit 으로 0/none 박을 수 있음.
   carousel: { radius: 12, shadow: 'md' },
+  // tabs: 자체 border/radius 없음 — 자식 panel이 시각 책임.
+  tabs: {},
 }
 
 // type별 color token slot — 캔버스 className의 var(--dw-*) 토큰을 ColorPresetTokens
@@ -197,6 +203,7 @@ export const DEFAULT_COLOR_TOKENS_BY_TYPE: Record<TreeNodeType, ColorTokenSlots>
   button: {},
   image: {},
   carousel: {},
+  tabs: {},
 }
 
 // emphasis별 text color token slot — text 노드의 textColor가 emphasis에 따라

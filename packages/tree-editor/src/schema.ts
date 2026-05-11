@@ -8,6 +8,8 @@ import {
   focalPointSchema,
   imageAspectRatioSchema,
   imagePresentationSchema,
+  tabItemSchema,
+  tabsVariantSchema,
   nodeColorSchema,
   nodeCursorSchema,
   nodeInsetSchema,
@@ -36,6 +38,7 @@ import type {
   UpdateImageOperation,
   UpdateLayoutOperation,
   UpdateNodeMetaOperation,
+  UpdateTabsOperation,
   UpdateShapeOperation,
   UpdateSpacingOperation,
   UpdateStyleTokensOperation,
@@ -132,6 +135,15 @@ export const updateCarouselOperationSchema: z.ZodType<UpdateCarouselOperation> =
     showDots: z.boolean().optional(),
     showArrows: z.boolean().optional(),
     previewIndex: z.number().int().min(0).optional(),
+  })
+
+export const updateTabsOperationSchema: z.ZodType<UpdateTabsOperation> =
+  z.object({
+    type: z.literal('updateTabs'),
+    nodeId: z.string().min(1),
+    items: z.array(tabItemSchema).min(1).optional(),
+    activeIndex: z.number().int().min(0).optional(),
+    variant: tabsVariantSchema.optional(),
   })
 
 export const moveNodeOperationSchema: z.ZodType<MoveNodeOperation> = z.object({
@@ -231,6 +243,13 @@ export const editOperationSchema: z.ZodType<EditOperation> = z.discriminatedUnio
     showDots: z.ZodOptional<z.ZodBoolean>
     showArrows: z.ZodOptional<z.ZodBoolean>
     previewIndex: z.ZodOptional<z.ZodNumber>
+  }>,
+  updateTabsOperationSchema as z.ZodObject<{
+    type: z.ZodLiteral<'updateTabs'>
+    nodeId: z.ZodString
+    items: z.ZodOptional<z.ZodArray<typeof tabItemSchema>>
+    activeIndex: z.ZodOptional<z.ZodNumber>
+    variant: z.ZodOptional<typeof tabsVariantSchema>
   }>,
   moveNodeOperationSchema as z.ZodObject<{
     type: z.ZodLiteral<'moveNode'>

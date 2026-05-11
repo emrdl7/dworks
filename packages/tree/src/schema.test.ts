@@ -28,10 +28,11 @@ import {
 } from './schema.js'
 
 describe('tree schema', () => {
-  it('exposes 9 node types — text/button/image/carousel/section/hero/card/list/form', () => {
-    assert.equal(TREE_NODE_TYPES.length, 9)
+  it('exposes 10 node types — adds carousel + tabs to base 8', () => {
+    assert.equal(TREE_NODE_TYPES.length, 10)
     assert.ok(TREE_NODE_TYPES.includes('image'))
     assert.ok(TREE_NODE_TYPES.includes('carousel'))
+    assert.ok(TREE_NODE_TYPES.includes('tabs'))
   })
 
   it('parses a minimal carousel node (1 item)', () => {
@@ -46,6 +47,34 @@ describe('tree schema', () => {
     if (parsed.type === 'carousel') {
       assert.equal(parsed.items.length, 1)
     }
+  })
+
+  it('parses a minimal tabs node (1 item)', () => {
+    const node = {
+      id: 't1',
+      type: 'tabs',
+      editKind: 'structure',
+      items: [{ id: 't1.0', label: '개요', content: '본문' }],
+      activeIndex: 0,
+      variant: 'pill',
+    }
+    const parsed = treeNodeSchema.parse(node)
+    assert.equal(parsed.type, 'tabs')
+    if (parsed.type === 'tabs') {
+      assert.equal(parsed.items.length, 1)
+      assert.equal(parsed.variant, 'pill')
+    }
+  })
+
+  it('rejects tabs with empty items array', () => {
+    assert.throws(() =>
+      treeNodeSchema.parse({
+        id: 't2',
+        type: 'tabs',
+        editKind: 'structure',
+        items: [],
+      }),
+    )
   })
 
   it('rejects carousel with empty items array', () => {

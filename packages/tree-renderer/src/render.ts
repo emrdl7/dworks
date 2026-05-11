@@ -15,6 +15,7 @@ import type {
   ImageNode,
   ListNode,
   SectionNode,
+  TabsNode,
   TextNode,
   Tree,
   TreeNode,
@@ -137,6 +138,8 @@ export function renderNode(node: TreeNode): string {
       return renderImage(node)
     case 'carousel':
       return renderCarousel(node)
+    case 'tabs':
+      return renderTabs(node)
     case 'section':
       return renderSection(node)
     case 'hero':
@@ -148,6 +151,26 @@ export function renderNode(node: TreeNode): string {
     case 'form':
       return renderForm(node)
   }
+}
+
+function renderTabs(node: TabsNode): string {
+  // 정적 export — activeIndex tab의 panel만 렌더 + role 속성으로 a11y 안내.
+  // 실제 tab 전환은 export 후 라이브러리(Radix Tabs 등) wrap.
+  const activeIndex = Math.min(
+    Math.max(node.activeIndex ?? 0, 0),
+    Math.max(node.items.length - 1, 0),
+  )
+  const tabsHtml = node.items
+    .map((it, idx) => {
+      const isActive = idx === activeIndex
+      return `<button${attrs([['type', 'button'], ['role', 'tab'], ['aria-selected', isActive ? 'true' : 'false']])}>${escapeHtml(it.label)}</button>`
+    })
+    .join('')
+  const panel = node.items[activeIndex]
+  const panelHtml = panel
+    ? `<div${attrs([['role', 'tabpanel']])}>${escapeHtml(panel.content).replace(/\n/g, '<br />')}</div>`
+    : ''
+  return `<div${commonAttrs(node)} role="region" aria-roledescription="tabs"><div role="tablist">${tabsHtml}</div>${panelHtml}</div>`
 }
 
 function renderCarousel(node: CarouselNode): string {

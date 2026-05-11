@@ -3,6 +3,7 @@
 // SelectableNode badge 등)가 공유.
 
 import {
+  AppWindow,
   FormInput,
   GalleryHorizontal,
   ImageIcon,
@@ -22,6 +23,7 @@ export const nodeTypeLabels: Record<TreeNode['type'], string> = {
   button: '버튼',
   image: '이미지',
   carousel: '이미지 carousel',
+  tabs: '탭',
   section: '섹션',
   hero: '히어로',
   card: '카드',
@@ -34,6 +36,7 @@ export const nodeTypeIcons: Record<TreeNode['type'], LucideIcon> = {
   button: MousePointer,
   image: ImageIcon,
   carousel: GalleryHorizontal,
+  tabs: AppWindow,
   section: PanelTop,
   hero: SquareStack,
   card: Square,

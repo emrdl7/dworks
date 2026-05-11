@@ -296,6 +296,43 @@
             ]
           },
           {
+            "id": "guide",
+            "type": "section",
+            "editKind": "structure",
+            "layout": { "direction": "column", "align": "center" },
+            "spacing": { "paddingTop": 96, "paddingBottom": 96, "paddingLeft": 56, "paddingRight": 56, "gap": 48 },
+            "color": { "backgroundColor": "#ffffff" },
+            "children": [
+              {
+                "id": "guide.head",
+                "type": "section",
+                "editKind": "structure",
+                "layout": { "direction": "column", "align": "center" },
+                "spacing": { "gap": 12 },
+                "children": [
+                  { "id": "guide.kicker", "type": "text", "editKind": "text", "emphasis": "caption", "content": "DEVELOPER FLOW", "typography": { "fontSize": 13, "fontWeight": "700", "letterSpacing": 0.08, "textAlign": "center" }, "color": { "textColor": "#0ea5e9" } },
+                  { "id": "guide.title", "type": "text", "editKind": "text", "emphasis": "heading-2", "content": "5분 만에 첫 이벤트 흐름 — 설치부터 알림까지.", "typography": { "fontSize": 38, "fontWeight": "700", "lineHeight": 1.2, "letterSpacing": -0.02, "textAlign": "center" }, "color": { "textColor": "#0f172a" } }
+                ]
+              },
+              {
+                "id": "guide.tabs",
+                "type": "tabs",
+                "editKind": "structure",
+                "variant": "underline",
+                "activeIndex": 0,
+                "items": [
+                  { "id": "guide.tabs.install", "label": "설치", "content": "npm install @stratum/sdk\nyarn add @stratum/sdk\npnpm add @stratum/sdk\n\n— Node 18+ / 모든 모던 브라우저 지원." },
+                  { "id": "guide.tabs.init", "label": "초기화", "content": "import { Stratum } from '@stratum/sdk'\n\nconst stratum = new Stratum({\n  apiKey: process.env.STRATUM_KEY,\n  env: 'production',\n})" },
+                  { "id": "guide.tabs.event", "label": "이벤트", "content": "stratum.track('checkout.started', {\n  cart_value: 142000,\n  currency: 'KRW',\n  user_id: user.id,\n})\n\n— 첫 이벤트가 5초 안에 대시보드에 도착합니다." },
+                  { "id": "guide.tabs.alert", "label": "알림", "content": "임계치를 설정하면 Slack/Email/PagerDuty로 즉시 알림.\n\n예: checkout.failed > 5/분 → Slack #alerts 채널.\n\n사전 정의 대시보드 50+ 종에서 바로 시작." }
+                ],
+                "shape": { "radius": 12, "borderWidth": 1, "borderColor": "#e2e8f0", "borderStyle": "solid" },
+                "color": { "backgroundColor": "#f8fafc" },
+                "spacing": { "paddingTop": 24, "paddingBottom": 24, "paddingLeft": 24, "paddingRight": 24 }
+              }
+            ]
+          },
+          {
             "id": "stats",
             "type": "section",
             "editKind": "structure",

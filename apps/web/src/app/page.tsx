@@ -53,6 +53,8 @@ import {
   type ImageAspectRatio,
   type ImageFit,
   type CarouselNode,
+  type TabsNode,
+  type TabItem,
   type ImageNode,
   type ImagePresentation,
   type LayoutAlign,
@@ -99,6 +101,7 @@ import {
   updateButtonLabel,
   updateImage,
   updateLayout,
+  updateTabs,
   updateNodeMeta,
   updateShape,
   updateSpacing,
@@ -545,6 +548,11 @@ type CarouselEditPatch = Pick<
   | 'showDots'
   | 'showArrows'
   | 'previewIndex'
+>
+
+type TabsEditPatch = Pick<
+  Partial<TabsNode>,
+  'items' | 'activeIndex' | 'variant'
 >
 
 export default function HomePage() {
@@ -2436,6 +2444,14 @@ export default function HomePage() {
     options?: CommitTreeEditOptions,
   ) {
     commitTreeEdit(updateCarousel(tree, node.id, patch), undefined, options)
+  }
+
+  function handleTabsChange(
+    node: TabsNode,
+    patch: TabsEditPatch,
+    options?: CommitTreeEditOptions,
+  ) {
+    commitTreeEdit(updateTabs(tree, node.id, patch), undefined, options)
   }
 
   function handleMoveNode(nodeId: string, direction: 'up' | 'down') {
@@ -4923,6 +4939,7 @@ export default function HomePage() {
             onButtonLabelChange={handleButtonLabelChange}
             onImageChange={handleImageChange}
             onCarouselChange={handleCarouselChange}
+            onTabsChange={handleTabsChange}
             colorPreset={colorPreset}
           />
         </aside>
@@ -6204,6 +6221,13 @@ function CanvasNode({
           <CarouselPreview node={node} style={boxStyle} fallbackStyle={colorStyle} />
         </SelectableNode>
       )
+
+    case 'tabs':
+      return (
+        <SelectableNode node={node} selectedNodeId={selectedNodeId} onSelect={onSelect}>
+          <TabsPreview node={node} style={boxStyle} />
+        </SelectableNode>
+      )
   }
 }
 
@@ -6839,6 +6863,84 @@ function CarouselPreview({
   )
 }
 
+// TabsPreview — 캔버스 정적 미리보기.
+//   activeIndex tab만 panel 표시. tab list는 모두 표시 (active는 강조).
+//   variant별 시각: underline(default) / pill / enclosed.
+function TabsPreview({
+  node,
+  style,
+}: {
+  node: TabsNode
+  style?: CSSProperties
+}) {
+  const items = node.items
+  const activeIndex = Math.min(
+    Math.max(node.activeIndex ?? 0, 0),
+    Math.max(items.length - 1, 0),
+  )
+  const variant = node.variant ?? 'underline'
+  const active = items[activeIndex]
+
+  const tabBase =
+    'inline-flex items-center px-4 py-2 text-[length:var(--dw-text-label)] font-medium transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)]'
+  function tabClass(isActive: boolean): string {
+    if (variant === 'pill') {
+      return `${tabBase} rounded-full ${
+        isActive
+          ? 'bg-[var(--dw-ui-accent)] text-[var(--dw-ui-accent-text)]'
+          : 'bg-transparent text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)]'
+      }`
+    }
+    if (variant === 'enclosed') {
+      return `${tabBase} -mb-px border ${
+        isActive
+          ? 'border-[var(--dw-ui-border)] border-b-[var(--dw-ui-bg)] bg-[var(--dw-ui-bg)] text-[var(--dw-ui-text-primary)] rounded-t-md'
+          : 'border-transparent text-[var(--dw-ui-text-muted)] hover:text-[var(--dw-ui-text-primary)]'
+      }`
+    }
+    // underline (default)
+    return `${tabBase} border-b-2 -mb-px ${
+      isActive
+        ? 'border-[var(--dw-ui-accent)] text-[var(--dw-ui-accent-text)]'
+        : 'border-transparent text-[var(--dw-ui-text-muted)] hover:text-[var(--dw-ui-text-primary)]'
+    }`
+  }
+
+  return (
+    <div style={style} className="w-full min-w-0">
+      <div
+        role="tablist"
+        aria-label="탭"
+        className={`flex flex-wrap items-end ${
+          variant === 'underline' || variant === 'enclosed'
+            ? 'border-b border-[var(--dw-ui-border)]'
+            : 'gap-2'
+        }`}
+      >
+        {items.map((it, idx) => (
+          <button
+            key={it.id}
+            type="button"
+            role="tab"
+            aria-selected={idx === activeIndex}
+            tabIndex={-1}
+            className={tabClass(idx === activeIndex)}
+          >
+            {it.label}
+          </button>
+        ))}
+      </div>
+      <div
+        role="tabpanel"
+        aria-labelledby={active?.id}
+        className="mt-4 min-h-12 whitespace-pre-wrap text-[length:var(--dw-text-body)] leading-relaxed text-[var(--dw-ui-text-body)]"
+      >
+        {active ? active.content : <span className="text-[var(--dw-ui-text-faint)]">탭 컨텐츠가 비어있습니다</span>}
+      </div>
+    </div>
+  )
+}
+
 const IMAGE_DROP_SHADOW_DEFAULT: ImageDropShadow = {
   offsetX: 0,
   offsetY: 4,
@@ -6941,6 +7043,11 @@ interface NodeInspectorProps {
     patch: CarouselEditPatch,
     options?: CommitTreeEditOptions,
   ) => void
+  onTabsChange: (
+    node: TabsNode,
+    patch: TabsEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
 }
 
 function NodeInspector({
@@ -6971,6 +7078,7 @@ function NodeInspector({
   onButtonLabelChange,
   onImageChange,
   onCarouselChange,
+  onTabsChange,
 }: NodeInspectorProps) {
   const isSelectedNodeContainer = isContainerNode(node)
   const [nodeIdCopied, setNodeIdCopied] = useState(false)
@@ -7526,6 +7634,14 @@ function NodeInspector({
                 node={node}
                 disclosure={bindSection('Carousel')}
                 onCarouselChange={onCarouselChange}
+              />
+            ) : null}
+
+            {node.type === 'tabs' ? (
+              <TabsControls
+                node={node}
+                disclosure={bindSection('Tabs')}
+                onTabsChange={onTabsChange}
               />
             ) : null}
 
@@ -11533,8 +11649,209 @@ function CarouselControls({
 
         <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
           캔버스는 _정적_ 미리보기 — 실제 슬라이드 동작은 export 결과에서
-          carousel 라이브러리(Embla 등)가 처리합니다. 슬라이드 추가/삭제/순서
-          편집은 다음 사이클에서 지원합니다.
+          carousel 라이브러리(Embla 등)가 처리합니다.
+        </p>
+      </div>
+    </InspectorDisclosure>
+  )
+}
+
+interface TabsControlsProps {
+  disclosure?: InspectorDisclosureControl
+  node: TabsNode
+  onTabsChange: (
+    node: TabsNode,
+    patch: TabsEditPatch,
+    options?: CommitTreeEditOptions,
+  ) => void
+}
+
+// TabsControls — variant select + items 편집(추가/삭제/순서) + activeIndex 미리보기.
+function TabsControls({
+  disclosure,
+  node,
+  onTabsChange,
+}: TabsControlsProps) {
+  const items = node.items
+  const activeIndex = Math.min(
+    Math.max(node.activeIndex ?? 0, 0),
+    Math.max(items.length - 1, 0),
+  )
+  const variant = node.variant ?? 'underline'
+
+  function patchItems(nextItems: TabsNode['items'], options?: { activeIndex?: number }) {
+    const patch: TabsEditPatch = { items: nextItems }
+    if (options?.activeIndex !== undefined) {
+      patch.activeIndex = options.activeIndex
+    } else if (activeIndex >= nextItems.length) {
+      patch.activeIndex = Math.max(nextItems.length - 1, 0)
+    }
+    onTabsChange(node, patch)
+  }
+
+  function updateItem(idx: number, patch: Partial<TabItem>) {
+    const next = items.map((it, i) => (i === idx ? { ...it, ...patch } : it))
+    patchItems(next)
+  }
+
+  function moveItem(idx: number, dir: -1 | 1) {
+    const target = idx + dir
+    if (target < 0 || target >= items.length) return
+    const next = [...items]
+    const a = next[idx]
+    const b = next[target]
+    if (!a || !b) return
+    next[idx] = b
+    next[target] = a
+    let nextActive: number | undefined
+    if (activeIndex === idx) nextActive = target
+    else if (activeIndex === target) nextActive = idx
+    patchItems(next, nextActive !== undefined ? { activeIndex: nextActive } : undefined)
+  }
+
+  function removeItem(idx: number) {
+    if (items.length <= 1) return
+    const next = items.filter((_, i) => i !== idx)
+    patchItems(next)
+  }
+
+  function addItem() {
+    const newId = `${node.id}.tab${items.length + 1}-${Math.random().toString(36).slice(2, 6)}`
+    const next = [
+      ...items,
+      { id: newId, label: `탭 ${items.length + 1}`, content: '' },
+    ]
+    patchItems(next, { activeIndex: items.length })
+  }
+
+  return (
+    <InspectorDisclosure
+      title="Tabs"
+      description={`${items.length}개 탭 — 편집/추가/순서 + 미리보기 + variant`}
+      defaultOpen
+      {...disclosure}
+    >
+      <div className="mt-3 space-y-4">
+        {/* variant */}
+        <div>
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            스타일
+          </span>
+          <div className="mt-2 grid grid-cols-3 gap-1">
+            {(['underline', 'pill', 'enclosed'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={variant === v}
+                onClick={() =>
+                  onTabsChange(node, { variant: v === 'underline' ? undefined : v })
+                }
+                className={`flex h-8 items-center justify-center rounded-[var(--dw-radius-sm)] border text-[length:var(--dw-text-label)] font-[number:var(--dw-font-weight-label)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                  variant === v
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                }`}
+              >
+                {v === 'underline' ? '밑줄' : v === 'pill' ? '필' : '둘러싸기'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* items 편집 */}
+        <div>
+          <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
+            탭 ({items.length}개, 최소 1개)
+          </span>
+          <ul className="mt-2 space-y-2">
+            {items.map((it, idx) => (
+              <li
+                key={it.id}
+                className={`rounded-md border px-2.5 py-2 ${
+                  idx === activeIndex
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)]/30'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)]'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded bg-[var(--dw-ui-elevated)] px-1.5 text-[11px] font-mono tabular-nums text-[var(--dw-ui-text-muted)]">
+                    {idx + 1}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="위로"
+                    title="위로"
+                    disabled={idx === 0}
+                    onClick={() => moveItem(idx, -1)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="아래로"
+                    title="아래로"
+                    disabled={idx === items.length - 1}
+                    onClick={() => moveItem(idx, 1)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onTabsChange(node, { activeIndex: idx })}
+                    className={`ml-auto inline-flex h-6 items-center rounded px-2 text-[11px] ${
+                      idx === activeIndex
+                        ? 'bg-[var(--dw-ui-accent)] text-[var(--dw-ui-accent-text)]'
+                        : 'text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)]'
+                    }`}
+                  >
+                    {idx === activeIndex ? '활성' : '활성으로'}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="삭제"
+                    title={items.length === 1 ? '최소 1개 유지' : '삭제'}
+                    disabled={items.length === 1}
+                    onClick={() => removeItem(idx)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-warn-bg)] hover:text-[var(--dw-ui-warn-text)] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  <input
+                    type="text"
+                    placeholder="탭 라벨"
+                    aria-label={`탭 ${idx + 1} 라벨`}
+                    className="block h-8 w-full rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-bg)] px-2 text-[11px] outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+                    value={it.label}
+                    onChange={(e) => updateItem(idx, { label: e.target.value })}
+                  />
+                  <textarea
+                    placeholder="탭 컨텐츠 (markdown 가능, 빈 줄로 단락 구분)"
+                    aria-label={`탭 ${idx + 1} 컨텐츠`}
+                    rows={3}
+                    className="block w-full rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-bg)] px-2 py-1.5 text-[11px] leading-relaxed outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+                    value={it.content}
+                    onChange={(e) => updateItem(idx, { content: e.target.value })}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={addItem}
+            className="mt-2 flex h-8 w-full items-center justify-center rounded border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[11px] text-[var(--dw-ui-text-muted)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] hover:border-[var(--dw-ui-accent)] hover:bg-[var(--dw-ui-accent-soft)]/40 hover:text-[var(--dw-ui-accent-text)]"
+          >
+            + 탭 추가
+          </button>
+        </div>
+
+        <p className="rounded-md border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] px-3 py-2 text-[11px] text-[var(--dw-ui-text-muted)]">
+          캔버스는 _정적_ 미리보기 (활성 탭만 표시) — 실제 탭 전환은 export 결과에서
+          라이브러리(Radix Tabs 등)가 처리합니다.
         </p>
       </div>
     </InspectorDisclosure>

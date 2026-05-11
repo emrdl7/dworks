@@ -566,6 +566,30 @@ export interface CarouselNode extends BaseNodeMeta {
   previewIndex?: number
 }
 
+// TabsNode — 탭 인터페이스. 각 tab item은 label + content(markdown string).
+//   캔버스는 activeIndex tab만 정적 렌더 (label list + 활성 panel).
+//   복합 panel(이미지/버튼 등 다중 노드)이 필요한 경우는 별도 section 만든 후
+//   hideOn으로 표시 분기 가능. 현재는 simple text content만 지원.
+export const TABS_VARIANTS = ['underline', 'pill', 'enclosed'] as const
+export const tabsVariantSchema = z.enum(TABS_VARIANTS)
+export type TabsVariant = z.infer<typeof tabsVariantSchema>
+
+export interface TabItem {
+  id: string
+  label: string
+  // 인라인 markdown 지원 (text-preview의 parseInlineMarkdown과 동일 처리).
+  content: string
+}
+
+export interface TabsNode extends BaseNodeMeta {
+  type: 'tabs'
+  items: TabItem[]
+  // 정적 미리보기에서 어떤 tab의 panel을 보여줄지. 기본 0.
+  activeIndex?: number
+  // 시각 스타일. 기본 'underline'.
+  variant?: TabsVariant
+}
+
 export interface SectionNode extends BaseNodeMeta {
   type: 'section'
   role?: string
@@ -605,6 +629,7 @@ export type TreeNode =
   | ButtonNode
   | ImageNode
   | CarouselNode
+  | TabsNode
   | SectionNode
   | HeroNode
   | CardNode
@@ -683,6 +708,20 @@ export const carouselNodeSchema: z.ZodType<CarouselNode> = z.object({
   previewIndex: z.number().int().min(0).optional(),
 })
 
+export const tabItemSchema: z.ZodType<TabItem> = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  content: z.string(),
+})
+
+export const tabsNodeSchema: z.ZodType<TabsNode> = z.object({
+  ...baseShape,
+  type: z.literal('tabs'),
+  items: z.array(tabItemSchema).min(1),
+  activeIndex: z.number().int().min(0).optional(),
+  variant: tabsVariantSchema.optional(),
+})
+
 // 재귀 union을 위해 children 필드는 z.lazy로 후행 참조.
 const childrenLazy = z.lazy((): z.ZodType<TreeNode[]> =>
   z.array(treeNodeSchema),
@@ -736,6 +775,7 @@ export const treeNodeSchema: z.ZodType<TreeNode> = z.lazy(() =>
     buttonNodeSchema,
     imageNodeSchema,
     carouselNodeSchema,
+    tabsNodeSchema,
     sectionNodeSchema,
     heroNodeSchema,
     cardNodeSchema,
@@ -758,6 +798,7 @@ export const TREE_NODE_TYPES = [
   'button',
   'image',
   'carousel',
+  'tabs',
   'section',
   'hero',
   'card',
