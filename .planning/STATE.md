@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
-status: ready_to_plan
-last_updated: "2026-05-11T09:30:00.000Z"
+status: unknown
+last_updated: "2026-05-11T09:41:08.634Z"
 progress:
   total_phases: 5
-  completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
-  percent: 100
+  completed_phases: 4
+  total_plans: 21
+  completed_plans: 19
+  percent: 90
 ---
 
 # Dworks v2.0 STATE
@@ -26,7 +26,7 @@ progress:
 | 2 | AI 생성 품질 자동 검증 | 🟢 plans 5/5 완료 (02-05 wiring gap closure 완료) |
 | 3 | 시각 보조 도구 | 🟢 plans 3/3 완료 (VIS-01 + VIS-02 + VIS-03 done) |
 | 4 | export 깊이 | 🟢 plans 3/3 완료 (04-01 tree-renderer + 04-02 exporters + 04-03 web 어댑터 done) |
-| 5 | 디자인 시스템 깊이 | ⚪ pending |
+| 5 | 디자인 시스템 깊이 | 🟡 진행 중 (05-02 DS-02 done; 05-01 code 적용 완료 SUMMARY 없음; 05-03 잔여) |
 
 ## Active Work
 
@@ -46,7 +46,8 @@ progress:
 - ✅ 04-01 (EXP-01/02 tree-renderer 4 interactive 노드 확장) — 2026-05-11. renderCarousel/Tabs/Accordion/Modal 전체 slide+item 렌더 + data-dworks-* attr + 한국어 aria(이전/다음 슬라이드/닫기) + hidden attr 토글 + data-expand-mode single/multiple. 8 신규 테스트 (23/23 pass). schema 불일치 4건 Rule 3 정규화. commits b46259d + 7fa6ad9. 18분.
 - ✅ 04-02 (EXP-01/02/03 exporters html.ts + html-scripts.ts + tests) — 2026-05-11. exportTreeToHtml(tree) → 완성된 <!DOCTYPE html> + detectFeatures 5종 검출 + 5개 vanilla JS IIFE 템플릿 (TABS/MODAL/ACCORDION/CAROUSEL_INIT/ENTRANCE) + BASE_CSS + Embla CDN 자동 주입 + IntersectionObserver + prefers-reduced-motion. 9 신규 테스트 pass. deviation 5건 (data-dw-entrance attr 명, schema descend 단순화, aria-selected string, readyState 분기, unused param). commits 43e6b66 + ffd4955 + fdf3743. 5분.
 - ✅ 04-03 (EXP-01/02/03 web 어댑터 + HTML 내보내기 UI) — 2026-05-11. apps/web/src/app/html-export.ts 신규(53줄) — downloadGenerationAsHtml + buildHtmlFilename. page.tsx handleExportGenerationHtml + 'HTML 내보내기' 버튼 JSON 옆 추가. showToast(message, tone) 위치인자 시그니처 정정 (Rule 1) + disabled={compareMode} JSON 패턴 정렬 (Rule 2). 376 tests pass. commits 97e8cbf + b63a208. 6분.
-- 잔여: Phase 5 (디자인 시스템 깊이) — 다음.
+- ✅ 05-02 (DS-02 custom palette manager) — 2026-05-11. palette-context.ts (PaletteProvider+usePalettes+CRUD+localStorage 'dw:palettes:v1'+유효성) + palette-manager-dialog.tsx (CRUD UI + native color picker grid) + page.tsx PaletteProvider wrap + ⌘K '팔레트 관리'. commits 82190d3..2d97104. 3분. 376 tests pass. 인스펙터 wiring 은 v3+ deferred.
+- 잔여: 05-01 (DS-01 SUMMARY 작성 — 코드는 이미 적용) + 05-03 (DS-03 토큰 export).
 
 ## Decisions Log
 
@@ -86,6 +87,9 @@ progress:
 - [Phase 4 / Plan 02] modal backdrop close — getBoundingClientRect 로 content rect 바깥 클릭 감지. ESC 는 <dialog> 네이티브. accordion single 모드만 toggle 핸들러 (multiple 은 네이티브 details).
 - [Phase 4 / Plan 03] showToast(message, tone) 위치인자 시그니처 — plan 의 {tone, message} 객체 호출 형은 toast-context.ts:30 API 와 불일치. 정정 적용 (Rule 1).
 - [Phase 4 / Plan 03] HTML 내보내기 버튼 disabled={compareMode} — 같은 자리의 JSON '내보내기' 버튼과 정렬 (Rule 2 일관성). active 안전성은 핸들러 내부 early-return 으로 유지.
+- [Phase 5 / Plan 02] palette-context.ts 는 .ts 확장자 + createElement — theme-context.ts (05-01) 패턴 차용, JSX 없이 React tree 생성. Provider 순서 ThemeProvider > PaletteProvider > ToastProvider (palette CRUD 가 toast 비의존, hydration 안정성).
+- [Phase 5 / Plan 02] 유효성 검사 분산 — context.addPalette null 반환 (silent 거부) + dialog 가 null 체크 후 toast 노출 (user-facing). hex regex + 5-10색 범위 + max 8 palette + invalid localStorage entry silently drop.
+- [Phase 5 / Plan 02] 활성 palette 의 인스펙터 color picker 통합은 v3+ deferred (D-08 specifics) — 본 plan 은 storage + dialog + ⌘K 액션만. 사용처 wiring 은 후속.
 
 ## Performance Metrics
 
@@ -107,6 +111,7 @@ progress:
 | Phase 04-export-depth P01 | 18min | 2 tasks | 2 files |
 | Phase 04 P02 | 5min | 3 tasks | 5 files |
 | Phase 04 P03 | 6min | 2 tasks | 4 files |
+| Phase 05-design-system P02 | 3min | 3 tasks | 3 files |
 
 ## v1 Final State (참조)
 
@@ -123,4 +128,4 @@ v1에서 확보한 것 (PROJECT.md Validated 참조):
 3. Phase 1 시작: `/gsd-discuss-phase 1 --auto` (사용자 자리 비움 mandate, --auto 또는 --power 권장)
 4. 또는 한 번에: `/gsd-autonomous` (모든 phase 자율 진행)
 
-**Planned Phase:** 4 (export 깊이) — 3 plans — 2026-05-11T09:00:10.443Z
+**Planned Phase:** 5 (디자인 시스템 깊이) — 3 plans — 2026-05-11T09:33:27.483Z
