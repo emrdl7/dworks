@@ -28,6 +28,7 @@ import {
   Lock,
   Unlock,
   LayoutGrid,
+  Map as MapIcon,
   PanelLeft,
   PanelRight,
   Pin,
@@ -223,6 +224,7 @@ import {
 import { BoxSelectOverlay, findNodesInBox } from './box-select-overlay'
 import { SpacingOverlay } from './spacing-overlay'
 import { GridOverlay, computeColumnSpan } from './grid-overlay'
+import { Minimap } from './minimap'
 import { ToastProvider, useToast } from './toast-context'
 import { ToastHost } from './toast-host'
 import { useAlignDistribute } from './use-align-distribute'
@@ -787,6 +789,11 @@ function HomePageInner() {
   const [canvasGridSize, setCanvasGridSize] = useState<0 | 8 | 16 | 24>(0)
   // VIS-01 — 12-col grid overlay 토글. localStorage 영속화(dw:uiPrefs:v1) — D-01.
   const [gridOverlayEnabled, setGridOverlayEnabled] = useState(false)
+  // VIS-03 — 좌하단 미니맵 토글. localStorage 영속화(dw:uiPrefs:v1) — D-08, D-12.
+  const [minimapEnabled, setMinimapEnabled] = useState(false)
+  // VIS-03 — tree 변경 시 미니맵 노드 박스 재측정 trigger.
+  // useRef 카운터로는 re-render 가 안 일어나므로 useState + effect 패턴.
+  const [treeRevision, setTreeRevision] = useState(0)
   // VIS-01 D-04 — snap 발생 column edge X 좌표(logical px). null 이면 가이드 숨김.
   // setSnapGuideX 는 향후 자유 위치(absolute) 노드 드래그 통합 site 에서 호출 예정 — 본 plan
   // 에서는 인프라(state + 가이드 렌더 + computeColumnEdges/snapToColumnEdge export)만 박는다.
@@ -823,6 +830,12 @@ function HomePageInner() {
       return changed ? next : prev
     })
   }, [selectedNodeId, tree])
+
+  // VIS-03 — tree 변경 시 미니맵 노드 박스 재측정 trigger (D-09).
+  // React identity 비교만으로 충분 — 깊은 비교 불필요.
+  useEffect(() => {
+    setTreeRevision((r) => r + 1)
+  }, [tree])
 
   useEffect(() => {
     if (leftPanelTab !== 'layers') return
@@ -1031,6 +1044,8 @@ function HomePageInner() {
           rightPanelWidth?: number
           // VIS-01 — 12-col grid overlay 토글 상태(D-01).
           gridOverlayEnabled?: boolean
+          // VIS-03 — 좌하단 미니맵 토글 상태(D-08, D-12).
+          minimapEnabled?: boolean
         }
         // 신규(canvasGridSize) 우선, 없으면 legacy boolean 마이그레이션
         if (
@@ -1079,6 +1094,10 @@ function HomePageInner() {
         if (typeof saved.gridOverlayEnabled === 'boolean') {
           setGridOverlayEnabled(saved.gridOverlayEnabled)
         }
+        // VIS-03 — 미니맵 토글 상태 복원(boolean 검증, D-08, D-12).
+        if (typeof saved.minimapEnabled === 'boolean') {
+          setMinimapEnabled(saved.minimapEnabled)
+        }
       }
     } catch {
       // localStorage 접근 실패는 무시 — default 상태 유지
@@ -1100,6 +1119,8 @@ function HomePageInner() {
           rightPanelWidth,
           // VIS-01 — 12-col grid overlay 토글 상태(D-01).
           gridOverlayEnabled,
+          // VIS-03 — 좌하단 미니맵 토글 상태(D-08, D-12).
+          minimapEnabled,
         }),
       )
     } catch {
@@ -1114,6 +1135,7 @@ function HomePageInner() {
     leftPanelWidth,
     rightPanelWidth,
     gridOverlayEnabled,
+    minimapEnabled,
   ])
 
   useEffect(() => {
@@ -3259,6 +3281,18 @@ function HomePageInner() {
         setGridOverlayEnabled((v) => !v)
         return
       }
+      // VIS-03 — Shift+M 으로 좌하단 미니맵 토글.
+      // M 단독은 modal quick-add (use-quick-add) 가 가져가므로 Shift+M 으로 충돌 회피 (D-12).
+      if (
+        event.key.toLowerCase() === 'm' &&
+        !meta &&
+        !event.altKey &&
+        event.shiftKey
+      ) {
+        event.preventDefault()
+        setMinimapEnabled((v) => !v)
+        return
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -3752,7 +3786,7 @@ function HomePageInner() {
         })
       },
     },
-    // VIS-01..VIS-03 — Phase 3 시각 보조 토글 (VIS-02/03 은 후속 Plan 에서 같은 group 추가).
+    // VIS-01..VIS-03 — Phase 3 시각 보조 토글.
     {
       id: 'toggle-grid-overlay',
       label: gridOverlayEnabled ? '12-col 그리드 끄기' : '12-col 그리드 켜기',
@@ -3761,6 +3795,16 @@ function HomePageInner() {
       keywords: ['grid', '그리드', 'column', 'layout', '12'],
       icon: Grid3x3,
       action: () => setGridOverlayEnabled((v) => !v),
+    },
+    // VIS-03 — 좌하단 미니맵 토글 (D-08, D-12).
+    {
+      id: 'toggle-minimap',
+      label: minimapEnabled ? '미니맵 끄기' : '미니맵 켜기',
+      group: '시각 보조',
+      shortcut: '⇧M',
+      keywords: ['minimap', '미니맵', 'navigator', 'overview', 'map'],
+      icon: MapIcon,
+      action: () => setMinimapEnabled((v) => !v),
     },
     // 도움말 — UX-06 D-19: ⌘K → "단축키" 검색으로 cheatsheet 노출.
     {
@@ -5132,6 +5176,22 @@ function HomePageInner() {
                   <Grid3x3 size={13} aria-hidden="true" />
                   <span>12-col</span>
                 </button>
+                {/* VIS-03 — 좌하단 미니맵 토글 (D-08, D-12). */}
+                <button
+                  type="button"
+                  aria-label={minimapEnabled ? '미니맵 끄기' : '미니맵 켜기'}
+                  aria-pressed={minimapEnabled}
+                  title="미니맵 (Shift+M)"
+                  onClick={() => setMinimapEnabled((v) => !v)}
+                  className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border px-2 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] ${
+                    minimapEnabled
+                      ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
+                      : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-muted)] hover:border-[var(--dw-ui-accent)] hover:text-[var(--dw-ui-accent-text-strong)]'
+                  }`}
+                >
+                  <MapIcon size={13} aria-hidden="true" />
+                  <span>미니맵</span>
+                </button>
                 {selectedColumnSpan !== null && (
                   <span
                     className="inline-flex h-7 shrink-0 items-center rounded-md border border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] px-2 text-xs font-semibold text-[var(--dw-ui-accent-text)] tabular-nums"
@@ -5673,6 +5733,15 @@ function HomePageInner() {
         open={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}
         items={commandItems}
+      />
+      {/* VIS-03 좌하단 미니맵 — fixed bottom-4 left-4, 큰 트리 navigate 용 (D-08..D-12). */}
+      <Minimap
+        open={minimapEnabled}
+        canvasScrollRef={canvasScrollRef}
+        canvasZoom={canvasZoom}
+        containerWidth={selectedViewportPreset.width}
+        treeRevision={treeRevision}
+        onClose={() => setMinimapEnabled(false)}
       />
       <ToastHost />
       {/* UX-05 — 박스 선택 결과 + 정렬/분포 액션 한국어 알림 (UI-SPEC line 327).
