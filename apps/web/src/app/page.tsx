@@ -7582,9 +7582,15 @@ function NodeColorControls({
   onNodeMetaChange,
   onNodeColorReset,
 }: NodeColorControlsProps) {
+  const inspectorViewport = useContext(CanvasViewportContext)
   const textContrast =
     node.type === 'text' ? computeTextContrast(tree, node, colorPreset) : null
   const color = node.color ?? {}
+  const overrideColorKeys =
+    inspectorViewport === 'desktop'
+      ? Object.keys(color)
+      : Object.keys(node.responsiveStyle?.[inspectorViewport]?.color ?? {})
+  const hasExplicitForViewport = overrideColorKeys.length > 0
   const eff = effectiveStyle ?? {}
   // tree 색상 || 캔버스 렌더 색상 — 비어있어도 _현재 렌더 색_을 input value로 표시
   const effectiveBackgroundColor = color.backgroundColor ?? eff.backgroundColor
@@ -8327,7 +8333,7 @@ function NodeColorControls({
       title="색상"
       description="선택한 노드의 배경, 글자, 강조"
       onAction={() => onNodeColorReset(node)}
-      hasExplicit={Object.keys(node.color ?? {}).length > 0}
+      hasExplicit={hasExplicitForViewport}
       {...disclosure}
     >
       {textContrast ? (
@@ -9224,9 +9230,15 @@ function TypographyControls({
   onFontDelete,
   onFontFamilyDelete,
 }: TypographyControlsProps) {
+  const inspectorViewport = useContext(CanvasViewportContext)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const defaults = getTypographyDefaults(node)
   const typography = node.typography ?? {}
+  const overrideTypographyKeys =
+    inspectorViewport === 'desktop'
+      ? Object.keys(typography)
+      : Object.keys(node.responsiveStyle?.[inspectorViewport]?.typography ?? {})
+  const hasExplicitForViewport = overrideTypographyKeys.length > 0
   const effectiveTextAlign = typography.textAlign ?? defaults.textAlign
   const effectiveFontFamily = typography.fontFamily ?? defaults.fontFamily
   const sliderFontSize = typography.fontSize ?? defaults.fontSize
@@ -9385,7 +9397,7 @@ function TypographyControls({
       title="타이포그래피"
       description="선택한 텍스트만 조정"
       onAction={() => onTypographyReset(node)}
-      hasExplicit={Object.keys(typography).length > 0}
+      hasExplicit={hasExplicitForViewport}
       {...disclosure}
     >
       <div
@@ -9777,8 +9789,15 @@ function LayoutControls({
   onLayoutReset,
   onSpacingChange,
 }: LayoutControlsProps) {
+  const inspectorViewport = useContext(CanvasViewportContext)
   const canEditLayout = isContainerNode(node)
   const layout = node.layout ?? {}
+  // viewport-aware hasExplicit — desktop은 base, mobile/tablet은 override만 체크
+  const overrideLayoutKeys =
+    inspectorViewport === 'desktop'
+      ? Object.keys(layout)
+      : Object.keys(node.responsiveStyle?.[inspectorViewport]?.layout ?? {})
+  const hasExplicitForViewport = overrideLayoutKeys.length > 0
   const spacing = node.spacing ?? {}
   // 우선순위: explicit(spacing) > resolver default(canvas-defaults) > DOM 측정(effectiveStyle)
   const eff = effectiveStyle ?? {}
@@ -9890,7 +9909,7 @@ function LayoutControls({
       isActionDisabled={!canEditLayout}
       onAction={() => onLayoutReset(node)}
       defaultOpen={canEditLayout}
-      hasExplicit={Object.keys(layout).length > 0}
+      hasExplicit={hasExplicitForViewport}
       {...disclosure}
     >
 
@@ -10203,10 +10222,16 @@ function SpacingControls({
   onSpacingChange,
   onSpacingReset,
 }: SpacingControlsProps) {
+  const inspectorViewport = useContext(CanvasViewportContext)
   const [paddingMode, setPaddingMode] = useState<SpacingMode>('all')
   const [marginMode, setMarginMode] = useState<SpacingMode>('all')
   const spacing = node.spacing ?? {}
   const canEditGap = isContainerNode(node)
+  const overrideSpacingKeys =
+    inspectorViewport === 'desktop'
+      ? Object.keys(spacing)
+      : Object.keys(node.responsiveStyle?.[inspectorViewport]?.spacing ?? {})
+  const hasExplicitForViewport = overrideSpacingKeys.length > 0
   // 우선순위: explicit(spacing) > resolver default(canvas-defaults) > DOM 측정(effectiveStyle)
   // 마이그레이션 단계상 resolved가 누락한 키는 effectiveStyle로 fallback (회귀 방지망)
   const eff = effectiveStyle ?? {}
@@ -10410,7 +10435,7 @@ function SpacingControls({
       description="선택한 노드의 여백 조정"
       defaultOpen={false}
       onAction={() => onSpacingReset(node)}
-      hasExplicit={Object.keys(spacing).length > 0}
+      hasExplicit={hasExplicitForViewport}
       {...disclosure}
     >
       <div className="space-y-3">
@@ -10474,7 +10499,13 @@ function ShapeControls({
   onShapeChange,
   onShapeReset,
 }: ShapeControlsProps) {
+  const inspectorViewport = useContext(CanvasViewportContext)
   const shape = node.shape ?? EMPTY_SHAPE
+  const overrideShapeKeys =
+    inspectorViewport === 'desktop'
+      ? Object.keys(node.shape ?? {})
+      : Object.keys(node.responsiveStyle?.[inspectorViewport]?.shape ?? {})
+  const hasExplicitForViewport = overrideShapeKeys.length > 0
   const radiusMode: ShapeRadiusMode = hasCornerRadiusOverride(shape)
     ? 'corners'
     : 'all'
@@ -10848,7 +10879,7 @@ function ShapeControls({
       description="선택한 노드의 테두리와 그림자"
       defaultOpen={false}
       onAction={() => onShapeReset(node)}
-      hasExplicit={Object.keys(node.shape ?? {}).length > 0}
+      hasExplicit={hasExplicitForViewport}
       {...disclosure}
     >
       <div className="grid grid-cols-2 gap-3">
