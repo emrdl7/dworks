@@ -11293,8 +11293,8 @@ interface CarouselControlsProps {
   ) => void
 }
 
-// Carousel 컨트롤 — 미리보기 슬라이드 / 자동 재생 / dot/arrow 토글 + intervalMs.
-// items 편집(추가/삭제/순서)은 다음 사이클.
+// Carousel 컨트롤 — items 편집(추가/삭제/순서/src/alt) + 미리보기 슬라이드 +
+// 자동 재생 / dot/arrow 토글 + intervalMs.
 function CarouselControls({
   disclosure,
   node,
@@ -11310,42 +11310,162 @@ function CarouselControls({
   const showDots = node.showDots !== false
   const showArrows = node.showArrows !== false
 
+  function patchItems(nextItems: CarouselNode['items'], options?: { previewIndex?: number }) {
+    const patch: CarouselEditPatch = { items: nextItems }
+    if (options?.previewIndex !== undefined) {
+      patch.previewIndex = options.previewIndex
+    } else if (previewIndex >= nextItems.length) {
+      // 현재 미리보기가 사라진 슬라이드면 마지막 슬라이드로
+      patch.previewIndex = Math.max(nextItems.length - 1, 0)
+    }
+    onCarouselChange(node, patch)
+  }
+
+  function updateItem(idx: number, patch: Partial<CarouselNode['items'][number]>) {
+    const next = items.map((it, i) => (i === idx ? { ...it, ...patch } : it))
+    patchItems(next)
+  }
+
+  function moveItem(idx: number, dir: -1 | 1) {
+    const target = idx + dir
+    if (target < 0 || target >= items.length) return
+    const next = [...items]
+    const a = next[idx]
+    const b = next[target]
+    if (!a || !b) return
+    next[idx] = b
+    next[target] = a
+    // 미리보기가 두 슬라이드 중 하나면 따라 이동
+    let nextPreview: number | undefined
+    if (previewIndex === idx) nextPreview = target
+    else if (previewIndex === target) nextPreview = idx
+    patchItems(next, nextPreview !== undefined ? { previewIndex: nextPreview } : undefined)
+  }
+
+  function removeItem(idx: number) {
+    if (items.length <= 1) return // 최소 1개 유지 (schema)
+    const next = items.filter((_, i) => i !== idx)
+    patchItems(next)
+  }
+
+  function addItem() {
+    const newId = `${node.id}.item${items.length + 1}-${Math.random().toString(36).slice(2, 6)}`
+    const next = [
+      ...items,
+      { id: newId, src: '', alt: `슬라이드 ${items.length + 1}` },
+    ]
+    patchItems(next, { previewIndex: items.length })
+  }
+
   return (
     <InspectorDisclosure
       title="Carousel"
-      description={`${items.length}개 슬라이드 — 미리보기 + 자동/표시 옵션`}
+      description={`${items.length}개 슬라이드 — 편집/추가/순서 + 미리보기 + 표시 옵션`}
       defaultOpen
       {...disclosure}
     >
       <div className="mt-3 space-y-4">
-        {/* 미리보기 슬라이드 */}
+        {/* items 편집 */}
         <div>
           <span className="text-xs font-semibold text-[var(--dw-ui-text-muted)]">
-            미리보기 슬라이드
+            슬라이드 ({items.length}개, 최소 1개)
           </span>
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <ul className="mt-2 space-y-2">
             {items.map((it, idx) => (
-              <button
+              <li
                 key={it.id}
-                type="button"
-                aria-pressed={idx === previewIndex}
-                onClick={() => onCarouselChange(node, { previewIndex: idx })}
-                className={`flex h-8 min-w-8 items-center justify-center rounded-[var(--dw-radius-sm)] border px-2 text-[length:var(--dw-text-label)] font-mono tabular-nums transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)] active:scale-[0.97] ${
+                className={`rounded-md border px-2.5 py-2 ${
                   idx === previewIndex
-                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)] text-[var(--dw-ui-accent-text)]'
-                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[var(--dw-ui-text-body)] hover:border-[var(--dw-ui-strong)] hover:bg-[var(--dw-ui-elevated)]'
+                    ? 'border-[var(--dw-ui-accent)] bg-[var(--dw-ui-accent-soft)]/30'
+                    : 'border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)]'
                 }`}
-                title={it.alt || `슬라이드 ${idx + 1}`}
               >
-                {idx + 1}
-              </button>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded bg-[var(--dw-ui-elevated)] px-1.5 text-[11px] font-mono tabular-nums text-[var(--dw-ui-text-muted)]">
+                    {idx + 1}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="위로"
+                    title="위로"
+                    disabled={idx === 0}
+                    onClick={() => moveItem(idx, -1)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="아래로"
+                    title="아래로"
+                    disabled={idx === items.length - 1}
+                    onClick={() => moveItem(idx, 1)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onCarouselChange(node, { previewIndex: idx })}
+                    className={`ml-auto inline-flex h-6 items-center rounded px-2 text-[11px] ${
+                      idx === previewIndex
+                        ? 'bg-[var(--dw-ui-accent)] text-[var(--dw-ui-accent-text)]'
+                        : 'text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-elevated)] hover:text-[var(--dw-ui-text-primary)]'
+                    }`}
+                  >
+                    {idx === previewIndex ? '미리보기 중' : '미리보기'}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="삭제"
+                    title={items.length === 1 ? '최소 1개 유지' : '삭제'}
+                    disabled={items.length === 1}
+                    onClick={() => removeItem(idx)}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-warn-bg)] hover:text-[var(--dw-ui-warn-text)] disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  <input
+                    type="text"
+                    placeholder="이미지 URL"
+                    aria-label={`슬라이드 ${idx + 1} 이미지 URL`}
+                    className="block h-8 w-full rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-bg)] px-2 text-[11px] outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+                    value={it.src}
+                    onChange={(e) => updateItem(idx, { src: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    placeholder="대체 텍스트 (스크린리더)"
+                    aria-label={`슬라이드 ${idx + 1} 대체 텍스트`}
+                    className="block h-8 w-full rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-bg)] px-2 text-[11px] outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+                    value={it.alt}
+                    onChange={(e) => updateItem(idx, { alt: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    placeholder="캡션 (선택)"
+                    aria-label={`슬라이드 ${idx + 1} 캡션`}
+                    className="block h-8 w-full rounded border border-[var(--dw-ui-border)] bg-[var(--dw-ui-bg)] px-2 text-[11px] outline-none focus:border-[var(--dw-ui-accent)] focus:ring-1 focus:ring-[color:var(--dw-ui-accent)]"
+                    value={it.caption ?? ''}
+                    onChange={(e) =>
+                      updateItem(idx, {
+                        caption: e.target.value === '' ? undefined : e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </li>
             ))}
-          </div>
-          {items[previewIndex]?.caption ? (
-            <p className="mt-2 text-[11px] text-[var(--dw-ui-text-muted)]">
-              {items[previewIndex]?.caption}
-            </p>
-          ) : null}
+          </ul>
+          <button
+            type="button"
+            onClick={addItem}
+            className="mt-2 flex h-8 w-full items-center justify-center rounded border border-dashed border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] text-[11px] text-[var(--dw-ui-text-muted)] transition-[background-color,border-color,color] duration-[var(--dw-motion-fast)] hover:border-[var(--dw-ui-accent)] hover:bg-[var(--dw-ui-accent-soft)]/40 hover:text-[var(--dw-ui-accent-text)]"
+          >
+            + 슬라이드 추가
+          </button>
         </div>
 
         {/* 표시 옵션 */}
