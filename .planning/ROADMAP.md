@@ -10,7 +10,7 @@
 | # | Phase | Goal | Requirements | UI hint |
 |---|-------|------|--------------|---------|
 | 1 | UX 핵심 fix + 측정 | 7/7 | Complete    | 2026-05-11 |
-| 2 | AI 생성 품질 자동 검증 | 풍부도 13 신호 자동 enforce + 도메인×톤 매트릭스 + 멀티모달 강화 | AI-01..AI-05 | partial |
+| 2 | AI 생성 품질 자동 검증 | 5/5 | Complete    | 2026-05-11 |
 | 3 | 시각 보조 도구 (그리드/줌/미니맵) | 기성 툴 시각 표준 (column grid + 마우스 위치 줌 + 미니맵) | VIS-01..VIS-03 | yes |
 | 4 | export 깊이 — 인터랙티브 작동 | carousel/tabs/accordion/modal/animation 실제 작동 export (라이브러리 wrap) | EXP-01..EXP-03 | no |
 | 5 | 디자인 시스템 (theme/palette/token export) | theme switcher + custom palette + 토큰 export | DS-01..DS-03 | yes |
@@ -59,14 +59,14 @@ Plans:
 4. prompt에 _도메인×톤 매트릭스_ 표 추가 (e-commerce dark / SaaS playful 등 조합 + fixture 표본)
 5. 참조 이미지에서 dominant color 5색 + 레이아웃 의도 (centered/left-aligned/grid) 추출해 prompt에 전달
 
-**Plans:** 5 plans
+**Plans:** 5/5 plans complete
 
 ```
 Plans:
 - [x] 02-01-PLAN.md — AI-01 richness.ts 5 신호 추가 + validateTreeRichness API (Wave 1, foundation) — 2026-05-11
-- [ ] 02-02-PLAN.md — AI-04 도메인×톤 6×5 매트릭스 prompt 섹션 (Wave 1, prompt-only)
-- [ ] 02-03-PLAN.md — AI-05 image-color analyzeDominantColors + extractLayoutIntent + prompt inject (Wave 2)
-- [ ] 02-04-PLAN.md — AI-01b/AI-02/AI-03 generation-normalize enforceRichness hook + interactive + animation (Wave 2)
+- [x] 02-02-PLAN.md — AI-04 도메인×톤 6×5 매트릭스 prompt 섹션 (Wave 1, prompt-only)
+- [x] 02-03-PLAN.md — AI-05 image-color analyzeDominantColors + extractLayoutIntent + prompt inject (Wave 2)
+- [x] 02-04-PLAN.md — AI-01b/AI-02/AI-03 generation-normalize enforceRichness hook + interactive + animation (Wave 2)
 - [x] 02-05-PLAN.md — Gap closure: AI-01/02/03 + AI-05 production wiring in page.tsx (Wave 7, gap_closure) — 2026-05-11
 ```
 
