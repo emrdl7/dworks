@@ -3,10 +3,14 @@
 
 import { type Tree } from '@dworks/tree'
 
-import { loadDesignSystem } from './design-systems/loader.js'
+import {
+  buildSelectorCatalog,
+  loadDesignSystem,
+} from './design-systems/loader.js'
 
 export {
   availableDesignSystems,
+  buildSelectorCatalog,
   describeDesignSystem,
   describeDesignSystemExtended,
   listDesignSystemsExtended,
@@ -1883,3 +1887,109 @@ ${CLARIFY_EXAMPLE_BLOCK}
 - 같은 질문 반복 금지 — 다른 axis(예: brand voice / target audience / 핵심 행동 강조도)를 묻는다.
 
 이제 사용자 의도를 받아 위 규칙에 따라 질문 JSON 하나만 반환한다.`
+
+// ─────────────────────────────────────────────────────────────
+// Design System Selector — Open Design 의 핵심 generation pattern.
+// 사용자 brief + clarify 답변 → LLM 이 _149 카탈로그_ 에서 1개 선택.
+// 선택된 시스템의 _full DESIGN.md_ 는 generator 호출 시 별도 inject.
+// 따라서 selector 는 _요약_(buildSelectorCatalog) 만 본다.
+// ─────────────────────────────────────────────────────────────
+
+export const SELECT_DESIGN_SYSTEM_SYSTEM_PROMPT = `너는 _디자인 시스템 선택자_ 다.
+
+사용자 brief 와 clarify 답변을 보고, 아래 _카탈로그_ 에서 _가장 잘 맞는 디자인 시스템 1개_ 를 선택한다.
+
+## 출력 규칙
+
+1. JSON 객체 하나만 출력. 코드 펜스 / 설명 / 추가 텍스트 절대 금지.
+2. 형식: { "chosenSystem": "<id>", "rationale": "<한국어 1-2문장>" }
+3. \`chosenSystem\` 은 카탈로그의 _정확한_ id (예: 'linear-app', 'stripe', 'apple', 'anthropic').
+4. \`rationale\` 은 _왜 이 시스템_ 인지 사용자가 납득할 수 있도록 한국어로 1-2문장 (~80자).
+5. \`rationale\` 에 _브리프의 어떤 부분_ 이 _이 시스템의 어떤 특성_ 과 매칭됐는지 명시.
+
+## 좋은 선택 기준
+
+- **카테고리 매칭**: 사용자 의도가 SaaS/dashboard → 'linear-app' / 'notion' / 'vercel' / 'stripe'. e-commerce → 'airbnb' / 'shopify'. AI 도구 → 'anthropic' / 'claude' / 'x-ai'. 미디어/콘텐츠 → 'apple' / 'spotify' / 'netflix'.
+- **톤 매칭**: 답변에서 _다크/럭셔리/미니멀/플레이풀_ 등 톤이 명시됐다면 그 톤에 맞는 시스템 우선 (다크/미니멀 → linear-app, playful → claude/cursor/x-ai 등 vivid accent).
+- **브랜드 매칭**: 사용자가 _특정 브랜드 (Linear 같은 / Stripe 풍)_ 직접 언급하면 그 시스템 우선.
+- **fallback**: 매칭 어려우면 카테고리 기반 _가장 일반적인_ 시스템 (saas → 'linear-app', e-commerce → 'airbnb', 기본 → 'apple').
+
+## 절대 금지
+
+- 카탈로그에 _없는 id_ 반환 금지.
+- JSON 외 출력 금지.
+- _여러 시스템_ 반환 금지 — 정확히 1개.
+- rationale 영어로 쓰지 말 것 (한국어 mandate).
+
+## 디자인 시스템 카탈로그 (149개)
+
+${buildSelectorCatalog()}
+`
+
+export interface SelectorBrief {
+  intent: string
+  answers?: BriefAnswer[]
+  notes?: string
+}
+
+/**
+ * Selector user prompt — brief + 답변 직렬화. catalog 은 _system_ prompt 에 들어감 (selector 가 매 호출마다 카탈로그 다시 받지 않음 — caching 친화적).
+ */
+export function formatBriefForSelector(brief: SelectorBrief): string {
+  const lines: string[] = []
+  lines.push('## 디자인 브리프')
+  lines.push('')
+  lines.push('### 의도')
+  lines.push(brief.intent.trim())
+  if (brief.answers !== undefined && brief.answers.length > 0) {
+    lines.push('')
+    lines.push('### Clarify 답변')
+    for (const a of brief.answers) {
+      const answer = Array.isArray(a.answer) ? a.answer.join(', ') : a.answer
+      if (answer.trim().length === 0) continue
+      lines.push(`- ${a.questionLabel}: ${answer.trim()}`)
+    }
+  }
+  if (brief.notes !== undefined && brief.notes.trim().length > 0) {
+    lines.push('')
+    lines.push('### 브랜드 / 참조 메모')
+    lines.push(brief.notes.trim())
+  }
+  lines.push('')
+  lines.push(
+    '위 브리프 + 답변에 맞는 디자인 시스템 1개를 카탈로그에서 선택해 JSON 반환.',
+  )
+  return lines.join('\n')
+}
+
+export interface SelectorResult {
+  chosenSystem: string
+  rationale: string
+}
+
+/** Selector LLM 응답 JSON 파서. 실패시 null. */
+export function parseSelectorResponse(raw: string): SelectorResult | null {
+  // JSON 객체 추출 — code fence 가 와도 견고하게
+  const trimmed = raw.trim()
+  const start = trimmed.indexOf('{')
+  const end = trimmed.lastIndexOf('}')
+  if (start < 0 || end < 0 || end <= start) return null
+  const json = trimmed.slice(start, end + 1)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(json)
+  } catch {
+    return null
+  }
+  if (typeof parsed !== 'object' || parsed === null) return null
+  const obj = parsed as Record<string, unknown>
+  if (typeof obj.chosenSystem !== 'string' || obj.chosenSystem.length === 0) {
+    return null
+  }
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(obj.chosenSystem)) return null
+  const rationale =
+    typeof obj.rationale === 'string' && obj.rationale.trim().length > 0
+      ? obj.rationale.trim()
+      : '카탈로그 기반 자동 선택'
+  return { chosenSystem: obj.chosenSystem, rationale }
+}

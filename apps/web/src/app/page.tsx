@@ -388,6 +388,12 @@ interface ClarifyTurn {
 
 type GenerateStage = 'intent' | 'questions'
 
+interface ChosenDesignSystem {
+  id: string
+  rationale: string
+  source: 'llm-picked' | 'user-override'
+}
+
 interface GenerationEntry {
   id: string
   label: string
@@ -401,6 +407,8 @@ interface GenerationEntry {
   createdAt: number
   latencyMs: number | null
   model: 'claude' | 'codex' | 'gemini' | null
+  /** Open Design pattern — LLM 이 (또는 사용자가) 선택한 디자인 시스템. */
+  chosenDesignSystem?: ChosenDesignSystem
 }
 
 const MAX_GENERATIONS = 6
@@ -752,9 +760,12 @@ function HomePageInner() {
   const [briefIntent, setBriefIntent] = useState('')
   const [briefNotes, setBriefNotes] = useState('')
   // Open Design 흡수 — 활성 design system id. localStorage 영속화.
+  // 평상시 null (LLM 이 자동 선택) — 사용자가 강제 override 했을 때만 set.
   const [activeDesignSystem, setActiveDesignSystem] = useState<string | null>(
     null,
   )
+  // 결과 badge 클릭 시 swap picker 모달 열림.
+  const [showSystemSwapPicker, setShowSystemSwapPicker] = useState(false)
   const [briefVariantCount, setBriefVariantCount] = useState<VariantCount>(1)
   const [userFixtures, setUserFixtures] = useState<UserFixture[]>([])
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null)
@@ -1990,7 +2001,13 @@ function HomePageInner() {
     apiBase: string,
     requestBrief: SubmittedDesignBrief,
   ): Promise<
-    | { ok: true; tree: Tree; model: GenerationEntry['model']; latencyMs: number }
+    | {
+        ok: true
+        tree: Tree
+        model: GenerationEntry['model']
+        latencyMs: number
+        chosenDesignSystem?: ChosenDesignSystem
+      }
     | { ok: false; reason: string }
   > {
     try {
@@ -2000,7 +2017,12 @@ function HomePageInner() {
         body: JSON.stringify({ brief: requestBrief }),
       })
       const payload = (await response.json()) as
-        | { tree: Tree; model: GenerationEntry['model']; latencyMs: number }
+        | {
+            tree: Tree
+            model: GenerationEntry['model']
+            latencyMs: number
+            chosenDesignSystem?: ChosenDesignSystem
+          }
         | { error: string; message: string }
       if (!response.ok) {
         return {
@@ -2017,6 +2039,9 @@ function HomePageInner() {
         tree: payload.tree,
         model: payload.model ?? 'claude',
         latencyMs: payload.latencyMs ?? 0,
+        ...(payload.chosenDesignSystem !== undefined
+          ? { chosenDesignSystem: payload.chosenDesignSystem }
+          : {}),
       }
     } catch (error) {
       return {
@@ -2048,6 +2073,7 @@ function HomePageInner() {
         tree: Tree
         model: GenerationEntry['model']
         latencyMs: number
+        chosenDesignSystem?: ChosenDesignSystem
       }> = []
       const failures: string[] = []
       for (const r of settled) {
@@ -2057,6 +2083,9 @@ function HomePageInner() {
               tree: r.value.tree,
               model: r.value.model,
               latencyMs: r.value.latencyMs,
+              ...(r.value.chosenDesignSystem !== undefined
+                ? { chosenDesignSystem: r.value.chosenDesignSystem }
+                : {}),
             })
           } else {
             failures.push(r.value.reason)
@@ -2089,6 +2118,9 @@ function HomePageInner() {
         createdAt: now,
         latencyMs: success.latencyMs,
         model: success.model,
+        ...(success.chosenDesignSystem !== undefined
+          ? { chosenDesignSystem: success.chosenDesignSystem }
+          : {}),
       }))
       setGenerations((entries) => {
         return appendGenerationHistoryEntries(
@@ -4639,15 +4671,30 @@ function HomePageInner() {
                       }}
                     />
                   </label>
-                  {/* Open Design 흡수 — 디자인 시스템 picker (149 systems). */}
-                  <DesignSystemPicker
-                    apiBase={
-                      process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
-                    }
-                    value={activeDesignSystem}
-                    onChange={(id) => setActiveDesignSystem(id)}
-                    disabled={clarifyLoading || generateLoading}
-                  />
+                  {/* Open Design pattern — 디자인 시스템은 LLM 이 자동 선택. 사용자 override 는 결과 패널의 시스템 badge 클릭으로. */}
+                  {activeDesignSystem !== null && (
+                    <div className="rounded-md border border-[var(--dw-ui-accent-border)] bg-[var(--dw-ui-accent-soft)] px-3 py-2 text-[10px]">
+                      <div className="flex items-start gap-2">
+                        <span className="text-[var(--dw-ui-accent-text)]">●</span>
+                        <div className="flex-1">
+                          <div className="font-medium text-[var(--dw-ui-accent-text-strong)]">
+                            override: <code>{activeDesignSystem}</code>
+                          </div>
+                          <div className="mt-0.5 text-[var(--dw-ui-accent-text)]">
+                            LLM 자동 선택 대신 이 시스템 강제 — 해제 시 LLM 이 다시 선택
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setActiveDesignSystem(null)}
+                          className="rounded p-0.5 text-[var(--dw-ui-accent-text)] hover:bg-[var(--dw-ui-accent-soft)]"
+                          aria-label="override 해제"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <button
                     type="button"
                     className="w-full rounded-md bg-[var(--dw-ui-accent)] px-3 py-2 text-xs font-semibold text-white hover:bg-[var(--dw-ui-accent-hover)] disabled:opacity-50"
@@ -5387,6 +5434,36 @@ function HomePageInner() {
                     {selectedColumnSpan} cols
                   </span>
                 )}
+                {/* Open Design pattern — 활성 generation 의 선택된 디자인 시스템 badge.
+                    LLM 이 자동 선택했으면 source: 'llm-picked', 사용자 강제면 'user-override'.
+                    클릭 → swap picker 열림 (다른 시스템 강제 적용 후 재생성). */}
+                {(() => {
+                  const active = generations.find(
+                    (e) => e.id === activeGenerationId,
+                  )
+                  const cds = active?.chosenDesignSystem
+                  if (cds === undefined) return null
+                  const dotColor = cds.source === 'llm-picked' ? '#10b981' : '#fbbf24'
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setShowSystemSwapPicker(true)}
+                      title={`${cds.rationale} — 클릭해서 다른 시스템으로 재생성`}
+                      className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md border border-[var(--dw-ui-accent-border)] bg-[var(--dw-ui-accent-soft)] px-2 text-xs font-semibold text-[var(--dw-ui-accent-text-strong)] hover:border-[var(--dw-ui-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dw-ui-accent)]"
+                      aria-label={`디자인 시스템: ${cds.id} (${cds.source === 'llm-picked' ? 'AI 자동 선택' : '사용자 지정'})`}
+                    >
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: dotColor }}
+                        aria-hidden="true"
+                      />
+                      <span className="font-mono text-[10px]">{cds.id}</span>
+                      <span className="text-[10px] text-[var(--dw-ui-accent-text)]">
+                        {cds.source === 'llm-picked' ? 'AI 선택' : '강제'}
+                      </span>
+                    </button>
+                  )
+                })()}
               </div>
             </div>
           )}
@@ -5926,6 +6003,56 @@ function HomePageInner() {
         open={paletteDialogOpen}
         onClose={() => setPaletteDialogOpen(false)}
       />
+      {/* Open Design — 디자인 시스템 swap picker (결과 badge 클릭 → 다른 시스템 강제). */}
+      {showSystemSwapPicker && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setShowSystemSwapPicker(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="디자인 시스템 강제 지정"
+        >
+          <div
+            className="flex max-h-[80vh] w-[720px] max-w-full flex-col gap-3 rounded-lg border border-[var(--dw-ui-border)] bg-[var(--dw-ui-panel)] p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-[var(--dw-ui-text-primary)]">
+                  디자인 시스템 강제 지정
+                </h2>
+                <p className="mt-0.5 text-[10px] text-[var(--dw-ui-text-faint)]">
+                  LLM 자동 선택을 무시하고 _이 시스템_ 으로 다음 생성. 해제하면 다시 LLM 이 선택.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSystemSwapPicker(false)}
+                className="rounded p-1 text-[var(--dw-ui-text-muted)] hover:bg-[var(--dw-ui-soft)]"
+                aria-label="닫기"
+              >
+                ✕
+              </button>
+            </header>
+            <DesignSystemPicker
+              apiBase={
+                process.env.NEXT_PUBLIC_DWORKS_API_URL ?? 'http://localhost:3001'
+              }
+              value={activeDesignSystem}
+              onChange={(id) => {
+                setActiveDesignSystem(id)
+                setShowSystemSwapPicker(false)
+                showToast(
+                  id === null
+                    ? 'override 해제 — 다음 생성부터 LLM 이 다시 선택합니다'
+                    : `${id} 강제 — 다음 생성부터 적용`,
+                  'info',
+                )
+              }}
+            />
+          </div>
+        </div>
+      )}
       {/* VIS-03 좌하단 미니맵 — fixed bottom-4 left-4, 큰 트리 navigate 용 (D-08..D-12). */}
       <Minimap
         open={minimapEnabled}

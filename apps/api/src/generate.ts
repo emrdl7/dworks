@@ -5,7 +5,11 @@ import { z } from 'zod'
 
 import {
   GENERATE_TREE_SYSTEM_PROMPT,
+  SELECT_DESIGN_SYSTEM_SYSTEM_PROMPT,
+  availableDesignSystems,
   formatBriefAsUserPrompt,
+  formatBriefForSelector,
+  parseSelectorResponse,
 } from '@dworks/llm-prompts'
 import { treeSchema, type Tree } from '@dworks/tree'
 
@@ -95,6 +99,12 @@ export interface GenerateSuccess {
     tree: Tree
     model: LlmProvider
     latencyMs: number
+    /** Open Design generation pattern — LLM 이 선택한 design system + rationale. user override 시 user picked, rationale 은 "user-override". */
+    chosenDesignSystem?: {
+      id: string
+      rationale: string
+      source: 'llm-picked' | 'user-override'
+    }
   }
 }
 
@@ -126,6 +136,12 @@ export interface GenerateDeps {
     path: string
     cleanup: () => Promise<void>
   }>
+  /**
+   * Open Design pattern — LLM 자동 design system 선택 활성화.
+   * 기본 true. 테스트에서 deterministic mock 으로 단일 LLM 호출만 검증할 때 false.
+   * brief.activeDesignSystem 이 set 되어 있으면 이 플래그와 무관하게 user-override 가 우선.
+   */
+  enableDesignSystemSelector?: boolean
 }
 
 /**
@@ -163,6 +179,35 @@ export async function handleGenerate(
         message: 'LLM provider chain이 비어 있습니다.',
       },
     }
+  }
+
+  // Open Design pattern — design system 자동 선택 (brief.activeDesignSystem 미지정시).
+  // user 가 override 한 경우 (PaletteManager / 디버그) source: 'user-override'.
+  // 테스트 환경 / 명시적 비활성화 시 selector skip (mock LLM 이 단일 호출 가정).
+  const selectorEnabled =
+    deps.enableDesignSystemSelector ?? process.env.NODE_ENV !== 'test'
+  let chosenDesignSystem: GenerateSuccess['body']['chosenDesignSystem']
+  if (
+    resolved.brief.activeDesignSystem !== undefined &&
+    resolved.brief.activeDesignSystem.length > 0
+  ) {
+    chosenDesignSystem = {
+      id: resolved.brief.activeDesignSystem,
+      rationale: '사용자가 직접 지정',
+      source: 'user-override',
+    }
+  } else if (selectorEnabled) {
+    const selected = await selectDesignSystemViaLlm(resolved.brief, chain, deps)
+    if (selected !== null) {
+      // brief 에 자동 inject — formatBriefAsUserPrompt 가 DESIGN.md 를 prompt 에 추가
+      resolved.brief.activeDesignSystem = selected.chosenSystem
+      chosenDesignSystem = {
+        id: selected.chosenSystem,
+        rationale: selected.rationale,
+        source: 'llm-picked',
+      }
+    }
+    // selector 실패시 chosenDesignSystem 은 undefined — 기존 톤 매핑으로 fallback
   }
 
   const userPrompt = formatBriefAsUserPrompt(resolved.brief)
@@ -252,6 +297,9 @@ export async function handleGenerate(
         tree: treeParse.data,
         model: final.provider,
         latencyMs: final.result.latencyMs,
+        ...(chosenDesignSystem !== undefined
+          ? { chosenDesignSystem }
+          : {}),
       },
     }
   }
@@ -280,4 +328,72 @@ export async function handleGenerate(
     result = await runOnce()
   }
   return result
+}
+
+/**
+ * Selector LLM 호출 — brief + clarify 답변 → catalog 에서 시스템 1개 선택.
+ *
+ * 실패시 null 반환 (selector 가 죽어도 generation 은 진행). 기존 톤 매핑 fallback.
+ * - LLM 응답 JSON parse 실패 → null
+ * - chosenSystem 이 catalog 에 없는 id → null
+ * - LLM call 자체 실패 → null
+ *
+ * Catalog 은 SELECT_DESIGN_SYSTEM_SYSTEM_PROMPT 안에 _system prompt_ 로 inject 되어
+ * 매 호출마다 user message 가 작아 cache 친화적. 한국어 mandate.
+ */
+async function selectDesignSystemViaLlm(
+  brief: GenerateBrief,
+  chain: readonly LlmProvider[],
+  deps: GenerateDeps,
+): Promise<{ chosenSystem: string; rationale: string } | null> {
+  try {
+    const selectorUserPrompt = formatBriefForSelector({
+      intent: brief.intent,
+      answers: brief.answers,
+      notes: brief.notes,
+    })
+    const { final } = await callLlmChain({
+      chain,
+      systemPrompt: SELECT_DESIGN_SYSTEM_SYSTEM_PROMPT,
+      userPrompt: selectorUserPrompt,
+      spawnImpl: deps.spawnImpl,
+      command: deps.command,
+      timeoutMs: deps.timeoutMs,
+      readOutputFileImpl: deps.readOutputFileImpl,
+      prepareOutputFileImpl: deps.prepareOutputFileImpl,
+    })
+    if (final === null || !final.result.ok) {
+      if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
+        console.error('[dworks-api] selector call failed')
+      }
+      return null
+    }
+    const parsed = parseSelectorResponse(final.result.stdout)
+    if (parsed === null) {
+      if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
+        console.error(
+          '[dworks-api] selector JSON parse failed:',
+          final.result.stdout.slice(0, 200),
+        )
+      }
+      return null
+    }
+    // catalog 에 실제로 존재하는 id 인지 검증 (LLM hallucination 방어)
+    const validIds = new Set(availableDesignSystems())
+    if (!validIds.has(parsed.chosenSystem)) {
+      if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
+        console.error(
+          '[dworks-api] selector returned unknown system:',
+          parsed.chosenSystem,
+        )
+      }
+      return null
+    }
+    return parsed
+  } catch (error) {
+    if (process.env.DWORKS_DEBUG_SCHEMA === '1') {
+      console.error('[dworks-api] selector exception:', error)
+    }
+    return null
+  }
 }

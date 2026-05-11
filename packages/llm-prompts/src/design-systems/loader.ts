@@ -158,3 +158,28 @@ export function listDesignSystemsExtended(): DesignSystemMetaExtended[] {
     .map((id) => describeDesignSystemExtended(id))
     .filter((m): m is DesignSystemMetaExtended => m !== null)
 }
+
+/**
+ * Selector LLM 용 _카탈로그 요약_ 빌더.
+ * 형식: `- id | category | one-line blurb` (시스템당 ~150자 평균).
+ * 149 systems × ~150자 ≈ 22KB — selector prompt 에 통째로 inject.
+ *
+ * Selector LLM 은 _full DESIGN.md_ 를 보지 않고 이 요약만으로 1개 선택.
+ * 선택된 시스템의 full DESIGN.md (22.5KB) 는 _generator_ LLM 호출 시 별도 inject.
+ */
+export function buildSelectorCatalog(): string {
+  const list = listDesignSystemsExtended()
+  return list
+    .map((s) => {
+      const cat = s.category ?? '(uncategorized)'
+      const blurb =
+        s.blurb !== null && s.blurb.length > 0
+          ? s.blurb.length > 100
+            ? s.blurb.slice(0, 97) + '...'
+            : s.blurb
+          : ''
+      const title = s.title.replace(/^Design System Inspired by\s*/i, '').trim()
+      return `- ${s.id} | ${title} | ${cat} | ${blurb}`
+    })
+    .join('\n')
+}
