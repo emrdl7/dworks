@@ -4,7 +4,14 @@
 // SpacingControls/LayoutControls/ShapeControls/NodeColorControls/TypographyControls
 // + UX-03 NodeTypeConvertDropdown 등이 공유.
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from 'react'
 
 import { ChevronDown, type LucideIcon } from 'lucide-react'
 
@@ -384,18 +391,21 @@ export function NodeTypeConvertDropdown({
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [open])
 
-  // ESC — close + return focus
-  useEffect(() => {
-    if (!open) return
-    function onKey(event: KeyboardEvent) {
+  // MR-04 — ESC 처리는 dropdown 루트 onKeyDown 으로 스코프 한정.
+  //   기존: document.addEventListener('keydown') — 다른 모달/⌘K 안에서 ESC 가 눌려도
+  //         이 dropdown 도 react 했었음 (멀티 인스턴스 시 listener 누적).
+  //   현재: 컴포넌트 트리 안에서 발생한 ESC bubbling 만 처리 → 의도된 scope.
+  const handleRootKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>) => {
+      if (!open) return
       if (event.key === 'Escape') {
+        event.stopPropagation()
         setOpen(false)
         buttonRef.current?.focus()
       }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open])
+    },
+    [open],
+  )
 
   const handleSelect = useCallback(
     (nextType: TreeNode['type']) => {
@@ -411,7 +421,7 @@ export function NodeTypeConvertDropdown({
   )
 
   return (
-    <div className="relative">
+    <div className="relative" onKeyDown={handleRootKeyDown}>
       <button
         ref={buttonRef}
         type="button"
