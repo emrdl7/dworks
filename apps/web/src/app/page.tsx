@@ -228,6 +228,7 @@ import { GridOverlay, computeColumnSpan } from './grid-overlay'
 import { Minimap } from './minimap'
 import { ToastProvider, useToast } from './toast-context'
 import { ToastHost } from './toast-host'
+import { ThemeProvider, useTheme } from './theme-context'
 import { useAlignDistribute } from './use-align-distribute'
 import { useQuickAddShortcuts } from './use-quick-add'
 import {
@@ -626,19 +627,24 @@ type ModalEditPatch = Pick<
   | 'open'
 >
 
-// HomePage 는 ToastProvider 로 HomePageInner 를 감싸 useToast() 가
-// 컴포넌트 함수 body 에서 호출 가능하도록 한다 (UX-03 변환 손실 toast 등).
+// HomePage 는 ThemeProvider + ToastProvider 로 HomePageInner 를 감싸 useTheme()/useToast() 가
+// 컴포넌트 함수 body 에서 호출 가능하도록 한다 (DS-01 테마 swap, UX-03 변환 손실 toast 등).
+// ThemeProvider 가 더 바깥 — 테마 초기 hydration 이 toast 보다 우선이고, toast UI 도 chrome 토큰 사용.
 export default function HomePage() {
   return (
-    <ToastProvider>
-      <HomePageInner />
-    </ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
+        <HomePageInner />
+      </ToastProvider>
+    </ThemeProvider>
   )
 }
 
 function HomePageInner() {
   // 전역 toast — UX-03 변환 손실 안내 등에서 사용.
   const { showToast } = useToast()
+  // DS-01 테마 — ⌘K '테마: 다크/라이트/세피아' 액션이 setTheme 호출.
+  const { setTheme } = useTheme()
   const [selectedFixtureId, setSelectedFixtureId] = useState(defaultTreeFixture.id)
   const [tree, setTree] = useState<Tree>(defaultTreeFixture.tree)
   const [selectedNodeId, setSelectedNodeId] = useState(
@@ -3842,6 +3848,29 @@ function HomePageInner() {
       keywords: ['minimap', '미니맵', 'navigator', 'overview', 'map'],
       icon: MapIcon,
       action: () => setMinimapEnabled((v) => !v),
+    },
+    // DS-01 테마 switcher — 3 액션 (다크/라이트/세피아). setTheme 이 즉시
+    // <html data-theme> 갱신 + localStorage 'dw:theme:v1' 저장.
+    {
+      id: 'theme-dark',
+      label: '테마: 다크',
+      group: '테마',
+      keywords: ['theme', 'dark', '다크', '테마', 'mode'],
+      action: () => setTheme('dark'),
+    },
+    {
+      id: 'theme-light',
+      label: '테마: 라이트',
+      group: '테마',
+      keywords: ['theme', 'light', '라이트', '테마', 'mode', '밝은'],
+      action: () => setTheme('light'),
+    },
+    {
+      id: 'theme-sepia',
+      label: '테마: 세피아',
+      group: '테마',
+      keywords: ['theme', 'sepia', '세피아', '테마', 'mode', '베이지'],
+      action: () => setTheme('sepia'),
     },
     // 도움말 — UX-06 D-19: ⌘K → "단축키" 검색으로 cheatsheet 노출.
     {
