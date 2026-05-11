@@ -41,10 +41,9 @@
 
 ### D. export 깊이 (3)
 
-- [x] **EXP-01**: carousel export 작동 — Embla Carousel CDN script + 자동 init JS 주입. (2026-05-11, Plan 04-01 renderer hook contract; Embla wiring 은 Plan 04-02 예정)
-- [x] **EXP-02**: tabs/accordion/modal export 작동 — vanilla JS (Radix dependencies 회피) + a11y(role/aria) 보강. (2026-05-11, Plan 04-01 renderer hook contract; vanilla JS 주입은 Plan 04-02 예정)
-- [x] **EXP-03
-**: entranceAnimation export 작동 — IntersectionObserver vanilla JS 자동 주입 + reduced-motion 존중.
+- [x] **EXP-01**: carousel export 작동 — Embla Carousel CDN script + 자동 init JS 주입. (2026-05-11, Plan 04-01 renderer + Plan 04-02 exporters/html.ts CAROUSEL_INIT + Plan 04-03 web 'HTML 내보내기' 버튼)
+- [x] **EXP-02**: tabs/accordion/modal export 작동 — vanilla JS (Radix dependencies 회피) + a11y(role/aria) 보강. (2026-05-11, Plan 04-01 renderer + Plan 04-02 exporters TABS/MODAL/ACCORDION 템플릿 + Plan 04-03 web download UI)
+- [x] **EXP-03**: entranceAnimation export 작동 — IntersectionObserver vanilla JS 자동 주입 + reduced-motion 존중. (2026-05-11, Plan 04-02 exporters ENTRANCE 템플릿 + Plan 04-03 web download UI)
 
 ### E. 디자인 시스템 (3)
 

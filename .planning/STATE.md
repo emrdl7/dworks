@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-05-11T09:13:50.722Z"
+last_updated: "2026-05-11T09:30:00.000Z"
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 18
-  completed_plans: 17
-  percent: 94
+  completed_plans: 18
+  percent: 100
 ---
 
 # Dworks v2.0 STATE
@@ -25,7 +25,7 @@ progress:
 | 1 | UX 핵심 fix + 측정 도구 | 🟡 진행 중 (5/7 plan 완료, 01-01/01-04 잔여) |
 | 2 | AI 생성 품질 자동 검증 | 🟢 plans 5/5 완료 (02-05 wiring gap closure 완료) |
 | 3 | 시각 보조 도구 | 🟢 plans 3/3 완료 (VIS-01 + VIS-02 + VIS-03 done) |
-| 4 | export 깊이 | 🟡 진행 중 (2/3 plan 완료 — 04-01 tree-renderer 확장 + 04-02 exporters done) |
+| 4 | export 깊이 | 🟢 plans 3/3 완료 (04-01 tree-renderer + 04-02 exporters + 04-03 web 어댑터 done) |
 | 5 | 디자인 시스템 깊이 | ⚪ pending |
 
 ## Active Work
@@ -45,7 +45,8 @@ progress:
 - ✅ 03-03 (VIS-03 좌하단 미니맵) — 2026-05-11. minimap.tsx 신규(311줄) — 노드 outlined rectangle + viewport rect + 클릭 navigate + Shift+M + toolbar 버튼 + commandPalette + dw:uiPrefs:v1 영속화. rAF throttle + treeRevision trigger 패턴. Map import → MapIcon alias 로 global Map constructor shadowing 회피. commits b945001 + 6d4780e + 6c030cf. 25분.
 - ✅ 04-01 (EXP-01/02 tree-renderer 4 interactive 노드 확장) — 2026-05-11. renderCarousel/Tabs/Accordion/Modal 전체 slide+item 렌더 + data-dworks-* attr + 한국어 aria(이전/다음 슬라이드/닫기) + hidden attr 토글 + data-expand-mode single/multiple. 8 신규 테스트 (23/23 pass). schema 불일치 4건 Rule 3 정규화. commits b46259d + 7fa6ad9. 18분.
 - ✅ 04-02 (EXP-01/02/03 exporters html.ts + html-scripts.ts + tests) — 2026-05-11. exportTreeToHtml(tree) → 완성된 <!DOCTYPE html> + detectFeatures 5종 검출 + 5개 vanilla JS IIFE 템플릿 (TABS/MODAL/ACCORDION/CAROUSEL_INIT/ENTRANCE) + BASE_CSS + Embla CDN 자동 주입 + IntersectionObserver + prefers-reduced-motion. 9 신규 테스트 pass. deviation 5건 (data-dw-entrance attr 명, schema descend 단순화, aria-selected string, readyState 분기, unused param). commits 43e6b66 + ffd4955 + fdf3743. 5분.
-- 잔여: Phase 4 (04-03 web 어댑터) + Phase 5 (디자인 시스템) — 다음.
+- ✅ 04-03 (EXP-01/02/03 web 어댑터 + HTML 내보내기 UI) — 2026-05-11. apps/web/src/app/html-export.ts 신규(53줄) — downloadGenerationAsHtml + buildHtmlFilename. page.tsx handleExportGenerationHtml + 'HTML 내보내기' 버튼 JSON 옆 추가. showToast(message, tone) 위치인자 시그니처 정정 (Rule 1) + disabled={compareMode} JSON 패턴 정렬 (Rule 2). 376 tests pass. commits 97e8cbf + b63a208. 6분.
+- 잔여: Phase 5 (디자인 시스템 깊이) — 다음.
 
 ## Decisions Log
 
@@ -83,6 +84,8 @@ progress:
 - [Phase 4 / Plan 02] feature detect → script injection 분기 패턴 — Embla CDN + 5 vanilla JS 모두 검출 시에만 주입, payload 최소화. IIFE + ES5 호환 (var/function) 글로벌 미오염.
 - [Phase 4 / Plan 02] entrance load trigger readyState 분기 추가 — defer script 가 DOMContentLoaded 이후 실행 시 이벤트 미발화로 stuck 회피 (Rule 2 critical fix).
 - [Phase 4 / Plan 02] modal backdrop close — getBoundingClientRect 로 content rect 바깥 클릭 감지. ESC 는 <dialog> 네이티브. accordion single 모드만 toggle 핸들러 (multiple 은 네이티브 details).
+- [Phase 4 / Plan 03] showToast(message, tone) 위치인자 시그니처 — plan 의 {tone, message} 객체 호출 형은 toast-context.ts:30 API 와 불일치. 정정 적용 (Rule 1).
+- [Phase 4 / Plan 03] HTML 내보내기 버튼 disabled={compareMode} — 같은 자리의 JSON '내보내기' 버튼과 정렬 (Rule 2 일관성). active 안전성은 핸들러 내부 early-return 으로 유지.
 
 ## Performance Metrics
 
@@ -103,6 +106,7 @@ progress:
 | Phase 03 P03 | 25min | 3 tasks | 3 files |
 | Phase 04-export-depth P01 | 18min | 2 tasks | 2 files |
 | Phase 04 P02 | 5min | 3 tasks | 5 files |
+| Phase 04 P03 | 6min | 2 tasks | 4 files |
 
 ## v1 Final State (참조)
 
