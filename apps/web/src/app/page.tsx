@@ -162,7 +162,13 @@ import {
   writeUserFixtures,
   type UserFixture,
 } from './user-fixtures'
-import { extractDominantColors, pickAspectRatio } from './image-color'
+import {
+  analyzeDominantColors,
+  extractDominantColors,
+  extractLayoutIntent,
+  pickAspectRatio,
+  type LayoutIntent,
+} from './image-color'
 import { normalizeDesignTree } from './generation-normalize'
 import {
   getCssColorWithOpacity,
@@ -348,6 +354,9 @@ interface BriefAnswer {
 interface ImageReferenceSeed {
   colors: string[]
   aspectRatio?: 'square' | 'landscape' | 'portrait' | 'wide'
+  // AI-05 — image-color.analyzeDominantColors / extractLayoutIntent 결과를 llm-prompts ImageReference 로 propagate.
+  dominantColors?: string[]
+  layoutIntent?: LayoutIntent
 }
 
 interface SubmittedDesignBrief {
@@ -408,6 +417,8 @@ function readFileAsDataUrl(file: File): Promise<string> {
 async function extractFromDataUrl(dataUrl: string): Promise<{
   colors: string[]
   aspectRatio: 'square' | 'landscape' | 'portrait' | 'wide' | null
+  dominantColors: string[]
+  layoutIntent: LayoutIntent
 }> {
   const image = await loadImage(dataUrl)
   const naturalWidth = image.naturalWidth
@@ -429,11 +440,21 @@ async function extractFromDataUrl(dataUrl: string): Promise<{
   }
   ctx.drawImage(image, 0, 0, drawWidth, drawHeight)
   const imageData = ctx.getImageData(0, 0, drawWidth, drawHeight)
-  const colors = extractDominantColors(
-    { data: imageData.data, width: drawWidth, height: drawHeight },
-    5,
-  )
-  return { colors, aspectRatio }
+  const pixelSource = {
+    data: imageData.data,
+    width: drawWidth,
+    height: drawHeight,
+  }
+  // AI-05 — 5색 hex + light/dark/neutral 분류 + 4사분면 layout heuristic 동시 추출 (동일 imageData 재사용으로 1회 디코딩).
+  const colors = extractDominantColors(pixelSource, 5)
+  const analysis = analyzeDominantColors(pixelSource, 5)
+  const layoutIntent = extractLayoutIntent(pixelSource)
+  return {
+    colors,
+    aspectRatio,
+    dominantColors: analysis.hexes,
+    layoutIntent,
+  }
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -1509,14 +1530,18 @@ function HomePageInner() {
       }
       try {
         const dataUrl = await readFileAsDataUrl(file)
-        const { colors, aspectRatio } = await extractFromDataUrl(dataUrl)
+        const { colors, aspectRatio, dominantColors, layoutIntent } =
+          await extractFromDataUrl(dataUrl)
         if (colors.length === 0) {
           failures.push(`${file.name}: 색 추출 실패`)
           continue
         }
+        // AI-05 — dominantColors / layoutIntent 를 ImageReferenceSeed 에 함께 저장 (llm-prompts <reference_image_analysis> inject 활성 조건).
         newRefs.push({
           colors,
           ...(aspectRatio !== null ? { aspectRatio } : {}),
+          dominantColors,
+          layoutIntent,
         })
         newThumbs.push(dataUrl)
       } catch (error) {
