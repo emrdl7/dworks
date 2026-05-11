@@ -212,6 +212,7 @@ import {
   ShortcutHelpModal,
   type CommandPaletteItem,
 } from './command-palette'
+import { BoxSelectOverlay, findNodesInBox } from './box-select-overlay'
 import { SpacingOverlay } from './spacing-overlay'
 import { ToastProvider, useToast } from './toast-context'
 import { ToastHost } from './toast-host'
@@ -657,6 +658,17 @@ function HomePageInner() {
   const [isPanning, setIsPanning] = useState(false)
   // UX-02: Alt 키 추적 — SpacingOverlay 정렬 가이드 토글용 (D-03).
   const [altKeyPressed, setAltKeyPressed] = useState(false)
+  // UX-05: Shift+drag 박스 선택 — canvas wrapper 안 logical 좌표 (zoom 적용 전).
+  // active=true 동안 global mousemove/mouseup 이 endX/endY 업데이트 + 종료 처리.
+  const [boxSelect, setBoxSelect] = useState<{
+    active: boolean
+    startX: number
+    startY: number
+    endX: number
+    endY: number
+  }>({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 })
+  // UX-05: aria-live polite 알림 — "{N}개 노드 선택" + 정렬/분포 한국어 액션 이름.
+  const [boxSelectAnnouncement, setBoxSelectAnnouncement] = useState('')
   const canvasScrollRef = useRef<HTMLDivElement | null>(null)
   const panStateRef = useRef<{
     startX: number
@@ -3330,6 +3342,81 @@ function HomePageInner() {
     }
   }, [canvasZoom])
 
+  // UX-05 박스 선택 — boxSelect.active=true 동안 global mousemove/mouseup capture.
+  // mousemove → endX/endY 업데이트, mouseup → intersect 검출 + selection commit.
+  useEffect(() => {
+    if (!boxSelect.active) return
+    const el = canvasScrollRef.current
+    if (!el) return
+    const startLogicalX = boxSelect.startX
+    const startLogicalY = boxSelect.startY
+    function onMove(event: globalThis.MouseEvent) {
+      const wrapper = canvasScrollRef.current
+      if (!wrapper) return
+      const rect = wrapper.getBoundingClientRect()
+      const z = canvasZoom > 0 ? canvasZoom : 1
+      const logicalX = (event.clientX - rect.left + wrapper.scrollLeft) / z
+      const logicalY = (event.clientY - rect.top + wrapper.scrollTop) / z
+      setBoxSelect((prev) =>
+        prev.active ? { ...prev, endX: logicalX, endY: logicalY } : prev,
+      )
+    }
+    function onUp(event: globalThis.MouseEvent) {
+      const wrapper = canvasScrollRef.current
+      if (!wrapper) {
+        setBoxSelect({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 })
+        return
+      }
+      const rect = wrapper.getBoundingClientRect()
+      const z = canvasZoom > 0 ? canvasZoom : 1
+      // 박스 시작점 — logical → client 좌표 변환 (zoom + scroll 역적용).
+      const startClientX = startLogicalX * z + rect.left - wrapper.scrollLeft
+      const startClientY = startLogicalY * z + rect.top - wrapper.scrollTop
+      const endClientX = event.clientX
+      const endClientY = event.clientY
+      const boxRect = {
+        left: Math.min(startClientX, endClientX),
+        top: Math.min(startClientY, endClientY),
+        right: Math.max(startClientX, endClientX),
+        bottom: Math.max(startClientY, endClientY),
+      }
+      // 최소 크기 미만이면 클릭 동등 — selection 변경 없이 종료.
+      if (
+        boxRect.right - boxRect.left < 4 &&
+        boxRect.bottom - boxRect.top < 4
+      ) {
+        setBoxSelect({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 })
+        return
+      }
+      // root 노드는 항상 intersect 매칭되므로 제외 (의미 없음).
+      const found = findNodesInBox(boxRect, new Set([tree.root.id]))
+      const first = found[0]
+      if (first !== undefined) {
+        const rest = found.slice(1)
+        setSelectedNodeId(first)
+        // selectedNodeId 변경 시 additionalSelectedNodeIds 가 reset 되는 useEffect 가
+        // 있으므로 next microtask 로 additional 적용 — 순서 보장.
+        queueMicrotask(() => {
+          setAdditionalSelectedNodeIds(new Set(rest))
+        })
+        setBoxSelectAnnouncement(`${found.length}개 노드 선택`)
+      }
+      setBoxSelect({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 })
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    const previousCursor = document.body.style.cursor
+    const previousUserSelect = document.body.style.userSelect
+    document.body.style.cursor = 'crosshair'
+    document.body.style.userSelect = 'none'
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = previousCursor
+      document.body.style.userSelect = previousUserSelect
+    }
+  }, [boxSelect.active, boxSelect.startX, boxSelect.startY, canvasZoom, tree.root.id])
+
   // ⌘K 명령 팔레트 항목 — 선택 노드 컨텍스트에 따라 disabled 결정.
   // 의도적으로 useMemo 안 쓰고 inline 계산 — handler들이 매 렌더 새 참조라
   // useMemo deps가 매번 변해 캐싱 효과 없음. 15개 항목 계산은 trivial.
@@ -4934,6 +5021,27 @@ function HomePageInner() {
               handleAddFromLibrary(payload, target)
             }}
             onMouseDown={(event) => {
+              // UX-05 박스 선택 — Shift + 좌클릭 + 캔버스 빈 공간만 (D-12).
+              // event.target === currentTarget 으로 자식 노드 위에서는 트리거 안 됨.
+              const isShiftLeftEmpty =
+                event.shiftKey && event.button === 0 && event.target === event.currentTarget
+              if (isShiftLeftEmpty) {
+                const el = canvasScrollRef.current
+                if (!el) return
+                const rect = el.getBoundingClientRect()
+                const z = canvasZoom > 0 ? canvasZoom : 1
+                const logicalX = (event.clientX - rect.left + el.scrollLeft) / z
+                const logicalY = (event.clientY - rect.top + el.scrollTop) / z
+                setBoxSelect({
+                  active: true,
+                  startX: logicalX,
+                  startY: logicalY,
+                  endX: logicalX,
+                  endY: logicalY,
+                })
+                event.preventDefault()
+                return
+              }
               // 스페이스+드래그 또는 가운데 버튼(button=1) → 패닝
               const isMiddleButton = event.button === 1
               if (!isSpacePressed && !isMiddleButton) return
@@ -5100,6 +5208,14 @@ function HomePageInner() {
             selectedNodeId={selectedNodeId}
             altKeyPressed={altKeyPressed}
             canvasWrapperRef={canvasScrollRef}
+          />
+          {/* UX-05 박스 선택 시각 — Shift+drag 동안 accent 50% border + 10% bg 사각형 (D-13). */}
+          <BoxSelectOverlay
+            active={boxSelect.active}
+            startX={boxSelect.startX}
+            startY={boxSelect.startY}
+            endX={boxSelect.endX}
+            endY={boxSelect.endY}
           />
           {/* UX-04 — drop target outline. 드래그 중 hover 한 컨테이너 노드를 accent 2px dashed 로 강조 (D-10). */}
           {dropTargetNodeId !== null && (
@@ -5347,6 +5463,16 @@ function HomePageInner() {
         items={commandItems}
       />
       <ToastHost />
+      {/* UX-05 — 박스 선택 결과 + 정렬/분포 액션 한국어 알림 (UI-SPEC line 327).
+          시각 표시 없이 screen reader 전용 — sr-only Tailwind utility 활용. */}
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {boxSelectAnnouncement}
+      </div>
     </main>
     </CanvasHoverContext.Provider>
     </CanvasSelectionContext.Provider>
